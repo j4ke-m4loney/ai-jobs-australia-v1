@@ -1,0 +1,165 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Mail, Twitter, Linkedin, Github } from "lucide-react";
+
+const Footer = () => {
+  return (
+    <footer className="bg-foreground text-background py-16">
+      <div className="container mx-auto px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Main Footer Content */}
+          <div className="grid lg:grid-cols-4 gap-8 mb-12">
+            {/* Brand */}
+            <div className="lg:col-span-2">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">AI</span>
+                </div>
+                <span className="text-xl font-bold">
+                  AIJobsAustralia.com.au
+                </span>
+              </div>
+              <p className="text-background/80 mb-6 max-w-md">
+                Building the #1 platform for artificial intelligence careers in
+                Australia. Dedicated to connecting local talent with local
+                opportunities.
+              </p>
+
+              {/* Newsletter Signup */}
+              <div className="max-w-md">
+                <h4 className="font-semibold mb-3">Stay Updated</h4>
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    placeholder="johndoe@email.com"
+                    className="bg-background/10 border-background/20 text-background placeholder:text-background/60"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-background text-foreground hover:bg-background/90"
+                  >
+                    <Mail className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Links */}
+            <div>
+              <h4 className="font-semibold mb-4">Platform</h4>
+              <ul className="space-y-2 text-background/80">
+                <li>
+                  <a
+                    href="#job-seekers"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Job Seekers
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#employers"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Employers
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#about"
+                    className="hover:text-background transition-smooth"
+                  >
+                    About
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#contact"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Contact
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2 text-background/80">
+                <li>
+                  <a
+                    href="/privacy"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/terms"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Terms of Service
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="/contact"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Contact Us
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="border-t border-background/20 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="text-background/60 text-sm mb-4 md:mb-0">
+                © 2024 AIJobsAustralia.com.au. All rights reserved.
+              </div>
+
+              {/* Social Links */}
+              <div className="flex space-x-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-background/60 hover:text-background hover:bg-background/10"
+                >
+                  <Twitter className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-background/60 hover:text-background hover:bg-background/10"
+                >
+                  <Linkedin className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-background/60 hover:text-background hover:bg-background/10"
+                >
+                  <Github className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-background/60 hover:text-background hover:bg-background/10"
+                >
+                  <Mail className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
