@@ -2,84 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 1) Keep your HSL values as simple variables */
-:root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-
-  /* Primary: Vibrant blue to match original design */
-  --primary: 221 83% 58%;
-  --primary-foreground: 0 0% 98%;
-  --primary-light: 221 83% 95%;
-
-  /* Secondary: Soft gray */
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-
-  /* Muted: Light backgrounds */
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-
-  /* Accent: Vibrant purple */
-  --accent: 262 83% 58%;
-  --accent-foreground: 0 0% 98%;
-  --accent-light: 262 83% 95%;
-
-  /* Success green */
-  --success: 142 76% 36%;
-  --success-foreground: 0 0% 98%;
-  --success-light: 142 76% 95%;
-
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 221 83% 58%;
-
-  --radius: 0.75rem;
-
-  /* Clean gradients */
-  --gradient-hero: linear-gradient(
-    135deg,
-    hsl(221 83% 58%) 0%,
-    hsl(262 83% 58%) 100%
-  );
-  --gradient-subtle: linear-gradient(
-    135deg,
-    hsl(240 4.8% 95.9%) 0%,
-    hsl(0 0% 100%) 100%
-  );
-
-  /* Subtle shadows */
-  --shadow-sm: 0 1px 2px 0 hsl(240 5.9% 10% / 0.05);
-  --shadow-md: 0 4px 6px -1px hsl(240 5.9% 10% / 0.1);
-  --shadow-lg: 0 10px 15px -3px hsl(240 5.9% 10% / 0.1);
-  --shadow-xl: 0 20px 25px -5px hsl(240 5.9% 10% / 0.1);
-
-  /* Smooth transitions */
-  --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --sidebar-background: 0 0% 98%;
-  --sidebar-foreground: 240 5.3% 26.1%;
-  --sidebar-primary: 240 5.9% 10%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 240 4.8% 95.9%;
-  --sidebar-accent-foreground: 240 5.9% 10%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
-}
-
-/* Tailwind v3 compatible - colors are defined in tailwind.config.js */
-
-/* 3) Dark mode via system preference (simple) */
-@media (prefers-color-scheme: dark) {
+/* Design tokens — EXACTLY as in your React app */
+@layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    /* Primary (React value) */
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 98%;
+    --primary-light: 221 83% 95%;
+
+    /* Secondary */
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    /* Muted */
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    /* Accent */
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 98%;
+    --accent-light: 262 83% 95%;
+
+    /* Success */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --success-light: 142 76% 95%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 221 83% 53%;
+
+    --radius: 0.75rem;
+
+    /* Gradients (React values) */
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(221 83% 53%) 0%,
+      hsl(262 83% 58%) 100%
+    );
+    --gradient-subtle: linear-gradient(
+      135deg,
+      hsl(240 4.8% 95.9%) 0%,
+      hsl(0 0% 100%) 100%
+    );
+  }
+
+  /* Dark mode (React used a .dark class) */
+  .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -119,16 +100,12 @@
   }
 }
 
-/* Base layer with CSS variables instead of @apply */
+/* Base styles using your tokens */
 @layer base {
   * {
-    border-color: hsl(var(--border));
+    @apply border-border;
   }
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-background text-foreground;
   }
 }
-
-/* Use your gradients with arbitrary values:
-   className="bg-[var(--gradient-hero)]" */

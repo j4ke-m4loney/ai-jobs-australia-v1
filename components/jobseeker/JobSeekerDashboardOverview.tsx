@@ -142,7 +142,7 @@ export const JobSeekerDashboardOverview = () => {
   ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Welcome Section */}
       <div className="flex items-center justify-between">
         <div>
@@ -156,16 +156,16 @@ export const JobSeekerDashboardOverview = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-sm font-medium text-foreground">
               Total Applications
             </CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
+          <CardContent className="pt-2">
+            <div className="text-3xl font-bold text-foreground">
               {applications.length}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -174,30 +174,30 @@ export const JobSeekerDashboardOverview = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-sm font-medium text-foreground">
               Saved Jobs
             </CardTitle>
             <Heart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
+          <CardContent className="pt-2">
+            <div className="text-3xl font-bold text-foreground">
               {savedJobIds.size}
             </div>
             <p className="text-xs text-muted-foreground">Ready to apply</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-sm font-medium text-foreground">
               Profile Complete
             </CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
+          <CardContent className="pt-2">
+            <div className="text-3xl font-bold text-foreground">
               {profileComplete}%
             </div>
             <p className="text-xs text-muted-foreground">
@@ -208,7 +208,7 @@ export const JobSeekerDashboardOverview = () => {
       </div>
 
       {/* Profile Section */}
-      <Card>
+      <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-foreground">
             <User className="w-5 h-5" />
@@ -226,15 +226,18 @@ export const JobSeekerDashboardOverview = () => {
         </CardHeader>
         <CardContent>
           {!profile ? (
-            <div className="text-center py-8">
-              <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
+            <div className="text-center py-12">
+              <User className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
+              <h3 className="text-xl font-semibold text-foreground mb-3">
                 Create your profile
               </h3>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Add your details to help employers find you.
               </p>
-              <Button onClick={() => navigate("/jobseeker/profile")}>
+              <Button
+                onClick={() => router.push("/jobseeker/profile")}
+                size="lg"
+              >
                 Create Profile
               </Button>
             </div>
@@ -321,8 +324,8 @@ export const JobSeekerDashboardOverview = () => {
 
       {/* Recent Applications */}
       {applications.length > 0 && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
             <CardTitle className="flex items-center gap-2 text-foreground">
               <FileText className="w-5 h-5" />
               Recent Applications

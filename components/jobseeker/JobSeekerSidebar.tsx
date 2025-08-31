@@ -77,17 +77,17 @@ export function JobSeekerSidebar() {
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+      <SidebarHeader className="border-b p-4">
         {!collapsed ? (
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Search className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="font-semibold text-foreground text-sidebar-foreground">
+              <h2 className="font-semibold text-sidebar-foreground">
                 Dashboard
               </h2>
-              <p className="text-xs text-foreground/70">Job Seeker</p>
+              <p className="text-xs text-sidebar-foreground/70">Job Seeker</p>
             </div>
           </div>
         ) : (
@@ -99,7 +99,7 @@ export function JobSeekerSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-foreground">
+          <SidebarGroupLabel className="text-sidebar-foreground">
             Main Menu
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -126,7 +126,7 @@ export function JobSeekerSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4">
+      <SidebarFooter className="border-t p-4">
         {!collapsed ? (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
@@ -138,7 +138,7 @@ export function JobSeekerSidebar() {
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                <p className="text-sm font-medium text-sidebar-foreground truncate capitalize">
                   {user?.user_metadata?.first_name || "Job Seeker"}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate">
