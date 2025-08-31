@@ -35,7 +35,7 @@ const Employers = () => {
                 </Badge>
               </div>
 
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
                 Hire Australia's{" "}
                 <span className="bg-gradient-hero bg-clip-text text-transparent">
                   AI Talent

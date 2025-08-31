@@ -16,7 +16,7 @@ const JobSeekers = () => {
                 </span>
               </div>
 
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
                 Discover Your Next{" "}
                 <span className="bg-gradient-hero bg-clip-text text-transparent">
                   AI Career

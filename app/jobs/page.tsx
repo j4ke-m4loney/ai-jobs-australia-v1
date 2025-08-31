@@ -738,7 +738,7 @@ export default function JobsPage() {
 
                 {/* Job Description */}
                 <div>
-                  <h2 className="text-xl font-semibold mb-4">
+                  <h2 className="text-xl font-semibold text-foreground mb-4">
                     Job Description
                   </h2>
                   <div className="prose max-w-none">
@@ -751,7 +751,7 @@ export default function JobsPage() {
                 {/* Requirements */}
                 {selectedJob.requirements && (
                   <div>
-                    <h2 className="text-xl font-semibold mb-4">Requirements</h2>
+                    <h2 className="text-xl font-semibold text-foreground mb-4">Requirements</h2>
                     <div className="prose max-w-none">
                       <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                         {selectedJob.requirements}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +38,7 @@ interface Profile {
 
 export const JobSeekerDashboardOverview = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { savedJobIds } = useSavedJobs();
   const [applications, setApplications] = useState<Application[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -159,13 +159,15 @@ export const JobSeekerDashboardOverview = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-foreground">
               Total Applications
             </CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{applications.length}</div>
+            <div className="text-2xl font-bold text-foreground">
+              {applications.length}
+            </div>
             <p className="text-xs text-muted-foreground">
               {pendingApplications} pending review
             </p>
@@ -174,24 +176,30 @@ export const JobSeekerDashboardOverview = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saved Jobs</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">
+              Saved Jobs
+            </CardTitle>
             <Heart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{savedJobIds.size}</div>
+            <div className="text-2xl font-bold text-foreground">
+              {savedJobIds.size}
+            </div>
             <p className="text-xs text-muted-foreground">Ready to apply</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-foreground">
               Profile Complete
             </CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{profileComplete}%</div>
+            <div className="text-2xl font-bold text-foreground">
+              {profileComplete}%
+            </div>
             <p className="text-xs text-muted-foreground">
               {profileComplete < 80 ? "Needs attention" : "Looking good!"}
             </p>
@@ -202,14 +210,14 @@ export const JobSeekerDashboardOverview = () => {
       {/* Profile Section */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <User className="w-5 h-5" />
             Your Profile
           </CardTitle>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate("/jobseeker/profile")}
+            onClick={() => router.push("/jobseeker/profile")}
             className="gap-2"
           >
             <Edit className="w-4 h-4" />
@@ -236,7 +244,7 @@ export const JobSeekerDashboardOverview = () => {
                 <div className="flex items-center gap-3">
                   <User className="w-5 h-5 text-muted-foreground" />
                   <div>
-                    <p className="font-medium">
+                    <p className="font-medium text-foreground">
                       {profile.first_name && profile.last_name
                         ? `${profile.first_name} ${profile.last_name}`
                         : "Name not provided"}
@@ -315,14 +323,14 @@ export const JobSeekerDashboardOverview = () => {
       {applications.length > 0 && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-foreground">
               <FileText className="w-5 h-5" />
               Recent Applications
             </CardTitle>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/jobseeker/applications")}
+              onClick={() => router.push("/jobseeker/applications")}
             >
               View All
             </Button>
@@ -335,7 +343,9 @@ export const JobSeekerDashboardOverview = () => {
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex-1">
-                    <h4 className="font-medium">{application.job.title}</h4>
+                    <h4 className="font-medium text-foreground">
+                      {application.job.title}
+                    </h4>
                     <p className="text-sm text-muted-foreground">
                       {application.job.location} • {application.job.job_type}
                     </p>

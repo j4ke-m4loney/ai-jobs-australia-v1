@@ -31,7 +31,7 @@ export function DashboardOverview() {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Dashboard Overview</h2>
+          <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(6)].map((_, i) => (
@@ -51,7 +51,7 @@ export function DashboardOverview() {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Dashboard Overview</h2>
+          <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
         </div>
         <Card>
           <CardContent className="p-6">
@@ -138,7 +138,7 @@ export function DashboardOverview() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Dashboard Overview</h2>
+          <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
           <p className="text-muted-foreground">
             Track your hiring performance and manage your job postings
           </p>

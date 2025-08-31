@@ -6,6 +6,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
 import {
   Card,
   CardContent,
@@ -17,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { User, ArrowLeft } from "lucide-react";
+import { User } from "lucide-react";
 
 const JobSeekerAuthPage = () => {
   const searchParams = useSearchParams();
@@ -26,6 +29,7 @@ const JobSeekerAuthPage = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [signUpSuccess, setSignUpSuccess] = useState(false);
 
   // If user is already logged in, redirect appropriately
   if (user) {
@@ -49,6 +53,7 @@ const JobSeekerAuthPage = () => {
     if (error) {
       setError(error.message);
     } else {
+      setSignUpSuccess(true);
       toast({
         title: "Job seeker account created!",
         description: "Please check your email to verify your account.",
@@ -78,7 +83,9 @@ const JobSeekerAuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+    <div className="min-h-screen flex flex-col bg-muted">
+      <Header />
+      <div className="flex-1 flex items-center justify-center pt-32 pb-20">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -90,13 +97,6 @@ const JobSeekerAuthPage = () => {
           <CardDescription>
             Find and apply for the best AI jobs in Australia
           </CardDescription>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-3 h-3" />
-            Back to home
-          </Link>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -147,59 +147,89 @@ const JobSeekerAuthPage = () => {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    placeholder="John"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    name="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    name="password"
-                    type="password"
-                    minLength={6}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Sign Up"}
-                </Button>
-                <p className="text-center text-sm text-muted-foreground">
-                  Looking to hire?{" "}
-                  <Link
-                    href="/employer-login"
-                    className="text-primary hover:underline"
+              {signUpSuccess ? (
+                <div className="space-y-6 text-center py-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Account Created Successfully!
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      We've sent a verification email to your inbox. Please check your email and click the verification link to activate your account.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Once verified, you can sign in and start exploring AI job opportunities.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setSignUpSuccess(false)}
+                    variant="outline"
+                    className="w-full"
                   >
-                    Create an employer account
-                  </Link>
-                </p>
-              </form>
+                    Back to Sign In
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      name="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      name="password"
+                      type="password"
+                      minLength={6}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Creating account..." : "Sign Up"}
+                  </Button>
+                  <p className="text-center text-sm text-muted-foreground">
+                    Looking to hire?{" "}
+                    <Link
+                      href="/employer-login"
+                      className="text-primary hover:underline"
+                    >
+                      Create an employer account
+                    </Link>
+                  </p>
+                </form>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
+      </div>
+      <Footer />
     </div>
   );
 };

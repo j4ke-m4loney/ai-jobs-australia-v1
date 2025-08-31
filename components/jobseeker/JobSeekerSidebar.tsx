@@ -84,10 +84,10 @@ export function JobSeekerSidebar() {
               <Search className="w-4 h-4 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="font-semibold text-sidebar-foreground">
+              <h2 className="font-semibold text-foreground text-sidebar-foreground">
                 Dashboard
               </h2>
-              <p className="text-xs text-sidebar-foreground/60">Job Seeker</p>
+              <p className="text-xs text-foreground/70">Job Seeker</p>
             </div>
           </div>
         ) : (
@@ -99,17 +99,20 @@ export function JobSeekerSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-foreground">
+            Main Menu
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <Link 
-                      href={item.url} 
-                      className={isActive(item.url) 
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium flex items-center gap-2" 
-                        : "hover:bg-sidebar-accent/50 text-sidebar-foreground flex items-center gap-2"
+                    <Link
+                      href={item.url}
+                      className={
+                        isActive(item.url)
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium flex items-center gap-2"
+                          : "hover:bg-sidebar-accent/50 text-sidebar-foreground flex items-center gap-2"
                       }
                     >
                       <item.icon className="w-4 h-4" />

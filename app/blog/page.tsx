@@ -158,7 +158,7 @@ export default function BlogPage() {
           <div className="container mx-auto px-4">
             <div className="flex items-center gap-2 mb-8">
               <TrendingUp className="w-6 h-6 text-primary" />
-              <h2 className="text-3xl font-bold">Featured Articles</h2>
+              <h2 className="text-3xl font-bold text-foreground">Featured Articles</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -213,7 +213,7 @@ export default function BlogPage() {
             {/* Main Content */}
             <div className="flex-1">
               <div className="flex justify-between items-center mb-8">
-                <h2 className="text-3xl font-bold">Latest Articles</h2>
+                <h2 className="text-3xl font-bold text-foreground">Latest Articles</h2>
                 <div className="text-sm text-muted-foreground">
                   {filteredPosts.length} articles found
                 </div>

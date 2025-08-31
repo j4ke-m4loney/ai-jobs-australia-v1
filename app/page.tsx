@@ -185,7 +185,7 @@ const HomePage = () => {
       {/* Job Categories */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
+          <h2 className="text-foreground text-3xl font-bold text-center mb-12">
             Browse by Category
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -194,7 +194,7 @@ const HomePage = () => {
               return (
                 <Card
                   key={category.name}
-                  className="hover:shadow-md transition-all cursor-pointer group"
+                  className="hover:shadow-hover transition-all cursor-pointer group"
                 >
                   <CardContent className="p-6 text-center">
                     <Icon className="w-12 h-12 text-primary mx-auto mb-4 group-hover:scale-110 transition-transform" />
@@ -214,7 +214,9 @@ const HomePage = () => {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center mb-12">
-            <h2 className="text-3xl font-bold">Featured Jobs</h2>
+            <h2 className="text-foreground text-3xl font-bold">
+              Featured Jobs
+            </h2>
             <Button
               variant="outline"
               onClick={() =>
@@ -231,7 +233,7 @@ const HomePage = () => {
             {featuredJobs.map((job) => (
               <Card
                 key={job.id}
-                className="hover:shadow-lg transition-all cursor-pointer"
+                className="hover:shadow-hover transition-all cursor-pointer"
                 onClick={() => handleJobClick(job.id)}
               >
                 <CardHeader>
@@ -278,7 +280,9 @@ const HomePage = () => {
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">How It Works</h2>
+            <h2 className="text-foreground text-3xl font-bold mb-4">
+              How It Works
+            </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Getting started is simple. Follow these three steps to find your
               next AI opportunity.
@@ -311,7 +315,9 @@ const HomePage = () => {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Top Companies Hiring</h2>
+            <h2 className="text-foreground text-3xl font-bold mb-4">
+              Top Companies Hiring
+            </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Join thousands of professionals working at Australia's leading
               tech companies.

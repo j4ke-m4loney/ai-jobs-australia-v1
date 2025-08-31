@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* 1) Keep your HSL values as simple variables */
 :root {
@@ -11,8 +13,8 @@
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 3.9%;
 
-  /* Primary: Modern blue */
-  --primary: 221 83% 53%;
+  /* Primary: Vibrant blue to match original design */
+  --primary: 221 83% 58%;
   --primary-foreground: 0 0% 98%;
   --primary-light: 221 83% 95%;
 
@@ -39,14 +41,14 @@
 
   --border: 240 5.9% 90%;
   --input: 240 5.9% 90%;
-  --ring: 221 83% 53%;
+  --ring: 221 83% 58%;
 
   --radius: 0.75rem;
 
   /* Clean gradients */
   --gradient-hero: linear-gradient(
     135deg,
-    hsl(221 83% 53%) 0%,
+    hsl(221 83% 58%) 0%,
     hsl(262 83% 58%) 100%
   );
   --gradient-subtle: linear-gradient(

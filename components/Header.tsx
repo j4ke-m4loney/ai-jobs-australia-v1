@@ -79,7 +79,7 @@ const Header = () => {
                   Sign In
                 </Button>
               </Link>
-              <Link href="/post-job">
+              <Link href="/employer-login?next=/post-job">
                 <Button variant="default" size="sm">
                   Post Job
                 </Button>
