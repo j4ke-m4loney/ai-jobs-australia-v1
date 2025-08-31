@@ -1,21 +1,24 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LogOut, User, Briefcase } from "lucide-react";
 
 const Header = () => {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
+    router.push("/");
   };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-border/50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-3">
+        <Link href="/" className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">AI</span>
           </div>
@@ -27,13 +30,13 @@ const Header = () => {
         {/* Center Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
           <Link
-            to="/jobs"
+            href="/jobs"
             className="text-muted-foreground hover:text-foreground transition-all font-medium"
           >
             Browse Jobs
           </Link>
           <Link
-            to="/blog"
+            href="/blog"
             className="text-muted-foreground hover:text-foreground transition-all font-medium"
           >
             Blog
@@ -45,10 +48,10 @@ const Header = () => {
           {user ? (
             <>
               <Link
-                to={
+                href={
                   user.user_metadata?.user_type === "employer"
-                    ? "/employer/dashboard"
-                    : "/jobseeker/dashboard"
+                    ? "/employer"
+                    : "/jobseeker"
                 }
                 className="text-muted-foreground hover:text-foreground transition-all font-medium flex items-center gap-1"
               >
@@ -71,12 +74,16 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/auth/jobseeker">Sign In</Link>
-              </Button>
-              <Button variant="default" size="sm" asChild>
-                <Link to="/post-job">Post Job</Link>
-              </Button>
+              <Link href="/auth">
+                <Button variant="outline" size="sm">
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/post-job">
+                <Button variant="default" size="sm">
+                  Post Job
+                </Button>
+              </Link>
             </>
           )}
         </div>

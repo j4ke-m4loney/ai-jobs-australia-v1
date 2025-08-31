@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { JobSeekerSidebar } from "@/components/jobseeker/JobSeekerSidebar";
@@ -12,10 +14,10 @@ interface JobSeekerLayoutProps {
 
 export const JobSeekerLayout = ({ children, title }: JobSeekerLayoutProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   if (!user) {
-    navigate("/auth");
+    router.push("/login");
     return null;
   }
 
@@ -29,7 +31,7 @@ export const JobSeekerLayout = ({ children, title }: JobSeekerLayoutProps) => {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
             </div>
-            <Button onClick={() => navigate("/jobs")} className="gap-2">
+            <Button onClick={() => router.push("/jobs")} className="gap-2">
               <Search className="w-4 h-4" />
               Browse Jobs
             </Button>

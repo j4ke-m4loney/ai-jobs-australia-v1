@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +15,12 @@ import {
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
-const Blog = () => {
+export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const blogPosts = [
     {
@@ -350,4 +352,3 @@ const Blog = () => {
   );
 };
 
-export default Blog;

@@ -1,4 +1,7 @@
-import { NavLink, useLocation } from "react-router-dom";
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Briefcase,
@@ -6,8 +9,6 @@ import {
   BarChart3,
   Building2,
   Settings,
-  Calendar,
-  Star,
   Plus,
 } from "lucide-react";
 import {
@@ -29,7 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const menuItems = [
   {
     title: "Dashboard",
-    url: "/employer/dashboard",
+    url: "/employer",
     icon: LayoutDashboard,
   },
   {
@@ -49,7 +50,7 @@ const menuItems = [
   },
   {
     title: "Company Profile",
-    url: "/employer/company",
+    url: "/employer/company-profile",
     icon: Building2,
   },
   {
@@ -61,16 +62,12 @@ const menuItems = [
 
 export function EmployerSidebar() {
   const { state } = useSidebar();
-  const location = useLocation();
+  const pathname = usePathname();
   const { user } = useAuth();
 
   const collapsed = state === "collapsed";
 
-  const isActive = (path: string) => location.pathname === path;
-  const getNavClass = ({ isActive }: { isActive: boolean }) =>
-    isActive
-      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-      : "hover:bg-sidebar-accent/50 text-sidebar-foreground";
+  const isActive = (path: string) => pathname === path;
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
@@ -97,14 +94,12 @@ export function EmployerSidebar() {
       <SidebarContent>
         {!collapsed && (
           <div className="p-4">
-            <Button
-              onClick={() => (window.location.href = "/post-job")}
-              className="w-full gap-2"
-              size="sm"
-            >
-              <Plus className="w-4 h-4" />
-              Post New Job
-            </Button>
+            <Link href="/post-job">
+              <Button className="w-full gap-2" size="sm">
+                <Plus className="w-4 h-4" />
+                Post New Job
+              </Button>
+            </Link>
           </div>
         )}
 
@@ -115,10 +110,17 @@ export function EmployerSidebar() {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={getNavClass}>
+                    <Link
+                      href={item.url}
+                      className={
+                        isActive(item.url)
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                          : "hover:bg-sidebar-accent/50 text-sidebar-foreground"
+                      }
+                    >
                       <item.icon className="w-4 h-4" />
                       {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

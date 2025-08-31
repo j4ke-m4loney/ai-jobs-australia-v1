@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bell, Search, MapPin, Briefcase } from "lucide-react";
-import jobSeekersImage from "@/assets/job-seekers.jpg";
 
 const JobSeekers = () => {
   return (
@@ -92,12 +91,10 @@ const JobSeekers = () => {
 
             {/* Image */}
             <div className="relative">
-              <div className="rounded-2xl overflow-hidden shadow-lg">
-                <img
-                  src={jobSeekersImage}
-                  alt="AI professionals working on machine learning projects"
-                  className="w-full h-full object-cover"
-                />
+              <div className="rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-accent/10 to-primary/10">
+                <div className="aspect-video flex items-center justify-center">
+                  <Briefcase className="w-24 h-24 text-accent/30" />
+                </div>
               </div>
               {/* Decorative elements */}
               <div className="absolute -top-4 -right-4 w-20 h-20 bg-primary/10 rounded-full blur-xl" />

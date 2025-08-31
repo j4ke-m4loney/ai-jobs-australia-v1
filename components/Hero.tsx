@@ -1,11 +1,13 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, Mail, Users, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Hero = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuth();
 
   return (
@@ -57,7 +59,7 @@ const Hero = () => {
                       variant="primary"
                       size="lg"
                       className="flex-1"
-                      onClick={() => navigate("/jobseeker/dashboard")}
+                      onClick={() => router.push("/jobseeker")}
                     >
                       <Mail className="w-5 h-5" />
                       Job Seeker Dashboard
@@ -66,7 +68,7 @@ const Hero = () => {
                       variant="outline"
                       size="lg"
                       className="flex-1"
-                      onClick={() => navigate("/employer/dashboard")}
+                      onClick={() => router.push("/employer")}
                     >
                       <Users className="w-5 h-5" />
                       Employer Dashboard
@@ -78,7 +80,7 @@ const Hero = () => {
                       variant="primary"
                       size="lg"
                       className="flex-1"
-                      onClick={() => navigate("/auth")}
+                      onClick={() => router.push("/login")}
                     >
                       <Mail className="w-5 h-5" />
                       Join as Job Seeker
@@ -87,7 +89,7 @@ const Hero = () => {
                       variant="outline"
                       size="lg"
                       className="flex-1"
-                      onClick={() => navigate("/auth")}
+                      onClick={() => router.push("/login")}
                     >
                       <Users className="w-5 h-5" />
                       Register as Employer

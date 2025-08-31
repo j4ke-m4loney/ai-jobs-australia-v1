@@ -1,4 +1,7 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { JobSeekerSidebar } from "@/components/jobseeker/JobSeekerSidebar";
@@ -6,12 +9,17 @@ import { JobSeekerDashboardOverview } from "@/components/jobseeker/JobSeekerDash
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
-const JobSeekerDashboard = () => {
+export default function JobSeekerDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth");
+    }
+  }, [user, router]);
 
   if (!user) {
-    navigate("/auth");
     return null;
   }
 
@@ -25,7 +33,7 @@ const JobSeekerDashboard = () => {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
             </div>
-            <Button onClick={() => navigate("/jobs")} className="gap-2">
+            <Button onClick={() => router.push("/jobs")} className="gap-2">
               <Search className="w-4 h-4" />
               Browse Jobs
             </Button>
@@ -39,6 +47,4 @@ const JobSeekerDashboard = () => {
       </div>
     </SidebarProvider>
   );
-};
-
-export default JobSeekerDashboard;
+}

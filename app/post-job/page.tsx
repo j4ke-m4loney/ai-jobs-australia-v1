@@ -1,5 +1,7 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,19 +49,24 @@ const steps = [
   },
 ];
 
-export default function PostJob() {
+export default function PostJobPage() {
   const { user, loading } = useAuth();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Redirect to employer auth if not authenticated
-  if (!loading && !user) {
-    return <Navigate to="/auth/employer?next=/post-job" replace />;
-  }
+  useEffect(() => {
+    // Redirect to auth if not authenticated
+    if (!loading && !user) {
+      router.push("/auth?next=/post-job");
+      return;
+    }
 
-  // Redirect to employer auth if user is not an employer
-  if (!loading && user && user.user_metadata?.user_type !== "employer") {
-    return <Navigate to="/auth/employer?next=/post-job" replace />;
-  }
+    // Redirect to auth if user is not an employer
+    if (!loading && user && user.user_metadata?.user_type !== "employer") {
+      router.push("/auth?next=/post-job");
+      return;
+    }
+  }, [user, loading, router]);
 
   // Show loading state while checking auth
   if (loading) {
@@ -72,6 +79,12 @@ export default function PostJob() {
       </div>
     );
   }
+
+  // Don't render anything if redirecting
+  if (!user || user.user_metadata?.user_type !== "employer") {
+    return null;
+  }
+
   const [formData, setFormData] = useState<JobFormData>({
     // Job Details
     jobTitle: "",

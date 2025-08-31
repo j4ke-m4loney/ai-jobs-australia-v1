@@ -1,5 +1,7 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,10 +48,11 @@ interface UserDocument {
   is_default: boolean;
 }
 
-const Apply = () => {
-  const { jobId } = useParams<{ jobId: string }>();
+export default function ApplyPage() {
+  const params = useParams();
+  const jobId = params.jobId as string;
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [job, setJob] = useState<Job | null>(null);
   const [jobLoading, setJobLoading] = useState(true);
@@ -68,9 +71,9 @@ const Apply = () => {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/auth/jobseeker");
+      router.push("/login");
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, router]);
 
   // Fetch job details
   useEffect(() => {
@@ -94,7 +97,7 @@ const Apply = () => {
     if (error) {
       console.error("Error fetching job:", error);
       toast.error("Failed to load job details");
-      navigate("/jobs");
+      router.push("/jobs");
     } else {
       setJob(data as Job);
     }
@@ -230,7 +233,7 @@ const Apply = () => {
       if (error) throw error;
 
       toast.success("Application submitted successfully!");
-      navigate("/jobseeker/applications");
+      router.push("/jobseeker/applications");
     } catch (error) {
       console.error("Application error:", error);
       toast.error("Failed to submit application");
@@ -286,7 +289,7 @@ const Apply = () => {
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => navigate("/jobs")}
+          onClick={() => router.push("/jobs")}
           className="mb-6 hover:bg-primary/10"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -581,4 +584,3 @@ const Apply = () => {
   );
 };
 
-export default Apply;

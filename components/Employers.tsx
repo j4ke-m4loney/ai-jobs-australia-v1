@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Target, Zap, Award } from "lucide-react";
-import employersImage from "@/assets/employers.jpg";
 
 const Employers = () => {
   return (
@@ -12,12 +11,10 @@ const Employers = () => {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Image */}
             <div className="relative order-2 lg:order-1">
-              <div className="rounded-2xl overflow-hidden shadow-lg">
-                <img
-                  src={employersImage}
-                  alt="Australian tech company team collaborating on AI projects"
-                  className="w-full h-full object-cover"
-                />
+              <div className="rounded-2xl overflow-hidden shadow-lg bg-gradient-to-br from-primary/10 to-accent/10">
+                <div className="aspect-video flex items-center justify-center">
+                  <Users className="w-24 h-24 text-primary/30" />
+                </div>
               </div>
               {/* Decorative elements */}
               <div className="absolute -top-4 -left-4 w-20 h-20 bg-accent/10 rounded-full blur-xl" />

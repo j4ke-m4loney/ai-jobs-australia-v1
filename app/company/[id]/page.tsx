@@ -1,5 +1,7 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,9 +44,10 @@ interface Job {
   expires_at: string;
 }
 
-const CompanyProfile = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+export default function CompanyProfilePage() {
+  const params = useParams();
+  const id = params.id as string;
+  const router = useRouter();
   const [company, setCompany] = useState<Company | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,11 +55,11 @@ const CompanyProfile = () => {
 
   useEffect(() => {
     if (!id) {
-      navigate("/jobs");
+      router.push("/jobs");
       return;
     }
     fetchCompanyData();
-  }, [id, navigate]);
+  }, [id, router]);
 
   const fetchCompanyData = async () => {
     try {
@@ -84,7 +87,7 @@ const CompanyProfile = () => {
     } catch (error) {
       console.error("Error fetching company data:", error);
       toast.error("Company not found");
-      navigate("/jobs");
+      router.push("/jobs");
     } finally {
       setLoading(false);
       setJobsLoading(false);
@@ -140,7 +143,7 @@ const CompanyProfile = () => {
             <p className="text-muted-foreground mb-6">
               The company you're looking for doesn't exist.
             </p>
-            <Button onClick={() => navigate("/jobs")}>Browse Jobs</Button>
+            <Button onClick={() => router.push("/jobs")}>Browse Jobs</Button>
           </div>
         </div>
       </div>
@@ -155,7 +158,7 @@ const CompanyProfile = () => {
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => navigate("/jobs")}
+          onClick={() => router.push("/jobs")}
           className="mb-6 gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -277,7 +280,7 @@ const CompanyProfile = () => {
                       <Card
                         key={job.id}
                         className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => navigate(`/jobs/${job.id}`)}
+                        onClick={() => router.push(`/jobs/${job.id}`)}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-3">
@@ -363,6 +366,4 @@ const CompanyProfile = () => {
       </main>
     </div>
   );
-};
-
-export default CompanyProfile;
+}

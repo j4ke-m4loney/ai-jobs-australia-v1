@@ -1,4 +1,7 @@
-import { NavLink, useLocation } from "react-router-dom";
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   User,
   Heart,
@@ -22,7 +25,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const menuItems = [
@@ -38,7 +40,7 @@ const menuItems = [
   },
   {
     title: "Saved Jobs",
-    url: "/jobseeker/saved",
+    url: "/jobseeker/saved-jobs",
     icon: Heart,
   },
   {
@@ -55,16 +57,13 @@ const menuItems = [
 
 export function JobSeekerSidebar() {
   const { state } = useSidebar();
-  const location = useLocation();
+  const pathname = usePathname();
+  const router = useRouter();
   const { user, signOut } = useAuth();
 
   const collapsed = state === "collapsed";
 
-  const isActive = (path: string) => location.pathname === path;
-  const getNavClass = ({ isActive }: { isActive: boolean }) =>
-    isActive
-      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-      : "hover:bg-sidebar-accent/50 text-sidebar-foreground";
+  const isActive = (path: string) => pathname === path;
 
   const handleSignOut = async () => {
     try {
@@ -106,10 +105,16 @@ export function JobSeekerSidebar() {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={getNavClass}>
+                    <Link 
+                      href={item.url} 
+                      className={isActive(item.url) 
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium flex items-center gap-2" 
+                        : "hover:bg-sidebar-accent/50 text-sidebar-foreground flex items-center gap-2"
+                      }
+                    >
                       <item.icon className="w-4 h-4" />
                       {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

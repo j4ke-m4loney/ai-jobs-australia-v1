@@ -1,8 +1,11 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { JobSeekerLayout } from "@/components/jobseeker/JobSeekerLayout";
+import { JobSeekerSidebar } from "@/components/jobseeker/JobSeekerSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,18 +42,18 @@ interface Application {
 
 const JobSeekerApplications = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
 
   useEffect(() => {
     if (!user) {
-      navigate("/auth");
+      router.push("/login");
       return;
     }
     fetchApplications();
-  }, [user, navigate]);
+  }, [user, router]);
 
   const fetchApplications = async () => {
     try {
@@ -153,7 +156,12 @@ const JobSeekerApplications = () => {
   }
 
   return (
-    <JobSeekerLayout title="My Applications">
+    <SidebarProvider>
+      <div className="flex h-screen w-full">
+        <JobSeekerSidebar />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">
+            <h1 className="text-3xl font-bold mb-8">My Applications</h1>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <FileText className="w-6 h-6 text-primary" />
@@ -236,7 +244,7 @@ const JobSeekerApplications = () => {
                   ? "Start applying to jobs to track your progress here."
                   : `You don't have any applications with ${filter} status.`}
               </p>
-              <Button onClick={() => navigate("/jobs")} className="gap-2">
+              <Button onClick={() => router.push("/jobs")} className="gap-2">
                 <Search className="w-4 h-4" />
                 Browse Jobs
               </Button>
@@ -270,7 +278,7 @@ const JobSeekerApplications = () => {
                         <h3
                           className="text-lg font-semibold text-foreground mb-1 hover:text-primary cursor-pointer"
                           onClick={() =>
-                            navigate(`/jobs/${application.job.id}`)
+                            router.push(`/jobs/${application.job.id}`)
                           }
                         >
                           {application.job.title}
@@ -316,7 +324,7 @@ const JobSeekerApplications = () => {
                     <div className="flex flex-col gap-2">
                       <Button
                         size="sm"
-                        onClick={() => navigate(`/jobs/${application.job.id}`)}
+                        onClick={() => router.push(`/jobs/${application.job.id}`)}
                       >
                         View Job
                       </Button>
@@ -328,7 +336,10 @@ const JobSeekerApplications = () => {
           </div>
         )}
       </div>
-    </JobSeekerLayout>
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 

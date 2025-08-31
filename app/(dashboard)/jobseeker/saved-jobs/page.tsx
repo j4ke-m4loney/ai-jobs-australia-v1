@@ -1,5 +1,7 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { JobSeekerLayout } from "@/components/jobseeker/JobSeekerLayout";
@@ -39,18 +41,18 @@ interface SavedJob {
 
 const JobSeekerSavedJobs = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toggleSaveJob, isJobSaved } = useSavedJobs();
   const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      navigate("/auth");
+      router.push("/login");
       return;
     }
     fetchSavedJobs();
-  }, [user, navigate]);
+  }, [user, router]);
 
   const fetchSavedJobs = async () => {
     try {
@@ -161,7 +163,7 @@ const JobSeekerSavedJobs = () => {
               <p className="text-muted-foreground mb-6">
                 Start browsing jobs and save the ones you're interested in.
               </p>
-              <Button onClick={() => navigate("/jobs")} className="gap-2">
+              <Button onClick={() => router.push("/jobs")} className="gap-2">
                 <Search className="w-4 h-4" />
                 Browse Jobs
               </Button>
@@ -194,7 +196,7 @@ const JobSeekerSavedJobs = () => {
                       <div className="flex-1 min-w-0">
                         <h3
                           className="text-lg font-semibold text-foreground mb-1 hover:text-primary cursor-pointer"
-                          onClick={() => navigate(`/jobs/${savedJob.job.id}`)}
+                          onClick={() => router.push(`/jobs/${savedJob.job.id}`)}
                         >
                           {savedJob.job.title}
                         </h3>
@@ -246,7 +248,7 @@ const JobSeekerSavedJobs = () => {
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => navigate(`/jobs/${savedJob.job.id}`)}
+                        onClick={() => router.push(`/jobs/${savedJob.job.id}`)}
                       >
                         View Job
                       </Button>

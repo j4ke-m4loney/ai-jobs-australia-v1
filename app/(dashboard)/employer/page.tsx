@@ -1,15 +1,23 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { EmployerSidebar } from "@/components/employer/EmployerSidebar";
 import { DashboardOverview } from "@/components/employer/DashboardOverview";
 
-const EmployerDashboard = () => {
+export default function EmployerDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth");
+    }
+  }, [user, router]);
 
   if (!user) {
-    navigate("/auth");
     return null;
   }
 
@@ -34,6 +42,4 @@ const EmployerDashboard = () => {
       </div>
     </SidebarProvider>
   );
-};
-
-export default EmployerDashboard;
+}

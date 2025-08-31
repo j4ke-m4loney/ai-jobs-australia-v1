@@ -1,18 +1,20 @@
+"use client";
+
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { getAuthService } from "@/lib/auth";
+import type { AuthUser, AuthSession, AuthError } from "@/types/auth.types";
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: AuthUser | null;
+  session: AuthSession | null;
   loading: boolean;
   signUp: (
     email: string,
     password: string,
     firstName: string,
     userType: "job_seeker" | "employer"
-  ) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  ) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -33,60 +35,37 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  // TEMPORARY: Mock employer user for development - REMOVE THIS LATER
-  const mockUser = {
-    id: "mock-employer-id",
-    email: "johndoe@email.com",
-    user_metadata: { first_name: "John", user_type: "employer" },
-    app_metadata: {},
-    aud: "authenticated",
-    created_at: new Date().toISOString(),
-    email_confirmed_at: new Date().toISOString(),
-    last_sign_in_at: new Date().toISOString(),
-    role: "authenticated",
-    updated_at: new Date().toISOString(),
-  } as User;
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
-  const mockSession = {
-    user: mockUser,
-    access_token: "mock-token",
-    refresh_token: "mock-refresh",
-    expires_in: 3600,
-    expires_at: Date.now() + 3600000,
-    token_type: "bearer",
-  } as Session;
-
-  // TEMPORARILY ENABLED: Show authenticated employer view
-  const [user, setUser] = useState<User | null>(mockUser);
-  const [session, setSession] = useState<Session | null>(mockSession);
-  const [loading, setLoading] = useState(false);
-
-  // Ensure the provider is properly set up
   useEffect(() => {
-    // Simple initialization to ensure context is ready
-    setLoading(false);
+    setMounted(true);
   }, []);
 
-  // TEMPORARILY DISABLE AUTH CHECKS
-  // useEffect(() => {
-  //   // Set up auth state listener
-  //   const { data: { subscription } } = supabase.auth.onAuthStateChange(
-  //     (event, session) => {
-  //       setSession(session);
-  //       setUser(session?.user ?? null);
-  //       setLoading(false);
-  //     }
-  //   );
+  useEffect(() => {
+    if (!mounted) return;
+    
+    // Get the auth service instance only on client
+    const authService = getAuthService();
 
-  //   // Check for existing session
-  //   supabase.auth.getSession().then(({ data: { session } }) => {
-  //     setSession(session);
-  //     setUser(session?.user ?? null);
-  //     setLoading(false);
-  //   });
+    // Set up auth state listener
+    const unsubscribe = authService.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-  //   return () => subscription.unsubscribe();
-  // }, []);
+    // Check for existing session
+    authService.getSession().then((session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, [mounted]);
 
   const signUp = async (
     email: string,
@@ -94,32 +73,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     firstName: string,
     userType: "job_seeker" | "employer"
   ) => {
-    const redirectUrl = `${window.location.origin}/`;
-
-    const { error } = await supabase.auth.signUp({
+    const authService = getAuthService();
+    const result = await authService.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          first_name: firstName,
-          user_type: userType,
-        },
+      metadata: {
+        firstName,
+        userType,
       },
     });
-    return { error };
+    
+    return { error: result.error ?? null };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const authService = getAuthService();
+    const result = await authService.signIn({
       email,
       password,
     });
-    return { error };
+    
+    return { error: result.error ?? null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const authService = getAuthService();
+    await authService.signOut();
   };
 
   const value = {

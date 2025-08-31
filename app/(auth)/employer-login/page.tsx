@@ -1,5 +1,8 @@
+"use client";
+
 import { useState } from "react";
-import { Navigate, useSearchParams, Link } from "react-router-dom";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +19,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Briefcase, ArrowLeft } from "lucide-react";
 
-const EmployerAuth = () => {
-  const [searchParams] = useSearchParams();
+const EmployerAuthPage = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { user, signUp, signIn } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -25,8 +29,9 @@ const EmployerAuth = () => {
 
   // If user is already logged in, redirect appropriately
   if (user) {
-    const next = searchParams.get("next") || "/employer/dashboard";
-    return <Navigate to={next} replace />;
+    const next = searchParams.get("next") || "/employer";
+    router.push(next);
+    return null;
   }
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -65,6 +70,9 @@ const EmployerAuth = () => {
 
     if (error) {
       setError(error.message);
+    } else {
+      const next = searchParams.get("next") || "/employer";
+      router.push(next);
     }
     setLoading(false);
   };
@@ -83,11 +91,11 @@ const EmployerAuth = () => {
             Post jobs and find the best AI talent in Australia
           </CardDescription>
           <Link
-            to="/auth"
+            href="/"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-3 h-3" />
-            Back to main login
+            Back to home
           </Link>
         </CardHeader>
         <CardContent>
@@ -99,46 +107,59 @@ const EmployerAuth = () => {
 
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    name="email"
-                    type="email"
-                    placeholder="johndoe@email.com"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
-                  <Input
-                    id="signin-password"
-                    name="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    required
-                  />
-                </div>
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Company Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="your@company.com"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                  />
+                </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In to Employer Portal"}
+                  {loading ? "Signing in..." : "Sign In"}
                 </Button>
+                <p className="text-center text-sm text-muted-foreground">
+                  Looking for a job?{" "}
+                  <Link
+                    href="/login"
+                    className="text-primary hover:underline"
+                  >
+                    Sign in as job seeker
+                  </Link>
+                </p>
               </form>
             </TabsContent>
 
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">Company Contact Name</Label>
+                  <Label htmlFor="firstName">Your Name</Label>
                   <Input
                     id="firstName"
                     name="firstName"
                     type="text"
-                    placeholder="John"
+                    placeholder="John Doe"
                     required
                   />
                 </div>
@@ -148,7 +169,7 @@ const EmployerAuth = () => {
                     id="signup-email"
                     name="email"
                     type="email"
-                    placeholder="johndoe@email.com"
+                    placeholder="your@company.com"
                     required
                   />
                 </div>
@@ -158,18 +179,22 @@ const EmployerAuth = () => {
                     id="signup-password"
                     name="password"
                     type="password"
-                    placeholder="Create a password"
+                    minLength={6}
                     required
                   />
                 </div>
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Create Employer Account"}
+                  {loading ? "Creating account..." : "Sign Up"}
                 </Button>
+                <p className="text-center text-sm text-muted-foreground">
+                  Looking for a job?{" "}
+                  <Link
+                    href="/login"
+                    className="text-primary hover:underline"
+                  >
+                    Create a job seeker account
+                  </Link>
+                </p>
               </form>
             </TabsContent>
           </Tabs>
@@ -179,4 +204,4 @@ const EmployerAuth = () => {
   );
 };
 
-export default EmployerAuth;
+export default EmployerAuthPage;

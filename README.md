@@ -34,3 +34,11 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## How to Switch Auth Providers in Future:
+
+1. Install new provider SDK (e.g., npm install @clerk/nextjs)
+2. Create new adapter in /lib/auth/clerk-adapter.ts
+3. Change environment variable:
+   NEXT_PUBLIC_AUTH_PROVIDER="clerk"
+4. That's it! No changes needed in components or pages

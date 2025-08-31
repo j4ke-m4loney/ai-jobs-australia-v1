@@ -1,4 +1,8 @@
-import { Navigate, useSearchParams, Link } from "react-router-dom";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,17 +14,25 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { User, Briefcase, ArrowRight } from "lucide-react";
 
-const Auth = () => {
-  const [searchParams] = useSearchParams();
+export default function AuthPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { user } = useAuth();
 
   // If user is already logged in, redirect appropriately
+  useEffect(() => {
+    if (user) {
+      const userType = user.user_metadata?.user_type;
+      const defaultRedirect =
+        userType === "employer" ? "/employer" : "/jobseeker";
+      const next = searchParams.get("next") || defaultRedirect;
+      router.push(next);
+    }
+  }, [user, searchParams, router]);
+
+  // Don't render if redirecting
   if (user) {
-    const userType = user.user_metadata?.user_type;
-    const defaultRedirect =
-      userType === "employer" ? "/employer/dashboard" : "/jobseeker/dashboard";
-    const next = searchParams.get("next") || defaultRedirect;
-    return <Navigate to={next} replace />;
+    return null;
   }
 
   return (
@@ -40,7 +52,7 @@ const Auth = () => {
             variant="outline"
             className="w-full h-auto p-6 flex flex-col items-center gap-3 hover:bg-muted/50"
           >
-            <Link to="/auth/jobseeker">
+            <Link href="/login">
               <User className="w-8 h-8 text-primary" />
               <div className="text-center">
                 <div className="font-semibold">I'm looking for a job</div>
@@ -57,7 +69,7 @@ const Auth = () => {
             variant="outline"
             className="w-full h-auto p-6 flex flex-col items-center gap-3 hover:bg-muted/50"
           >
-            <Link to="/auth/employer">
+            <Link href="/employer-login">
               <Briefcase className="w-8 h-8 text-primary" />
               <div className="text-center">
                 <div className="font-semibold">I want to hire talent</div>
@@ -71,11 +83,11 @@ const Auth = () => {
 
           <div className="text-center text-sm text-muted-foreground mt-6">
             Already have an account?{" "}
-            <Link to="/auth/jobseeker" className="text-primary hover:underline">
+            <Link href="/login" className="text-primary hover:underline">
               Job Seeker Sign In
             </Link>
             {" | "}
-            <Link to="/auth/employer" className="text-primary hover:underline">
+            <Link href="/employer-login" className="text-primary hover:underline">
               Employer Sign In
             </Link>
           </div>
@@ -85,4 +97,3 @@ const Auth = () => {
   );
 };
 
-export default Auth;
