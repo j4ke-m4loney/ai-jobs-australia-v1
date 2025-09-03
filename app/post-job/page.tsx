@@ -21,6 +21,7 @@ import ApplicationMethodStep from "@/components/post-job/ApplicationMethodStep";
 import ReviewPaymentStep from "@/components/post-job/ReviewPaymentStep";
 import { JobFormData } from "@/types/job";
 import { useAuth } from "@/contexts/AuthContext";
+import SlimFooter from "@/components/SlimFooter";
 
 const steps = [
   {
@@ -244,6 +245,8 @@ export default function PostJobPage() {
           <CardContent>{renderStepContent()}</CardContent>
         </Card>
       </div>
+      
+      <SlimFooter />
     </div>
   );
 }

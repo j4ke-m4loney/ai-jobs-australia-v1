@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Mail, Twitter, Linkedin, Github } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 const Footer = () => {
   return (
@@ -12,9 +14,13 @@ const Footer = () => {
             {/* Brand */}
             <div className="lg:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">AI</span>
-                </div>
+                <Image
+                  src="/aja-300x300-blue-logo.svg"
+                  alt="AI Jobs Australia Logo"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 brightness-0 invert"
+                />
                 <span className="text-xl font-bold">
                   AIJobsAustralia.com.au
                 </span>
@@ -74,12 +80,12 @@ const Footer = () => {
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#contact"
+                  <Link
+                    href="/contact"
                     className="hover:text-background transition-smooth"
                   >
                     Contact
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -89,28 +95,28 @@ const Footer = () => {
               <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-background/80">
                 <li>
-                  <a
-                    href="/privacy"
+                  <Link
+                    href="/privacy-policy"
                     className="hover:text-background transition-smooth"
                   >
                     Privacy Policy
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="/terms"
                     className="hover:text-background transition-smooth"
                   >
                     Terms of Service
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a
+                  <Link
                     href="/contact"
                     className="hover:text-background transition-smooth"
                   >
                     Contact Us
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

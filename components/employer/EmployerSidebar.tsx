@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Briefcase,
@@ -10,6 +10,7 @@ import {
   Building2,
   Settings,
   Plus,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const menuItems = [
   {
@@ -63,15 +65,31 @@ const menuItems = [
 export function EmployerSidebar() {
   const { state } = useSidebar();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
 
   const collapsed = state === "collapsed";
 
   const isActive = (path: string) => pathname === path;
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Signed out successfully");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out");
+    }
+  };
+
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+    <Sidebar
+      className={collapsed ? "w-14" : "w-64"}
+      collapsible="icon"
+    >
+      <SidebarHeader
+        className={`border-b border-border ${!collapsed ? "p-4" : "py-4"}`}
+      >
         {!collapsed ? (
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -79,9 +97,9 @@ export function EmployerSidebar() {
             </div>
             <div>
               <h2 className="font-semibold text-sidebar-foreground">
-                JobPortal
+                Employer Hub
               </h2>
-              <p className="text-xs text-sidebar-foreground/60">Employer Hub</p>
+              <p className="text-xs text-sidebar-foreground/60">Dashboard</p>
             </div>
           </div>
         ) : (
@@ -104,7 +122,7 @@ export function EmployerSidebar() {
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -129,25 +147,44 @@ export function EmployerSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {!collapsed && (
-        <SidebarFooter className="border-t border-sidebar-border p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-hero rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-white">
-                {user?.user_metadata?.first_name?.[0] || "E"}
-              </span>
+      <SidebarFooter className="border-t border-border p-4">
+        {!collapsed ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-hero rounded-full flex items-center justify-center">
+                <span className="text-sm font-medium text-white">
+                  {user?.user_metadata?.first_name?.[0] ||
+                    user?.email?.[0]?.toUpperCase() ||
+                    "E"}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate capitalize">
+                  {user?.user_metadata?.first_name || "Employer"}
+                </p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">
+                  {user?.email}
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.user_metadata?.first_name || "Employer"}
-              </p>
-              <p className="text-xs text-sidebar-foreground/60 truncate">
-                {user?.email}
-              </p>
-            </div>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 w-full px-2 py-1 text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
           </div>
-        </SidebarFooter>
-      )}
+        ) : (
+          <button
+            onClick={handleSignOut}
+            className="w-8 h-8 mx-auto flex items-center justify-center hover:bg-sidebar-accent/50 rounded-md transition-colors"
+            title="Sign Out"
+          >
+            <LogOut className="w-4 h-4 text-sidebar-foreground" />
+          </button>
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 }

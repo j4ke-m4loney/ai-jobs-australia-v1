@@ -121,12 +121,13 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
+      
+      <main>
       {/* Hero Search Section */}
       <section className="pt-20 pb-16 bg-gradient-to-br from-background via-muted/30 to-primary-light/20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
+            <h1 className="pt-10 text-4xl md:text-6xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
               Find Your Dream AI Job
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -358,6 +359,7 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
     </div>

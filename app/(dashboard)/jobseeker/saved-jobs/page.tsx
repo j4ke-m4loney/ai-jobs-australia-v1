@@ -196,7 +196,9 @@ const JobSeekerSavedJobs = () => {
                       <div className="flex-1 min-w-0">
                         <h3
                           className="text-lg font-semibold text-foreground mb-1 hover:text-primary cursor-pointer"
-                          onClick={() => router.push(`/jobs/${savedJob.job.id}`)}
+                          onClick={() =>
+                            router.push(`/jobs/${savedJob.job.id}`)
+                          }
                         >
                           {savedJob.job.title}
                         </h3>

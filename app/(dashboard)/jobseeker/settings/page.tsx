@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -35,7 +35,7 @@ type SettingsFormData = z.infer<typeof settingsSchema>;
 
 const JobSeekerSettings = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -52,11 +52,11 @@ const JobSeekerSettings = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate("/auth");
+      router.push("/auth");
       return;
     }
     fetchSettings();
-  }, [user, navigate]);
+  }, [user, router]);
 
   const fetchSettings = async () => {
     try {

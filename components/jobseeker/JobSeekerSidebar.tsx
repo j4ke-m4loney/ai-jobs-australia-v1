@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   {
@@ -77,7 +78,7 @@ export function JobSeekerSidebar() {
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
-      <SidebarHeader className="border-b p-4">
+      <SidebarHeader className={`border-b ${!collapsed ? 'p-4' : 'py-4'}`}>
         {!collapsed ? (
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -85,9 +86,9 @@ export function JobSeekerSidebar() {
             </div>
             <div>
               <h2 className="font-semibold text-sidebar-foreground">
-                Dashboard
+                Job Seeker Hub
               </h2>
-              <p className="text-xs text-sidebar-foreground/70">Job Seeker</p>
+              <p className="text-xs text-sidebar-foreground/70">Dashboard</p>
             </div>
           </div>
         ) : (
@@ -98,6 +99,18 @@ export function JobSeekerSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        {!collapsed && (
+          <div className="p-4">
+            <Button
+              onClick={() => router.push("/jobs")}
+              className="w-full gap-2"
+              size="sm"
+            >
+              <Search className="w-4 h-4" />
+              Browse Jobs
+            </Button>
+          </div>
+        )}
         <SidebarGroup>
           <SidebarGroupLabel className="text-sidebar-foreground">
             Main Menu

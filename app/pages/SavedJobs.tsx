@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
@@ -41,7 +41,7 @@ interface SavedJob {
 
 const SavedJobs = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const { unsaveJob } = useSavedJobs();
   const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,13 +51,13 @@ const SavedJobs = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate("/auth/jobseeker");
+      router.push("/auth/jobseeker");
       return;
     }
 
     // Check if user is a job seeker
     checkUserType();
-  }, [user, navigate]);
+  }, [user, router]);
 
   const checkUserType = async () => {
     if (!user) return;
@@ -71,20 +71,20 @@ const SavedJobs = () => {
 
       if (error || !profile) {
         toast.error("Please complete your profile");
-        navigate("/profile");
+        router.push("/profile");
         return;
       }
 
       if (profile.user_type !== "job_seeker") {
         toast.error("Only job seekers can access saved jobs");
-        navigate("/employer/dashboard");
+        router.push("/employer/dashboard");
         return;
       }
 
       fetchSavedJobs();
     } catch (error) {
       console.error("Error checking user type:", error);
-      navigate("/auth/jobseeker");
+      router.push("/auth/jobseeker");
     }
   };
 
@@ -249,7 +249,7 @@ const SavedJobs = () => {
             </p>
           </div>
 
-          <Button onClick={() => navigate("/jobs")} className="gap-2">
+          <Button onClick={() => router.push("/jobs")} className="gap-2">
             <Search className="w-4 h-4" />
             Browse More Jobs
           </Button>
@@ -319,7 +319,7 @@ const SavedJobs = () => {
                     Start browsing jobs and save the ones you're interested in
                     for easy access later.
                   </p>
-                  <Button onClick={() => navigate("/jobs")} className="gap-2">
+                  <Button onClick={() => router.push("/jobs")} className="gap-2">
                     <Search className="w-4 h-4" />
                     Browse Jobs
                   </Button>
@@ -352,7 +352,7 @@ const SavedJobs = () => {
               <Card
                 key={job.id}
                 className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
-                onClick={() => navigate(`/jobs/${job.id}`)}
+                onClick={() => router.push(`/jobs/${job.id}`)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -435,7 +435,7 @@ const SavedJobs = () => {
                           className="gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/jobs/${job.id}`);
+                            router.push(`/jobs/${job.id}`);
                           }}
                         >
                           <Eye className="w-4 h-4" />
@@ -470,7 +470,7 @@ const SavedJobs = () => {
                       className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/jobs/${job.id}`);
+                        router.push(`/jobs/${job.id}`);
                       }}
                     >
                       <Eye className="w-3 h-3" />

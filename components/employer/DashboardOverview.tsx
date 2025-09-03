@@ -136,24 +136,27 @@ export function DashboardOverview() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
           <p className="text-muted-foreground">
             Track your hiring performance and manage your job postings
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <BarChart3 className="w-4 h-4 mr-2" />
-            View Analytics
+            <span className="hidden xs:inline">View Analytics</span>
+            <span className="xs:hidden">Analytics</span>
           </Button>
           <Button
             onClick={() => (window.location.href = "/post-job")}
             size="sm"
+            className="w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Post New Job
+            <span className="hidden xs:inline">Post New Job</span>
+            <span className="xs:hidden">Post Job</span>
           </Button>
         </div>
       </div>

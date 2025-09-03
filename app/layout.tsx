@@ -1,7 +1,6 @@
-"use client";
-
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { ClientProviders } from "@/components/providers/ClientProviders";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +13,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Note: Metadata export is not supported in client components
-// You can set metadata in a separate metadata.ts file or use generateMetadata
+export const metadata: Metadata = {
+  title: "AI Jobs Australia",
+  description: "Australia's leading platform for AI and ML careers",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: { url: "/favicon.svg", type: "image/svg+xml" },
+  },
+};
 
 export default function RootLayout({
   children,
@@ -27,9 +35,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
+        <ClientProviders>
           {children}
-        </AuthProvider>
+        </ClientProviders>
       </body>
     </html>
   );

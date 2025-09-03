@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { JobSeekerSidebar } from "@/components/jobseeker/JobSeekerSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { JobSeekerLayout } from "@/components/jobseeker/JobSeekerLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,12 +47,10 @@ const JobSeekerApplications = () => {
   const [filter, setFilter] = useState<string>("all");
 
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
+    if (user) {
+      fetchApplications();
     }
-    fetchApplications();
-  }, [user, router]);
+  }, [user]);
 
   const fetchApplications = async () => {
     try {
@@ -149,197 +146,203 @@ const JobSeekerApplications = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <JobSeekerLayout title="My Applications">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </JobSeekerLayout>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-full">
-        <JobSeekerSidebar />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-8">
-            <h1 className="text-3xl font-bold mb-8">My Applications</h1>
+    <JobSeekerLayout title="My Applications">
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <FileText className="w-6 h-6 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">My Applications</h1>
-            <p className="text-muted-foreground">Track your job applications</p>
+            <p className="text-muted-foreground">
+              Track your job applications
+            </p>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-foreground">
-                {applications.length}
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-foreground">
+                      {applications.length}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Total Applications
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {statusCounts.submitted || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Pending</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {statusCounts.reviewed || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Under Review
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {statusCounts.accepted || 0}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Accepted
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="text-sm text-muted-foreground">
-                Total Applications
+
+              {/* Filter Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={filter === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilter("all")}
+                >
+                  All ({applications.length})
+                </Button>
+                {Object.entries(statusCounts).map(([status, count]) => (
+                  <Button
+                    key={status}
+                    variant={filter === status ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilter(status)}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)} ({count})
+                  </Button>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {statusCounts.submitted || 0}
-              </div>
-              <div className="text-sm text-muted-foreground">Pending</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-600">
-                {statusCounts.reviewed || 0}
-              </div>
-              <div className="text-sm text-muted-foreground">Under Review</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {statusCounts.accepted || 0}
-              </div>
-              <div className="text-sm text-muted-foreground">Accepted</div>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={filter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("all")}
-          >
-            All ({applications.length})
-          </Button>
-          {Object.entries(statusCounts).map(([status, count]) => (
-            <Button
-              key={status}
-              variant={filter === status ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter(status)}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)} ({count})
-            </Button>
-          ))}
-        </div>
+              {filteredApplications.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      {filter === "all"
+                        ? "No applications yet"
+                        : `No ${filter} applications`}
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      {filter === "all"
+                        ? "Start applying to jobs to track your progress here."
+                        : `You don't have any applications with ${filter} status.`}
+                    </p>
+                    <Button
+                      onClick={() => router.push("/jobs")}
+                      className="gap-2"
+                    >
+                      <Search className="w-4 h-4" />
+                      Browse Jobs
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {filteredApplications.map((application) => (
+                    <Card
+                      key={application.id}
+                      className="hover:shadow-md transition-shadow"
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex gap-4 flex-1">
+                            {/* Company Logo */}
+                            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                              {application.job.company?.logo_url ? (
+                                <img
+                                  src={application.job.company.logo_url}
+                                  alt={application.job.company.name}
+                                  className="w-8 h-8 rounded"
+                                />
+                              ) : (
+                                <Building2 className="w-6 h-6 text-muted-foreground" />
+                              )}
+                            </div>
 
-        {filteredApplications.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                {filter === "all"
-                  ? "No applications yet"
-                  : `No ${filter} applications`}
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                {filter === "all"
-                  ? "Start applying to jobs to track your progress here."
-                  : `You don't have any applications with ${filter} status.`}
-              </p>
-              <Button onClick={() => router.push("/jobs")} className="gap-2">
-                <Search className="w-4 h-4" />
-                Browse Jobs
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {filteredApplications.map((application) => (
-              <Card
-                key={application.id}
-                className="hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex gap-4 flex-1">
-                      {/* Company Logo */}
-                      <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                        {application.job.company?.logo_url ? (
-                          <img
-                            src={application.job.company.logo_url}
-                            alt={application.job.company.name}
-                            className="w-8 h-8 rounded"
-                          />
-                        ) : (
-                          <Building2 className="w-6 h-6 text-muted-foreground" />
-                        )}
-                      </div>
+                            {/* Job Details */}
+                            <div className="flex-1 min-w-0">
+                              <h3
+                                className="text-lg font-semibold text-foreground mb-1 hover:text-primary cursor-pointer"
+                                onClick={() =>
+                                  router.push(`/jobs/${application.job.id}`)
+                                }
+                              >
+                                {application.job.title}
+                              </h3>
 
-                      {/* Job Details */}
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className="text-lg font-semibold text-foreground mb-1 hover:text-primary cursor-pointer"
-                          onClick={() =>
-                            router.push(`/jobs/${application.job.id}`)
-                          }
-                        >
-                          {application.job.title}
-                        </h3>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                {application.job.company?.name ||
+                                  "Company Name"}
+                              </p>
 
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {application.job.company?.name || "Company Name"}
-                        </p>
+                              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {application.job.location} (
+                                  {application.job.location_type})
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {application.job.job_type}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <DollarSign className="w-3 h-3" />
+                                  {formatSalary(
+                                    application.job.salary_min,
+                                    application.job.salary_max
+                                  )}
+                                </div>
+                              </div>
 
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {application.job.location} (
-                            {application.job.location_type})
+                              <div className="flex items-center gap-3">
+                                {getStatusBadge(application.status)}
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <Calendar className="w-3 h-3" />
+                                  Applied:{" "}
+                                  {new Date(
+                                    application.created_at
+                                  ).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {application.job.job_type}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="w-3 h-3" />
-                            {formatSalary(
-                              application.job.salary_min,
-                              application.job.salary_max
-                            )}
+
+                          {/* Actions */}
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                router.push(`/jobs/${application.job.id}`)
+                              }
+                            >
+                              View Job
+                            </Button>
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-3">
-                          {getStatusBadge(application.status)}
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="w-3 h-3" />
-                            Applied:{" "}
-                            {new Date(
-                              application.created_at
-                            ).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => router.push(`/jobs/${application.job.id}`)}
-                      >
-                        View Job
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
       </div>
-          </div>
-        </main>
-      </div>
-    </SidebarProvider>
+    </JobSeekerLayout>
   );
 };
 

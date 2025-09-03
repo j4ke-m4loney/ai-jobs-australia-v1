@@ -22,6 +22,7 @@ import {
   Check,
 } from "lucide-react";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 interface Job {
   id: string;
@@ -580,6 +581,8 @@ export default function ApplyPage() {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 };

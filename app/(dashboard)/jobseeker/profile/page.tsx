@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -33,7 +33,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 
 const JobSeekerProfile = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -50,11 +50,11 @@ const JobSeekerProfile = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate("/auth");
+      router.push("/auth");
       return;
     }
     fetchProfile();
-  }, [user, navigate]);
+  }, [user, router]);
 
   const fetchProfile = async () => {
     try {
@@ -244,8 +244,8 @@ const JobSeekerProfile = () => {
                   )}
                 />
 
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={saving}>
+                <div className="flex justify-center sm:justify-end">
+                  <Button type="submit" disabled={saving} className="w-full sm:w-auto">
                     {saving ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
