@@ -5,70 +5,156 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  ChevronLeft,
-  ChevronRight,
   Check,
   Briefcase,
-  MapPin,
-  DollarSign,
   FileText,
+  Settings,
   CreditCard,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import JobDetailsStep from "@/components/post-job/JobDetailsStep";
-import CompanyInfoStep from "@/components/post-job/CompanyInfoStep";
-import ApplicationMethodStep from "@/components/post-job/ApplicationMethodStep";
-import ReviewPaymentStep from "@/components/post-job/ReviewPaymentStep";
-import { JobFormData } from "@/types/job";
+import { JobFormData2 } from "@/types/job2";
 import { useAuth } from "@/contexts/AuthContext";
 import SlimFooter from "@/components/SlimFooter";
+
+// Step Components
+import JobBasicsStep from "@/components/post-job2/JobBasicsStep";
+import JobDetailsStep2 from "@/components/post-job2/JobDetailsStep2";
+import PayBenefitsStep from "@/components/post-job2/PayBenefitsStep";
+import DescribeJobStep from "@/components/post-job2/DescribeJobStep";
+import ApplicationSettingsStep from "@/components/post-job2/ApplicationSettingsStep";
+import PricingSelectionStep from "@/components/post-job2/PricingSelectionStep";
+import ReviewPaymentStep2 from "@/components/post-job2/ReviewPaymentStep2";
+
+// Modals
+import JobPreviewModal from "@/components/post-job2/JobPreviewModal";
 
 const steps = [
   {
     id: 1,
-    title: "Job Details",
-    description: "Tell us about the role",
+    title: "Job Basics",
+    description: "Title, details & compensation",
     icon: Briefcase,
   },
   {
     id: 2,
-    title: "Company Info",
-    description: "Your company details",
-    icon: MapPin,
-  },
-  {
-    id: 3,
-    title: "Application Method",
-    description: "How candidates apply",
+    title: "Describe Job",
+    description: "Description and requirements",
     icon: FileText,
   },
   {
+    id: 3,
+    title: "Application Settings",
+    description: "How to apply",
+    icon: Settings,
+  },
+  {
     id: 4,
-    title: "Review & Payment",
-    description: "Finalize your posting",
+    title: "Pricing",
+    description: "Choose your plan",
     icon: CreditCard,
+  },
+  {
+    id: 5,
+    title: "Review & Payment",
+    description: "Finalize posting",
+    icon: Check,
   },
 ];
 
-export default function PostJobPage() {
+// Move defaultFormData outside component to prevent hooks order issues
+const defaultFormData: JobFormData2 = {
+  // Job Basics
+  jobTitle: "",
+  locationAddress: "",
+  locationType: "in-person",
+
+  // Job Details
+  jobType: "full-time",
+  hoursConfig: undefined,
+  contractConfig: undefined,
+
+  // Pay and Benefits
+  payConfig: {
+    showPay: true,
+  },
+  benefits: [],
+
+  // Describe Job
+  jobDescription: "",
+  requirements: "",
+
+  // Application Settings
+  applicationMethod: "external",
+  applicationUrl: "",
+  applicationEmail: "",
+  communicationPrefs: {
+    emailUpdates: true,
+    phoneScreening: false,
+  },
+  hiringTimeline: "within-1-month",
+
+  // Pricing
+  pricingTier: "standard",
+
+  // Company Info
+  companyName: "",
+  companyLogo: null,
+  companyDescription: "",
+  companyWebsite: "",
+};
+
+export default function PostJob2() {
+  // ALL hooks must be at the top, before any conditional returns
   const { user, loading } = useAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [showPreview, setShowPreview] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [formData, setFormData] = useState<JobFormData2>(defaultFormData);
 
+  // Auth redirect useEffect
   useEffect(() => {
-    // Redirect to auth if not authenticated
+    // Redirect to employer auth if not authenticated
     if (!loading && !user) {
       router.push("/auth?next=/post-job");
       return;
     }
 
-    // Redirect to auth if user is not an employer
+    // Redirect to employer auth if user is not an employer
     if (!loading && user && user.user_metadata?.user_type !== "employer") {
       router.push("/auth?next=/post-job");
       return;
     }
   }, [user, loading, router]);
 
+  // Set mounted state to handle client-side only operations
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Load form data from localStorage after mount
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const savedData = localStorage.getItem("postJob2FormData");
+    if (savedData) {
+      try {
+        setFormData(JSON.parse(savedData));
+      } catch (error) {
+        console.error("Error loading saved form data:", error);
+      }
+    }
+  }, [mounted]);
+
+  // Save form data to localStorage on change
+  useEffect(() => {
+    if (!mounted) return;
+    
+    localStorage.setItem("postJob2FormData", JSON.stringify(formData));
+  }, [formData, mounted]);
+
+  // ALL CONDITIONAL RETURNS AFTER HOOKS
   // Show loading state while checking auth
   if (loading) {
     return (
@@ -86,30 +172,19 @@ export default function PostJobPage() {
     return null;
   }
 
-  const [formData, setFormData] = useState<JobFormData>({
-    // Job Details
-    jobTitle: "",
-    location: "",
-    locationType: "onsite",
-    jobType: "full-time",
-    salaryMin: "",
-    salaryMax: "",
-    jobDescription: "",
-    requirements: "",
+  // Don't render form until client-side to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading form...</p>
+        </div>
+      </div>
+    );
+  }
 
-    // Company Info
-    companyName: "",
-    companyLogo: null,
-    companyDescription: "",
-    companyWebsite: "",
-
-    // Application Method
-    applicationMethod: "external",
-    applicationUrl: "",
-    applicationEmail: "",
-  });
-
-  const updateFormData = (newData: Partial<JobFormData>) => {
+  const updateFormData = (newData: Partial<JobFormData2>) => {
     setFormData((prev) => ({ ...prev, ...newData }));
   };
 
@@ -125,11 +200,20 @@ export default function PostJobPage() {
     }
   };
 
+  const goToStep = (stepNumber: number) => {
+    if (stepNumber >= 1 && stepNumber <= steps.length) {
+      setCurrentStep(stepNumber);
+    }
+  };
+
+  const canShowPreview =
+    mounted && currentStep >= 2 && formData.jobTitle && formData.jobDescription;
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <JobDetailsStep
+          <JobBasicsStep
             formData={formData}
             updateFormData={updateFormData}
             onNext={nextStep}
@@ -137,16 +221,17 @@ export default function PostJobPage() {
         );
       case 2:
         return (
-          <CompanyInfoStep
+          <DescribeJobStep
             formData={formData}
             updateFormData={updateFormData}
             onNext={nextStep}
             onPrev={prevStep}
+            onShowPreview={() => setShowPreview(true)}
           />
         );
       case 3:
         return (
-          <ApplicationMethodStep
+          <ApplicationSettingsStep
             formData={formData}
             updateFormData={updateFormData}
             onNext={nextStep}
@@ -154,7 +239,22 @@ export default function PostJobPage() {
           />
         );
       case 4:
-        return <ReviewPaymentStep formData={formData} onPrev={prevStep} />;
+        return (
+          <PricingSelectionStep
+            formData={formData}
+            updateFormData={updateFormData}
+            onNext={nextStep}
+            onPrev={prevStep}
+          />
+        );
+      case 5:
+        return (
+          <ReviewPaymentStep2
+            formData={formData}
+            onPrev={prevStep}
+            onEdit={goToStep}
+          />
+        );
       default:
         return null;
     }
@@ -165,12 +265,26 @@ export default function PostJobPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Post a Job
-          </h1>
-          <p className="text-muted-foreground">
-            Find the best AI talent in Australia
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                Post a Job
+              </h1>
+              <p className="text-muted-foreground">
+                Find the best AI talent in Australia
+              </p>
+            </div>
+            {canShowPreview && (
+              <Button
+                variant="outline"
+                onClick={() => setShowPreview(true)}
+                className="flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                Preview Job
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Progress Steps */}
@@ -186,7 +300,7 @@ export default function PostJobPage() {
               />
             </div>
 
-            {steps.map((step, index) => {
+            {steps.map((step) => {
               const Icon = step.icon;
               const isCompleted = currentStep > step.id;
               const isCurrent = currentStep === step.id;
@@ -198,13 +312,14 @@ export default function PostJobPage() {
                 >
                   <div
                     className={cn(
-                      "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300",
+                      "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer",
                       isCompleted && "bg-primary text-primary-foreground",
                       isCurrent && "bg-primary text-primary-foreground",
                       !isCompleted &&
                         !isCurrent &&
-                        "bg-background text-muted-foreground border-2 border-border"
+                        "bg-background text-muted-foreground border-2 border-border hover:border-primary"
                     )}
+                    onClick={() => goToStep(step.id)}
                   >
                     {isCompleted ? (
                       <Check className="w-5 h-5" />
@@ -215,10 +330,11 @@ export default function PostJobPage() {
                   <div className="mt-2 text-center">
                     <p
                       className={cn(
-                        "text-sm font-medium",
+                        "text-sm font-medium cursor-pointer",
                         (isCurrent || isCompleted) && "text-foreground",
                         !isCurrent && !isCompleted && "text-muted-foreground"
                       )}
+                      onClick={() => goToStep(step.id)}
                     >
                       {step.title}
                     </p>
@@ -244,8 +360,15 @@ export default function PostJobPage() {
           </CardHeader>
           <CardContent>{renderStepContent()}</CardContent>
         </Card>
+
+        {/* Job Preview Modal */}
+        <JobPreviewModal
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+          formData={formData}
+        />
       </div>
-      
+
       <SlimFooter />
     </div>
   );

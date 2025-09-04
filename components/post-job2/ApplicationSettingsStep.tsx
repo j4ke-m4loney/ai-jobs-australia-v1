@@ -1,0 +1,287 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { JobFormData2 } from "@/types/job2";
+import { Mail, ExternalLink, Settings, Clock, Phone } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const schema = z.object({
+  applicationMethod: z.enum(["external", "email", "indeed"]),
+  applicationUrl: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.literal("")),
+  applicationEmail: z
+    .string()
+    .email("Please enter a valid email")
+    .optional()
+    .or(z.literal("")),
+  hiringTimeline: z.enum([
+    "immediately",
+    "within-1-week",
+    "within-1-month",
+    "flexible",
+  ]),
+});
+
+interface Props {
+  formData: JobFormData2;
+  updateFormData: (data: Partial<JobFormData2>) => void;
+  onNext: () => void;
+  onPrev: () => void;
+}
+
+const applicationMethods = [
+  {
+    value: "external",
+    label: "Redirect to company website",
+    icon: ExternalLink,
+  },
+  { value: "email", label: "Email applications", icon: Mail },
+  { value: "indeed", label: "AI Jobs Australia applications", icon: Settings },
+];
+
+const hiringTimelines = [
+  { value: "immediately", label: "Immediately" },
+  { value: "within-1-week", label: "Within 1 week" },
+  { value: "within-1-month", label: "Within 1 month" },
+  { value: "flexible", label: "Flexible" },
+];
+
+export default function ApplicationSettingsStep({
+  formData,
+  updateFormData,
+  onNext,
+  onPrev,
+}: Props) {
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      applicationMethod: formData.applicationMethod,
+      applicationUrl: formData.applicationUrl || "",
+      applicationEmail: formData.applicationEmail || "",
+      hiringTimeline: formData.hiringTimeline,
+    },
+  });
+
+  const watchedMethod = form.watch("applicationMethod");
+
+  const onSubmit = (values: z.infer<typeof schema>) => {
+    updateFormData({
+      ...values,
+      communicationPrefs: formData.communicationPrefs,
+    });
+    onNext();
+  };
+
+  const updateCommunicationPref = (key: string, value: boolean) => {
+    updateFormData({
+      communicationPrefs: {
+        ...formData.communicationPrefs,
+        [key]: value,
+      },
+    });
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-6">
+          {/* Application Method */}
+          <div className="space-y-4">
+            <FormLabel className="flex items-center gap-2 text-base font-medium">
+              <Settings className="w-5 h-5" />
+              How should candidates apply? *
+            </FormLabel>
+
+            <div className="grid gap-3">
+              {applicationMethods.map((method) => {
+                const Icon = method.icon;
+                return (
+                  <button
+                    key={method.value}
+                    type="button"
+                    onClick={() =>
+                      form.setValue("applicationMethod", method.value as any)
+                    }
+                    className={cn(
+                      "p-4 border rounded-lg text-left transition-all hover:border-primary flex items-center gap-3",
+                      watchedMethod === method.value
+                        ? "border-primary bg-primary/5 text-primary"
+                        : "border-border text-muted-foreground"
+                    )}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{method.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Application URL for external method */}
+          {watchedMethod === "external" && (
+            <FormField
+              control={form.control}
+              name="applicationUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <ExternalLink className="w-4 h-4" />
+                    Application URL *
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="https://careers.yourcompany.com/apply"
+                      {...field}
+                      className="text-base h-12"
+                    />
+                  </FormControl>
+                  <p className="text-sm text-muted-foreground">
+                    Candidates will be redirected to this URL to apply
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* Application Email for email method */}
+          {watchedMethod === "email" && (
+            <FormField
+              control={form.control}
+              name="applicationEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Application Email *
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="careers@yourcompany.com"
+                      type="email"
+                      {...field}
+                      className="text-base h-12"
+                    />
+                  </FormControl>
+                  <p className="text-sm text-muted-foreground">
+                    Candidates will email their applications to this address
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* Hiring Timeline */}
+          <FormField
+            control={form.control}
+            name="hiringTimeline"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-2 text-base font-medium">
+                  <Clock className="w-5 h-5" />
+                  When do you want to start interviewing? *
+                </FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="h-12 text-base">
+                      <SelectValue placeholder="Select timeline" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {hiringTimelines.map((timeline) => (
+                      <SelectItem key={timeline.value} value={timeline.value}>
+                        {timeline.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Communication Preferences */}
+          <div className="space-y-4">
+            <FormLabel className="text-base font-medium">
+              Communication Preferences
+            </FormLabel>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">
+                      Email updates about applications
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified when candidates apply
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.communicationPrefs.emailUpdates}
+                  onCheckedChange={(checked) =>
+                    updateCommunicationPref("emailUpdates", checked)
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Phone screening assistance</p>
+                    <p className="text-sm text-muted-foreground">
+                      We can help with initial candidate screening
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.communicationPrefs.phoneScreening}
+                  onCheckedChange={(checked) =>
+                    updateCommunicationPref("phoneScreening", checked)
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between">
+          <Button type="button" variant="outline" onClick={onPrev} size="lg">
+            Back
+          </Button>
+          <Button type="submit" size="lg" className="min-w-[120px]">
+            Continue
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
