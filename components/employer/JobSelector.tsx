@@ -57,7 +57,7 @@ export const JobSelector = ({
             </CardDescription>
           </div>
           <Badge variant="secondary" className="w-fit">
-            {totalApplications} total applications
+            {totalApplications.toLocaleString()} total applications
           </Badge>
         </div>
       </CardHeader>
@@ -79,7 +79,7 @@ export const JobSelector = ({
                       <span className="truncate pr-4">{job.title}</span>
                       <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                         <Badge variant="secondary" className="text-xs hidden sm:inline-flex">
-                          {job.application_count} applications
+                          {job.application_count.toLocaleString()} applications
                         </Badge>
                         <Badge
                           variant={
@@ -101,7 +101,7 @@ export const JobSelector = ({
             <div className="flex items-center gap-4 text-sm text-muted-foreground lg:flex-shrink-0">
               <div className="flex items-center gap-1">
                 <span className="font-medium">
-                  {selectedJob.application_count}
+                  {selectedJob.application_count.toLocaleString()}
                 </span>
                 <span>applications</span>
               </div>

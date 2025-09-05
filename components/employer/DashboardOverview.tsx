@@ -166,28 +166,28 @@ export function DashboardOverview() {
         <StatCard
           icon={Briefcase}
           title="Total Jobs"
-          value={displayStats.totalJobs}
+          value={displayStats.totalJobs.toLocaleString()}
           change="+2 this month"
           changeType="increase"
         />
         <StatCard
           icon={Activity}
           title="Active Jobs"
-          value={displayStats.activeJobs}
+          value={displayStats.activeJobs.toLocaleString()}
           change="+1 this week"
           changeType="increase"
         />
         <StatCard
           icon={Users}
           title="Total Applications"
-          value={displayStats.totalApplications}
+          value={displayStats.totalApplications.toLocaleString()}
           change={`+${displayStats.newApplications} this week`}
           changeType="increase"
         />
         <StatCard
           icon={Eye}
           title="Job Views"
-          value={displayStats.jobViews}
+          value={displayStats.jobViews.toLocaleString()}
           change="+89 this week"
           changeType="increase"
         />

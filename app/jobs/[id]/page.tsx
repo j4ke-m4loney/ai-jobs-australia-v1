@@ -42,6 +42,13 @@ interface Job {
   created_at: string;
   expires_at: string;
   is_featured: boolean;
+  companies: {
+    id: string;
+    name: string;
+    description: string | null;
+    website: string | null;
+    logo_url: string | null;
+  }[] | null;
 }
 
 export default function JobDetailPage() {
@@ -70,7 +77,16 @@ export default function JobDetailPage() {
     try {
       const { data, error } = await supabase
         .from("jobs")
-        .select("*")
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            description,
+            website,
+            logo_url
+          )
+        `)
         .eq("id", id)
         .eq("status", "approved")
         .single();
@@ -226,7 +242,7 @@ export default function JobDetailPage() {
                     <CardTitle className="text-2xl mb-2">{job.title}</CardTitle>
                     <div className="flex items-center gap-2 text-muted-foreground mb-3">
                       <Building2 className="w-4 h-4" />
-                      <span className="font-medium">Mock Company</span>
+                      <span className="font-medium">{job.companies?.[0]?.name || "Company Name"}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
@@ -258,9 +274,7 @@ export default function JobDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="prose max-w-none">
-                  <p className="whitespace-pre-wrap text-muted-foreground">
-                    {job.description}
-                  </p>
+                  <div dangerouslySetInnerHTML={{ __html: job.description }} />
                 </div>
               </CardContent>
             </Card>
@@ -273,9 +287,7 @@ export default function JobDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="prose max-w-none">
-                    <p className="whitespace-pre-wrap text-muted-foreground">
-                      {job.requirements}
-                    </p>
+                    <div dangerouslySetInnerHTML={{ __html: job.requirements }} />
                   </div>
                 </CardContent>
               </Card>

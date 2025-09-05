@@ -22,7 +22,7 @@ import {
   ImageIcon,
   Eye,
 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const schema = z.object({
   jobDescription: z
@@ -70,6 +70,17 @@ export default function DescribeJobStep({
       companyWebsite: formData.companyWebsite,
     },
   });
+
+  // Watch for form changes and update form data in real-time
+  const watchedValues = form.watch();
+  useEffect(() => {
+    // Debounce the updates to avoid too frequent calls
+    const timeoutId = setTimeout(() => {
+      updateFormData(watchedValues);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [watchedValues, updateFormData]);
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

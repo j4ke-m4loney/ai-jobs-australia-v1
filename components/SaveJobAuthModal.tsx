@@ -1,42 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { User } from "lucide-react";
+import { User, Heart, CheckCircle } from "lucide-react";
 
-const JobSeekerAuthPage = () => {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const { user, signUp, signIn } = useAuth();
+interface SaveJobAuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAuthSuccess: () => void;
+}
+
+export const SaveJobAuthModal = ({
+  isOpen,
+  onClose,
+  onAuthSuccess,
+}: SaveJobAuthModalProps) => {
+  const { signUp, signIn } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [signUpSuccess, setSignUpSuccess] = useState(false);
-
-  // If user is already logged in, redirect appropriately
-  if (user) {
-    const next = searchParams.get("next") || "/jobseeker";
-    router.push(next);
-    return null;
-  }
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -55,7 +51,7 @@ const JobSeekerAuthPage = () => {
     } else {
       setSignUpSuccess(true);
       toast({
-        title: "Job seeker account created!",
+        title: "Account created successfully!",
         description: "Please check your email to verify your account.",
       });
     }
@@ -76,40 +72,35 @@ const JobSeekerAuthPage = () => {
     if (error) {
       setError(error.message);
     } else {
-      const next = searchParams.get("next") || "/jobseeker";
-      router.push(next);
+      toast({
+        title: "Welcome back!",
+        description: "You're now signed in.",
+      });
+      onAuthSuccess();
+      onClose();
     }
     setLoading(false);
   };
 
-  const getGuestUrl = () => {
-    const next = searchParams.get("next");
-    if (next) {
-      // Parse the next URL to preserve existing parameters
-      const url = new URL(next, window.location.origin);
-      url.searchParams.set("guest", "true");
-      return url.pathname + url.search;
-    }
-    return "/jobs?guest=true";
+  const handleClose = () => {
+    setError("");
+    setSignUpSuccess(false);
+    onClose();
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted">
-      <Header />
-      <div className="flex-1 flex items-center justify-center pt-32 pb-20">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="w-full max-w-md">
+        <DialogHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <User className="w-6 h-6 text-primary" />
-            <CardTitle className="text-2xl font-bold">
-              Job Seeker Portal
-            </CardTitle>
+            <Heart className="w-6 h-6 text-red-500" />
+            <DialogTitle className="text-xl font-bold">
+              Sign In / Sign Up to start saving jobs in your profile.
+            </DialogTitle>
           </div>
-          <CardDescription>
-            Find and apply for the best AI jobs in Australia
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        </DialogHeader>
+
+        <div className="mt-4">
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -124,9 +115,9 @@ const JobSeekerAuthPage = () => {
                   </Alert>
                 )}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="signin-email">Email</Label>
                   <Input
-                    id="email"
+                    id="signin-email"
                     name="email"
                     type="email"
                     placeholder="your@email.com"
@@ -134,34 +125,17 @@ const JobSeekerAuthPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="signin-password">Password</Label>
                   <Input
-                    id="password"
+                    id="signin-password"
                     name="password"
                     type="password"
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
+                  {loading ? "Signing in..." : "Sign In & Save Job"}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  className="w-full" 
-                  onClick={() => router.push(getGuestUrl())}
-                >
-                  Maybe Later
-                </Button>
-                <p className="text-center text-sm text-muted-foreground">
-                  Are you an employer?{" "}
-                  <Link
-                    href="/employer-login"
-                    className="text-primary hover:underline"
-                  >
-                    Sign in here
-                  </Link>
-                </p>
               </form>
             </TabsContent>
 
@@ -169,19 +143,19 @@ const JobSeekerAuthPage = () => {
               {signUpSuccess ? (
                 <div className="space-y-6 text-center py-4">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <CheckCircle className="w-8 h-8 text-green-600" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Account Created Successfully!
+                      Thank you for signing up!
                     </h3>
                     <p className="text-muted-foreground mb-4">
-                      We've sent a verification email to your inbox. Please check your email and click the verification link to activate your account.
+                      Please check your inbox and click the verification link to
+                      activate your account.
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Once verified, you can sign in and start exploring AI job opportunities.
+                      Once verified, you can sign in and start saving jobs to
+                      your profile.
                     </p>
                   </div>
                   <Button
@@ -200,9 +174,9 @@ const JobSeekerAuthPage = () => {
                     </Alert>
                   )}
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">Your Name</Label>
+                    <Label htmlFor="signup-firstName">Your Name</Label>
                     <Input
-                      id="firstName"
+                      id="signup-firstName"
                       name="firstName"
                       type="text"
                       placeholder="John Doe"
@@ -230,35 +204,14 @@ const JobSeekerAuthPage = () => {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Creating account..." : "Sign Up"}
+                    {loading ? "Creating account..." : "Sign Up & Save Job"}
                   </Button>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    className="w-full" 
-                    onClick={() => router.push(getGuestUrl())}
-                  >
-                    Maybe Later
-                  </Button>
-                  <p className="text-center text-sm text-muted-foreground">
-                    Looking to hire?{" "}
-                    <Link
-                      href="/employer-login"
-                      className="text-primary hover:underline"
-                    >
-                      Create an employer account
-                    </Link>
-                  </p>
                 </form>
               )}
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
-      </div>
-      <Footer />
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
-
-export default JobSeekerAuthPage;

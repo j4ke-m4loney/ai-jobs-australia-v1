@@ -59,7 +59,7 @@ const Header = () => {
         {/* Center Navigation */}
         <nav className="hidden lg:flex items-center space-x-8">
           <Link
-            href="/jobs"
+            href={user ? "/jobs" : "/login"}
             className="text-muted-foreground hover:text-foreground transition-all font-medium"
           >
             Browse Jobs
@@ -147,7 +147,7 @@ const Header = () => {
           <div className="container mx-auto px-4 py-4 space-y-4">
             {/* Mobile Navigation Links */}
             <Link
-              href="/jobs"
+              href={user ? "/jobs" : "/login"}
               onClick={closeMobileMenu}
               className="flex items-center gap-3 py-3 px-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium"
             >

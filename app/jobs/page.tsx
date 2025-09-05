@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -42,6 +42,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
+import { SaveJobAuthModal } from "@/components/SaveJobAuthModal";
 
 interface Job {
   id: string;
@@ -60,6 +61,15 @@ interface Job {
   application_method: string;
   application_url: string | null;
   application_email: string | null;
+  status?: "pending" | "approved" | "rejected" | "expired";
+  company_id?: string | null;
+  companies?: {
+    id: string;
+    name: string;
+    description: string | null;
+    website: string | null;
+    logo_url: string | null;
+  }[] | null;
 }
 
 export default function JobsPage() {
@@ -69,11 +79,16 @@ export default function JobsPage() {
   const searchParams = useSearchParams();
   const { toggleSaveJob, isJobSaved } = useSavedJobs();
   console.log("useSavedJobs hook values:", { toggleSaveJob, isJobSaved });
+  console.log("🔍 Auth state:", { user: user?.id, loading });
+  
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobsLoading, setJobsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
+  );
+  const [locationTerm, setLocationTerm] = useState(
+    searchParams.get("location") || ""
   );
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
@@ -89,53 +104,45 @@ export default function JobsPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [suggestedJobs, setSuggestedJobs] = useState<Job[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [pendingJobId, setPendingJobId] = useState<string | null>(null);
+  
+  // Track if we should sync URL params (only on initial load, not after manual actions)
+  const shouldSyncFromUrl = useRef(true);
+  const initialized = useRef(false);
 
-  // Redirect to job seeker auth if not logged in
-  useEffect(() => {
-    if (!loading && !user) {
-      const currentUrl = `${window.location.pathname}${window.location.search}`;
-      router.push(`/login?next=${encodeURIComponent(currentUrl)}`);
-    }
-  }, [user, loading, router]);
-
-  useEffect(() => {
-    if (user) {
-      fetchJobs();
-    }
-  }, [
-    user,
+  // Memoized filter dependencies to prevent unnecessary re-renders
+  const filterDeps = useMemo(() => ({
     searchTerm,
-    selectedCategories,
-    selectedLocations,
-    selectedJobTypes,
-    selectedLocationTypes,
-    salaryRange,
+    locationTerm,
+    selectedCategories: selectedCategories.join(','),
+    selectedLocations: selectedLocations.join(','),
+    selectedJobTypes: selectedJobTypes.join(','),
+    selectedLocationTypes: selectedLocationTypes.join(','),
+    salaryRange: `${salaryRange.min}-${salaryRange.max}`,
     sortBy,
-  ]);
+  }), [searchTerm, locationTerm, selectedCategories, selectedLocations, selectedJobTypes, selectedLocationTypes, salaryRange, sortBy]);
 
-  useEffect(() => {
-    if (selectedJob && user) {
-      checkApplicationStatus(selectedJob.id);
+  // Define callback functions first
+  const checkApplicationStatus = useCallback(async (jobId: string) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("job_applications")
+        .select("id")
+        .eq("job_id", jobId)
+        .eq("applicant_id", user.id)
+        .single();
+
+      if (error && error.code !== "PGRST116") throw error;
+      setHasApplied((prev) => ({ ...prev, [jobId]: !!data }));
+    } catch (error) {
+      console.error("Error checking application status:", error);
     }
-  }, [selectedJob, user]);
+  }, [user]);
 
-  // Handle screen size detection
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
-    // Check initial size
-    checkScreenSize();
-
-    // Add event listener
-    window.addEventListener('resize', checkScreenSize);
-
-    // Cleanup
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-
-  const fetchSuggestions = async () => {
+  const fetchSuggestions = useCallback(async () => {
     setIsLoadingSuggestions(true);
     try {
       // Fetch featured or recent jobs without any filters
@@ -174,42 +181,29 @@ export default function JobsPage() {
     } finally {
       setIsLoadingSuggestions(false);
     }
-  };
+  }, []);
 
-  const fetchJobs = async () => {
-    setJobsLoading(true);
+  const fetchJobs = useCallback(async () => {
+    try {
+      setJobsLoading(true);
 
-    let query = supabase
-      .from("jobs")
-      .select(
-        `
-        id,
-        title,
-        description,
-        requirements,
-        location,
-        location_type,
-        job_type,
-        category,
-        salary_min,
-        salary_max,
-        is_featured,
-        created_at,
-        expires_at,
-        application_method,
-        application_url,
-        application_email
-      `
-      )
-      .eq("status", "approved");
+      let query = supabase
+        .from("jobs")
+        .select("*");
+      // DEVELOPMENT: Show both approved and pending jobs
+      // In production, change this back to only show approved jobs
+      // query = query.eq("status", "approved");
 
-    console.log("Fetching jobs with user:", user?.id);
+    console.log("Fetching jobs - user:", user?.id || "guest");
 
     // Apply filters
     if (searchTerm) {
       query = query.or(
         `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`
       );
+    }
+    if (locationTerm) {
+      query = query.ilike("location", `%${locationTerm}%`);
     }
     if (selectedCategories.length > 0) {
       query = query.in("category", selectedCategories);
@@ -260,42 +254,128 @@ export default function JobsPage() {
     }
 
     const { data, error } = await query;
+    
+    console.log("Jobs query result:", { data, error, count: data?.length });
 
     if (error) {
       console.error("Error fetching jobs:", error);
+      console.error("Error details:", error.message, error.details);
       toast.error("Failed to load jobs");
-    } else {
-      const jobsData = (data as Job[]) || [];
-      setJobs(jobsData);
-      // Auto-select first job if none selected
-      if (jobsData.length > 0 && !selectedJob) {
-        setSelectedJob(jobsData[0]);
-      }
-      // Fetch suggestions if no jobs found
-      if (jobsData.length === 0) {
-        fetchSuggestions();
-      }
+      return;
     }
-    setJobsLoading(false);
-  };
 
-  const checkApplicationStatus = async (jobId: string) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("job_applications")
-        .select("id")
-        .eq("job_id", jobId)
-        .eq("applicant_id", user.id)
-        .single();
-
-      if (error && error.code !== "PGRST116") throw error;
-      setHasApplied((prev) => ({ ...prev, [jobId]: !!data }));
+    const jobsData = (data as Job[]) || [];
+    console.log(`Found ${jobsData.length} jobs`);
+    if (jobsData.length > 0) {
+      console.log("First job:", jobsData[0]);
+    }
+    setJobs(jobsData);
+    
+    // Auto-select first job if none selected
+    if (jobsData.length > 0 && !selectedJob) {
+      setSelectedJob(jobsData[0]);
+    }
+    
+    // Fetch suggestions if no jobs found
+    if (jobsData.length === 0) {
+      console.log("No jobs found, fetching suggestions...");
+      await fetchSuggestions();
+    }
     } catch (error) {
-      console.error("Error checking application status:", error);
+      console.error("Error in fetchJobs:", error);
+      toast.error("Failed to load jobs");
+    } finally {
+      setJobsLoading(false);
     }
-  };
+  }, [searchTerm, locationTerm, selectedCategories, selectedLocations, selectedJobTypes, selectedLocationTypes, salaryRange, sortBy, selectedJob, user]);
+
+  // Consolidated initialization and authentication effect
+  useEffect(() => {
+    console.log("🔄 Initialization effect triggered", { 
+      loading, 
+      user: user?.id || "guest", 
+      initialized: initialized.current,
+      shouldSync: shouldSyncFromUrl.current 
+    });
+    
+    if (loading) {
+      console.log("⏳ Still loading, skipping initialization");
+      return;
+    }
+    
+    // Handle authentication redirect
+    if (!user) {
+      const isGuest = searchParams.get("guest") === "true";
+      console.log("👤 No user, guest mode:", isGuest);
+      if (!isGuest) {
+        const currentUrl = `${window.location.pathname}${window.location.search}`;
+        console.log("🔐 Redirecting to login");
+        router.push(`/login?next=${encodeURIComponent(currentUrl)}`);
+        return;
+      }
+    }
+    
+    // Sync URL parameters on initial load only
+    if (!initialized.current && shouldSyncFromUrl.current) {
+      const urlSearch = searchParams.get("search") || "";
+      const urlLocation = searchParams.get("location") || "";
+      
+      console.log("🔧 Syncing URL params", { urlSearch, urlLocation });
+      setSearchTerm(urlSearch);
+      setLocationTerm(urlLocation);
+      
+      shouldSyncFromUrl.current = false;
+      initialized.current = true;
+      console.log("✅ Initialization complete");
+    }
+  }, [loading, user, router, searchParams]);
+
+  // Reset sync flag when URL params actually change (new navigation)
+  useEffect(() => {
+    if (initialized.current) {
+      shouldSyncFromUrl.current = true;
+      initialized.current = false;
+    }
+  }, [searchParams]);
+
+  // Initial job fetching effect - triggers on component mount
+  useEffect(() => {
+    console.log("🎯 Initial job loading effect triggered!");
+    console.log("🚀 Calling fetchJobs immediately...");
+    fetchJobs();
+  }, []);
+
+  // Job fetching effect - triggers on filter changes
+  useEffect(() => {
+    console.log("🔍 Filter change effect triggered", { 
+      filterDeps,
+      initialized: initialized.current 
+    });
+    
+    if (!loading && initialized.current) {
+      console.log("🚀 Refetching jobs due to filter change");
+      fetchJobs();
+    }
+  }, [filterDeps]);
+
+  // Application status check effect
+  useEffect(() => {
+    if (selectedJob && user) {
+      checkApplicationStatus(selectedJob.id);
+    }
+  }, [selectedJob?.id, user?.id, checkApplicationStatus]);
+
+  // Handle screen size detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
 
   const handleApply = () => {
     if (!user) {
@@ -311,7 +391,24 @@ export default function JobsPage() {
   };
 
   const handleToggleSaveJob = async (jobId: string) => {
+    if (!user) {
+      setPendingJobId(jobId);
+      setAuthModalOpen(true);
+      return;
+    }
     await toggleSaveJob(jobId);
+  };
+
+  const handleAuthSuccess = async () => {
+    if (pendingJobId) {
+      await toggleSaveJob(pendingJobId);
+      setPendingJobId(null);
+    }
+  };
+
+  const handleCloseAuthModal = () => {
+    setAuthModalOpen(false);
+    setPendingJobId(null);
   };
 
   const handleJobClick = (job: Job) => {
@@ -411,6 +508,7 @@ export default function JobsPage() {
     setSelectedLocationTypes([]);
     setSalaryRange({ min: "", max: "" });
     setSearchTerm("");
+    setLocationTerm("");
   };
 
   if (loading) {
@@ -424,9 +522,7 @@ export default function JobsPage() {
     );
   }
 
-  if (!user) {
-    return null; // Will redirect to auth
-  }
+  // Allow page to render for both authenticated and guest users
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -453,7 +549,7 @@ export default function JobsPage() {
                   placeholder="Job title, keywords, or company"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-12 text-base bg-white"
+                  className="pl-10 h-12 text-base bg-white text-foreground"
                 />
               </div>
 
@@ -461,7 +557,9 @@ export default function JobsPage() {
                 <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
                   placeholder="Location"
-                  className="pl-10 h-12 text-base bg-white"
+                  value={locationTerm}
+                  onChange={(e) => setLocationTerm(e.target.value)}
+                  className="pl-10 h-12 text-base bg-white text-foreground"
                 />
               </div>
 
@@ -554,9 +652,9 @@ export default function JobsPage() {
               <div className="flex items-center gap-4">
                 <Badge
                   variant="secondary"
-                  className="bg-primary text-white font-semibold px-3 py-1"
+                  className="bg-primary text-white font-semibold px-3 py-1 hover:bg-primary/90 transition-colors"
                 >
-                  {jobs.length} jobs
+                  {jobs.length.toLocaleString()} jobs
                 </Badge>
                 <span className="text-sm text-muted-foreground">
                   New to you
@@ -596,12 +694,16 @@ export default function JobsPage() {
                     No exact matches found
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    We couldn't find jobs matching your criteria, but here are some suggestions
+                    We couldn't find jobs matching your criteria, but here are
+                    some suggestions
                   </p>
-                  
+
                   {/* Quick actions */}
                   <div className="flex flex-wrap gap-2 justify-center mb-6">
-                    {(searchTerm || selectedCategories.length > 0 || selectedLocations.length > 0) && (
+                    {(searchTerm ||
+                      locationTerm ||
+                      selectedCategories.length > 0 ||
+                      selectedLocations.length > 0) && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -621,6 +723,15 @@ export default function JobsPage() {
                         Clear search term
                       </Button>
                     )}
+                    {locationTerm && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLocationTerm("")}
+                      >
+                        Clear location
+                      </Button>
+                    )}
                     {selectedLocationTypes.length > 0 && (
                       <Button
                         variant="outline"
@@ -638,26 +749,28 @@ export default function JobsPage() {
                   <h4 className="font-semibold text-foreground px-2">
                     You might be interested in these opportunities
                   </h4>
-                  
+
                   {/* Popular categories */}
                   <div className="grid grid-cols-2 gap-2 px-2">
-                    {["ai", "ml", "data-science", "engineering"].map((category) => (
-                      <Button
-                        key={category}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          clearAllFilters();
-                          setSelectedCategories([category]);
-                        }}
-                        className="justify-start gap-2"
-                      >
-                        <Briefcase className="w-4 h-4" />
-                        <span className="capitalize">
-                          {getCategoryDisplay(category)}
-                        </span>
-                      </Button>
-                    ))}
+                    {["ai", "ml", "data-science", "engineering"].map(
+                      (category) => (
+                        <Button
+                          key={category}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            clearAllFilters();
+                            setSelectedCategories([category]);
+                          }}
+                          className="justify-start gap-2"
+                        >
+                          <Briefcase className="w-4 h-4" />
+                          <span className="capitalize">
+                            {getCategoryDisplay(category)}
+                          </span>
+                        </Button>
+                      )
+                    )}
                   </div>
 
                   {/* Suggested jobs */}
@@ -665,7 +778,10 @@ export default function JobsPage() {
                     <div className="p-4">
                       <div className="animate-pulse space-y-3">
                         {[1, 2, 3].map((i) => (
-                          <div key={i} className="h-24 bg-muted rounded-lg"></div>
+                          <div
+                            key={i}
+                            className="h-24 bg-muted rounded-lg"
+                          ></div>
                         ))}
                       </div>
                     </div>
@@ -698,9 +814,15 @@ export default function JobsPage() {
                                     {job.location_type}
                                   </span>
                                 </div>
-                                {formatSalary(job.salary_min, job.salary_max) && (
+                                {formatSalary(
+                                  job.salary_min,
+                                  job.salary_max
+                                ) && (
                                   <div className="text-sm font-semibold text-green-600">
-                                    {formatSalary(job.salary_min, job.salary_max)}
+                                    {formatSalary(
+                                      job.salary_min,
+                                      job.salary_max
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -734,7 +856,12 @@ export default function JobsPage() {
                       Try searching for:
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {["Python Developer", "Data Analyst", "AI Engineer", "ML Researcher"].map((term) => (
+                      {[
+                        "Python Developer",
+                        "Data Analyst",
+                        "AI Engineer",
+                        "ML Researcher",
+                      ].map((term) => (
                         <Button
                           key={term}
                           variant="ghost"
@@ -773,13 +900,20 @@ export default function JobsPage() {
                             </Badge>
                           )}
 
-                          <h3 className="font-semibold text-lg mb-1 line-clamp-2 text-foreground">
-                            {job.title}
-                          </h3>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <h3 className="font-semibold text-lg line-clamp-2 text-foreground">
+                              {job.title}
+                            </h3>
+                            {job.status === 'pending' && (
+                              <Badge variant="secondary" className="shrink-0">
+                                Pending
+                              </Badge>
+                            )}
+                          </div>
 
                           <div className="flex items-center gap-1 text-base text-foreground mb-3">
                             <Building className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-medium">Mock Company</span>
+                            <span className="font-medium">Company</span>
                           </div>
 
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
@@ -832,7 +966,7 @@ export default function JobsPage() {
                 ))}
               </div>
             )}
-            
+
             {/* Footer spacer to ensure scrolling works */}
             <div className="h-20 p-4">
               <div className="text-center text-sm text-muted-foreground">
@@ -871,7 +1005,7 @@ export default function JobsPage() {
 
                       <div className="flex items-center gap-2 text-muted-foreground mb-2">
                         <span className="font-medium text-lg">
-                          Mock Company
+                          Company
                         </span>
                         <Button
                           variant="link"
@@ -982,10 +1116,8 @@ export default function JobsPage() {
                   <h2 className="text-xl font-semibold text-foreground mb-4">
                     Job Description
                   </h2>
-                  <div className="prose max-w-none">
-                    <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                      {selectedJob.description}
-                    </p>
+                  <div className="prose max-w-none text-muted-foreground leading-relaxed">
+                    <div dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
                   </div>
                 </div>
 
@@ -995,10 +1127,8 @@ export default function JobsPage() {
                     <h2 className="text-xl font-semibold text-foreground mb-4">
                       Requirements
                     </h2>
-                    <div className="prose max-w-none">
-                      <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                        {selectedJob.requirements}
-                      </p>
+                    <div className="prose max-w-none text-muted-foreground leading-relaxed">
+                      <div dangerouslySetInnerHTML={{ __html: selectedJob.requirements }} />
                     </div>
                   </div>
                 )}
@@ -1047,8 +1177,15 @@ export default function JobsPage() {
           )}
         </div>
       </div>
-      
+
       <Footer />
+
+      {/* Save Job Authentication Modal */}
+      <SaveJobAuthModal
+        isOpen={authModalOpen}
+        onClose={handleCloseAuthModal}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </div>
   );
 }

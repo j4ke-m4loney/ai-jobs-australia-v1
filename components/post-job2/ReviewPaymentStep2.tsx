@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { JobFormData2, PRICING_TIERS } from "@/types/job2";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   MapPin,
   Clock,
@@ -30,6 +32,8 @@ export default function ReviewPaymentStep2({
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const selectedPlan = PRICING_TIERS[formData.pricingTier];
 
@@ -102,16 +106,106 @@ export default function ReviewPaymentStep2({
   };
 
   const handleSubmit = async () => {
+    if (!user) {
+      setError("You must be logged in to post a job");
+      return;
+    }
+
     setIsSubmitting(true);
+    setError(null);
 
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      let companyId = null;
 
-    setIsSubmitting(false);
-    setSubmitted(true);
+      // First, create or find the company record if company data is provided
+      if (formData.companyName && formData.companyName.trim()) {
+        // Check if company already exists with the same name and website
+        const { data: existingCompany, error: searchError } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('name', formData.companyName.trim())
+          .maybeSingle();
 
-    // Clear saved form data
-    localStorage.removeItem("postJob2FormData");
+        if (searchError) {
+          console.error('Company search error:', searchError);
+          setError('Failed to check existing companies. Please try again.');
+          return;
+        }
+
+        if (existingCompany) {
+          // Use existing company
+          companyId = existingCompany.id;
+        } else {
+          // Create new company record
+          const companyRecord = {
+            name: formData.companyName.trim(),
+            description: formData.companyDescription?.trim() || null,
+            website: formData.companyWebsite?.trim() || null,
+            // TODO: Handle logo upload - for now, set to null
+            logo_url: null,
+          };
+
+          const { data: companyData, error: companyError } = await supabase
+            .from('companies')
+            .insert(companyRecord)
+            .select()
+            .single();
+
+          if (companyError) {
+            console.error('Company creation error:', companyError);
+            setError('Failed to create company record. Please try again.');
+            return;
+          }
+
+          companyId = companyData.id;
+        }
+      }
+
+      // Map the job form data to database schema
+      const jobRecord = {
+        employer_id: user.id,
+        company_id: companyId,
+        title: formData.jobTitle,
+        description: formData.jobDescription,
+        requirements: formData.requirements,
+        location: formData.locationAddress,
+        location_type: mapLocationType(formData.locationType),
+        job_type: mapJobType(formData.jobType),
+        category: 'ai', // Default category
+        salary_min: getSalaryMin(formData.payConfig),
+        salary_max: getSalaryMax(formData.payConfig),
+        application_method: formData.applicationMethod === 'indeed' ? 'external' : formData.applicationMethod,
+        application_url: formData.applicationMethod === 'indeed' ? null : formData.applicationUrl,
+        application_email: formData.applicationMethod === 'email' ? formData.applicationEmail : null,
+        is_featured: formData.pricingTier === 'featured' || formData.pricingTier === 'annual',
+        status: 'approved', // DEVELOPMENT: Set to approved for immediate visibility
+        payment_status: 'completed', // For now, assume payment is completed
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      };
+
+      // Insert the job into the database
+      const { data, error } = await supabase
+        .from('jobs')
+        .insert(jobRecord)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Database error:', error);
+        setError('Failed to create job posting. Please try again.');
+        return;
+      }
+
+      // Success!
+      setSubmitted(true);
+      localStorage.removeItem("postJob2FormData");
+      
+    } catch (error) {
+      console.error('Submission error:', error);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -240,18 +334,24 @@ export default function ReviewPaymentStep2({
         <CardContent className="space-y-4">
           <div>
             <h4 className="font-medium text-foreground mb-2">Description</h4>
-            <p className="text-muted-foreground text-sm whitespace-pre-wrap">
-              {formData.jobDescription.substring(0, 200)}
-              {formData.jobDescription.length > 200 && "..."}
-            </p>
+            <div className="prose prose-sm max-w-none">
+              <div dangerouslySetInnerHTML={{ 
+                __html: formData.jobDescription.length > 200 
+                  ? formData.jobDescription.substring(0, 200) + "..." 
+                  : formData.jobDescription 
+              }} />
+            </div>
           </div>
 
           <div>
             <h4 className="font-medium text-foreground mb-2">Requirements</h4>
-            <p className="text-muted-foreground text-sm whitespace-pre-wrap">
-              {formData.requirements.substring(0, 200)}
-              {formData.requirements.length > 200 && "..."}
-            </p>
+            <div className="prose prose-sm max-w-none">
+              <div dangerouslySetInnerHTML={{ 
+                __html: formData.requirements.length > 200 
+                  ? formData.requirements.substring(0, 200) + "..." 
+                  : formData.requirements 
+              }} />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -301,6 +401,16 @@ export default function ReviewPaymentStep2({
         </CardContent>
       </Card>
 
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
+            {error}
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="flex justify-between">
         <Button type="button" variant="outline" onClick={onPrev} size="lg">
@@ -327,4 +437,76 @@ export default function ReviewPaymentStep2({
       </div>
     </div>
   );
+}
+
+// Helper functions to map form data to database schema
+function mapLocationType(locationType: string): string {
+  const mapping: { [key: string]: string } = {
+    'fully-remote': 'remote',
+    'in-person': 'onsite',
+    'hybrid': 'hybrid',
+    'on-the-road': 'onsite', // Map to onsite as closest match
+  };
+  return mapping[locationType] || 'onsite';
+}
+
+function mapJobType(jobType: string): string {
+  const mapping: { [key: string]: string } = {
+    'full-time': 'full-time',
+    'part-time': 'part-time',
+    'permanent': 'full-time', // Map to full-time as closest match
+    'fixed-term': 'contract',
+    'subcontract': 'contract',
+    'casual': 'part-time',
+    'temp-to-perm': 'contract',
+    'contract': 'contract',
+    'internship': 'internship',
+    'volunteer': 'internship', // Map to internship as closest match
+    'graduate': 'full-time',
+  };
+  return mapping[jobType] || 'full-time';
+}
+
+function getSalaryMin(payConfig: any): number | null {
+  if (!payConfig.showPay) return null;
+  
+  if (payConfig.payType === 'range' && payConfig.payRangeMin) {
+    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'minimum' && payConfig.payAmount) {
+    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'fixed' && payConfig.payAmount) {
+    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  }
+  
+  return null;
+}
+
+function getSalaryMax(payConfig: any): number | null {
+  if (!payConfig.showPay) return null;
+  
+  if (payConfig.payType === 'range' && payConfig.payRangeMax) {
+    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'maximum' && payConfig.payAmount) {
+    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'fixed' && payConfig.payAmount) {
+    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  }
+  
+  return null;
+}
+
+function convertToAnnualSalary(amount: number, period: string): number {
+  const multipliers: { [key: string]: number } = {
+    'hour': 2080, // 40 hours/week * 52 weeks
+    'day': 260, // ~260 working days per year
+    'week': 52,
+    'month': 12,
+    'year': 1,
+  };
+  
+  return Math.round(amount * (multipliers[period] || 1));
 }

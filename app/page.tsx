@@ -221,7 +221,7 @@ const HomePage = () => {
             <Button
               variant="outline"
               onClick={() =>
-                user ? router.push("/jobs") : router.push("/auth")
+                user ? router.push("/jobs") : router.push("/login")
               }
               className="gap-2"
             >
@@ -349,7 +349,7 @@ const HomePage = () => {
               variant="outline"
               size="lg"
               onClick={() =>
-                user ? router.push("/jobs") : router.push("/auth")
+                user ? router.push("/jobs") : router.push("/login")
               }
               className="gap-2"
             >

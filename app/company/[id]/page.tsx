@@ -208,7 +208,7 @@ export default function CompanyProfilePage() {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Briefcase className="w-4 h-4" />
                     <span>
-                      {jobs.length} open{" "}
+                      {jobs.length.toLocaleString()} open{" "}
                       {jobs.length === 1 ? "position" : "positions"}
                     </span>
                   </div>
@@ -254,7 +254,7 @@ export default function CompanyProfilePage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Briefcase className="w-5 h-5" />
-                  Open Positions ({jobs.length})
+                  Open Positions ({jobs.length.toLocaleString()})
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -343,7 +343,7 @@ export default function CompanyProfilePage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Open Jobs</span>
-                  <span className="font-semibold">{jobs.length}</span>
+                  <span className="font-semibold">{jobs.length.toLocaleString()}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">

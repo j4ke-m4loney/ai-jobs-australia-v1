@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -13,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { JobFormData2, PRICING_TIERS } from "@/types/job2";
-import { CreditCard, Check, Star, Crown, Zap } from "lucide-react";
+import { CreditCard, Check, Star, Crown, Zap, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
@@ -25,6 +26,7 @@ interface Props {
   updateFormData: (data: Partial<JobFormData2>) => void;
   onNext: () => void;
   onPrev: () => void;
+  onShowPreview?: () => void;
 }
 
 const tierIcons = {
@@ -44,6 +46,7 @@ export default function PricingSelectionStep({
   updateFormData,
   onNext,
   onPrev,
+  onShowPreview,
 }: Props) {
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -53,6 +56,17 @@ export default function PricingSelectionStep({
   });
 
   const watchedTier = form.watch("pricingTier");
+  const watchedValues = form.watch();
+
+  // Watch for form changes and update form data in real-time
+  useEffect(() => {
+    // Debounce the updates to avoid too frequent calls
+    const timeoutId = setTimeout(() => {
+      updateFormData(watchedValues);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [watchedValues, updateFormData]);
 
   const onSubmit = (values: z.infer<typeof schema>) => {
     updateFormData(values);
@@ -170,13 +184,27 @@ export default function PricingSelectionStep({
           </div>
         </div>
 
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <Button type="button" variant="outline" onClick={onPrev} size="lg">
             Back
           </Button>
-          <Button type="submit" size="lg" className="min-w-[120px]">
-            Continue to Payment
-          </Button>
+          <div className="flex items-center gap-3">
+            {onShowPreview && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onShowPreview}
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                Preview
+              </Button>
+            )}
+            <Button type="submit" size="lg" className="min-w-[120px]">
+              Continue to Payment
+            </Button>
+          </div>
         </div>
       </form>
     </Form>

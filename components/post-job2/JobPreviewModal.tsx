@@ -202,10 +202,8 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
               <h2 className="text-lg font-semibold text-foreground mb-3">
                 Job Description
               </h2>
-              <div className="prose prose-sm max-w-none">
-                <p className="text-muted-foreground whitespace-pre-wrap">
-                  {formData.jobDescription}
-                </p>
+              <div className="prose prose-sm max-w-none text-muted-foreground">
+                <div dangerouslySetInnerHTML={{ __html: formData.jobDescription }} />
               </div>
             </div>
           )}
@@ -216,10 +214,8 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
               <h2 className="text-lg font-semibold text-foreground mb-3">
                 Requirements
               </h2>
-              <div className="prose prose-sm max-w-none">
-                <p className="text-muted-foreground whitespace-pre-wrap">
-                  {formData.requirements}
-                </p>
+              <div className="prose prose-sm max-w-none text-muted-foreground">
+                <div dangerouslySetInnerHTML={{ __html: formData.requirements }} />
               </div>
             </div>
           )}
@@ -230,10 +226,8 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
               <h2 className="text-lg font-semibold text-foreground mb-3">
                 About {formData.companyName || "the Company"}
               </h2>
-              <div className="prose prose-sm max-w-none">
-                <p className="text-muted-foreground whitespace-pre-wrap">
-                  {formData.companyDescription}
-                </p>
+              <div className="prose prose-sm max-w-none text-muted-foreground">
+                <div dangerouslySetInnerHTML={{ __html: formData.companyDescription }} />
               </div>
             </div>
           )}

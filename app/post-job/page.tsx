@@ -236,6 +236,7 @@ export default function PostJob2() {
             updateFormData={updateFormData}
             onNext={nextStep}
             onPrev={prevStep}
+            onShowPreview={() => setShowPreview(true)}
           />
         );
       case 4:
@@ -245,6 +246,7 @@ export default function PostJob2() {
             updateFormData={updateFormData}
             onNext={nextStep}
             onPrev={prevStep}
+            onShowPreview={() => setShowPreview(true)}
           />
         );
       case 5:

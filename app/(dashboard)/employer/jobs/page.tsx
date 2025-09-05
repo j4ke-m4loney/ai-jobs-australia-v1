@@ -1,6 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { EmployerLayout } from "@/components/employer/EmployerLayout";
 import {
   Card,
@@ -19,6 +22,7 @@ import {
   MapPin,
   DollarSign,
   Clock,
+  Briefcase,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,61 +31,109 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+interface Job {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  location_type: string;
+  job_type: string;
+  category: string;
+  salary_min: number | null;
+  salary_max: number | null;
+  is_featured: boolean;
+  status: string;
+  created_at: string;
+  expires_at: string;
+}
+
 const EmployerJobs = () => {
   const router = useRouter();
+  const { user } = useAuth();
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock job data - will be replaced with real data later
-  const jobs = [
-    {
-      id: "1",
-      title: "Senior AI Engineer",
-      company: "TechCorp AI",
-      location: "Sydney, NSW",
-      type: "Full-time",
-      salary: "$120,000 - $160,000",
-      status: "active",
-      applications: 24,
-      views: 145,
-      postedDate: "2024-01-15",
-    },
-    {
-      id: "2",
-      title: "Machine Learning Researcher",
-      company: "AI Research Lab",
-      location: "Melbourne, VIC",
-      type: "Full-time",
-      salary: "$100,000 - $140,000",
-      status: "pending",
-      applications: 12,
-      views: 89,
-      postedDate: "2024-01-10",
-    },
-    {
-      id: "3",
-      title: "Data Scientist",
-      company: "DataFlow Solutions",
-      location: "Brisbane, QLD",
-      type: "Contract",
-      salary: "$80,000 - $110,000",
-      status: "paused",
-      applications: 8,
-      views: 52,
-      postedDate: "2024-01-05",
-    },
-  ];
+  useEffect(() => {
+    if (user) {
+      fetchJobs();
+    }
+  }, [user]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-success";
-      case "pending":
-        return "bg-warning";
-      case "paused":
-        return "bg-muted";
-      default:
-        return "bg-muted";
+  const fetchJobs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('employer_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      setJobs(data || []);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      setError('Failed to load jobs');
+    } finally {
+      setLoading(false);
     }
   };
+
+  const formatSalary = (salaryMin: number | null, salaryMax: number | null): string => {
+    if (!salaryMin && !salaryMax) return 'Salary not specified';
+    if (salaryMin && salaryMax && salaryMin !== salaryMax) {
+      return `$${salaryMin.toLocaleString()} - $${salaryMax.toLocaleString()}`;
+    }
+    if (salaryMin) return `$${salaryMin.toLocaleString()}`;
+    if (salaryMax) return `Up to $${salaryMax.toLocaleString()}`;
+    return 'Salary not specified';
+  };
+
+  const formatJobType = (jobType: string): string => {
+    return jobType.charAt(0).toUpperCase() + jobType.slice(1).replace('-', ' ');
+  };
+
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'expired': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  if (loading) {
+    return (
+      <EmployerLayout>
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold text-foreground">Job Postings</h1>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-2">Loading jobs...</p>
+          </div>
+        </div>
+      </EmployerLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <EmployerLayout>
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold text-foreground">Job Postings</h1>
+          <div className="text-center py-12">
+            <p className="text-red-600">{error}</p>
+            <Button onClick={fetchJobs} className="mt-4">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </EmployerLayout>
+    );
+  }
 
   return (
     <EmployerLayout title="Job Management">
@@ -159,7 +211,18 @@ const EmployerJobs = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {jobs.map((job) => (
+                    {jobs.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Briefcase className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-foreground mb-2">No jobs posted yet</h3>
+                        <p className="text-muted-foreground mb-4">Start by posting your first job to attract top talent.</p>
+                        <Button onClick={() => router.push('/post-job')}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Post Your First Job
+                        </Button>
+                      </div>
+                    ) : (
+                      jobs.map((job) => (
                       <div
                         key={job.id}
                         className="flex flex-col md:flex-row md:items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -180,11 +243,11 @@ const EmployerJobs = () => {
                             </div>
                             <div className="flex items-center gap-1">
                               <DollarSign className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate">{job.salary}</span>
+                              <span className="truncate">{formatSalary(job.salary_min, job.salary_max)}</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Clock className="w-4 h-4 flex-shrink-0" />
-                              <span>{job.type}</span>
+                              <span>{formatJobType(job.job_type)}</span>
                             </div>
                           </div>
                         </div>
@@ -193,7 +256,7 @@ const EmployerJobs = () => {
                           <div className="flex items-center gap-6">
                             <div className="text-center">
                               <div className="text-lg font-semibold">
-                                {job.applications}
+                                0
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 Applications
@@ -201,7 +264,7 @@ const EmployerJobs = () => {
                             </div>
                             <div className="text-center">
                               <div className="text-lg font-semibold">
-                                {job.views}
+                                0
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 Views
@@ -231,7 +294,8 @@ const EmployerJobs = () => {
                           </DropdownMenu>
                         </div>
                       </div>
-                    ))}
+                    ))
+                    )}
                   </div>
                 </CardContent>
               </Card>

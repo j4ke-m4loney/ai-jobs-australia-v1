@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Form,
   FormControl,
@@ -102,6 +102,25 @@ export default function JobBasicsStep({
       showPay: formData.payConfig.showPay,
     },
   });
+
+  // Watch for form changes and update form data in real-time
+  const watchedValues = form.watch();
+  useEffect(() => {
+    // Debounce the updates to avoid too frequent calls
+    const timeoutId = setTimeout(() => {
+      // Update the form data with watched values plus other state
+      updateFormData({
+        ...watchedValues,
+        jobType: selectedJobType,
+        hoursConfig: hoursConfig,
+        contractConfig: contractConfig,
+        payConfig: { ...formData.payConfig, showPay: watchedValues.showPay },
+        benefits: selectedBenefits,
+      });
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [watchedValues, selectedJobType, hoursConfig, contractConfig, selectedBenefits, formData.payConfig, updateFormData]);
 
   const requiresHoursConfig = selectedJobType === "part-time";
   const requiresContractConfig = [

@@ -35,6 +35,8 @@ export const RichTextEditor = React.forwardRef<
     if (
       selection &&
       selection.rangeCount > 0 &&
+      selection.anchorNode &&
+      selection.focusNode &&
       editorRef.current?.contains(selection.anchorNode)
     ) {
       return {
@@ -47,18 +49,12 @@ export const RichTextEditor = React.forwardRef<
     return null;
   }, []);
 
-  // Modern DOM manipulation utilities
-  const getCurrentSelection = useCallback(() => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return null;
-    return selection.getRangeAt(0);
-  }, []);
 
   const isInListItem = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return null;
     
-    let node = selection.getRangeAt(0).commonAncestorContainer;
+    let node: Node | null = selection.getRangeAt(0).commonAncestorContainer;
     while (node && node !== editorRef.current) {
       if (node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName === 'LI') {
         return node as HTMLLIElement;
@@ -79,56 +75,6 @@ export const RichTextEditor = React.forwardRef<
     li.innerHTML = content || '<br>';
     return li;
   }, []);
-
-  const insertList = useCallback(() => {
-    if (!editorRef.current) return;
-    
-    const range = getCurrentSelection();
-    if (!range) return;
-
-    // Check if we're already in a list
-    const existingList = getCurrentList();
-    if (existingList) {
-      // Remove the list
-      const listItems = Array.from(existingList.children);
-      const fragment = document.createDocumentFragment();
-      
-      listItems.forEach((li) => {
-        const p = document.createElement('p');
-        p.innerHTML = li.innerHTML || '<br>';
-        fragment.appendChild(p);
-      });
-      
-      existingList.parentNode?.replaceChild(fragment, existingList);
-    } else {
-      // Create new list
-      const ul = document.createElement('ul');
-      const li = createListItem();
-      ul.appendChild(li);
-      
-      // Insert the list at the current position
-      range.deleteContents();
-      range.insertNode(ul);
-      
-      // Move cursor into the list item
-      const newRange = document.createRange();
-      newRange.setStart(li, 0);
-      newRange.collapse(true);
-      const selection = window.getSelection();
-      selection?.removeAllRanges();
-      selection?.addRange(newRange);
-    }
-    
-    // Trigger change event
-    if (editorRef.current) {
-      setIsInternalUpdate(true);
-      onChange(editorRef.current.innerHTML);
-      setLastExternalValue(editorRef.current.innerHTML);
-      setIsInternalUpdate(false);
-    }
-    
-    updateActiveStates();
-  }, [getCurrentSelection, getCurrentList, createListItem, onChange, updateActiveStates]);
 
   const restoreSelection = useCallback((selectionData: {
     startContainer: Node;
@@ -170,6 +116,32 @@ export const RichTextEditor = React.forwardRef<
       list: isInList,
     });
   }, [isInListItem]);
+
+  const insertList = useCallback(() => {
+    if (!editorRef.current) return;
+    
+    // Ensure editor is focused
+    editorRef.current.focus();
+    
+    // Use the browser's native command to handle list toggling
+    // This automatically handles all the complex cases:
+    // - Converting paragraphs to list items
+    // - Toggling lists on/off
+    // - Handling multiple selected paragraphs
+    // - Maintaining proper HTML structure
+    document.execCommand("insertUnorderedList", false);
+    
+    // Trigger change event
+    if (editorRef.current) {
+      setIsInternalUpdate(true);
+      onChange(editorRef.current.innerHTML);
+      setLastExternalValue(editorRef.current.innerHTML);
+      setIsInternalUpdate(false);
+    }
+    
+    // Update button states
+    updateActiveStates();
+  }, [onChange, updateActiveStates]);
 
 
   const executeCommand = useCallback(

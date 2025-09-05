@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { JobFormData2 } from "@/types/job2";
-import { Mail, ExternalLink, Settings, Clock, Phone } from "lucide-react";
+import { Mail, ExternalLink, Settings, Clock, Phone, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
@@ -48,6 +49,7 @@ interface Props {
   updateFormData: (data: Partial<JobFormData2>) => void;
   onNext: () => void;
   onPrev: () => void;
+  onShowPreview?: () => void;
 }
 
 const applicationMethods = [
@@ -72,6 +74,7 @@ export default function ApplicationSettingsStep({
   updateFormData,
   onNext,
   onPrev,
+  onShowPreview,
 }: Props) {
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -84,6 +87,20 @@ export default function ApplicationSettingsStep({
   });
 
   const watchedMethod = form.watch("applicationMethod");
+  const watchedValues = form.watch();
+
+  // Watch for form changes and update form data in real-time
+  useEffect(() => {
+    // Debounce the updates to avoid too frequent calls
+    const timeoutId = setTimeout(() => {
+      updateFormData({
+        ...watchedValues,
+        communicationPrefs: formData.communicationPrefs,
+      });
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [watchedValues, formData.communicationPrefs, updateFormData]);
 
   const onSubmit = (values: z.infer<typeof schema>) => {
     updateFormData({
@@ -273,13 +290,27 @@ export default function ApplicationSettingsStep({
           </div>
         </div>
 
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <Button type="button" variant="outline" onClick={onPrev} size="lg">
             Back
           </Button>
-          <Button type="submit" size="lg" className="min-w-[120px]">
-            Continue
-          </Button>
+          <div className="flex items-center gap-3">
+            {onShowPreview && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onShowPreview}
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                Preview
+              </Button>
+            )}
+            <Button type="submit" size="lg" className="min-w-[120px]">
+              Continue
+            </Button>
+          </div>
         </div>
       </form>
     </Form>
