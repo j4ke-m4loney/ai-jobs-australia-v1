@@ -20,6 +20,9 @@ import {
   FileText,
   ArrowLeft,
   Check,
+  BookOpen,
+  CheckCircle,
+  Info,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -344,6 +347,52 @@ export default function ApplyPage() {
                   </div>
                 )}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Job Details */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="w-5 h-5" />
+              Job Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Job Description */}
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                Job Description
+              </h3>
+              <div className="prose max-w-none text-muted-foreground leading-relaxed">
+                <div dangerouslySetInnerHTML={{ __html: job.description }} />
+              </div>
+            </div>
+
+            {/* Requirements */}
+            {job.requirements && (
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Requirements
+                </h3>
+                <div className="prose max-w-none text-muted-foreground leading-relaxed">
+                  <div dangerouslySetInnerHTML={{ __html: job.requirements }} />
+                </div>
+              </div>
+            )}
+
+            {/* Company Info Section - placeholder for future enhancement */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Building className="w-5 h-5" />
+                About the Company
+              </h3>
+              <p className="text-muted-foreground">
+                Company information will be displayed here when available.
+              </p>
             </div>
           </CardContent>
         </Card>

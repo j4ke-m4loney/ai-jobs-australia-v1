@@ -77,8 +77,8 @@ export default function JobsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { toggleSaveJob, isJobSaved } = useSavedJobs();
-  console.log("useSavedJobs hook values:", { toggleSaveJob, isJobSaved });
+  const { saveJobOnly, isJobSaved } = useSavedJobs();
+  console.log("useSavedJobs hook values:", { saveJobOnly, isJobSaved });
   console.log("🔍 Auth state:", { user: user?.id, loading });
   
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -390,18 +390,18 @@ export default function JobsPage() {
     router.push(`/apply/${selectedJob.id}`);
   };
 
-  const handleToggleSaveJob = async (jobId: string) => {
+  const handleSaveJob = async (jobId: string) => {
     if (!user) {
       setPendingJobId(jobId);
       setAuthModalOpen(true);
       return;
     }
-    await toggleSaveJob(jobId);
+    await saveJobOnly(jobId);
   };
 
   const handleAuthSuccess = async () => {
     if (pendingJobId) {
-      await toggleSaveJob(pendingJobId);
+      await saveJobOnly(pendingJobId);
       setPendingJobId(null);
     }
   };
@@ -832,7 +832,7 @@ export default function JobsPage() {
                                 className="p-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleToggleSaveJob(job.id);
+                                  handleSaveJob(job.id);
                                 }}
                               >
                                 <Heart
@@ -948,7 +948,7 @@ export default function JobsPage() {
                             className="p-2"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleToggleSaveJob(job.id);
+                              handleSaveJob(job.id);
                             }}
                           >
                             <Heart
@@ -1052,7 +1052,7 @@ export default function JobsPage() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleToggleSaveJob(selectedJob.id);
+                        handleSaveJob(selectedJob.id);
                       }}
                       className="p-2"
                     >
@@ -1098,19 +1098,6 @@ export default function JobsPage() {
 
               {/* Job Content */}
               <div className="p-6 space-y-6 mx-4">
-                {/* Match Score */}
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                      <span className="font-semibold">How you match</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Matches based on your career history
-                    </p>
-                  </CardContent>
-                </Card>
-
                 {/* Job Description */}
                 <div>
                   <h2 className="text-xl font-semibold text-foreground mb-4">

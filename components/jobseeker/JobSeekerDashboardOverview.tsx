@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, FileText, User, MapPin, Phone, Mail, Edit } from "lucide-react";
+import { Heart, FileText, User, MapPin, Phone, Mail, Edit, Building2, Clock, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
 
@@ -39,9 +39,10 @@ interface Profile {
 export const JobSeekerDashboardOverview = () => {
   const { user } = useAuth();
   const router = useRouter();
-  const { savedJobIds } = useSavedJobs();
+  const { savedJobIds, fetchSavedJobsWithDetails } = useSavedJobs();
   const [applications, setApplications] = useState<Application[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [savedJobs, setSavedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -86,6 +87,10 @@ export const JobSeekerDashboardOverview = () => {
       if (profileError && profileError.code !== "PGRST116") {
         throw profileError;
       }
+
+      // Fetch saved jobs
+      const savedJobsData = await fetchSavedJobsWithDetails(3);
+      setSavedJobs(savedJobsData);
 
       const applicationsWithJobs =
         applicationsData?.map((app) => ({
@@ -174,7 +179,8 @@ export const JobSeekerDashboardOverview = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+          onClick={() => router.push("/jobseeker/saved-jobs")}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-sm font-medium text-foreground">
               Saved Jobs
@@ -186,6 +192,17 @@ export const JobSeekerDashboardOverview = () => {
               {savedJobIds.size}
             </div>
             <p className="text-xs text-muted-foreground">Ready to apply</p>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="mt-2 p-0 h-auto text-xs text-primary hover:text-primary/80"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push("/jobseeker/saved-jobs");
+              }}
+            >
+              View Saved Jobs →
+            </Button>
           </CardContent>
         </Card>
 
@@ -321,6 +338,58 @@ export const JobSeekerDashboardOverview = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Saved Jobs */}
+      {savedJobs.length > 0 && (
+        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <Heart className="w-5 h-5" />
+              Saved Jobs
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/jobseeker/saved-jobs")}
+            >
+              View All
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {savedJobs.slice(0, 3).map((savedJob) => (
+                <div
+                  key={savedJob.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => router.push(`/jobseeker/saved-job/${savedJob.job.id}`)}
+                >
+                  <div className="flex-1">
+                    <h4 className="font-medium text-foreground">
+                      {savedJob.job.title}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {savedJob.job.location} • {savedJob.job.job_type}
+                    </p>
+                    {savedJob.job.salary_min && (
+                      <p className="text-xs text-green-600 mt-1">
+                        ${savedJob.job.salary_min.toLocaleString()} - ${savedJob.job.salary_max?.toLocaleString() || ''}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <Badge variant="secondary" className="capitalize">
+                      {savedJob.job.category}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Saved {new Date(savedJob.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Applications */}
       {applications.length > 0 && (

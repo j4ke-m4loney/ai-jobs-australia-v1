@@ -97,7 +97,7 @@ export const useSavedJobs = () => {
     }
   };
 
-  // Toggle save/unsave
+  // Toggle save/unsave (for saved jobs page only)
   const toggleSaveJob = async (jobId: string) => {
     if (savedJobIds.has(jobId)) {
       await unsaveJob(jobId);
@@ -106,8 +106,63 @@ export const useSavedJobs = () => {
     }
   };
 
+  // Save only - doesn't unsave if already saved (for jobs listing page)
+  const saveJobOnly = async (jobId: string) => {
+    if (savedJobIds.has(jobId)) {
+      // Job is already saved, do nothing
+      return;
+    }
+    await saveJob(jobId);
+  };
+
   // Check if a job is saved
   const isJobSaved = (jobId: string) => savedJobIds.has(jobId);
+
+  // Fetch full saved jobs details (for dashboard preview)
+  const fetchSavedJobsWithDetails = async (limit?: number) => {
+    if (!user) return [];
+
+    try {
+      // First get saved job records
+      let query = supabase
+        .from('saved_jobs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data: savedData, error: savedError } = await query;
+      if (savedError) throw savedError;
+
+      if (!savedData || savedData.length === 0) {
+        return [];
+      }
+
+      // Then fetch the full job details
+      const jobIds = savedData.map(item => item.job_id);
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select('*')
+        .in('id', jobIds);
+
+      if (jobsError) throw jobsError;
+
+      // Combine and return
+      return savedData.map(saved => {
+        const job = jobsData?.find(j => j.id === saved.job_id);
+        return {
+          ...saved,
+          job
+        };
+      }).filter(item => item.job !== null);
+    } catch (error) {
+      console.error('Error fetching saved jobs with details:', error);
+      return [];
+    }
+  };
 
   useEffect(() => {
     fetchSavedJobs();
@@ -119,7 +174,9 @@ export const useSavedJobs = () => {
     saveJob,
     unsaveJob,
     toggleSaveJob,
+    saveJobOnly,
     isJobSaved,
-    refetch: fetchSavedJobs
+    refetch: fetchSavedJobs,
+    fetchSavedJobsWithDetails
   };
 };

@@ -56,42 +56,46 @@ const JobSeekerSavedJobs = () => {
 
   const fetchSavedJobs = async () => {
     try {
-      const { data, error } = await supabase
+      // First get saved job IDs
+      const { data: savedData, error: savedError } = await supabase
         .from("saved_jobs")
-        .select(
-          `
-          *,
-          jobs:job_id (
-            id,
-            title,
-            location,
-            location_type,
-            job_type,
-            salary_min,
-            salary_max,
-            created_at,
-            category
-          )
-        `
-        )
+        .select("*")
         .eq("user_id", user?.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (savedError) throw savedError;
 
-      const jobsWithCompanies =
-        data?.map((item) => ({
-          ...item,
-          job: {
-            ...item.jobs,
+      if (!savedData || savedData.length === 0) {
+        setSavedJobs([]);
+        setLoading(false);
+        return;
+      }
+
+      // Then fetch the full job details
+      const jobIds = savedData.map(item => item.job_id);
+      const { data: jobsData, error: jobsError } = await supabase
+        .from("jobs")
+        .select("*")
+        .in("id", jobIds);
+
+      if (jobsError) throw jobsError;
+
+      // Combine saved jobs with job details
+      const combinedData = savedData.map(saved => {
+        const job = jobsData?.find(j => j.id === saved.job_id);
+        return {
+          ...saved,
+          job: job ? {
+            ...job,
             company: {
-              name: "Company Name", // Placeholder until we have proper company data
+              name: "Company", // Placeholder for now
               logo_url: null,
-            },
-          },
-        })) || [];
+            }
+          } : null
+        };
+      }).filter(item => item.job !== null);
 
-      setSavedJobs(jobsWithCompanies);
+      setSavedJobs(combinedData);
     } catch (error) {
       console.error("Error fetching saved jobs:", error);
       toast.error("Failed to load saved jobs");
@@ -197,14 +201,14 @@ const JobSeekerSavedJobs = () => {
                         <h3
                           className="text-lg font-semibold text-foreground mb-1 hover:text-primary cursor-pointer"
                           onClick={() =>
-                            router.push(`/jobs/${savedJob.job.id}`)
+                            router.push(`/jobseeker/saved-job/${savedJob.job.id}`)
                           }
                         >
                           {savedJob.job.title}
                         </h3>
 
                         <p className="text-sm text-muted-foreground mb-2">
-                          {savedJob.job.company?.name || "Company Name"}
+                          Company
                         </p>
 
                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
@@ -250,7 +254,7 @@ const JobSeekerSavedJobs = () => {
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => router.push(`/jobs/${savedJob.job.id}`)}
+                        onClick={() => router.push(`/jobseeker/saved-job/${savedJob.job.id}`)}
                       >
                         View Job
                       </Button>

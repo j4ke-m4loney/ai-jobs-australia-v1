@@ -127,11 +127,11 @@
   }
   
   .prose ul {
-    @apply list-disc list-inside space-y-2;
+    @apply list-disc list-outside space-y-2 pl-6;
   }
   
   .prose ol {
-    @apply list-decimal list-inside space-y-2;
+    @apply list-decimal list-outside space-y-2 pl-6;
   }
   
   .prose li {
@@ -140,12 +140,12 @@
   
   .prose ul ul,
   .prose ol ul {
-    @apply ml-4 mt-2;
+    @apply ml-6 mt-2;
   }
   
   .prose ul ol,
   .prose ol ol {
-    @apply ml-4 mt-2;
+    @apply ml-6 mt-2;
   }
   
   .prose p {

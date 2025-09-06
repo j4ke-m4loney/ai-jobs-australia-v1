@@ -281,7 +281,7 @@ const JobSeekerApplications = () => {
                               <h3
                                 className="text-lg font-semibold text-foreground mb-1 hover:text-primary cursor-pointer"
                                 onClick={() =>
-                                  router.push(`/jobs/${application.job.id}`)
+                                  router.push(`/jobseeker/applied-job/${application.job.id}`)
                                 }
                               >
                                 {application.job.title}
@@ -329,7 +329,7 @@ const JobSeekerApplications = () => {
                             <Button
                               size="sm"
                               onClick={() =>
-                                router.push(`/jobs/${application.job.id}`)
+                                router.push(`/jobseeker/applied-job/${application.job.id}`)
                               }
                             >
                               View Job
