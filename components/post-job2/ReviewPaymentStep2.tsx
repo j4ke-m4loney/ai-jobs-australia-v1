@@ -178,6 +178,7 @@ export default function ReviewPaymentStep2({
         application_url: formData.applicationMethod === 'indeed' ? null : formData.applicationUrl,
         application_email: formData.applicationMethod === 'email' ? formData.applicationEmail : null,
         is_featured: formData.pricingTier === 'featured' || formData.pricingTier === 'annual',
+        highlights: formData.highlights || [],
         status: 'approved', // DEVELOPMENT: Set to approved for immediate visibility
         payment_status: 'completed', // For now, assume payment is completed
         expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now

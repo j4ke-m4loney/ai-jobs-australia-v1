@@ -127,23 +127,6 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 </Button>
               </div>
 
-              {/* Job Highlights */}
-              {job.highlights && job.highlights.length > 0 && (
-                <div className="mb-4">
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    {job.highlights
-                      .filter(highlight => highlight.trim().length > 0)
-                      .slice(0, 3)
-                      .map((highlight, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full mt-2 shrink-0"></span>
-                          <span className="leading-relaxed">{highlight}</span>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              )}
-
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
