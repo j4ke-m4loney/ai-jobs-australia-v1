@@ -40,6 +40,9 @@ export interface JobFormData2 {
   };
   benefits: string[];
   
+  // Job Highlights
+  highlights: string[];
+  
   // Describe Job
   jobDescription: string;
   requirements: string;

@@ -18,9 +18,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   MapPin,
-  Building,
-  Clock,
-  DollarSign,
   Search,
   Filter,
   Heart,
@@ -43,6 +40,8 @@ import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
 import { SaveJobAuthModal } from "@/components/SaveJobAuthModal";
+import { JobCard } from "@/components/jobs/JobCard";
+import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 
 interface Job {
   id: string;
@@ -63,6 +62,7 @@ interface Job {
   application_email: string | null;
   status?: "pending" | "approved" | "rejected" | "expired";
   company_id?: string | null;
+  highlights?: string[] | null;
   companies?: {
     id: string;
     name: string;
@@ -77,8 +77,8 @@ export default function JobsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { saveJobOnly, isJobSaved } = useSavedJobs();
-  console.log("useSavedJobs hook values:", { saveJobOnly, isJobSaved });
+  const { toggleSaveJob, isJobSaved } = useSavedJobs();
+  console.log("useSavedJobs hook values:", { toggleSaveJob, isJobSaved });
   console.log("🔍 Auth state:", { user: user?.id, loading });
   
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -390,18 +390,18 @@ export default function JobsPage() {
     router.push(`/apply/${selectedJob.id}`);
   };
 
-  const handleSaveJob = async (jobId: string) => {
+  const handleToggleSaveJob = async (jobId: string) => {
     if (!user) {
       setPendingJobId(jobId);
       setAuthModalOpen(true);
       return;
     }
-    await saveJobOnly(jobId);
+    await toggleSaveJob(jobId);
   };
 
   const handleAuthSuccess = async () => {
     if (pendingJobId) {
-      await saveJobOnly(pendingJobId);
+      await toggleSaveJob(pendingJobId);
       setPendingJobId(null);
     }
   };
@@ -438,33 +438,6 @@ export default function JobsPage() {
       research: "Research",
     };
     return categories[category as keyof typeof categories] || category;
-  };
-
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-    );
-
-    if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    }
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) {
-      return `${diffInDays}d ago`;
-    }
-
-    return date.toLocaleDateString();
-  };
-
-  const getDaysUntilExpiry = (expiryDate: string) => {
-    const days = Math.ceil(
-      (new Date(expiryDate).getTime() - new Date().getTime()) /
-        (1000 * 60 * 60 * 24)
-    );
-    return Math.max(0, days);
   };
 
   const handleCategoryChange = (category: string, checked: boolean) => {
@@ -832,7 +805,7 @@ export default function JobsPage() {
                                 className="p-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleSaveJob(job.id);
+                                  handleToggleSaveJob(job.id);
                                 }}
                               >
                                 <Heart
@@ -882,87 +855,14 @@ export default function JobsPage() {
             ) : (
               <div className="space-y-4 p-4 max-w-lg mx-auto">
                 {jobs.map((job) => (
-                  <Card
+                  <JobCard
                     key={job.id}
-                    className={`cursor-pointer transition-all duration-200 hover:shadow-lg border border-border/50 ${
-                      selectedJob?.id === job.id
-                        ? "ring-2 ring-primary bg-primary/5 shadow-md"
-                        : "hover:bg-muted/30 hover:border-border"
-                    } ${job.is_featured ? "border-l-4 border-l-primary" : ""}`}
-                    onClick={() => handleJobClick(job)}
-                  >
-                    <CardContent className="p-5">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          {job.is_featured && (
-                            <Badge className="bg-gradient-hero text-white text-xs mb-2">
-                              Featured
-                            </Badge>
-                          )}
-
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <h3 className="font-semibold text-lg line-clamp-2 text-foreground">
-                              {job.title}
-                            </h3>
-                            {job.status === 'pending' && (
-                              <Badge variant="secondary" className="shrink-0">
-                                Pending
-                              </Badge>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-1 text-base text-foreground mb-3">
-                            <Building className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-medium">Company</span>
-                          </div>
-
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              <span>{job.location}</span>
-                            </div>
-                            <span className="capitalize px-2 py-1 bg-muted rounded text-xs">
-                              {job.location_type}
-                            </span>
-                          </div>
-
-                          {formatSalary(job.salary_min, job.salary_max) && (
-                            <div className="text-base font-semibold text-green-600 mb-3">
-                              {formatSalary(job.salary_min, job.salary_max)}
-                            </div>
-                          )}
-
-                          <div className="text-xs text-muted-foreground">
-                            Posted {getTimeAgo(job.created_at)}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-3 ml-4">
-                          <div className="w-12 h-12 rounded bg-primary/10 flex items-center justify-center">
-                            <Building className="w-6 h-6 text-primary" />
-                          </div>
-
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSaveJob(job.id);
-                            }}
-                          >
-                            <Heart
-                              className={`w-5 h-5 ${
-                                isJobSaved(job.id)
-                                  ? "fill-red-500 text-red-500"
-                                  : "text-muted-foreground hover:text-red-400"
-                              }`}
-                            />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    job={job}
+                    isSelected={selectedJob?.id === job.id}
+                    onClick={handleJobClick}
+                    onSaveClick={handleToggleSaveJob}
+                    isJobSaved={isJobSaved(job.id)}
+                  />
                 ))}
               </div>
             )}
@@ -979,175 +879,13 @@ export default function JobsPage() {
         {/* Job Detail - Right Side */}
         <div className="hidden lg:block lg:w-3/5">
           {selectedJob ? (
-            <div className="lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] lg:overflow-y-auto">
-              {/* Job Header */}
-              <div className="p-6 border-b border-border bg-white mx-4">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-start gap-4 flex-1">
-                    <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Building className="w-8 h-8 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        {selectedJob.is_featured && (
-                          <Badge className="bg-gradient-hero text-white">
-                            Featured
-                          </Badge>
-                        )}
-                        <Badge variant="outline" className="text-xs">
-                          {getCategoryDisplay(selectedJob.category)}
-                        </Badge>
-                      </div>
-
-                      <h1 className="text-2xl font-bold text-foreground mb-1">
-                        {selectedJob.title}
-                      </h1>
-
-                      <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                        <span className="font-medium text-lg">
-                          Company
-                        </span>
-                        <Button
-                          variant="link"
-                          className="p-0 h-auto text-primary"
-                        >
-                          View all jobs
-                        </Button>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          {selectedJob.location} ({selectedJob.location_type})
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span className="capitalize">
-                            {selectedJob.job_type}
-                          </span>
-                        </div>
-                      </div>
-
-                      {formatSalary(
-                        selectedJob.salary_min,
-                        selectedJob.salary_max
-                      ) && (
-                        <div className="flex items-center gap-2 mb-4">
-                          <DollarSign className="h-4 w-4 text-green-600" />
-                          <span className="font-semibold text-green-600 text-lg">
-                            {formatSalary(
-                              selectedJob.salary_min,
-                              selectedJob.salary_max
-                            )}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Heart icon aligned with company logo */}
-                  <div className="w-16 h-16 flex items-center justify-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSaveJob(selectedJob.id);
-                      }}
-                      className="p-2"
-                    >
-                      <Heart
-                        className={`w-5 h-5 ${
-                          isJobSaved(selectedJob.id)
-                            ? "fill-red-500 text-red-500"
-                            : "text-muted-foreground"
-                        }`}
-                      />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>Posted {getTimeAgo(selectedJob.created_at)}</span>
-                    <span>•</span>
-                    <span>High application volume</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    {hasApplied[selectedJob.id] ? (
-                      <div className="text-center py-2 px-4">
-                        <div className="text-sm font-medium text-green-600">
-                          Application Submitted
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          You've applied for this position
-                        </div>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={handleApply}
-                        className="bg-primary hover:bg-primary/90 text-white px-6"
-                      >
-                        Apply
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Job Content */}
-              <div className="p-6 space-y-6 mx-4">
-                {/* Job Description */}
-                <div>
-                  <h2 className="text-xl font-semibold text-foreground mb-4">
-                    Job Description
-                  </h2>
-                  <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                    <div dangerouslySetInnerHTML={{ __html: selectedJob.description }} />
-                  </div>
-                </div>
-
-                {/* Requirements */}
-                {selectedJob.requirements && (
-                  <div>
-                    <h2 className="text-xl font-semibold text-foreground mb-4">
-                      Requirements
-                    </h2>
-                    <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                      <div dangerouslySetInnerHTML={{ __html: selectedJob.requirements }} />
-                    </div>
-                  </div>
-                )}
-
-                {/* Placeholder for company info */}
-
-                {/* Apply Section */}
-                <div className="border-t pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">
-                        Ready to apply?
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Expires in {getDaysUntilExpiry(selectedJob.expires_at)}{" "}
-                        days
-                      </p>
-                    </div>
-
-                    {!hasApplied[selectedJob.id] && (
-                      <Button
-                        onClick={handleApply}
-                        size="lg"
-                        className="bg-primary hover:bg-primary/90 text-white px-8"
-                      >
-                        Apply
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <JobDetailsView
+              job={selectedJob}
+              onApply={handleApply}
+              onSaveClick={handleToggleSaveJob}
+              isJobSaved={isJobSaved(selectedJob.id)}
+              hasApplied={hasApplied[selectedJob.id] || false}
+            />
           ) : (
             <div className="lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] flex items-center justify-center mx-4">
               <div className="text-center">

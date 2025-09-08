@@ -32,6 +32,7 @@ import {
   Gift,
   ChevronDown,
   ChevronUp,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -91,6 +92,7 @@ export default function JobBasicsStep({
   const [payConfig, setPayConfig] = useState(formData.payConfig);
   const [selectedBenefits, setSelectedBenefits] = useState(formData.benefits);
   const [showAllBenefits, setShowAllBenefits] = useState(false);
+  const [highlights, setHighlights] = useState(formData.highlights || ["", "", ""]);
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -116,6 +118,7 @@ export default function JobBasicsStep({
         contractConfig: contractConfig,
         payConfig: { ...formData.payConfig, showPay: watchedValues.showPay },
         benefits: selectedBenefits,
+        highlights: highlights,
       });
     }, 500);
 
@@ -144,6 +147,7 @@ export default function JobBasicsStep({
       contractConfig: requiresContractConfig ? contractConfig : undefined,
       payConfig: showPay ? payConfig : { showPay: false },
       benefits: selectedBenefits,
+      highlights: highlights,
     });
     onNext();
   };
@@ -159,6 +163,18 @@ export default function JobBasicsStep({
         ? prev.filter((b) => b !== benefit)
         : [...prev, benefit]
     );
+  };
+
+  const handleHighlightChange = (index: number, value: string) => {
+    setHighlights((prev) => {
+      const newHighlights = [...prev];
+      newHighlights[index] = value;
+      return newHighlights;
+    });
+  };
+
+  const getWordCount = (text: string) => {
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
   };
 
   const handlePayConfigChange = (field: string, value: any) => {
@@ -252,6 +268,71 @@ export default function JobBasicsStep({
                   </FormItem>
                 )}
               />
+            </div>
+          </div>
+
+          {/* Job Highlights */}
+          <div>
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Star className="w-5 h-5" />
+              Job Highlights
+            </h3>
+            
+            <p className="text-sm text-muted-foreground mb-4">
+              Add up to 3 key highlights about this role (10-12 words each)
+            </p>
+
+            <div className="space-y-3">
+              {highlights.map((highlight, index) => {
+                const wordCount = getWordCount(highlight);
+                const isOverLimit = wordCount > 12;
+                const isUnderMin = wordCount > 0 && wordCount < 8;
+                
+                return (
+                  <div key={index}>
+                    <FormLabel className="text-sm font-medium">
+                      Highlight {index + 1}
+                    </FormLabel>
+                    <div className="space-y-1">
+                      <Input
+                        placeholder={
+                          index === 0 
+                            ? "e.g. Lead innovative AI solutions using cutting-edge machine learning" 
+                            : index === 1
+                            ? "e.g. Work with world-class data scientists on breakthrough research"
+                            : "e.g. Competitive salary with equity and comprehensive benefits package"
+                        }
+                        value={highlight}
+                        onChange={(e) => handleHighlightChange(index, e.target.value)}
+                        className={cn(
+                          "text-base h-12",
+                          isOverLimit && "border-red-500 focus:border-red-500",
+                          isUnderMin && "border-yellow-500 focus:border-yellow-500"
+                        )}
+                      />
+                      <div className="flex justify-between items-center text-xs">
+                        <span 
+                          className={cn(
+                            "text-muted-foreground",
+                            isOverLimit && "text-red-500",
+                            isUnderMin && "text-yellow-600"
+                          )}
+                        >
+                          {wordCount === 0 
+                            ? "No words yet" 
+                            : `${wordCount} word${wordCount !== 1 ? 's' : ''}`
+                          }
+                          {isOverLimit && " (too many)"}
+                          {isUnderMin && " (too short)"}
+                        </span>
+                        <span className="text-muted-foreground">
+                          Target: 8-12 words
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

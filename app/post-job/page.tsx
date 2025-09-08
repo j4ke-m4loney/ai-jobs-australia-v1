@@ -80,6 +80,9 @@ const defaultFormData: JobFormData2 = {
   },
   benefits: [],
 
+  // Job Highlights
+  highlights: ["", "", ""],
+
   // Describe Job
   jobDescription: "",
   requirements: "",

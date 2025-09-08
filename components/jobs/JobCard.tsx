@@ -1,0 +1,178 @@
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Building, MapPin, Heart } from "lucide-react";
+
+interface Job {
+  id: string;
+  title: string;
+  description: string;
+  requirements: string | null;
+  location: string;
+  location_type: "onsite" | "remote" | "hybrid";
+  job_type: "full-time" | "part-time" | "contract" | "internship";
+  category: "ai" | "ml" | "data-science" | "engineering" | "research";
+  salary_min: number | null;
+  salary_max: number | null;
+  is_featured: boolean;
+  created_at: string;
+  expires_at: string;
+  application_method: string;
+  application_url: string | null;
+  application_email: string | null;
+  status?: "pending" | "approved" | "rejected" | "expired";
+  company_id?: string | null;
+  highlights?: string[] | null;
+  companies?: {
+    id: string;
+    name: string;
+    description: string | null;
+    website: string | null;
+    logo_url: string | null;
+  }[] | null;
+}
+
+interface JobCardProps {
+  job: Job;
+  isSelected: boolean;
+  onClick: (job: Job) => void;
+  onSaveClick: (jobId: string) => void;
+  isJobSaved: boolean;
+}
+
+// Helper functions
+const formatSalary = (min: number | null, max: number | null) => {
+  if (!min && !max) return null;
+  if (min && max)
+    return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+  if (min) return `From $${min.toLocaleString()}`;
+  if (max) return `Up to $${max.toLocaleString()}`;
+};
+
+const getTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInHours = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+  );
+
+  if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `${diffInDays}d ago`;
+  }
+
+  return date.toLocaleDateString();
+};
+
+export const JobCard: React.FC<JobCardProps> = ({
+  job,
+  isSelected,
+  onClick,
+  onSaveClick,
+  isJobSaved,
+}) => {
+  return (
+    <Card
+      className={`cursor-pointer transition-all duration-200 hover:shadow-lg border border-border/50 ${
+        isSelected
+          ? "ring-2 ring-primary bg-primary/5 shadow-md"
+          : "hover:bg-muted/30 hover:border-border"
+      } ${job.is_featured ? "border-l-4 border-l-primary" : ""}`}
+      onClick={() => onClick(job)}
+    >
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            {job.is_featured && (
+              <Badge className="bg-gradient-hero text-white text-xs mb-2">
+                Featured
+              </Badge>
+            )}
+
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h3 className="font-semibold text-lg line-clamp-2 text-foreground">
+                {job.title}
+              </h3>
+              {job.status === 'pending' && (
+                <Badge variant="secondary" className="shrink-0">
+                  Pending
+                </Badge>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1 text-base text-foreground mb-3">
+              <Building className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium">Company</span>
+            </div>
+
+            {/* Job Highlights */}
+            {job.highlights && job.highlights.length > 0 && (
+              <div className="mb-4">
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  {job.highlights
+                    .filter(highlight => highlight.trim().length > 0)
+                    .slice(0, 3)
+                    .map((highlight, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 shrink-0"></span>
+                        <span className="leading-relaxed">{highlight}</span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+              <div className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" />
+                <span>{job.location}</span>
+              </div>
+              <span className="capitalize px-2 py-1 bg-muted rounded text-xs">
+                {job.location_type}
+              </span>
+            </div>
+
+            {formatSalary(job.salary_min, job.salary_max) && (
+              <div className="text-base font-semibold text-green-600 mb-3">
+                {formatSalary(job.salary_min, job.salary_max)}
+              </div>
+            )}
+
+            <div className="text-xs text-muted-foreground">
+              Posted {getTimeAgo(job.created_at)}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-3 ml-4">
+            <div className="w-12 h-12 rounded bg-primary/10 flex items-center justify-center">
+              <Building className="w-6 h-6 text-primary" />
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="p-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaveClick(job.id);
+              }}
+            >
+              <Heart
+                className={`w-5 h-5 ${
+                  isJobSaved
+                    ? "fill-red-500 text-red-500"
+                    : "text-muted-foreground hover:text-red-400"
+                }`}
+              />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
