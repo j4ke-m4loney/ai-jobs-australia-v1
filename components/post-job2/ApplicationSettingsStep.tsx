@@ -144,7 +144,7 @@ export default function ApplicationSettingsStep({
                       "p-4 border rounded-lg text-left transition-all hover:border-primary flex items-center gap-3",
                       watchedMethod === method.value
                         ? "border-primary bg-primary/5 text-primary"
-                        : "border-border text-muted-foreground"
+                        : "border-primary text-muted-foreground"
                     )}
                   >
                     <Icon className="w-5 h-5" />
@@ -170,7 +170,7 @@ export default function ApplicationSettingsStep({
                     <Input
                       placeholder="https://careers.yourcompany.com/apply"
                       {...field}
-                      className="text-base h-12"
+                      className="text-base h-12 border-primary"
                     />
                   </FormControl>
                   <p className="text-sm text-muted-foreground">
@@ -198,7 +198,7 @@ export default function ApplicationSettingsStep({
                       placeholder="careers@yourcompany.com"
                       type="email"
                       {...field}
-                      className="text-base h-12"
+                      className="text-base h-12 border-primary"
                     />
                   </FormControl>
                   <p className="text-sm text-muted-foreground">
@@ -225,7 +225,7 @@ export default function ApplicationSettingsStep({
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="h-12 text-base">
+                    <SelectTrigger className="h-12 text-base border-primary">
                       <SelectValue placeholder="Select timeline" />
                     </SelectTrigger>
                   </FormControl>
@@ -249,7 +249,7 @@ export default function ApplicationSettingsStep({
             </FormLabel>
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                 <div className="flex items-center gap-3">
                   <Mail className="w-4 h-4 text-muted-foreground" />
                   <div>
@@ -269,7 +269,7 @@ export default function ApplicationSettingsStep({
                 />
               </div>
 
-              <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                 <div className="flex items-center gap-3">
                   <Phone className="w-4 h-4 text-muted-foreground" />
                   <div>

@@ -11,6 +11,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  PlacesAutocomplete,
+  PlaceResult,
+  isGooglePlacesDropdownActive,
+} from "@/components/ui/places-autocomplete";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -39,6 +44,9 @@ import { cn } from "@/lib/utils";
 const schema = z.object({
   jobTitle: z.string().min(5, "Job title must be at least 5 characters"),
   locationAddress: z.string().min(2, "Location is required"),
+  locationSuburb: z.string().optional(),
+  locationState: z.string().optional(),
+  locationPostcode: z.string().optional(),
   locationType: z.enum(["in-person", "fully-remote", "hybrid", "on-the-road"]),
   jobType: z.enum([
     "full-time",
@@ -92,18 +100,25 @@ export default function JobBasicsStep({
   const [payConfig, setPayConfig] = useState(formData.payConfig);
   const [selectedBenefits, setSelectedBenefits] = useState(formData.benefits);
   const [showAllBenefits, setShowAllBenefits] = useState(false);
-  const [highlights, setHighlights] = useState(formData.highlights || ["", "", ""]);
+  const [highlights, setHighlights] = useState(
+    formData.highlights || ["", "", ""]
+  );
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
       jobTitle: formData.jobTitle,
       locationAddress: formData.locationAddress,
+      locationSuburb: formData.locationSuburb,
+      locationState: formData.locationState,
+      locationPostcode: formData.locationPostcode,
       locationType: formData.locationType,
       jobType: formData.jobType,
       showPay: formData.payConfig.showPay,
     },
   });
+
+  const { setValue } = form;
 
   // Watch for form changes and update form data in real-time
   const watchedValues = form.watch();
@@ -123,7 +138,15 @@ export default function JobBasicsStep({
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [watchedValues, selectedJobType, hoursConfig, contractConfig, selectedBenefits, formData.payConfig, updateFormData]);
+  }, [
+    watchedValues,
+    selectedJobType,
+    hoursConfig,
+    contractConfig,
+    selectedBenefits,
+    formData.payConfig,
+    updateFormData,
+  ]);
 
   const requiresHoursConfig = selectedJobType === "part-time";
   const requiresContractConfig = [
@@ -174,22 +197,48 @@ export default function JobBasicsStep({
   };
 
   const getWordCount = (text: string) => {
-    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+    return text
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length;
   };
 
   const handlePayConfigChange = (field: string, value: any) => {
     setPayConfig((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Handle form-level keyboard events
+  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    // Check if Enter was pressed and Google Places dropdown is active
+    if (e.key === "Enter" && isGooglePlacesDropdownActive()) {
+      // Check if the location input is focused
+      const activeElement = document.activeElement;
+      const locationInput = document.querySelector(
+        'input[placeholder*="address"]'
+      );
+
+      if (activeElement === locationInput) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Let Google Places handle the selection
+        return;
+      }
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        onKeyDown={handleFormKeyDown}
+        className="space-y-8"
+      >
         {/* Job Title and Location */}
         <div className="space-y-6">
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
               <Briefcase className="w-5 h-5" />
-              Job Information
+              Information
             </h3>
 
             <div className="space-y-6">
@@ -205,7 +254,7 @@ export default function JobBasicsStep({
                       <Input
                         placeholder="e.g. Senior Machine Learning Engineer"
                         {...field}
-                        className="text-base h-12"
+                        className="text-base h-12 border-primary"
                       />
                     </FormControl>
                     <FormMessage />
@@ -226,7 +275,7 @@ export default function JobBasicsStep({
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="h-12 text-base">
+                        <SelectTrigger className="h-12 text-base border-primary">
                           <SelectValue placeholder="Select location type" />
                         </SelectTrigger>
                       </FormControl>
@@ -255,14 +304,23 @@ export default function JobBasicsStep({
                       What is the job location? *
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter a street address or postcode"
-                        {...field}
-                        className="text-base h-12"
+                      <PlacesAutocomplete
+                        value={field.value}
+                        onChange={(value, placeResult) => {
+                          field.onChange(value);
+                          if (placeResult) {
+                            setValue("locationSuburb", placeResult.suburb);
+                            setValue("locationState", placeResult.state);
+                            setValue("locationPostcode", placeResult.postcode);
+                          }
+                        }}
+                        placeholder="Enter address or 'Suburb, State' (e.g., Melbourne, VIC)"
+                        className="text-base h-12 border-primary"
                       />
                     </FormControl>
                     <p className="text-sm text-muted-foreground">
-                      Enter a street address, suburb, or postcode
+                      Enter a full address or just "Suburb, State" (e.g.,
+                      Sydney, NSW)
                     </p>
                     <FormMessage />
                   </FormItem>
@@ -277,7 +335,7 @@ export default function JobBasicsStep({
               <Star className="w-5 h-5" />
               Job Highlights
             </h3>
-            
+
             <p className="text-sm text-muted-foreground mb-4">
               Add up to 3 key highlights about this role (10-12 words each)
             </p>
@@ -287,7 +345,7 @@ export default function JobBasicsStep({
                 const wordCount = getWordCount(highlight);
                 const isOverLimit = wordCount > 12;
                 const isUnderMin = wordCount > 0 && wordCount < 8;
-                
+
                 return (
                   <div key={index}>
                     <FormLabel className="text-sm font-medium">
@@ -296,32 +354,34 @@ export default function JobBasicsStep({
                     <div className="space-y-1">
                       <Input
                         placeholder={
-                          index === 0 
-                            ? "e.g. Lead innovative AI solutions using cutting-edge machine learning" 
+                          index === 0
+                            ? "e.g. Lead innovative AI solutions using cutting-edge machine learning"
                             : index === 1
                             ? "e.g. Work with world-class data scientists on breakthrough research"
                             : "e.g. Competitive salary with equity and comprehensive benefits package"
                         }
                         value={highlight}
-                        onChange={(e) => handleHighlightChange(index, e.target.value)}
+                        onChange={(e) =>
+                          handleHighlightChange(index, e.target.value)
+                        }
                         className={cn(
-                          "text-base h-12",
+                          "text-base h-12 border-primary",
                           isOverLimit && "border-red-500 focus:border-red-500",
-                          isUnderMin && "border-yellow-500 focus:border-yellow-500"
+                          isUnderMin &&
+                            "border-yellow-500 focus:border-yellow-500"
                         )}
                       />
                       <div className="flex justify-between items-center text-xs">
-                        <span 
+                        <span
                           className={cn(
                             "text-muted-foreground",
                             isOverLimit && "text-red-500",
                             isUnderMin && "text-yellow-600"
                           )}
                         >
-                          {wordCount === 0 
-                            ? "No words yet" 
-                            : `${wordCount} word${wordCount !== 1 ? 's' : ''}`
-                          }
+                          {wordCount === 0
+                            ? "No words yet"
+                            : `${wordCount} word${wordCount !== 1 ? "s" : ""}`}
                           {isOverLimit && " (too many)"}
                           {isUnderMin && " (too short)"}
                         </span>
@@ -361,7 +421,7 @@ export default function JobBasicsStep({
                           "p-3 border rounded-lg text-left transition-all hover:border-primary",
                           selectedJobType === option.value
                             ? "border-primary bg-primary/5 text-primary font-medium"
-                            : "border-border text-muted-foreground"
+                            : "border-primary text-muted-foreground"
                         )}
                       >
                         {option.label}
@@ -391,7 +451,7 @@ export default function JobBasicsStep({
                       }))
                     }
                   >
-                    <SelectTrigger className="mt-1">
+                    <SelectTrigger className="mt-1 border-primary">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -409,7 +469,7 @@ export default function JobBasicsStep({
                     <Input
                       type="number"
                       placeholder="40"
-                      className="w-20"
+                      className="w-20 border-primary"
                       value={hoursConfig.fixedHours || ""}
                       onChange={(e) =>
                         setHoursConfig((prev) => ({
@@ -428,7 +488,7 @@ export default function JobBasicsStep({
                     <Input
                       type="number"
                       placeholder="20"
-                      className="w-20"
+                      className="w-20 border-primary"
                       value={hoursConfig.minHours || ""}
                       onChange={(e) =>
                         setHoursConfig((prev) => ({
@@ -441,7 +501,7 @@ export default function JobBasicsStep({
                     <Input
                       type="number"
                       placeholder="40"
-                      className="w-20"
+                      className="w-20 border-primary"
                       value={hoursConfig.maxHours || ""}
                       onChange={(e) =>
                         setHoursConfig((prev) => ({
@@ -460,7 +520,7 @@ export default function JobBasicsStep({
                     <Input
                       type="number"
                       placeholder="40"
-                      className="w-20"
+                      className="w-20 border-primary"
                       value={hoursConfig.maxHours || ""}
                       onChange={(e) =>
                         setHoursConfig((prev) => ({
@@ -479,7 +539,7 @@ export default function JobBasicsStep({
                     <Input
                       type="number"
                       placeholder="20"
-                      className="w-20"
+                      className="w-20 border-primary"
                       value={hoursConfig.minHours || ""}
                       onChange={(e) =>
                         setHoursConfig((prev) => ({
@@ -507,7 +567,7 @@ export default function JobBasicsStep({
                   <Input
                     type="number"
                     placeholder="6"
-                    className="w-20"
+                    className="w-20 border-primary"
                     value={contractConfig.length || ""}
                     onChange={(e) =>
                       setContractConfig((prev) => ({
@@ -526,7 +586,7 @@ export default function JobBasicsStep({
                       }))
                     }
                   >
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-32 border-primary">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -573,7 +633,7 @@ export default function JobBasicsStep({
                         handlePayConfigChange("payType", value)
                       }
                     >
-                      <SelectTrigger className="mt-1">
+                      <SelectTrigger className="mt-1 border-primary">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -601,7 +661,7 @@ export default function JobBasicsStep({
                               parseInt(e.target.value) || 0
                             )
                           }
-                          className="mt-1"
+                          className="mt-1 border-primary"
                         />
                       </div>
                     )}
@@ -622,7 +682,7 @@ export default function JobBasicsStep({
                                 parseInt(e.target.value) || 0
                               )
                             }
-                            className="mt-1"
+                            className="mt-1 border-primary"
                           />
                         </div>
                         <div>
@@ -639,7 +699,7 @@ export default function JobBasicsStep({
                                 parseInt(e.target.value) || 0
                               )
                             }
-                            className="mt-1"
+                            className="mt-1 border-primary"
                           />
                         </div>
                       </>
@@ -660,7 +720,7 @@ export default function JobBasicsStep({
                               parseInt(e.target.value) || 0
                             )
                           }
-                          className="mt-1"
+                          className="mt-1 border-primary"
                         />
                       </div>
                     )}
@@ -680,7 +740,7 @@ export default function JobBasicsStep({
                               parseInt(e.target.value) || 0
                             )
                           }
-                          className="mt-1"
+                          className="mt-1 border-primary"
                         />
                       </div>
                     )}
@@ -695,7 +755,7 @@ export default function JobBasicsStep({
                           handlePayConfigChange("payPeriod", value)
                         }
                       >
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="mt-1 border-primary">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building, MapPin, Heart } from "lucide-react";
+import { MapPin, Heart } from "lucide-react";
 
 interface Job {
   id: string;
@@ -10,6 +10,9 @@ interface Job {
   description: string;
   requirements: string | null;
   location: string;
+  suburb?: string | null;
+  state?: string | null;
+  location_display?: string | null;
   location_type: "onsite" | "remote" | "hybrid";
   job_type: "full-time" | "part-time" | "contract" | "internship";
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
@@ -30,7 +33,7 @@ interface Job {
     description: string | null;
     website: string | null;
     logo_url: string | null;
-  }[] | null;
+  } | null;
 }
 
 interface JobCardProps {
@@ -44,8 +47,7 @@ interface JobCardProps {
 // Helper functions
 const formatSalary = (min: number | null, max: number | null) => {
   if (!min && !max) return null;
-  if (min && max)
-    return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+  if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
   if (min) return `From $${min.toLocaleString()}`;
   if (max) return `Up to $${max.toLocaleString()}`;
 };
@@ -78,7 +80,7 @@ export const JobCard: React.FC<JobCardProps> = ({
 }) => {
   return (
     <Card
-      className={`cursor-pointer transition-all duration-200 hover:shadow-lg border border-border/50 ${
+      className={`cursor-pointer transition-all duration-200 hover:shadow-lg border border-primary/50 ${
         isSelected
           ? "ring-2 ring-primary bg-primary/5 shadow-md"
           : "hover:bg-muted/30 hover:border-border"
@@ -98,7 +100,7 @@ export const JobCard: React.FC<JobCardProps> = ({
               <h3 className="font-semibold text-lg line-clamp-2 text-foreground">
                 {job.title}
               </h3>
-              {job.status === 'pending' && (
+              {job.status === "pending" && (
                 <Badge variant="secondary" className="shrink-0">
                   Pending
                 </Badge>
@@ -106,16 +108,32 @@ export const JobCard: React.FC<JobCardProps> = ({
             </div>
 
             <div className="flex items-center gap-1 text-base text-foreground mb-3">
-              <Building className="w-4 h-4 text-muted-foreground" />
-              <span className="font-medium">Company</span>
+              <span className="font-medium">
+                {job.companies?.name || "Company"}
+              </span>
             </div>
+
+            <div className="flex items-center gap-4 text-sm text-foreground mb-3">
+              <div className="flex items-center gap-1">
+                <span>{job.location_display || job.location}</span>
+              </div>
+              <span className="capitalize px-2 py-1 bg-muted rounded text-xs">
+                {job.location_type}
+              </span>
+            </div>
+
+            {formatSalary(job.salary_min, job.salary_max) && (
+              <div className="text-sm font-semibold text-green-600 mb-3">
+                {formatSalary(job.salary_min, job.salary_max)}
+              </div>
+            )}
 
             {/* Job Highlights */}
             {job.highlights && job.highlights.length > 0 && (
-              <div className="mb-4">
-                <ul className="space-y-1 text-sm text-muted-foreground">
+              <div className="mb-3">
+                <ul className="space-y-1 text-sm text-foreground">
                   {job.highlights
-                    .filter(highlight => highlight.trim().length > 0)
+                    .filter((highlight) => highlight.trim().length > 0)
                     .slice(0, 3)
                     .map((highlight, index) => (
                       <li key={index} className="flex items-start gap-2">
@@ -127,31 +145,22 @@ export const JobCard: React.FC<JobCardProps> = ({
               </div>
             )}
 
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-              <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
-                <span>{job.location}</span>
-              </div>
-              <span className="capitalize px-2 py-1 bg-muted rounded text-xs">
-                {job.location_type}
-              </span>
-            </div>
-
-            {formatSalary(job.salary_min, job.salary_max) && (
-              <div className="text-base font-semibold text-green-600 mb-3">
-                {formatSalary(job.salary_min, job.salary_max)}
-              </div>
-            )}
-
             <div className="text-xs text-muted-foreground">
               Posted {getTimeAgo(job.created_at)}
             </div>
           </div>
 
           <div className="flex flex-col items-center gap-3 ml-4">
-            <div className="w-12 h-12 rounded bg-primary/10 flex items-center justify-center">
-              <Building className="w-6 h-6 text-primary" />
-            </div>
+            {/* Company Logo - only show if exists */}
+            {job.companies?.logo_url && (
+              <div className="w-12 h-12">
+                <img
+                  src={job.companies.logo_url}
+                  alt={job.companies.name || "Company logo"}
+                  className="w-12 h-12 rounded object-contain"
+                />
+              </div>
+            )}
 
             <Button
               variant="ghost"

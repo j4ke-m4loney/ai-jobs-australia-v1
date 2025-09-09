@@ -130,7 +130,7 @@ export default function JobDetailsStep2({
                         "p-3 border rounded-lg text-left transition-all hover:border-primary",
                         selectedJobType === option.value
                           ? "border-primary bg-primary/5 text-primary font-medium"
-                          : "border-border text-muted-foreground"
+                          : "border-primary text-muted-foreground"
                       )}
                     >
                       {option.label}
@@ -160,7 +160,7 @@ export default function JobDetailsStep2({
                     }))
                   }
                 >
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className="mt-1 border-primary">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -178,7 +178,7 @@ export default function JobDetailsStep2({
                   <Input
                     type="number"
                     placeholder="40"
-                    className="w-20"
+                    className="w-20 border-primary"
                     value={hoursConfig.fixedHours || ""}
                     onChange={(e) =>
                       setHoursConfig((prev) => ({
@@ -197,7 +197,7 @@ export default function JobDetailsStep2({
                   <Input
                     type="number"
                     placeholder="20"
-                    className="w-20"
+                    className="w-20 border-primary"
                     value={hoursConfig.minHours || ""}
                     onChange={(e) =>
                       setHoursConfig((prev) => ({
@@ -210,7 +210,7 @@ export default function JobDetailsStep2({
                   <Input
                     type="number"
                     placeholder="40"
-                    className="w-20"
+                    className="w-20 border-primary"
                     value={hoursConfig.maxHours || ""}
                     onChange={(e) =>
                       setHoursConfig((prev) => ({
@@ -229,7 +229,7 @@ export default function JobDetailsStep2({
                   <Input
                     type="number"
                     placeholder="40"
-                    className="w-20"
+                    className="w-20 border-primary"
                     value={hoursConfig.maxHours || ""}
                     onChange={(e) =>
                       setHoursConfig((prev) => ({
@@ -248,7 +248,7 @@ export default function JobDetailsStep2({
                   <Input
                     type="number"
                     placeholder="20"
-                    className="w-20"
+                    className="w-20 border-primary"
                     value={hoursConfig.minHours || ""}
                     onChange={(e) =>
                       setHoursConfig((prev) => ({
@@ -295,7 +295,7 @@ export default function JobDetailsStep2({
                     }))
                   }
                 >
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 border-primary">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

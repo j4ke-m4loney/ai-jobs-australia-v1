@@ -118,6 +118,7 @@ export default function DescribeJobStep({
                     onChange={field.onChange}
                     placeholder="Describe the role, responsibilities, team culture, and what makes this opportunity exciting..."
                     minHeight="150px"
+                    className="border-primary"
                   />
                 </FormControl>
                 <p className="text-sm text-muted-foreground">
@@ -144,6 +145,7 @@ export default function DescribeJobStep({
                     onChange={field.onChange}
                     placeholder="List the essential skills, experience, qualifications, and personal qualities required for this role..."
                     minHeight="120px"
+                    className="border-primary"
                   />
                 </FormControl>
                 <p className="text-sm text-muted-foreground">
@@ -175,7 +177,7 @@ export default function DescribeJobStep({
                       <Input
                         placeholder="e.g. TechCorp Australia"
                         {...field}
-                        className="text-base h-12"
+                        className="text-base h-12 border-primary"
                       />
                     </FormControl>
                     <FormMessage />
@@ -189,7 +191,7 @@ export default function DescribeJobStep({
                 </label>
                 <div className="flex items-center gap-4">
                   <div
-                    className="w-16 h-16 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                    className="w-16 h-16 border-2 border-dashed border-primary rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {logoPreview ? (
@@ -236,7 +238,7 @@ export default function DescribeJobStep({
                       <Input
                         placeholder="https://www.yourcompany.com.au"
                         {...field}
-                        className="text-base h-12"
+                        className="text-base h-12 border-primary"
                       />
                     </FormControl>
                     <FormMessage />
@@ -255,7 +257,7 @@ export default function DescribeJobStep({
                     <FormControl>
                       <Textarea
                         placeholder="Tell candidates about your company, culture, mission, and what makes it a great place to work..."
-                        className="min-h-[120px] text-base"
+                        className="min-h-[120px] text-base border-primary"
                         {...field}
                       />
                     </FormControl>

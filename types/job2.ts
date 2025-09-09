@@ -2,6 +2,9 @@ export interface JobFormData2 {
   // Job Basics
   jobTitle: string;
   locationAddress: string;
+  locationSuburb?: string;
+  locationState?: string;
+  locationPostcode?: string;
   locationType: "in-person" | "fully-remote" | "hybrid" | "on-the-road";
   
   // Job Details

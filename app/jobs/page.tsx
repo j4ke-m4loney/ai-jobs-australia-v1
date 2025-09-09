@@ -49,6 +49,9 @@ interface Job {
   description: string;
   requirements: string | null;
   location: string;
+  suburb?: string | null;
+  state?: string | null;
+  location_display?: string | null;
   location_type: "onsite" | "remote" | "hybrid";
   job_type: "full-time" | "part-time" | "contract" | "internship";
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
@@ -69,7 +72,7 @@ interface Job {
     description: string | null;
     website: string | null;
     logo_url: string | null;
-  }[] | null;
+  } | null;
 }
 
 export default function JobsPage() {
@@ -142,6 +145,43 @@ export default function JobsPage() {
     }
   }, [user]);
 
+  // Function to enrich jobs with company data
+  const enrichJobsWithCompanyData = async (jobs: any[]): Promise<Job[]> => {
+    if (!jobs || jobs.length === 0) return [];
+
+    // Extract unique company IDs
+    const companyIds = [...new Set(jobs.map(job => job.company_id).filter(Boolean))];
+    
+    if (companyIds.length === 0) {
+      // No companies to fetch, return jobs as-is with companies set to null
+      return jobs.map(job => ({ ...job, companies: null }));
+    }
+
+    // Fetch company data
+    const { data: companies, error: companiesError } = await supabase
+      .from('companies')
+      .select('id, name, description, website, logo_url')
+      .in('id', companyIds);
+
+    if (companiesError) {
+      console.error('Error fetching companies:', companiesError);
+      // Return jobs without company data
+      return jobs.map(job => ({ ...job, companies: null }));
+    }
+
+    // Create a map of company_id -> company for easy lookup
+    const companyMap = new Map();
+    companies?.forEach(company => {
+      companyMap.set(company.id, company);
+    });
+
+    // Merge company data into jobs
+    return jobs.map(job => ({
+      ...job,
+      companies: job.company_id ? companyMap.get(job.company_id) : null
+    }));
+  };
+
   const fetchSuggestions = useCallback(async () => {
     setIsLoadingSuggestions(true);
     try {
@@ -165,7 +205,9 @@ export default function JobsPage() {
           expires_at,
           application_method,
           application_url,
-          application_email
+          application_email,
+          highlights,
+          company_id
         `
         )
         .eq("status", "approved")
@@ -174,7 +216,9 @@ export default function JobsPage() {
         .limit(5);
 
       if (!featuredError && featuredJobs) {
-        setSuggestedJobs(featuredJobs as Job[]);
+        // Fetch company data for featured jobs
+        const jobsWithCompanies = await enrichJobsWithCompanyData(featuredJobs);
+        setSuggestedJobs(jobsWithCompanies);
       }
     } catch (error) {
       console.error("Error fetching suggestions:", error);
@@ -189,7 +233,10 @@ export default function JobsPage() {
 
       let query = supabase
         .from("jobs")
-        .select("*");
+        .select(`
+          *,
+          highlights
+        `);
       // DEVELOPMENT: Show both approved and pending jobs
       // In production, change this back to only show approved jobs
       // query = query.eq("status", "approved");
@@ -268,12 +315,17 @@ export default function JobsPage() {
     console.log(`Found ${jobsData.length} jobs`);
     if (jobsData.length > 0) {
       console.log("First job:", jobsData[0]);
+      
+      // Enrich jobs with company data
+      const jobsWithCompanies = await enrichJobsWithCompanyData(jobsData);
+      setJobs(jobsWithCompanies);
+    } else {
+      setJobs([]);
     }
-    setJobs(jobsData);
     
-    // Auto-select first job if none selected
+    // Auto-select first job if none selected (this will be handled after enrichment)
     if (jobsData.length > 0 && !selectedJob) {
-      setSelectedJob(jobsData[0]);
+      // The selection will be handled after enrichment in the useEffect
     }
     
     // Fetch suggestions if no jobs found
@@ -288,6 +340,13 @@ export default function JobsPage() {
       setJobsLoading(false);
     }
   }, [searchTerm, locationTerm, selectedCategories, selectedLocations, selectedJobTypes, selectedLocationTypes, salaryRange, sortBy, selectedJob, user]);
+
+  // Auto-select first job when jobs are loaded
+  useEffect(() => {
+    if (jobs.length > 0 && !selectedJob) {
+      setSelectedJob(jobs[0]);
+    }
+  }, [jobs, selectedJob]);
 
   // Consolidated initialization and authentication effect
   useEffect(() => {

@@ -13,7 +13,6 @@ import {
   MapPin,
   Clock,
   DollarSign,
-  Building2,
   Mail,
   ExternalLink,
   Globe,
@@ -112,7 +111,7 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Job Preview</DialogTitle>
+          <DialogTitle>Preview</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -124,7 +123,6 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
                   {formData.jobTitle || "Job Title"}
                 </h1>
                 <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-muted-foreground" />
                   <span className="font-medium text-foreground">
                     {formData.companyName || "Company Name"}
                   </span>
@@ -199,11 +197,10 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
           {/* Job Description */}
           {formData.jobDescription && (
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-3">
-                Job Description
-              </h2>
               <div className="prose prose-sm max-w-none text-muted-foreground">
-                <div dangerouslySetInnerHTML={{ __html: formData.jobDescription }} />
+                <div
+                  dangerouslySetInnerHTML={{ __html: formData.jobDescription }}
+                />
               </div>
             </div>
           )}
@@ -211,11 +208,10 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
           {/* Requirements */}
           {formData.requirements && (
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-3">
-                Requirements
-              </h2>
               <div className="prose prose-sm max-w-none text-muted-foreground">
-                <div dangerouslySetInnerHTML={{ __html: formData.requirements }} />
+                <div
+                  dangerouslySetInnerHTML={{ __html: formData.requirements }}
+                />
               </div>
             </div>
           )}
@@ -227,7 +223,11 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
                 About {formData.companyName || "the Company"}
               </h2>
               <div className="prose prose-sm max-w-none text-muted-foreground">
-                <div dangerouslySetInnerHTML={{ __html: formData.companyDescription }} />
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: formData.companyDescription,
+                  }}
+                />
               </div>
             </div>
           )}
@@ -256,7 +256,6 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
                 </>
               ) : (
                 <>
-                  <Building2 className="w-4 h-4 text-primary" />
                   <span>Apply through AI Jobs Australia platform</span>
                 </>
               )}
