@@ -29,6 +29,7 @@ import {
   Search,
 } from "lucide-react";
 import { JobSeekerLayout } from "@/components/jobseeker/JobSeekerLayout";
+import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 
 interface Job {
   id: string;
@@ -44,7 +45,24 @@ interface Job {
   is_featured: boolean;
   created_at: string;
   expires_at: string;
-  employer_questions: any; // Flexible type for JSON data
+  // Optional fields that may not exist in all job records
+  suburb?: string | null;
+  state?: string | null;
+  location_display?: string | null;
+  application_method?: string;
+  application_url?: string | null;
+  application_email?: string | null;
+  status?: "pending" | "approved" | "rejected" | "expired";
+  company_id?: string | null;
+  highlights?: string[] | null;
+  companies?: {
+    id: string;
+    name: string;
+    description: string | null;
+    website: string | null;
+    logo_url: string | null;
+  } | null;
+  employer_questions?: any; // Flexible type for JSON data
 }
 
 interface UserDocument {
@@ -91,7 +109,16 @@ export default function SavedJobDetailPage() {
     setJobLoading(true);
     const { data, error } = await supabase
       .from("jobs")
-      .select("*")
+      .select(`
+        *,
+        companies (
+          id,
+          name,
+          description,
+          website,
+          logo_url
+        )
+      `)
       .eq("id", jobId)
       .eq("status", "approved")
       .single();
@@ -269,6 +296,47 @@ export default function SavedJobDetailPage() {
     }
   };
 
+  const handleApply = () => {
+    if (!job) return;
+    
+    // Check if it's an external application
+    if (job.application_method === "external") {
+      if (job.application_url) {
+        window.open(job.application_url, "_blank");
+      } else if (job.application_email) {
+        window.open(`mailto:${job.application_email}`);
+      }
+      return;
+    }
+
+    // For internal applications, scroll to the application form
+    document.getElementById('application-form')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSaveClick = async (jobId: string) => {
+    await handleUnsaveJob();
+  };
+
+  // Check if user has already applied
+  const [hasApplied, setHasApplied] = useState(false);
+  
+  useEffect(() => {
+    const checkApplicationStatus = async () => {
+      if (!user || !jobId) return;
+      
+      const { data } = await supabase
+        .from("job_applications")
+        .select("id")
+        .eq("job_id", jobId)
+        .eq("applicant_id", user.id)
+        .single();
+      
+      setHasApplied(!!data);
+    };
+    
+    checkApplicationStatus();
+  }, [user, jobId]);
+
 
   const formatSalary = (min: number | null, max: number | null) => {
     if (!min && !max) return null;
@@ -327,131 +395,32 @@ export default function SavedJobDetailPage() {
 
   return (
     <JobSeekerLayout title="Job Details">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto">
         {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/jobseeker/saved-jobs")}
-          className="hover:bg-primary/10"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Saved Jobs
-        </Button>
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/jobseeker/saved-jobs")}
+            className="hover:bg-primary/10"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Saved Jobs
+          </Button>
+        </div>
 
-        {/* Job Summary */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Building className="w-8 h-8 text-primary" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  {job.is_featured && (
-                    <Badge className="bg-gradient-hero text-white">
-                      Featured
-                    </Badge>
-                  )}
-                  <Badge variant="outline" className="text-xs">
-                    {getCategoryDisplay(job.category)}
-                  </Badge>
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    <Heart className="w-3 h-3 mr-1 fill-current" />
-                    Saved
-                  </Badge>
-                </div>
-
-                <h1 className="text-2xl font-bold text-foreground mb-2">
-                  {job.title}
-                </h1>
-
-                <div className="text-lg font-medium text-muted-foreground mb-3">
-                  Company
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {job.location} ({job.location_type})
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span className="capitalize">{job.job_type}</span>
-                  </div>
-                  <span className="text-xs">
-                    Posted {getTimeAgo(job.created_at)}
-                  </span>
-                </div>
-
-                {formatSalary(job.salary_min, job.salary_max) && (
-                  <div className="flex items-center gap-2 mb-4">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    <span className="font-semibold text-green-600 text-lg">
-                      {formatSalary(job.salary_min, job.salary_max)}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={handleUnsaveJob}
-                    className="gap-2"
-                  >
-                    <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-                    Remove from Saved
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Job Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Info className="w-5 h-5" />
-              Job Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Job Description */}
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Job Description
-              </h3>
-              <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                <div dangerouslySetInnerHTML={{ __html: job.description }} />
-              </div>
-            </div>
-
-            {/* Requirements */}
-            {job.requirements && (
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  Requirements
-                </h3>
-                <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                  <div dangerouslySetInnerHTML={{ __html: job.requirements }} />
-                </div>
-              </div>
-            )}
-
-            {/* Company Info Section - placeholder for future enhancement */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                About the Company
-              </h3>
-              <p className="text-muted-foreground">
-                Company information will be displayed here when available.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Job Details using centralized component */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="lg:col-span-1">
+            <JobDetailsView
+              job={job}
+              onApply={handleApply}
+              onSaveClick={handleSaveClick}
+              isJobSaved={true}
+              hasApplied={hasApplied}
+            />
+          </div>
+          
+          <div className="lg:col-span-1">
 
         {/* Application Section */}
         {applicationSubmitted ? (
@@ -711,6 +680,8 @@ export default function SavedJobDetailPage() {
           </CardContent>
           </Card>
         )}
+          </div>
+        </div>
       </div>
     </JobSeekerLayout>
   );

@@ -141,11 +141,20 @@ export const useSavedJobs = () => {
         return [];
       }
 
-      // Then fetch the full job details
+      // Then fetch the full job details with company information
       const jobIds = savedData.map(item => item.job_id);
       const { data: jobsData, error: jobsError } = await supabase
         .from('jobs')
-        .select('*')
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            description,
+            website,
+            logo_url
+          )
+        `)
         .in('id', jobIds);
 
       if (jobsError) throw jobsError;

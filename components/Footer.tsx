@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Twitter, Linkedin, Github } from "lucide-react";
+import { Mail, Twitter, Linkedin } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -26,13 +26,11 @@ const Footer = () => {
                 </span>
               </div>
               <p className="text-background/80 mb-6 max-w-md">
-                Building the #1 platform for artificial intelligence careers in
-                Australia. Dedicated to connecting local talent with local
-                opportunities.
+                Australia's #1 platform for careers in AI, ML and Data Science.
+                Connecting local talent with local opportunities.
               </p>
-
               {/* Newsletter Signup */}
-              <div className="max-w-md">
+              {/* <div className="max-w-md">
                 <h4 className="font-semibold mb-3">Stay Updated</h4>
                 <div className="flex gap-2">
                   <Input
@@ -48,7 +46,7 @@ const Footer = () => {
                     <Mail className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Quick Links */}
@@ -56,35 +54,35 @@ const Footer = () => {
               <h4 className="font-semibold mb-4">Platform</h4>
               <ul className="space-y-2 text-background/80">
                 <li>
-                  <a
-                    href="#job-seekers"
+                  <Link
+                    href="/jobs"
                     className="hover:text-background transition-smooth"
                   >
-                    Job Seekers
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#employers"
-                    className="hover:text-background transition-smooth"
-                  >
-                    Employers
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#about"
-                    className="hover:text-background transition-smooth"
-                  >
-                    About
-                  </a>
+                    Browse Jobs
+                  </Link>
                 </li>
                 <li>
                   <Link
-                    href="/contact"
+                    href="/hire"
                     className="hover:text-background transition-smooth"
                   >
-                    Contact
+                    Post Job
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/login"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Job Seeker Sign In
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/employer-login"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Employer Sign In
                   </Link>
                 </li>
               </ul>
@@ -126,39 +124,46 @@ const Footer = () => {
           <div className="border-t border-background/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="text-background/60 text-sm mb-4 md:mb-0">
-                © 2024 AIJobsAustralia.com.au. All rights reserved.
+                © 2025 AIJobsAustralia.com.au. All rights reserved.
               </div>
 
               {/* Social Links */}
               <div className="flex space-x-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-background/60 hover:text-background hover:bg-background/10"
+                <Link
+                  href="https://x.com/aijobsaustralia"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <Twitter className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-background/60 hover:text-background hover:bg-background/10"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-background/60 hover:text-background hover:bg-background/10"
+                  >
+                    <Twitter className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link
+                  href="https://www.linkedin.com/company/ai-jobs-australia/?viewAsMember=true"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <Linkedin className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-background/60 hover:text-background hover:bg-background/10"
-                >
-                  <Github className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-background/60 hover:text-background hover:bg-background/10"
-                >
-                  <Mail className="w-4 h-4" />
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-background/60 hover:text-background hover:bg-background/10"
+                  >
+                    <Linkedin className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-background/60 hover:text-background hover:bg-background/10"
+                  >
+                    <Mail className="w-4 h-4" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

@@ -42,6 +42,13 @@ interface Job {
   created_at: string;
   expires_at: string;
   employer_questions: any; // Flexible type for JSON data
+  companies?: {
+    id: string;
+    name: string;
+    description: string | null;
+    website: string | null;
+    logo_url: string | null;
+  } | null;
 }
 
 interface UserDocument {
@@ -93,7 +100,16 @@ export default function ApplyPage() {
     setJobLoading(true);
     const { data, error } = await supabase
       .from("jobs")
-      .select("*")
+      .select(`
+        *,
+        companies (
+          id,
+          name,
+          description,
+          website,
+          logo_url
+        )
+      `)
       .eq("id", jobId)
       .eq("status", "approved")
       .single();
@@ -324,7 +340,7 @@ export default function ApplyPage() {
                 </h1>
 
                 <div className="text-lg font-medium text-muted-foreground mb-3">
-                  Mock Company
+                  {job.companies?.name || "Company"}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
@@ -390,9 +406,27 @@ export default function ApplyPage() {
                 <Building className="w-5 h-5" />
                 About the Company
               </h3>
-              <p className="text-muted-foreground">
-                Company information will be displayed here when available.
-              </p>
+              {job.companies ? (
+                <div className="space-y-3">
+                  <p className="text-muted-foreground">
+                    {job.companies.description || "Company description not available."}
+                  </p>
+                  {job.companies.website && (
+                    <a
+                      href={job.companies.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-primary hover:underline"
+                    >
+                      Visit Company Website
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  Company information not available.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

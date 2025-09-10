@@ -32,10 +32,13 @@ interface SavedJob {
     salary_max: number | null;
     created_at: string;
     category: string;
-    company?: {
+    companies?: {
+      id: string;
       name: string;
+      description: string | null;
+      website: string | null;
       logo_url: string | null;
-    };
+    } | null;
   };
 }
 
@@ -71,11 +74,20 @@ const JobSeekerSavedJobs = () => {
         return;
       }
 
-      // Then fetch the full job details
+      // Then fetch the full job details with company information
       const jobIds = savedData.map(item => item.job_id);
       const { data: jobsData, error: jobsError } = await supabase
         .from("jobs")
-        .select("*")
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            description,
+            website,
+            logo_url
+          )
+        `)
         .in("id", jobIds);
 
       if (jobsError) throw jobsError;
@@ -85,13 +97,7 @@ const JobSeekerSavedJobs = () => {
         const job = jobsData?.find(j => j.id === saved.job_id);
         return {
           ...saved,
-          job: job ? {
-            ...job,
-            company: {
-              name: "Company", // Placeholder for now
-              logo_url: null,
-            }
-          } : null
+          job: job || null
         };
       }).filter(item => item.job !== null);
 
@@ -185,10 +191,10 @@ const JobSeekerSavedJobs = () => {
                     <div className="flex gap-4 flex-1">
                       {/* Company Logo */}
                       <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                        {savedJob.job.company?.logo_url ? (
+                        {savedJob.job.companies?.logo_url ? (
                           <img
-                            src={savedJob.job.company.logo_url}
-                            alt={savedJob.job.company.name}
+                            src={savedJob.job.companies.logo_url}
+                            alt={savedJob.job.companies.name || "Company"}
                             className="w-8 h-8 rounded"
                           />
                         ) : (
@@ -208,7 +214,7 @@ const JobSeekerSavedJobs = () => {
                         </h3>
 
                         <p className="text-sm text-muted-foreground mb-2">
-                          Company
+                          {savedJob.job.companies?.name || "Company"}
                         </p>
 
                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">

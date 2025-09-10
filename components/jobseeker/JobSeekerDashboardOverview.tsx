@@ -21,6 +21,13 @@ interface Application {
     job_type: string;
     salary_min: number | null;
     salary_max: number | null;
+    companies?: {
+      id: string;
+      name: string;
+      description: string | null;
+      website: string | null;
+      logo_url: string | null;
+    } | null;
   };
 }
 
@@ -67,7 +74,14 @@ export const JobSeekerDashboardOverview = () => {
             location_type,
             job_type,
             salary_min,
-            salary_max
+            salary_max,
+            companies (
+              id,
+              name,
+              description,
+              website,
+              logo_url
+            )
           )
         `
           )
@@ -368,7 +382,7 @@ export const JobSeekerDashboardOverview = () => {
                       {savedJob.job.title}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      {savedJob.job.location} • {savedJob.job.job_type}
+                      {savedJob.job.companies?.name || "Company"} • {savedJob.job.location} • {savedJob.job.job_type}
                     </p>
                     {savedJob.job.salary_min && (
                       <p className="text-xs text-green-600 mt-1">
@@ -419,7 +433,7 @@ export const JobSeekerDashboardOverview = () => {
                       {application.job.title}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      {application.job.location} • {application.job.job_type}
+                      {application.job.companies?.name || "Company"} • {application.job.location} • {application.job.job_type}
                     </p>
                   </div>
                   <div className="text-right">

@@ -90,7 +90,7 @@ const HomePage = () => {
       step: "1",
       title: "Create Your Profile",
       description:
-        "Build a compelling profile showcasing your AI/ML skills and experience",
+        "Build a compelling profile showcasing your AI/ML skills and experience with our smart profile builder",
       icon: Users,
     },
     {
@@ -102,7 +102,7 @@ const HomePage = () => {
     },
     {
       step: "3",
-      title: "Get Hired",
+      title: "Get Hired Fast",
       description:
         "Connect with top Australian companies and land your dream AI role",
       icon: CheckCircle,
@@ -144,7 +144,7 @@ const HomePage = () => {
                       placeholder="Job title, keywords, or company"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 h-12 text-base"
+                      className="pl-10 h-12 text-base border-primary/50"
                     />
                   </div>
                   <div className="flex-1 relative">
@@ -153,7 +153,7 @@ const HomePage = () => {
                       placeholder="City, state, or remote"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="pl-10 h-12 text-base"
+                      className="pl-10 h-12 text-base border-primary/50"
                     />
                   </div>
                   <Button
@@ -170,14 +170,12 @@ const HomePage = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary mb-2">
-                    500+
+                    150+
                   </div>
                   <div className="text-muted-foreground">Active Jobs</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-accent mb-2">
-                    150+
-                  </div>
+                  <div className="text-3xl font-bold text-accent mb-2">50+</div>
                   <div className="text-muted-foreground">Companies</div>
                 </div>
                 <div className="text-center">
@@ -222,16 +220,21 @@ const HomePage = () => {
         {/* Featured Jobs */}
         <section className="py-16">
           <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center mb-12">
-              <h2 className="text-foreground text-3xl font-bold">
-                Featured Jobs
-              </h2>
+            <div className="flex justify-between items-start mb-12">
+              <div>
+                <h2 className="text-foreground text-3xl font-bold mb-3">
+                  Featured Jobs
+                </h2>
+                <p className="text-xl text-muted-foreground leading-relaxed">
+                  Roles from Australia's most innovative companies
+                </p>
+              </div>
               <Button
                 variant="outline"
                 onClick={() =>
                   user ? router.push("/jobs") : router.push("/login")
                 }
-                className="gap-2"
+                className="gap-2 shadow-lg"
               >
                 View All Jobs
                 <ArrowRight className="w-4 h-4" />
@@ -286,33 +289,44 @@ const HomePage = () => {
         </section>
 
         {/* How It Works */}
-        <section className="py-16 bg-muted/30">
+        <section className="py-20">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-foreground text-3xl font-bold mb-4">
-                How It Works
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold mb-4">
+                Your AI Career Journey
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Getting started is simple. Follow these three steps to find your
-                next AI opportunity.
+                From profile creation to your first day - we're with you every
+                step of the way
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {howItWorksSteps.map((step) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              {howItWorksSteps.map((step, index) => {
                 const Icon = step.icon;
                 return (
-                  <div key={step.step} className="text-center group">
-                    <div className="relative mb-6">
-                      <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <Icon className="w-8 h-8 text-primary-foreground" />
+                  <div
+                    key={step.step}
+                    className="text-center group"
+                    style={{ animationDelay: `${index * 0.3}s` }}
+                  >
+                    <div className="relative mb-8">
+                      <div className="w-20 h-20 bg-gradient-hero rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-500 shadow-lg">
+                        <Icon className="w-10 h-10 text-white" />
                       </div>
-                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white font-bold text-sm animate-bounce">
                         {step.step}
                       </div>
+                      {index < howItWorksSteps.length - 1 && (
+                        <div className="hidden md:block absolute top-10 left-full w-full h-0.5 bg-gradient-to-r from-primary to-accent opacity-30"></div>
+                      )}
                     </div>
-                    <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
-                    <p className="text-muted-foreground">{step.description}</p>
+                    <h3 className="text-2xl font-semibold mb-4 group-hover:text-primary transition-colors">
+                      {step.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {step.description}
+                    </p>
                   </div>
                 );
               })}
@@ -368,6 +382,55 @@ const HomePage = () => {
           </div>
         </section>
       </main>
+
+      {/* Final CTA Section */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-hero opacity-10"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center max-w-4xl mx-auto">
+            <h2 className="text-5xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
+              Ready to Shape Australia's AI Future?
+            </h2>
+            <p className="text-xl text-foreground mb-12 leading-relaxed">
+              Join thousands of AI professionals who have already discovered
+              their dream careers. Your next breakthrough is just one click
+              away.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <Button
+                size="lg"
+                className="h-16 px-12 text-lg bg-gradient-hero hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                onClick={() =>
+                  user
+                    ? router.push("/jobseeker/dashboard")
+                    : router.push("/auth/jobseeker")
+                }
+              >
+                <Zap className="w-6 h-6 mr-3" />
+                Start Your AI Journey
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-16 px-12 text-lg hover:bg-primary hover:text-primary-foreground transition-all duration-300 transform hover:scale-105"
+                onClick={() =>
+                  user ? router.push("/hire") : router.push("/hire")
+                }
+              >
+                <Users className="w-6 h-6 mr-3" />
+                Hire AI Talent
+              </Button>
+            </div>
+
+            <p className="text-sm text-muted-foreground mt-8">
+              Join our community of <strong>1,000+</strong> AI professionals and{" "}
+              <strong>150+</strong> innovative companies
+            </p>
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </div>

@@ -45,137 +45,197 @@ export const useEmployerApplications = (selectedJobId?: string) => {
   const fetchJobs = async () => {
     if (!user) return;
 
-    // Mock jobs data from Job Management
-    const mockJobs = [
-      {
-        id: "1",
-        title: "Senior AI Engineer",
-        status: "approved",
-        application_count: 24,
-      },
-      {
-        id: "2",
-        title: "Machine Learning Researcher",
-        status: "pending",
-        application_count: 12,
-      },
-      {
-        id: "3",
-        title: "Data Scientist",
-        status: "approved",
-        application_count: 8,
-      },
-    ];
+    try {
+      // Fetch real jobs for this employer with application counts
+      const { data: jobsData, error: jobsError } = await supabase
+        .from("jobs")
+        .select(`
+          id,
+          title,
+          status,
+          created_at
+        `)
+        .eq("employer_id", user.id)
+        .order("created_at", { ascending: false });
 
-    setJobs(mockJobs);
+      if (jobsError) {
+        console.error("Error fetching jobs:", jobsError);
+        setError("Failed to load jobs");
+        return;
+      }
+
+      // Get application counts for each job
+      const jobsWithCounts = await Promise.all(
+        (jobsData || []).map(async (job) => {
+          const { count, error: countError } = await supabase
+            .from("job_applications")
+            .select("*", { count: "exact", head: true })
+            .eq("job_id", job.id);
+
+          if (countError) {
+            console.error("Error counting applications for job:", job.id, countError);
+          }
+
+          return {
+            id: job.id,
+            title: job.title,
+            status: job.status,
+            application_count: count || 0,
+          };
+        })
+      );
+
+      setJobs(jobsWithCounts);
+    } catch (error) {
+      console.error("Error in fetchJobs:", error);
+      setError("Failed to load jobs");
+    }
   };
 
   const fetchApplications = async () => {
     if (!user) return;
 
-    // Mock applications data
-    const mockApplications = [
-      {
-        id: "1",
-        job_id: "1",
-        applicant_id: "user1",
-        status: "reviewing",
-        created_at: "2024-01-20T10:00:00Z",
-        resume_url: "#",
-        cover_letter_url: "#",
-        job: {
-          id: "1",
-          title: "Senior AI Engineer",
-          company_id: "comp1",
-        },
-        profiles: {
-          id: "profile1",
-          first_name: "Sarah",
-          last_name: "Johnson",
-          phone: "+61 400 123 456",
-          location: "Sydney, NSW",
-          experience_level: "5+ years",
-          user_id: "user1",
-        },
-      },
-      {
-        id: "2",
-        job_id: "1",
-        applicant_id: "user2",
-        status: "shortlisted",
-        created_at: "2024-01-18T14:30:00Z",
-        resume_url: "#",
-        cover_letter_url: "#",
-        job: {
-          id: "1",
-          title: "Senior AI Engineer",
-          company_id: "comp1",
-        },
-        profiles: {
-          id: "profile2",
-          first_name: "Michael",
-          last_name: "Chen",
-          phone: "+61 400 789 012",
-          location: "Melbourne, VIC",
-          experience_level: "7+ years",
-          user_id: "user2",
-        },
-      },
-      {
-        id: "3",
-        job_id: "2",
-        applicant_id: "user3",
-        status: "reviewing",
-        created_at: "2024-01-15T09:15:00Z",
-        resume_url: "#",
-        cover_letter_url: undefined,
-        job: {
-          id: "2",
-          title: "Machine Learning Researcher",
-          company_id: "comp2",
-        },
-        profiles: {
-          id: "profile3",
-          first_name: "Emily",
-          last_name: "Rodriguez",
-          phone: "+61 400 345 678",
-          location: "Brisbane, QLD",
-          experience_level: "4+ years",
-          user_id: "user3",
-        },
-      },
-      {
-        id: "4",
-        job_id: "3",
-        applicant_id: "user4",
-        status: "rejected",
-        created_at: "2024-01-12T16:45:00Z",
-        resume_url: "#",
-        cover_letter_url: "#",
-        job: {
-          id: "3",
-          title: "Data Scientist",
-          company_id: "comp3",
-        },
-        profiles: {
-          id: "profile4",
-          first_name: "David",
-          last_name: "Kim",
-          phone: "+61 400 567 890",
-          location: "Perth, WA",
-          experience_level: "3+ years",
-          user_id: "user4",
-        },
-      },
-    ];
+    try {
+      setLoading(true);
+      
+      // First get the job IDs for this employer
+      const { data: employerJobs, error: employerJobsError } = await supabase
+        .from("jobs")
+        .select("id")
+        .eq("employer_id", user.id);
 
-    // Filter by selected job if one is selected
-    const filteredApplications = selectedJobId
-      ? mockApplications.filter((app) => app.job_id === selectedJobId)
-      : mockApplications;
+      if (employerJobsError) {
+        console.error("Error fetching employer jobs:", employerJobsError);
+        setError("Failed to load employer jobs");
+        return;
+      }
 
-    setApplications(filteredApplications);
-    setLoading(false);
+      const jobIds = employerJobs?.map(job => job.id) || [];
+
+      if (jobIds.length === 0) {
+        // No jobs posted yet, so no applications
+        setApplications([]);
+        setLoading(false);
+        return;
+      }
+
+      // First get basic applications data
+      let applicationsQuery = supabase
+        .from("job_applications")
+        .select(`
+          id,
+          job_id,
+          applicant_id,
+          status,
+          created_at,
+          resume_url,
+          cover_letter_url
+        `)
+        .in("job_id", jobIds)
+        .order("created_at", { ascending: false });
+
+      // Filter by selected job if one is selected
+      if (selectedJobId) {
+        applicationsQuery = applicationsQuery.eq("job_id", selectedJobId);
+      }
+
+      const { data: applicationsData, error: applicationsError } = await applicationsQuery;
+
+      if (applicationsError) {
+        console.error("Error fetching applications:", applicationsError);
+        console.error("Error details:", {
+          message: applicationsError.message,
+          details: applicationsError.details,
+          hint: applicationsError.hint,
+          code: applicationsError.code
+        });
+        setError(`Failed to load applications: ${applicationsError.message}`);
+        return;
+      }
+
+      // Debug: Log resume URLs to understand the format
+      console.log("=== Applications Debug ===");
+      if (applicationsData) {
+        applicationsData.forEach((app, index) => {
+          console.log(`Application ${index + 1}:`, {
+            id: app.id,
+            resume_url: app.resume_url,
+            cover_letter_url: app.cover_letter_url
+          });
+        });
+      }
+
+      if (!applicationsData || applicationsData.length === 0) {
+        setApplications([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get job details for applications
+      const applicationJobIds = [...new Set(applicationsData.map(app => app.job_id))];
+      const { data: jobsData, error: jobsError } = await supabase
+        .from("jobs")
+        .select("id, title, company_id")
+        .in("id", applicationJobIds);
+
+      if (jobsError) {
+        console.error("Error fetching job details:", jobsError);
+      }
+
+      // Get applicant profiles
+      const applicantIds = [...new Set(applicationsData.map(app => app.applicant_id))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          user_id,
+          first_name,
+          last_name,
+          phone,
+          location,
+          experience_level
+        `)
+        .in("user_id", applicantIds);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+      }
+
+      // Create lookup maps
+      const jobsMap = new Map();
+      (jobsData || []).forEach(job => {
+        jobsMap.set(job.id, job);
+      });
+
+      const profilesMap = new Map();
+      (profilesData || []).forEach(profile => {
+        profilesMap.set(profile.user_id, profile);
+      });
+
+      // Transform the data to match the expected interface
+      const transformedApplications: JobApplication[] = applicationsData.map((app: any) => ({
+        id: app.id,
+        job_id: app.job_id,
+        applicant_id: app.applicant_id,
+        status: app.status || "pending",
+        created_at: app.created_at,
+        resume_url: app.resume_url,
+        cover_letter_url: app.cover_letter_url,
+        job: {
+          id: app.job_id,
+          title: jobsMap.get(app.job_id)?.title || "Unknown Job",
+          company_id: jobsMap.get(app.job_id)?.company_id,
+        },
+        profiles: profilesMap.get(app.applicant_id) || null,
+      }));
+
+      setApplications(transformedApplications);
+    } catch (error) {
+      console.error("Error in fetchApplications:", error);
+      setError("Failed to load applications");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateApplicationStatus = async (
@@ -231,11 +291,15 @@ export const useEmployerApplications = (selectedJobId?: string) => {
   };
 
   useEffect(() => {
-    fetchJobs();
+    if (user) {
+      fetchJobs();
+    }
   }, [user]);
 
   useEffect(() => {
-    fetchApplications();
+    if (user) {
+      fetchApplications();
+    }
   }, [user, selectedJobId]);
 
   // Set up real-time subscription

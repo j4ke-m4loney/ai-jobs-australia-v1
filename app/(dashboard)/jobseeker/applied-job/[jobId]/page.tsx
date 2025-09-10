@@ -21,6 +21,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { JobSeekerLayout } from "@/components/jobseeker/JobSeekerLayout";
+import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 
 interface Job {
   id: string;
@@ -35,7 +36,24 @@ interface Job {
   salary_max: number | null;
   is_featured: boolean;
   created_at: string;
-  expires_at: string | null; // TODO: Job expiration functionality needs to be added to job posting process
+  expires_at: string;
+  // Optional fields that may not exist in all job records
+  suburb?: string | null;
+  state?: string | null;
+  location_display?: string | null;
+  application_method?: string;
+  application_url?: string | null;
+  application_email?: string | null;
+  status?: "pending" | "approved" | "rejected" | "expired";
+  company_id?: string | null;
+  highlights?: string[] | null;
+  companies?: {
+    id: string;
+    name: string;
+    description: string | null;
+    website: string | null;
+    logo_url: string | null;
+  } | null;
 }
 
 interface Application {
@@ -68,10 +86,19 @@ export default function AppliedJobDetailPage() {
 
     setJobLoading(true);
     try {
-      // Fetch job details
+      // Fetch job details with company information
       const { data: jobData, error: jobError } = await supabase
         .from("jobs")
-        .select("*")
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            description,
+            website,
+            logo_url
+          )
+        `)
         .eq("id", jobId)
         .eq("status", "approved")
         .single();
@@ -137,6 +164,18 @@ export default function AppliedJobDetailPage() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  // Handlers for JobDetailsView component
+  const handleApply = () => {
+    // User has already applied, show message
+    toast.info("You have already applied to this position");
+  };
+
+  const handleSaveClick = (jobId: string) => {
+    // Navigate to save/unsave functionality if needed
+    // For now, just show info since they've already applied
+    toast.info("You can save other jobs from the jobs listing page");
   };
 
   const formatSalary = (min: number | null, max: number | null) => {
@@ -232,44 +271,40 @@ export default function AppliedJobDetailPage() {
 
   return (
     <JobSeekerLayout title="Job Details">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto">
         {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/jobseeker/applications")}
-          className="hover:bg-primary/10"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Applications
-        </Button>
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/jobseeker/applications")}
+            className="hover:bg-primary/10"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Applications
+          </Button>
+        </div>
 
-        {/* Job Summary */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Building className="w-8 h-8 text-primary" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                  {job.is_featured && (
-                    <Badge className="bg-gradient-hero text-white">
-                      Featured
-                    </Badge>
-                  )}
-                  <Badge variant="outline" className="text-xs">
-                    {getCategoryDisplay(job.category)}
-                  </Badge>
-                  {getApplicationStatusBadge(application.status)}
-                  {isJobExpired() && (
-                    <Badge variant="destructive" className="bg-red-100 text-red-800">
-                      Expired
-                    </Badge>
-                  )}
-                  </div>
-                  
-                  {/* Delete link aligned with badges */}
+        {/* Job Details using centralized component */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="lg:col-span-1">
+            <JobDetailsView
+              job={job}
+              onApply={handleApply}
+              onSaveClick={handleSaveClick}
+              isJobSaved={false}
+              hasApplied={true}
+            />
+          </div>
+          
+          <div className="lg:col-span-1 lg:sticky lg:top-16 lg:h-fit">
+            {/* Application Status and Actions */}
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Application Status
+                  </span>
                   <button
                     onClick={handleDeleteApplication}
                     disabled={deleting}
@@ -277,137 +312,45 @@ export default function AppliedJobDetailPage() {
                   >
                     {deleting ? "Deleting..." : "Delete"}
                   </button>
-                </div>
-
-                <h1 className="text-2xl font-bold text-foreground mb-2">
-                  {job.title}
-                </h1>
-
-                <div className="text-lg font-medium text-muted-foreground mb-3">
-                  Company
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {job.location} ({job.location_type})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-foreground">Status:</span>
+                    {getApplicationStatusBadge(application.status)}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span className="capitalize">{job.job_type}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
-                    <span>Applied {new Date(application.created_at).toLocaleDateString()}</span>
+                    <span>Applied on {new Date(application.created_at).toLocaleDateString()}</span>
                   </div>
-                  <span className="text-xs">
-                    Posted {getTimeAgo(job.created_at)}
-                  </span>
                 </div>
-
-                {formatSalary(job.salary_min, job.salary_max) && (
-                  <div className="flex items-center gap-2 mb-4">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    <span className="font-semibold text-green-600 text-lg">
-                      {formatSalary(job.salary_min, job.salary_max)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Job Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Info className="w-5 h-5" />
-              Job Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Job Description */}
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Job Description
-              </h3>
-              <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                <div dangerouslySetInnerHTML={{ __html: job.description }} />
-              </div>
-            </div>
-
-            {/* Requirements */}
-            {job.requirements && (
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  Requirements
-                </h3>
-                <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                  <div dangerouslySetInnerHTML={{ __html: job.requirements }} />
+                <div className="flex flex-col gap-3">
+                  <Button
+                    onClick={() => router.push("/jobseeker/applications")}
+                    className="bg-primary hover:bg-primary/90 text-white w-full"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    View All Applications
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push("/jobs")}
+                    className="w-full"
+                  >
+                    Browse More Jobs
+                  </Button>
                 </div>
-              </div>
-            )}
-
-            {/* Company Info Section - placeholder for future enhancement */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                About the Company
-              </h3>
-              <p className="text-muted-foreground">
-                Company information will be displayed here when available.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Application Status Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Your Application Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-muted/30 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-medium text-foreground">Status:</span>
-                {getApplicationStatusBadge(application.status)}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                <span>Applied on {new Date(application.created_at).toLocaleDateString()}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={() => router.push("/jobseeker/applications")}
-                className="bg-primary hover:bg-primary/90 text-white"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                View All Applications
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/jobs")}
-              >
-                Browse More Jobs
-              </Button>
-            </div>
-
-            <div className="text-sm text-muted-foreground">
-              <p>
-                <strong>Note:</strong> Removing this application from your view will not affect 
-                your actual job application status with the employer.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="text-sm text-muted-foreground">
+                  <p>
+                    <strong>Note:</strong> Removing this application from your view will not affect 
+                    your actual job application status with the employer.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </JobSeekerLayout>
   );

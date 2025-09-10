@@ -83,7 +83,7 @@ export default function JobsPage() {
   const { toggleSaveJob, isJobSaved } = useSavedJobs();
   console.log("useSavedJobs hook values:", { toggleSaveJob, isJobSaved });
   console.log("🔍 Auth state:", { user: user?.id, loading });
-  
+
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobsLoading, setJobsLoading] = useState(true);
@@ -99,86 +99,110 @@ export default function JobsPage() {
   const [selectedLocationTypes, setSelectedLocationTypes] = useState<string[]>(
     []
   );
-  const [salaryRange, setSalaryRange] = useState({ min: "", max: "" });
+  const [selectedSalary, setSelectedSalary] = useState("");
+  const [dateFilter, setDateFilter] = useState("any");
   const [showFilters, setShowFilters] = useState(false);
   const [showOptions, setShowOptions] = useState(true);
   const [sortBy, setSortBy] = useState("relevance");
+  const [dateSort, setDateSort] = useState("newest"); // newest or oldest
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [hasApplied, setHasApplied] = useState<Record<string, boolean>>({});
   const [isMobile, setIsMobile] = useState(false);
   const [suggestedJobs, setSuggestedJobs] = useState<Job[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [pendingJobId, setPendingJobId] = useState<string | null>(null);
-  
+
   // Track if we should sync URL params (only on initial load, not after manual actions)
   const shouldSyncFromUrl = useRef(true);
   const initialized = useRef(false);
 
   // Memoized filter dependencies to prevent unnecessary re-renders
-  const filterDeps = useMemo(() => ({
-    searchTerm,
-    locationTerm,
-    selectedCategories: selectedCategories.join(','),
-    selectedLocations: selectedLocations.join(','),
-    selectedJobTypes: selectedJobTypes.join(','),
-    selectedLocationTypes: selectedLocationTypes.join(','),
-    salaryRange: `${salaryRange.min}-${salaryRange.max}`,
-    sortBy,
-  }), [searchTerm, locationTerm, selectedCategories, selectedLocations, selectedJobTypes, selectedLocationTypes, salaryRange, sortBy]);
+  const filterDeps = useMemo(
+    () => ({
+      searchTerm,
+      locationTerm,
+      selectedCategories: selectedCategories.join(","),
+      selectedLocations: selectedLocations.join(","),
+      selectedJobTypes: selectedJobTypes.join(","),
+      selectedLocationTypes: selectedLocationTypes.join(","),
+      selectedSalary,
+      dateFilter,
+      dateSort,
+      sortBy,
+    }),
+    [
+      searchTerm,
+      locationTerm,
+      selectedCategories,
+      selectedLocations,
+      selectedJobTypes,
+      selectedLocationTypes,
+      selectedSalary,
+      dateFilter,
+      dateSort,
+      sortBy,
+    ]
+  );
 
   // Define callback functions first
-  const checkApplicationStatus = useCallback(async (jobId: string) => {
-    if (!user) return;
+  const checkApplicationStatus = useCallback(
+    async (jobId: string) => {
+      if (!user) return;
 
-    try {
-      const { data, error } = await supabase
-        .from("job_applications")
-        .select("id")
-        .eq("job_id", jobId)
-        .eq("applicant_id", user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("job_applications")
+          .select("id")
+          .eq("job_id", jobId)
+          .eq("applicant_id", user.id)
+          .single();
 
-      if (error && error.code !== "PGRST116") throw error;
-      setHasApplied((prev) => ({ ...prev, [jobId]: !!data }));
-    } catch (error) {
-      console.error("Error checking application status:", error);
-    }
-  }, [user]);
+        if (error && error.code !== "PGRST116") throw error;
+        setHasApplied((prev) => ({ ...prev, [jobId]: !!data }));
+      } catch (error) {
+        console.error("Error checking application status:", error);
+      }
+    },
+    [user]
+  );
 
   // Function to enrich jobs with company data
   const enrichJobsWithCompanyData = async (jobs: any[]): Promise<Job[]> => {
     if (!jobs || jobs.length === 0) return [];
 
     // Extract unique company IDs
-    const companyIds = [...new Set(jobs.map(job => job.company_id).filter(Boolean))];
-    
+    const companyIds = [
+      ...new Set(jobs.map((job) => job.company_id).filter(Boolean)),
+    ];
+
     if (companyIds.length === 0) {
       // No companies to fetch, return jobs as-is with companies set to null
-      return jobs.map(job => ({ ...job, companies: null }));
+      return jobs.map((job) => ({ ...job, companies: null }));
     }
 
     // Fetch company data
     const { data: companies, error: companiesError } = await supabase
-      .from('companies')
-      .select('id, name, description, website, logo_url')
-      .in('id', companyIds);
+      .from("companies")
+      .select("id, name, description, website, logo_url")
+      .in("id", companyIds);
 
     if (companiesError) {
-      console.error('Error fetching companies:', companiesError);
+      console.error("Error fetching companies:", companiesError);
       // Return jobs without company data
-      return jobs.map(job => ({ ...job, companies: null }));
+      return jobs.map((job) => ({ ...job, companies: null }));
     }
 
     // Create a map of company_id -> company for easy lookup
     const companyMap = new Map();
-    companies?.forEach(company => {
+    companies?.forEach((company) => {
       companyMap.set(company.id, company);
     });
 
     // Merge company data into jobs
-    return jobs.map(job => ({
+    return jobs.map((job) => ({
       ...job,
-      companies: job.company_id ? companyMap.get(job.company_id) : null
+      companies: job.company_id ? companyMap.get(job.company_id) : null,
     }));
   };
 
@@ -231,9 +255,7 @@ export default function JobsPage() {
     try {
       setJobsLoading(true);
 
-      let query = supabase
-        .from("jobs")
-        .select(`
+      let query = supabase.from("jobs").select(`
           *,
           highlights
         `);
@@ -241,105 +263,117 @@ export default function JobsPage() {
       // In production, change this back to only show approved jobs
       // query = query.eq("status", "approved");
 
-    console.log("Fetching jobs - user:", user?.id || "guest");
+      console.log("Fetching jobs - user:", user?.id || "guest");
 
-    // Apply filters
-    if (searchTerm) {
-      query = query.or(
-        `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`
-      );
-    }
-    if (locationTerm) {
-      query = query.ilike("location", `%${locationTerm}%`);
-    }
-    if (selectedCategories.length > 0) {
-      query = query.in("category", selectedCategories);
-    }
-    if (selectedJobTypes.length > 0) {
-      query = query.in("job_type", selectedJobTypes);
-    }
-    if (selectedLocationTypes.length > 0) {
-      query = query.in("location_type", selectedLocationTypes);
-    }
-    if (selectedLocations.length > 0) {
-      const locationConditions = selectedLocations
-        .map((loc) =>
-          loc === "remote"
-            ? "location_type.eq.remote"
-            : `location.ilike.%${loc}%`
-        )
-        .join(",");
-      query = query.or(locationConditions);
-    }
-    if (salaryRange.min) {
-      query = query.gte("salary_min", parseInt(salaryRange.min));
-    }
-    if (salaryRange.max) {
-      query = query.lte("salary_max", parseInt(salaryRange.max));
-    }
+      // Apply filters
+      if (searchTerm) {
+        query = query.or(
+          `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`
+        );
+      }
+      if (locationTerm) {
+        query = query.ilike("location", `%${locationTerm}%`);
+      }
+      if (selectedCategories.length > 0) {
+        query = query.in("category", selectedCategories);
+      }
+      if (selectedJobTypes.length > 0) {
+        query = query.in("job_type", selectedJobTypes);
+      }
+      if (selectedLocationTypes.length > 0) {
+        query = query.in("location_type", selectedLocationTypes);
+      }
+      if (selectedLocations.length > 0) {
+        const locationConditions = selectedLocations
+          .map((loc) =>
+            loc === "remote"
+              ? "location_type.eq.remote"
+              : `location.ilike.%${loc}%`
+          )
+          .join(",");
+        query = query.or(locationConditions);
+      }
+      if (selectedSalary) {
+        query = query.gte("salary_min", parseInt(selectedSalary));
+      }
 
-    // Sorting
-    switch (sortBy) {
-      case "date":
-        query = query.order("created_at", { ascending: false });
-        break;
-      case "salary":
-        query = query.order("salary_max", {
-          ascending: false,
-          nullsFirst: false,
-        });
-        break;
-      case "featured":
-        query = query
-          .order("is_featured", { ascending: false })
-          .order("created_at", { ascending: false });
-        break;
-      default:
-        query = query
-          .order("is_featured", { ascending: false })
-          .order("created_at", { ascending: false });
-    }
+      // Sorting
+      switch (sortBy) {
+        case "date":
+          query = query.order("created_at", {
+            ascending: dateSort === "oldest",
+          });
+          break;
+        case "salary":
+          query = query.order("salary_max", {
+            ascending: false,
+            nullsFirst: false,
+          });
+          break;
+        case "featured":
+          query = query
+            .order("is_featured", { ascending: false })
+            .order("created_at", { ascending: false });
+          break;
+        default:
+          query = query
+            .order("is_featured", { ascending: false })
+            .order("created_at", { ascending: false });
+      }
 
-    const { data, error } = await query;
-    
-    console.log("Jobs query result:", { data, error, count: data?.length });
+      const { data, error } = await query;
 
-    if (error) {
-      console.error("Error fetching jobs:", error);
-      console.error("Error details:", error.message, error.details);
-      toast.error("Failed to load jobs");
-      return;
-    }
+      console.log("Jobs query result:", { data, error, count: data?.length });
 
-    const jobsData = (data as Job[]) || [];
-    console.log(`Found ${jobsData.length} jobs`);
-    if (jobsData.length > 0) {
-      console.log("First job:", jobsData[0]);
-      
-      // Enrich jobs with company data
-      const jobsWithCompanies = await enrichJobsWithCompanyData(jobsData);
-      setJobs(jobsWithCompanies);
-    } else {
-      setJobs([]);
-    }
-    
-    // Auto-select first job if none selected (this will be handled after enrichment)
-    if (jobsData.length > 0 && !selectedJob) {
-      // The selection will be handled after enrichment in the useEffect
-    }
-    
-    // Fetch suggestions if no jobs found
-    if (jobsData.length === 0) {
-      console.log("No jobs found, fetching suggestions...");
-      await fetchSuggestions();
-    }
+      if (error) {
+        console.error("Error fetching jobs:", error);
+        console.error("Error details:", error.message, error.details);
+        toast.error("Failed to load jobs");
+        return;
+      }
+
+      const jobsData = (data as Job[]) || [];
+      console.log(`Found ${jobsData.length} jobs`);
+      if (jobsData.length > 0) {
+        console.log("First job:", jobsData[0]);
+
+        // Enrich jobs with company data
+        const jobsWithCompanies = await enrichJobsWithCompanyData(jobsData);
+        setJobs(jobsWithCompanies);
+      } else {
+        setJobs([]);
+      }
+
+      // Auto-select first job if none selected (this will be handled after enrichment)
+      if (jobsData.length > 0 && !selectedJob) {
+        // The selection will be handled after enrichment in the useEffect
+      }
+
+      // Fetch suggestions if no jobs found
+      if (jobsData.length === 0) {
+        console.log("No jobs found, fetching suggestions...");
+        await fetchSuggestions();
+      }
     } catch (error) {
       console.error("Error in fetchJobs:", error);
       toast.error("Failed to load jobs");
     } finally {
       setJobsLoading(false);
     }
-  }, [searchTerm, locationTerm, selectedCategories, selectedLocations, selectedJobTypes, selectedLocationTypes, salaryRange, sortBy, selectedJob, user]);
+  }, [
+    searchTerm,
+    locationTerm,
+    selectedCategories,
+    selectedLocations,
+    selectedJobTypes,
+    selectedLocationTypes,
+    selectedSalary,
+    dateFilter,
+    dateSort,
+    sortBy,
+    selectedJob,
+    user,
+  ]);
 
   // Auto-select first job when jobs are loaded
   useEffect(() => {
@@ -350,18 +384,18 @@ export default function JobsPage() {
 
   // Consolidated initialization and authentication effect
   useEffect(() => {
-    console.log("🔄 Initialization effect triggered", { 
-      loading, 
-      user: user?.id || "guest", 
+    console.log("🔄 Initialization effect triggered", {
+      loading,
+      user: user?.id || "guest",
       initialized: initialized.current,
-      shouldSync: shouldSyncFromUrl.current 
+      shouldSync: shouldSyncFromUrl.current,
     });
-    
+
     if (loading) {
       console.log("⏳ Still loading, skipping initialization");
       return;
     }
-    
+
     // Handle authentication redirect
     if (!user) {
       const isGuest = searchParams.get("guest") === "true";
@@ -373,16 +407,16 @@ export default function JobsPage() {
         return;
       }
     }
-    
+
     // Sync URL parameters on initial load only
     if (!initialized.current && shouldSyncFromUrl.current) {
       const urlSearch = searchParams.get("search") || "";
       const urlLocation = searchParams.get("location") || "";
-      
+
       console.log("🔧 Syncing URL params", { urlSearch, urlLocation });
       setSearchTerm(urlSearch);
       setLocationTerm(urlLocation);
-      
+
       shouldSyncFromUrl.current = false;
       initialized.current = true;
       console.log("✅ Initialization complete");
@@ -406,11 +440,11 @@ export default function JobsPage() {
 
   // Job fetching effect - triggers on filter changes
   useEffect(() => {
-    console.log("🔍 Filter change effect triggered", { 
+    console.log("🔍 Filter change effect triggered", {
       filterDeps,
-      initialized: initialized.current 
+      initialized: initialized.current,
     });
-    
+
     if (!loading && initialized.current) {
       console.log("🚀 Refetching jobs due to filter change");
       fetchJobs();
@@ -434,7 +468,6 @@ export default function JobsPage() {
     window.addEventListener("resize", checkScreenSize);
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
-
 
   const handleApply = () => {
     if (!user) {
@@ -538,7 +571,8 @@ export default function JobsPage() {
     setSelectedLocations([]);
     setSelectedJobTypes([]);
     setSelectedLocationTypes([]);
-    setSalaryRange({ min: "", max: "" });
+    setSelectedSalary("");
+    setDateFilter("any");
     setSearchTerm("");
     setLocationTerm("");
   };
@@ -623,11 +657,11 @@ export default function JobsPage() {
 
             {/* Filter Pills */}
             {showFilters && (
-              <div className="flex flex-wrap gap-2 mt-2 animate-fade-in">
-                <select
+              <div className="flex flex-wrap items-center gap-2 mt-2 animate-fade-in">
+                {/* <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-full bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
+                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
                 >
                   <option value="relevance" className="text-black">
                     All work types
@@ -641,34 +675,106 @@ export default function JobsPage() {
                   <option value="featured" className="text-black">
                     Featured First
                   </option>
+                </select> */}
+
+                <select
+                  value={
+                    selectedJobTypes.length > 0 ? selectedJobTypes[0] : "all"
+                  }
+                  onChange={(e) => {
+                    if (e.target.value === "all") {
+                      setSelectedJobTypes([]);
+                    } else {
+                      setSelectedJobTypes([e.target.value]);
+                    }
+                  }}
+                  className="h-10 pl-3 pr-2 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
+                >
+                  <option value="all" className="text-black">
+                    Any job type
+                  </option>
+                  <option value="full-time" className="text-black">
+                    Full time
+                  </option>
+                  <option value="part-time" className="text-black">
+                    Part time
+                  </option>
+                  <option value="contract" className="text-black">
+                    Contract
+                  </option>
+                  <option value="internship" className="text-black">
+                    Casual/Temporary
+                  </option>
+                  <option value="permanent" className="text-black">
+                    Permanent
+                  </option>
                 </select>
 
-                <select className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-full bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]">
-                  <option className="text-black">All remote options</option>
-                  <option className="text-black">Remote</option>
-                  <option className="text-black">Hybrid</option>
-                  <option className="text-black">On-site</option>
+                <select
+                  value={selectedSalary}
+                  onChange={(e) => setSelectedSalary(e.target.value)}
+                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
+                >
+                  <option value="" className="text-black">
+                    Any Salary
+                  </option>
+                  <option value="30000" className="text-black">
+                    $30,000+
+                  </option>
+                  <option value="50000" className="text-black">
+                    $50,000+
+                  </option>
+                  <option value="70000" className="text-black">
+                    $70,000+
+                  </option>
+                  <option value="90000" className="text-black">
+                    $90,000+
+                  </option>
+                  <option value="110000" className="text-black">
+                    $110,000+
+                  </option>
+                  <option value="140000" className="text-black">
+                    $140,000+
+                  </option>
                 </select>
 
-                <select className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-full bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]">
-                  <option className="text-black">paying $0</option>
-                  <option className="text-black">$50K+</option>
-                  <option className="text-black">$100K+</option>
-                  <option className="text-black">$150K+</option>
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
+                >
+                  <option value="any" className="text-black">
+                    Listed any time
+                  </option>
+                  <option value="24h" className="text-black">
+                    Last 24 hours
+                  </option>
+                  <option value="7d" className="text-black">
+                    Last 7 days
+                  </option>
+                  <option value="30d" className="text-black">
+                    Last 30 days
+                  </option>
                 </select>
 
-                <select className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-full bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]">
-                  <option className="text-black">to $350K+</option>
-                  <option className="text-black">to $200K</option>
-                  <option className="text-black">to $300K</option>
-                  <option className="text-black">$350K+</option>
-                </select>
-
-                <select className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-full bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]">
-                  <option className="text-black">listed any time</option>
-                  <option className="text-black">Last 24 hours</option>
-                  <option className="text-black">Last 30 days</option>
-                </select>
+                {/* Reset All Filters Link */}
+                {(searchTerm ||
+                  locationTerm ||
+                  selectedCategories.length > 0 ||
+                  selectedLocations.length > 0 ||
+                  selectedJobTypes.length > 0 ||
+                  selectedLocationTypes.length > 0 ||
+                  selectedSalary ||
+                  dateFilter !== "any") && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-sm text-white/80 hover:text-white underline transition-colors ml-2"
+                  >
+                    Reset all
+                    <br />
+                    filters
+                  </button>
+                )}
               </div>
             )}
           </form>
@@ -684,11 +790,11 @@ export default function JobsPage() {
               <div className="flex items-center gap-4">
                 <Badge
                   variant="secondary"
-                  className="bg-primary text-white font-semibold px-3 py-1 hover:bg-primary/90 transition-colors"
+                  className="bg-primary text-white font-semibold px-2 py-1 hover:bg-primary/90 transition-colors"
                 >
                   {jobs.length.toLocaleString()} jobs
                 </Badge>
-                <span className="text-sm text-muted-foreground">
+                {/* <span className="text-sm text-muted-foreground">
                   New to you
                 </span>
                 <Badge
@@ -696,11 +802,61 @@ export default function JobsPage() {
                   className="bg-green-100 text-green-800"
                 >
                   99+
-                </Badge>
+                </Badge> */}
               </div>
-              <Button variant="ghost" size="sm">
-                <SlidersHorizontal className="w-4 h-4" />
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                </Button>
+
+                {showSortDropdown && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-border rounded-md shadow-lg z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setSortBy("relevance");
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors ${
+                          sortBy === "relevance" ? "bg-muted font-medium" : ""
+                        }`}
+                      >
+                        Relevance
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (sortBy === "date") {
+                            // Toggle between newest and oldest
+                            setDateSort(
+                              dateSort === "newest" ? "oldest" : "newest"
+                            );
+                          } else {
+                            setSortBy("date");
+                            setDateSort("newest");
+                          }
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors ${
+                          sortBy === "date" ? "bg-muted font-medium" : ""
+                        }`}
+                      >
+                        Date{" "}
+                        {sortBy === "date"
+                          ? `(${
+                              dateSort === "newest"
+                                ? "Newest first"
+                                : "Oldest first"
+                            })`
+                          : ""}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

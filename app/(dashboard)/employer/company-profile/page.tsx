@@ -1,30 +1,54 @@
 "use client";
 
-import { useState } from "react";
 import { EmployerLayout } from "@/components/employer/EmployerLayout";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Building2,
-  Globe,
-  MapPin,
-  Users,
-  Save,
-  Upload,
-  Camera,
-} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, Clock } from "lucide-react";
 
 const EmployerCompany = () => {
+  return (
+    <EmployerLayout title="Company Profile">
+      <div className="max-w-2xl mx-auto">
+        <Card className="text-center">
+          <CardHeader>
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <Building2 className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <CardTitle className="text-2xl">Company Profile</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
+              <div className="flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 mb-2">
+                <Clock className="w-5 h-5" />
+                <span className="font-medium">Coming Soon</span>
+              </div>
+              <p className="text-muted-foreground">
+                The standalone company profile management will be available in a future update.
+              </p>
+              <p className="text-sm text-muted-foreground mt-3">
+                For now, you can manage your company information when posting or editing jobs.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </EmployerLayout>
+  );
+
+  /* 
+  TODO: FUTURE FEATURE - Standalone Company Profile Management
+  
+  The code below implements a full company profile management interface.
+  This will be enabled in a future release to allow employers to:
+  - Manage company information independently of job postings
+  - View company statistics and performance metrics
+  - Upload company logos and branding
+  - Maintain consistent company data across all job postings
+  
+  When implemented, this will integrate with the companies database table
+  and synchronize with the job posting process.
+  */
+
+  /*
   const [isEditing, setIsEditing] = useState(false);
 
   // Mock company data
@@ -72,7 +96,7 @@ const EmployerCompany = () => {
       </div>
       
       <div className="max-w-4xl mx-auto grid gap-6">
-              {/* Company Header */}
+              // Company Header 
               <Card>
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
@@ -158,7 +182,7 @@ const EmployerCompany = () => {
                 </CardContent>
               </Card>
 
-              {/* Company Details */}
+              // Company Details 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
@@ -279,7 +303,7 @@ const EmployerCompany = () => {
                 </Card>
               </div>
 
-              {/* Company Stats */}
+              // Company Stats 
               <Card>
                 <CardHeader>
                   <CardTitle>Company Statistics</CardTitle>
@@ -319,6 +343,7 @@ const EmployerCompany = () => {
             </div>
     </EmployerLayout>
   );
+  */
 };
 
 export default EmployerCompany;

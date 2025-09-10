@@ -32,10 +32,13 @@ interface Application {
     salary_min: number | null;
     salary_max: number | null;
     category: string;
-    company?: {
+    companies?: {
+      id: string;
       name: string;
+      description: string | null;
+      website: string | null;
       logo_url: string | null;
-    };
+    } | null;
   };
 }
 
@@ -67,7 +70,14 @@ const JobSeekerApplications = () => {
             job_type,
             salary_min,
             salary_max,
-            category
+            category,
+            companies (
+              id,
+              name,
+              description,
+              website,
+              logo_url
+            )
           )
         `
         )
@@ -79,13 +89,7 @@ const JobSeekerApplications = () => {
       const applicationsWithJobs =
         data?.map((app) => ({
           ...app,
-          job: {
-            ...app.jobs,
-            company: {
-              name: "Company Name", // Placeholder until we have proper company data
-              logo_url: null,
-            },
-          },
+          job: app.jobs,
         })) || [];
 
       setApplications(applicationsWithJobs);
@@ -265,10 +269,10 @@ const JobSeekerApplications = () => {
                           <div className="flex gap-4 flex-1">
                             {/* Company Logo */}
                             <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                              {application.job.company?.logo_url ? (
+                              {application.job.companies?.logo_url ? (
                                 <img
-                                  src={application.job.company.logo_url}
-                                  alt={application.job.company.name}
+                                  src={application.job.companies.logo_url}
+                                  alt={application.job.companies.name || "Company"}
                                   className="w-8 h-8 rounded"
                                 />
                               ) : (
@@ -288,8 +292,8 @@ const JobSeekerApplications = () => {
                               </h3>
 
                               <p className="text-sm text-muted-foreground mb-2">
-                                {application.job.company?.name ||
-                                  "Company Name"}
+                                {application.job.companies?.name ||
+                                  "Company"}
                               </p>
 
                               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">

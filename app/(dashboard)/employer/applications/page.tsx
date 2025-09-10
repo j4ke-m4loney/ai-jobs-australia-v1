@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { EmployerLayout } from "@/components/employer/EmployerLayout";
 import {
   Card,
@@ -26,6 +27,7 @@ import {
   Calendar,
   ChevronDown,
   Briefcase,
+  Plus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,13 +42,17 @@ import {
   JobApplication,
 } from "@/hooks/useEmployerApplications";
 import { useToast } from "@/hooks/use-toast";
+import { downloadResume, downloadCoverLetter } from "@/utils/documentDownload";
 
 const EmployerApplications = () => {
   const { toast } = useToast();
+  const router = useRouter();
   const [selectedJobId, setSelectedJobId] = useState<string>();
   const [selectedApplications, setSelectedApplications] = useState<string[]>(
     []
   );
+  const [downloadingResume, setDownloadingResume] = useState<string | null>(null);
+  const [downloadingCoverLetter, setDownloadingCoverLetter] = useState<string | null>(null);
 
   const {
     applications,
@@ -133,6 +139,38 @@ const EmployerApplications = () => {
     setSelectedApplications((prev) =>
       prev.length === allIds.length ? [] : allIds
     );
+  };
+
+  const handleDownloadResume = async (application: JobApplication) => {
+    if (!application.resume_url || downloadingResume === application.id) return;
+    
+    setDownloadingResume(application.id);
+    
+    const applicantName = `${application.profiles?.first_name || ""} ${
+      application.profiles?.last_name || ""
+    }`.trim() || "Applicant";
+
+    try {
+      await downloadResume(application.resume_url, applicantName);
+    } finally {
+      setDownloadingResume(null);
+    }
+  };
+
+  const handleDownloadCoverLetter = async (application: JobApplication) => {
+    if (!application.cover_letter_url || downloadingCoverLetter === application.id) return;
+    
+    setDownloadingCoverLetter(application.id);
+    
+    const applicantName = `${application.profiles?.first_name || ""} ${
+      application.profiles?.last_name || ""
+    }`.trim() || "Applicant";
+
+    try {
+      await downloadCoverLetter(application.cover_letter_url, applicantName);
+    } finally {
+      setDownloadingCoverLetter(null);
+    }
   };
 
   const ApplicationCard = ({
@@ -224,9 +262,11 @@ const EmployerApplications = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full sm:w-auto text-xs sm:text-sm"
+                  onClick={() => handleDownloadResume(application)}
+                  disabled={downloadingResume === application.id}
+                  className="w-full sm:w-auto text-xs sm:text-sm hover:bg-blue-50 hover:border-blue-300 disabled:opacity-50"
                 >
-                  Resume
+                  {downloadingResume === application.id ? "Downloading..." : "Resume"}
                   <Download className="w-4 h-4 ml-2" />
                 </Button>
               )}
@@ -234,11 +274,20 @@ const EmployerApplications = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full sm:w-auto text-xs sm:text-sm"
+                  onClick={() => handleDownloadCoverLetter(application)}
+                  disabled={downloadingCoverLetter === application.id}
+                  className="w-full sm:w-auto text-xs sm:text-sm hover:bg-green-50 hover:border-green-300 disabled:opacity-50"
                 >
-                  Cover Letter
+                  {downloadingCoverLetter === application.id ? "Downloading..." : "Cover Letter"}
                   <Download className="w-4 h-4 ml-2" />
                 </Button>
+              )}
+              
+              {/* Show indicators when documents are not available */}
+              {!application.resume_url && !application.cover_letter_url && (
+                <span className="text-xs text-muted-foreground">
+                  No documents available
+                </span>
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -292,7 +341,44 @@ const EmployerApplications = () => {
           loading={loading}
         />
 
-        {selectedJobId && (
+        {/* Error State */}
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-red-700">
+                <XCircle className="h-5 w-5" />
+                <span className="font-medium">Error Loading Data</span>
+              </div>
+              <p className="mt-2 text-sm text-red-600">{error}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Empty State - No Jobs */}
+        {!loading && !error && jobs.length === 0 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  No Job Postings Yet
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  You haven't posted any jobs yet. Create your first job posting to start receiving applications.
+                </p>
+                <Button
+                  onClick={() => router.push("/post-job")}
+                  className="gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Post Your First Job
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {selectedJobId && !loading && !error && (
           <>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -450,16 +536,26 @@ const EmployerApplications = () => {
                       </Button>
                     </div>
                     <div className="space-y-4">
-                      {applications.map((application) => (
-                        <ApplicationCard
-                          key={application.id}
-                          application={application}
-                          isSelected={selectedApplications.includes(
-                            application.id
-                          )}
-                          onToggleSelect={toggleApplicationSelection}
-                        />
-                      ))}
+                      {applications.length === 0 ? (
+                        <div className="text-center py-12">
+                          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">No Applications Yet</h3>
+                          <p className="text-muted-foreground">
+                            This job posting hasn't received any applications yet. Once candidates apply, you'll see them here.
+                          </p>
+                        </div>
+                      ) : (
+                        applications.map((application) => (
+                          <ApplicationCard
+                            key={application.id}
+                            application={application}
+                            isSelected={selectedApplications.includes(
+                              application.id
+                            )}
+                            onToggleSelect={toggleApplicationSelection}
+                          />
+                        ))
+                      )}
                     </div>
                   </TabsContent>
 
