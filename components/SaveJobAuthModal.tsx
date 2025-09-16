@@ -147,15 +147,13 @@ export const SaveJobAuthModal = ({
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-2">
-                      Thank you for signing up!
+                      Account Created Successfully!
                     </h3>
                     <p className="text-muted-foreground mb-4">
-                      Please check your inbox and click the verification link to
-                      activate your account.
+                      We've sent a verification email to your inbox. Please check your email and click the verification link to activate your account.
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Once verified, you can sign in and start saving jobs to
-                      your profile.
+                      Once verified, you can sign in and start saving jobs to your profile.
                     </p>
                   </div>
                   <Button

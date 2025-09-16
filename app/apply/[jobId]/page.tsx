@@ -10,7 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   MapPin,
   Building,
@@ -63,6 +71,7 @@ export default function ApplyPage() {
   const params = useParams();
   const jobId = params.jobId as string;
   const { user, loading } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
 
   const [job, setJob] = useState<Job | null>(null);

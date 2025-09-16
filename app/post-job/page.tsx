@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { JobFormData2 } from "@/types/job2";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import SlimFooter from "@/components/SlimFooter";
 
 // Step Components
@@ -110,6 +111,7 @@ const defaultFormData: JobFormData2 = {
 export default function PostJob2() {
   // ALL hooks must be at the top, before any conditional returns
   const { user, loading } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
@@ -125,7 +127,8 @@ export default function PostJob2() {
     }
 
     // Redirect to employer auth if user is not an employer
-    if (!loading && user && user.user_metadata?.user_type !== "employer") {
+    const userType = profile?.user_type || user?.user_metadata?.user_type;
+    if (!loading && user && userType !== "employer") {
       router.push("/auth?next=/post-job");
       return;
     }
@@ -171,7 +174,8 @@ export default function PostJob2() {
   }
 
   // Don't render anything if redirecting
-  if (!user || user.user_metadata?.user_type !== "employer") {
+  const userType = profile?.user_type || user?.user_metadata?.user_type;
+  if (!user || userType !== "employer") {
     return null;
   }
 

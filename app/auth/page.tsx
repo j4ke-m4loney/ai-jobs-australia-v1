@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { User, Briefcase, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,17 +21,18 @@ export default function AuthPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { profile } = useProfile();
 
   // If user is already logged in, redirect appropriately
   useEffect(() => {
     if (user) {
-      const userType = user.user_metadata?.user_type;
+      const userType = profile?.user_type || user.user_metadata?.user_type;
       const defaultRedirect =
         userType === "employer" ? "/employer" : "/jobseeker";
       const next = searchParams.get("next") || defaultRedirect;
       router.push(next);
     }
-  }, [user, searchParams, router]);
+  }, [user, profile, searchParams, router]);
 
   // Don't render if redirecting
   if (user) {

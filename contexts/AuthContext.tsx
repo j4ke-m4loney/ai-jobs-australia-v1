@@ -16,6 +16,7 @@ interface AuthContextType {
   ) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
+  updateUserMetadata: (metadata: Record<string, any>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,6 +102,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await authService.signOut();
   };
 
+  const updateUserMetadata = async (metadata: Record<string, any>) => {
+    const authService = getAuthService();
+    const { data, error } = await authService.updateUser({
+      data: { user_metadata: metadata }
+    });
+    
+    if (!error && data?.user) {
+      setUser(data.user);
+    }
+  };
+
   const value = {
     user,
     session,
@@ -108,6 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     signUp,
     signIn,
     signOut,
+    updateUserMetadata,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

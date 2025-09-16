@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,8 +11,14 @@ import { LogOut, User, Briefcase, Menu, X, Search, FileText, LogIn, Building } f
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Helper function to get user type with profiles-first approach
+  const getUserType = () => {
+    return profile?.user_type || user?.user_metadata?.user_type;
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -78,13 +85,13 @@ const Header = () => {
             <>
               <Link
                 href={
-                  user.user_metadata?.user_type === "employer"
+                  getUserType() === "employer"
                     ? "/employer"
                     : "/jobseeker"
                 }
                 className="text-muted-foreground hover:text-foreground transition-all font-medium flex items-center gap-1"
               >
-                {user.user_metadata?.user_type === "employer" ? (
+                {getUserType() === "employer" ? (
                   <Briefcase className="w-4 h-4" />
                 ) : (
                   <User className="w-4 h-4" />
@@ -169,14 +176,14 @@ const Header = () => {
                 <>
                   <Link
                     href={
-                      user.user_metadata?.user_type === "employer"
+                      getUserType() === "employer"
                         ? "/employer"
                         : "/jobseeker"
                     }
                     onClick={closeMobileMenu}
                     className="flex items-center gap-3 py-3 px-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium"
                   >
-                    {user.user_metadata?.user_type === "employer" ? (
+                    {getUserType() === "employer" ? (
                       <Briefcase className="w-5 h-5 flex-shrink-0" />
                     ) : (
                       <User className="w-5 h-5 flex-shrink-0" />

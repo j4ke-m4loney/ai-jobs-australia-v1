@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -11,20 +12,18 @@ import { Badge } from "@/components/ui/badge";
 import {
   Briefcase,
   Users,
-  Eye,
-  TrendingUp,
-  Calendar,
-  Star,
+  Clock,
   Plus,
-  FileText,
-  BarChart3,
+  Building,
+  Settings,
   Activity,
+  AlertCircle,
 } from "lucide-react";
-import { SimpleChart } from "@/components/ui/simple-chart";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 export function DashboardOverview() {
-  const { data: stats, trends, loading, error } = useAnalytics();
+  const router = useRouter();
+  const { data: stats, loading, error } = useAnalytics();
 
   // Show loading state
   if (loading) {
@@ -34,7 +33,7 @@ export function DashboardOverview() {
           <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(6)].map((_, i) => (
+          {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
                 <div className="h-20 bg-muted rounded"></div>
@@ -62,76 +61,89 @@ export function DashboardOverview() {
     );
   }
 
-  // Use actual data from analytics hook
+  // Use actual data from analytics hook with fallback
   const displayStats = stats || {
-    totalJobs: 15,
-    activeJobs: 8,
-    totalApplications: 247,
-    newApplications: 23,
-    jobViews: 1542,
-    responseRate: 16.0,
+    totalJobs: 0,
+    activeJobs: 0,
+    totalApplications: 0,
+    pendingApplications: 0,
+    reviewedApplications: 0,
+    recentApplications: []
   };
-
-  const displayTrends =
-    trends.length > 0
-      ? trends
-      : [
-          { date: "2024-01-01", applications: 5, views: 45 },
-          { date: "2024-01-02", applications: 8, views: 52 },
-          { date: "2024-01-03", applications: 3, views: 38 },
-          { date: "2024-01-04", applications: 12, views: 65 },
-          { date: "2024-01-05", applications: 7, views: 48 },
-          { date: "2024-01-06", applications: 15, views: 78 },
-          { date: "2024-01-07", applications: 9, views: 56 },
-        ];
 
   const StatCard = ({
     icon: Icon,
     title,
     value,
-    change,
-    changeType,
+    description,
+    variant = "default"
   }: {
     icon: any;
     title: string;
     value: string | number;
-    change?: string;
-    changeType?: "increase" | "decrease";
-  }) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
-            {change && (
-              <div className="flex items-center gap-1">
-                <TrendingUp
-                  className={`w-3 h-3 ${
-                    changeType === "increase"
-                      ? "text-green-500"
-                      : "text-red-500"
-                  }`}
-                />
-                <span
-                  className={`text-xs ${
-                    changeType === "increase"
-                      ? "text-green-500"
-                      : "text-red-500"
-                  }`}
-                >
-                  {change}
-                </span>
-              </div>
-            )}
+    description?: string;
+    variant?: "default" | "warning" | "success";
+  }) => {
+    const getVariantStyles = () => {
+      switch (variant) {
+        case "warning":
+          return "bg-orange-50 text-orange-600 dark:bg-orange-950/20";
+        case "success":
+          return "bg-green-50 text-green-600 dark:bg-green-950/20";
+        default:
+          return "bg-primary/10 text-primary";
+      }
+    };
+
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">{title}</p>
+              <p className="text-2xl font-bold">{value}</p>
+              {description && (
+                <p className="text-xs text-muted-foreground">{description}</p>
+              )}
+            </div>
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getVariantStyles()}`}>
+              <Icon className="w-6 h-6" />
+            </div>
           </div>
-          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Icon className="w-6 h-6 text-primary" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
+    switch (status) {
+      case 'pending':
+        return 'outline';
+      case 'reviewed':
+      case 'shortlisted':
+        return 'secondary';
+      case 'rejected':
+        return 'destructive';
+      default:
+        return 'default';
+    }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} min ago`;
+    } else if (diffInMinutes < 1440) {
+      const hours = Math.floor(diffInMinutes / 60);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    } else {
+      const days = Math.floor(diffInMinutes / 1440);
+      return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -140,25 +152,17 @@ export function DashboardOverview() {
         <div>
           <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
           <p className="text-muted-foreground">
-            Track your hiring performance and manage your job postings
+            Manage your job postings and track applications
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
-            <BarChart3 className="w-4 h-4 mr-2" />
-            <span className="hidden xs:inline">View Analytics</span>
-            <span className="xs:hidden">Analytics</span>
-          </Button>
-          <Button
-            onClick={() => (window.location.href = "/post-job")}
-            size="sm"
-            className="w-full sm:w-auto"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            <span className="hidden xs:inline">Post New Job</span>
-            <span className="xs:hidden">Post Job</span>
-          </Button>
-        </div>
+        <Button
+          onClick={() => router.push("/post-job")}
+          size="sm"
+          className="w-full sm:w-auto"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Post New Job
+        </Button>
       </div>
 
       {/* Key Statistics */}
@@ -166,173 +170,161 @@ export function DashboardOverview() {
         <StatCard
           icon={Briefcase}
           title="Total Jobs"
-          value={displayStats.totalJobs.toLocaleString()}
-          change="+2 this month"
-          changeType="increase"
+          value={displayStats.totalJobs}
+          description="All job postings"
         />
         <StatCard
           icon={Activity}
           title="Active Jobs"
-          value={displayStats.activeJobs.toLocaleString()}
-          change="+1 this week"
-          changeType="increase"
+          value={displayStats.activeJobs}
+          description="Currently accepting applications"
+          variant={displayStats.activeJobs > 0 ? "success" : "default"}
         />
         <StatCard
           icon={Users}
           title="Total Applications"
-          value={displayStats.totalApplications.toLocaleString()}
-          change={`+${displayStats.newApplications} this week`}
-          changeType="increase"
+          value={displayStats.totalApplications}
+          description="Across all jobs"
         />
         <StatCard
-          icon={Eye}
-          title="Job Views"
-          value={displayStats.jobViews.toLocaleString()}
-          change="+89 this week"
-          changeType="increase"
+          icon={Clock}
+          title="Pending Review"
+          value={displayStats.pendingApplications}
+          description="Awaiting your response"
+          variant={displayStats.pendingApplications > 0 ? "warning" : "default"}
         />
       </div>
 
-      {/* Secondary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard
-          icon={TrendingUp}
-          title="Response Rate"
-          value={`${displayStats.responseRate}%`}
-          change="+2.1% vs last month"
-          changeType="increase"
-        />
-        <StatCard
-          icon={Calendar}
-          title="Avg Time to Hire"
-          value="12 days"
-          change="-3 days vs last month"
-          changeType="increase"
-        />
-        <StatCard
-          icon={Star}
-          title="Conversion Rate"
-          value={`${displayStats.responseRate}%`}
-          change="+1.2% vs last month"
-          changeType="increase"
-        />
-      </div>
-
-      {/* Charts and Activity */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Application Trends */}
+        {/* Recent Applications */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Application Trends</CardTitle>
+            <CardTitle>Recent Applications</CardTitle>
             <CardDescription>
-              Applications and views over the last 30 days
+              Latest candidates who applied to your jobs
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <SimpleChart data={displayTrends} />
+            {displayStats.recentApplications.length > 0 ? (
+              <div className="space-y-4">
+                {displayStats.recentApplications.map((application) => (
+                  <div key={application.id} className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                    <div className="flex-1 space-y-1">
+                      <p className="font-medium text-sm">
+                        {application.applicantName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Applied for {application.jobTitle}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatTimeAgo(application.appliedAt)}
+                      </p>
+                    </div>
+                    <Badge variant={getStatusBadgeVariant(application.status)}>
+                      {application.status}
+                    </Badge>
+                  </div>
+                ))}
+                {displayStats.totalApplications > 5 && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => router.push("/employer/applications")}
+                  >
+                    View All Applications
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  No applications yet. Post a job to start receiving applications.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+        {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Quick Actions</CardTitle>
             <CardDescription>
-              Latest updates from your job postings
+              Manage your hiring process
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium">
-                    New application from Sarah Chen
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Senior React Developer - 3 min ago
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium">Interview scheduled</p>
-                  <p className="text-xs text-muted-foreground">
-                    UX Designer candidate - 45 min ago
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium">
-                    Job posting expires soon
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Product Manager - 2 days remaining
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium">5 new applications</p>
-                  <p className="text-xs text-muted-foreground">
-                    Frontend Developer - 4 hours ago
-                  </p>
-                </div>
-              </div>
-            </div>
+          <CardContent className="space-y-3">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => router.push("/employer/jobs")}
+            >
+              <Briefcase className="w-4 h-4 mr-2" />
+              Manage Jobs
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => router.push("/employer/applications")}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Review Applications
+              {displayStats.pendingApplications > 0 && (
+                <Badge className="ml-auto" variant="destructive">
+                  {displayStats.pendingApplications}
+                </Badge>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => router.push("/employer/company-profile")}
+            >
+              <Building className="w-4 h-4 mr-2" />
+              Company Profile
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => router.push("/employer/settings")}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
+      {/* Help Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>
-            Common tasks to manage your hiring process
-          </CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5" />
+            Getting Started
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <Button
-              variant="outline"
-              className="h-auto p-4 flex flex-col items-center gap-2"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="text-sm">Post Job</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto p-4 flex flex-col items-center gap-2"
-            >
-              <Users className="w-5 h-5" />
-              <span className="text-sm">Review Applications</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto p-4 flex flex-col items-center gap-2"
-            >
-              <FileText className="w-5 h-5" />
-              <span className="text-sm">Create Template</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto p-4 flex flex-col items-center gap-2"
-            >
-              <BarChart3 className="w-5 h-5" />
-              <span className="text-sm">View Analytics</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto p-4 flex flex-col items-center gap-2"
-            >
-              <Calendar className="w-5 h-5" />
-              <span className="text-sm">Schedule Interview</span>
-            </Button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Post Your First Job</h4>
+              <p className="text-xs text-muted-foreground">
+                Create a compelling job listing to attract top talent
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Complete Company Profile</h4>
+              <p className="text-xs text-muted-foreground">
+                Add company details to build trust with candidates
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Review Applications</h4>
+              <p className="text-xs text-muted-foreground">
+                Respond quickly to maintain a good employer reputation
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

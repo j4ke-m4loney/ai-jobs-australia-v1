@@ -6,11 +6,15 @@ export interface AnalyticsData {
   totalJobs: number;
   activeJobs: number;
   totalApplications: number;
-  newApplications: number;
-  jobViews: number;
-  responseRate: number;
-  averageTimeToHire: number;
-  conversionRate: number;
+  pendingApplications: number;
+  reviewedApplications: number;
+  recentApplications: Array<{
+    id: string;
+    applicantName: string;
+    jobTitle: string;
+    appliedAt: string;
+    status: string;
+  }>;
 }
 
 export interface ApplicationTrend {
@@ -23,83 +27,146 @@ export function useAnalytics() {
   const { user } = useAuth();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [trends, setTrends] = useState<ApplicationTrend[]>([]);
-  const [loading, setLoading] = useState(false); // Changed to false to show mock data immediately
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
 
-    // For now, return mock data to demonstrate the dashboard
-    const mockAnalyticsData: AnalyticsData = {
-      totalJobs: 15,
-      activeJobs: 8,
-      totalApplications: 247,
-      newApplications: 23,
-      jobViews: 1542,
-      responseRate: 16.0,
-      averageTimeToHire: 12,
-      conversionRate: 16.0
-    };
-
-    // Generate realistic trend data for the last 30 days
-    const mockTrendData: ApplicationTrend[] = [];
-    const baseDate = new Date();
-    
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(baseDate.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      // Create realistic fluctuating data
-      const dayOfWeek = date.getDay();
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-      
-      // Lower activity on weekends
-      const baseApplications = isWeekend ? 2 : 8;
-      const baseViews = isWeekend ? 15 : 50;
-      
-      // Add some randomness
-      const applications = Math.floor(baseApplications + Math.random() * 8);
-      const views = Math.floor(baseViews + Math.random() * 30);
-
-      mockTrendData.push({
-        date: dateStr,
-        applications,
-        views
-      });
-    }
-
-    setData(mockAnalyticsData);
-    setTrends(mockTrendData);
-    setError(null);
-    setLoading(false);
-
-    // TODO: Replace with real Supabase queries when ready
-    /*
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         // Fetch job statistics
         const { data: jobs, error: jobsError } = await supabase
           .from('jobs')
-          .select('id, status, created_at')
+          .select('id, status, title')
           .eq('employer_id', user.id);
 
         if (jobsError) throw jobsError;
 
-        // ... rest of real analytics code
+        const totalJobs = jobs?.length || 0;
+        const activeJobs = jobs?.filter(job => job.status === 'approved').length || 0;
+
+        // Get all job IDs for this employer
+        const jobIds = jobs?.map(job => job.id) || [];
+
+        // Initialize analytics data
+        let analyticsData: AnalyticsData = {
+          totalJobs,
+          activeJobs,
+          totalApplications: 0,
+          pendingApplications: 0,
+          reviewedApplications: 0,
+          recentApplications: []
+        };
+
+        if (jobIds.length > 0) {
+          // Fetch applications for employer's jobs
+          const { data: applications, error: appsError } = await supabase
+            .from('job_applications')
+            .select(`
+              id,
+              status,
+              created_at,
+              job_id,
+              applicant_id
+            `)
+            .in('job_id', jobIds)
+            .order('created_at', { ascending: false });
+
+          if (appsError) throw appsError;
+
+          // Get applicant profiles for recent applications
+          const recentApps = applications?.slice(0, 5) || [];
+          const applicantIds = [...new Set(recentApps.map(app => app.applicant_id))];
+          
+          let profilesMap = new Map();
+          if (applicantIds.length > 0) {
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('user_id, first_name, last_name')
+              .in('user_id', applicantIds);
+            
+            profiles?.forEach(profile => {
+              profilesMap.set(profile.user_id, profile);
+            });
+          }
+
+          // Create jobs map for quick lookup
+          const jobsMap = new Map();
+          jobs?.forEach(job => {
+            jobsMap.set(job.id, job);
+          });
+
+          // Calculate application metrics
+          analyticsData.totalApplications = applications?.length || 0;
+          analyticsData.pendingApplications = applications?.filter(app => app.status === 'pending').length || 0;
+          analyticsData.reviewedApplications = applications?.filter(app => 
+            app.status === 'reviewed' || app.status === 'shortlisted' || app.status === 'rejected'
+          ).length || 0;
+
+          // Format recent applications
+          analyticsData.recentApplications = recentApps.map(app => {
+            const profile = profilesMap.get(app.applicant_id);
+            const job = jobsMap.get(app.job_id);
+            return {
+              id: app.id,
+              applicantName: profile 
+                ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Applicant'
+                : 'Unknown Applicant',
+              jobTitle: job?.title || 'Unknown Position',
+              appliedAt: app.created_at,
+              status: app.status || 'pending'
+            };
+          });
+
+          // Generate simple trend data for last 7 days
+          const trendData: ApplicationTrend[] = [];
+          const today = new Date();
+          
+          for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            
+            // Count applications for this date
+            const dayApplications = applications?.filter(app => {
+              const appDate = new Date(app.created_at).toISOString().split('T')[0];
+              return appDate === dateStr;
+            }).length || 0;
+
+            trendData.push({
+              date: dateStr,
+              applications: dayApplications,
+              views: 0 // We'll implement views tracking later
+            });
+          }
+
+          setTrends(trendData);
+        }
+
+        setData(analyticsData);
         
       } catch (err) {
         console.error('Error fetching analytics:', err);
         setError('Failed to load analytics data');
+        // Set default data on error
+        setData({
+          totalJobs: 0,
+          activeJobs: 0,
+          totalApplications: 0,
+          pendingApplications: 0,
+          reviewedApplications: 0,
+          recentApplications: []
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchAnalytics();
-    */
   }, [user]);
 
   const trackJobView = async (jobId: string) => {

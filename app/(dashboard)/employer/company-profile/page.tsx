@@ -22,10 +22,12 @@ const EmployerCompany = () => {
                 <span className="font-medium">Coming Soon</span>
               </div>
               <p className="text-muted-foreground">
-                The standalone company profile management will be available in a future update.
+                The standalone company profile management will be available in a
+                future update.
               </p>
               <p className="text-sm text-muted-foreground mt-3">
-                For now, you can manage your company information when posting or editing jobs.
+                For now, you can manage your company information when posting or
+                editing jobs.
               </p>
             </div>
           </CardContent>

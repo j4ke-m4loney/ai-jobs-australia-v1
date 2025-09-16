@@ -2,10 +2,22 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile, type Profile } from "@/contexts/ProfileContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, FileText, User, MapPin, Phone, Mail, Edit, Building2, Clock, DollarSign } from "lucide-react";
+import {
+  Heart,
+  FileText,
+  User,
+  MapPin,
+  Phone,
+  Mail,
+  Edit,
+  Building2,
+  Clock,
+  DollarSign,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
 
@@ -31,24 +43,14 @@ interface Application {
   };
 }
 
-interface Profile {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  bio: string | null;
-  location: string | null;
-  phone: string | null;
-  skills: string[] | null;
-  experience_level: string | null;
-  resume_url: string | null;
-}
+// Profile interface is now imported from ProfileContext
 
 export const JobSeekerDashboardOverview = () => {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
   const { savedJobIds, fetchSavedJobsWithDetails } = useSavedJobs();
   const [applications, setApplications] = useState<Application[]>([]);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [savedJobs, setSavedJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -91,16 +93,7 @@ export const JobSeekerDashboardOverview = () => {
 
       if (applicationsError) throw applicationsError;
 
-      // Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user?.id)
-        .maybeSingle();
-
-      if (profileError && profileError.code !== "PGRST116") {
-        throw profileError;
-      }
+      // Profile data is handled by ProfileContext
 
       // Fetch saved jobs
       const savedJobsData = await fetchSavedJobsWithDetails(3);
@@ -113,7 +106,7 @@ export const JobSeekerDashboardOverview = () => {
         })) || [];
 
       setApplications(applicationsWithJobs);
-      setProfile(profileData);
+      // Profile data is now provided by ProfileContext
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       toast.error("Failed to load dashboard data");
@@ -193,8 +186,10 @@ export const JobSeekerDashboardOverview = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-          onClick={() => router.push("/jobseeker/saved-jobs")}>
+        <Card
+          className="shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+          onClick={() => router.push("/jobseeker/saved-jobs")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle className="text-sm font-medium text-foreground">
               Saved Jobs
@@ -206,9 +201,9 @@ export const JobSeekerDashboardOverview = () => {
               {savedJobIds.size}
             </div>
             <p className="text-xs text-muted-foreground">Ready to apply</p>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="mt-2 p-0 h-auto text-xs text-primary hover:text-primary/80"
               onClick={(e) => {
                 e.stopPropagation();
@@ -375,18 +370,22 @@ export const JobSeekerDashboardOverview = () => {
                 <div
                   key={savedJob.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => router.push(`/jobseeker/saved-job/${savedJob.job.id}`)}
+                  onClick={() =>
+                    router.push(`/jobseeker/saved-job/${savedJob.job.id}`)
+                  }
                 >
                   <div className="flex-1">
                     <h4 className="font-medium text-foreground">
                       {savedJob.job.title}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      {savedJob.job.companies?.name || "Company"} • {savedJob.job.location} • {savedJob.job.job_type}
+                      {savedJob.job.companies?.name || "Company"} •{" "}
+                      {savedJob.job.location} • {savedJob.job.job_type}
                     </p>
                     {savedJob.job.salary_min && (
                       <p className="text-xs text-green-600 mt-1">
-                        ${savedJob.job.salary_min.toLocaleString()} - ${savedJob.job.salary_max?.toLocaleString() || ''}
+                        ${savedJob.job.salary_min.toLocaleString()} - $
+                        {savedJob.job.salary_max?.toLocaleString() || ""}
                       </p>
                     )}
                   </div>
@@ -433,7 +432,8 @@ export const JobSeekerDashboardOverview = () => {
                       {application.job.title}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      {application.job.companies?.name || "Company"} • {application.job.location} • {application.job.job_type}
+                      {application.job.companies?.name || "Company"} •{" "}
+                      {application.job.location} • {application.job.job_type}
                     </p>
                   </div>
                   <div className="text-right">

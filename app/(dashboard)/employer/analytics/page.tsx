@@ -8,239 +8,125 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { SimpleChart } from "@/components/ui/simple-chart";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   TrendingUp,
   Eye,
   Users,
-  BarChart3,
-  Calendar,
   Target,
-  Award,
   Clock,
+  AlertCircle,
+  ArrowLeft,
 } from "lucide-react";
 
 const EmployerAnalytics = () => {
-
-  // Mock analytics data
-  const viewsData = [
-    { date: "Mon", applications: 24, views: 24 },
-    { date: "Tue", applications: 31, views: 31 },
-    { date: "Wed", applications: 45, views: 45 },
-    { date: "Thu", applications: 38, views: 38 },
-    { date: "Fri", applications: 52, views: 52 },
-    { date: "Sat", applications: 29, views: 29 },
-    { date: "Sun", applications: 18, views: 18 },
-  ];
-
-  const applicationsData = [
-    { date: "Mon", applications: 4, views: 24 },
-    { date: "Tue", applications: 7, views: 31 },
-    { date: "Wed", applications: 9, views: 45 },
-    { date: "Thu", applications: 6, views: 38 },
-    { date: "Fri", applications: 12, views: 52 },
-    { date: "Sat", applications: 5, views: 29 },
-    { date: "Sun", applications: 3, views: 18 },
-  ];
-
-  const topJobsData = [
-    { job: "Senior AI Engineer", views: 145, applications: 24 },
-    { job: "ML Researcher", views: 89, applications: 12 },
-    { job: "Data Scientist", views: 52, applications: 8 },
-  ];
+  const router = useRouter();
 
   return (
     <EmployerLayout title="Analytics">
       <div className="grid gap-6">
-              {/* Key Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Total Job Views
-                    </CardTitle>
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">1,247</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-success">+12%</span> from last month
-                    </p>
-                  </CardContent>
-                </Card>
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/employer")}
+            className="gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Button>
+        </div>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Applications Received
-                    </CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">186</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-success">+8%</span> from last month
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Application Rate
-                    </CardTitle>
-                    <Target className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">14.9%</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-success">+2.1%</span> from last
-                      month
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Avg. Time to Fill
-                    </CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">18 days</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-warning">-3 days</span> from last
-                      month
-                    </p>
-                  </CardContent>
-                </Card>
+        {/* Coming Soon Card */}
+        <Card className="border-dashed">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <TrendingUp className="w-8 h-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Advanced Analytics Coming Soon</CardTitle>
+            <CardDescription className="max-w-md mx-auto">
+              We're working on bringing you detailed insights about your job postings, 
+              including view trends, conversion rates, and candidate engagement metrics.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <Eye className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <h4 className="font-medium text-sm mb-1">View Analytics</h4>
+                <p className="text-xs text-muted-foreground">
+                  Track how many people view your job postings
+                </p>
               </div>
-
-              {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5" />
-                      Job Views This Week
-                    </CardTitle>
-                    <CardDescription>
-                      Daily views across all your job postings
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <SimpleChart data={viewsData} />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5" />
-                      Applications This Week
-                    </CardTitle>
-                    <CardDescription>
-                      Daily application submissions
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <SimpleChart data={applicationsData} />
-                  </CardContent>
-                </Card>
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <h4 className="font-medium text-sm mb-1">Conversion Metrics</h4>
+                <p className="text-xs text-muted-foreground">
+                  Understand your view-to-application rates
+                </p>
               </div>
-
-              {/* Performance Metrics */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Award className="w-5 h-5" />
-                      Top Performing Jobs
-                    </CardTitle>
-                    <CardDescription>
-                      Jobs with highest engagement this month
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {topJobsData.map((job, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                        >
-                          <div>
-                            <h4 className="font-medium">{job.job}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {job.views} views • {job.applications}{" "}
-                              applications
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium">
-                              {((job.applications / job.views) * 100).toFixed(
-                                1
-                              )}
-                              %
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              conversion rate
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5" />
-                      Monthly Overview
-                    </CardTitle>
-                    <CardDescription>
-                      Key performance indicators for this month
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Jobs Posted</span>
-                        <span className="text-lg font-bold">3</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Active Jobs</span>
-                        <span className="text-lg font-bold">2</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Total Applicants
-                        </span>
-                        <span className="text-lg font-bold">44</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Interviews Scheduled
-                        </span>
-                        <span className="text-lg font-bold">8</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Offers Extended
-                        </span>
-                        <span className="text-lg font-bold">2</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">
-                          Positions Filled
-                        </span>
-                        <span className="text-lg font-bold">1</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <h4 className="font-medium text-sm mb-1">Time-to-Hire</h4>
+                <p className="text-xs text-muted-foreground">
+                  Optimize your recruitment process timing
+                </p>
               </div>
+            </div>
+
+            {/* Current Available Features */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  What's Available Now
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-medium text-sm">Real-time Application Tracking</p>
+                    <p className="text-xs text-muted-foreground">
+                      View applications as they come in from your dashboard
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-medium text-sm">Job Status Management</p>
+                    <p className="text-xs text-muted-foreground">
+                      Keep track of active and inactive job postings
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                  <div>
+                    <p className="font-medium text-sm">Application Status Updates</p>
+                    <p className="text-xs text-muted-foreground">
+                      Mark applications as reviewed, shortlisted, or rejected
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
+              <Button onClick={() => router.push("/employer/jobs")}>
+                <Users className="w-4 h-4 mr-2" />
+                View Your Jobs
+              </Button>
+              <Button variant="outline" onClick={() => router.push("/employer/applications")}>
+                Review Applications
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </EmployerLayout>
   );

@@ -25,8 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { JobFormData2, BENEFITS_OPTIONS } from "@/types/job2";
+import { JobFormData2 } from "@/types/job2";
 import {
   Briefcase,
   MapPin,
@@ -34,7 +33,6 @@ import {
   Clock,
   Calendar,
   DollarSign,
-  Gift,
   ChevronDown,
   ChevronUp,
   Star,
@@ -98,8 +96,6 @@ export default function JobBasicsStep({
   );
   const [showPay, setShowPay] = useState(formData.payConfig.showPay);
   const [payConfig, setPayConfig] = useState(formData.payConfig);
-  const [selectedBenefits, setSelectedBenefits] = useState(formData.benefits);
-  const [showAllBenefits, setShowAllBenefits] = useState(false);
   const [highlights, setHighlights] = useState(
     formData.highlights || ["", "", ""]
   );
@@ -132,7 +128,6 @@ export default function JobBasicsStep({
         hoursConfig: hoursConfig,
         contractConfig: contractConfig,
         payConfig: { ...formData.payConfig, showPay: watchedValues.showPay },
-        benefits: selectedBenefits,
         highlights: highlights,
       });
     }, 500);
@@ -143,7 +138,6 @@ export default function JobBasicsStep({
     selectedJobType,
     hoursConfig,
     contractConfig,
-    selectedBenefits,
     formData.payConfig,
     updateFormData,
   ]);
@@ -158,10 +152,6 @@ export default function JobBasicsStep({
     "volunteer",
     "internship",
   ].includes(selectedJobType);
-  const visibleBenefits = showAllBenefits
-    ? BENEFITS_OPTIONS
-    : BENEFITS_OPTIONS.slice(0, 6);
-  const hiddenBenefitsCount = BENEFITS_OPTIONS.length - 6;
 
   const onSubmit = (values: z.infer<typeof schema>) => {
     updateFormData({
@@ -169,7 +159,6 @@ export default function JobBasicsStep({
       hoursConfig: requiresHoursConfig ? hoursConfig : undefined,
       contractConfig: requiresContractConfig ? contractConfig : undefined,
       payConfig: showPay ? payConfig : { showPay: false },
-      benefits: selectedBenefits,
       highlights: highlights,
     });
     onNext();
@@ -180,13 +169,6 @@ export default function JobBasicsStep({
     form.setValue("jobType", value as any);
   };
 
-  const handleBenefitToggle = (benefit: string) => {
-    setSelectedBenefits((prev) =>
-      prev.includes(benefit)
-        ? prev.filter((b) => b !== benefit)
-        : [...prev, benefit]
-    );
-  };
 
   const handleHighlightChange = (index: number, value: string) => {
     setHighlights((prev) => {
@@ -771,55 +753,6 @@ export default function JobBasicsStep({
                 </div>
               )}
 
-              {/* Benefits */}
-              <div className="space-y-4">
-                <FormLabel className="flex items-center gap-2 text-base font-medium">
-                  <Gift className="w-5 h-5" />
-                  Benefits (optional)
-                </FormLabel>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {visibleBenefits.map((benefit) => (
-                    <div key={benefit} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={benefit}
-                        checked={selectedBenefits.includes(benefit)}
-                        onCheckedChange={() => handleBenefitToggle(benefit)}
-                      />
-                      <label
-                        htmlFor={benefit}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
-                        {benefit}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-
-                {!showAllBenefits && hiddenBenefitsCount > 0 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setShowAllBenefits(true)}
-                    className="flex items-center gap-2 text-primary hover:text-primary"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                    Show {hiddenBenefitsCount} more benefits
-                  </Button>
-                )}
-
-                {showAllBenefits && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setShowAllBenefits(false)}
-                    className="flex items-center gap-2 text-primary hover:text-primary"
-                  >
-                    <ChevronUp className="w-4 h-4" />
-                    Show fewer benefits
-                  </Button>
-                )}
-              </div>
             </div>
           </div>
         </div>

@@ -257,7 +257,7 @@ const JobSeekerSettings = () => {
                   />
                 </div>
 
-                <div className="pt-4 border-t">
+                {/* <div className="pt-4 border-t">
                   <div className="flex items-start gap-3 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
                     <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                     <div className="text-sm">
@@ -271,7 +271,7 @@ const JobSeekerSettings = () => {
                       </p>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,8 +11,14 @@ import { LogOut, User, Menu, X } from "lucide-react";
 
 const EmployerHeader = () => {
   const { user, signOut } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Helper function to get user type with profiles-first approach
+  const getUserType = () => {
+    return profile?.user_type || user?.user_metadata?.user_type;
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -63,7 +70,7 @@ const EmployerHeader = () => {
               <>
                 <Link
                   href={
-                    user.user_metadata?.user_type === "employer"
+                    getUserType() === "employer"
                       ? "/employer"
                       : "/jobseeker"
                   }
@@ -124,7 +131,7 @@ const EmployerHeader = () => {
                 <>
                   <Link
                     href={
-                      user.user_metadata?.user_type === "employer"
+                      getUserType() === "employer"
                         ? "/employer"
                         : "/jobseeker"
                     }

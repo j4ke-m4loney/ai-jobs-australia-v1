@@ -84,6 +84,9 @@ export interface AuthService {
   resetPassword?(email: string): Promise<{ error?: AuthError | null }>;
   updatePassword?(newPassword: string): Promise<{ error?: AuthError | null }>;
   
+  // User management
+  updateUser?(updates: { data?: { user_metadata?: Record<string, any>; email?: string } }): Promise<{ data?: { user: AuthUser } | null; error?: AuthError | null }>;
+  
   // Provider-specific features (optional)
   signInWithOAuth?(provider: string): Promise<AuthResult>;
   signInWithMagicLink?(email: string): Promise<{ error?: AuthError | null }>;

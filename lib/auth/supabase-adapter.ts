@@ -178,6 +178,18 @@ export class SupabaseAuthAdapter implements AuthService {
     return { error: this.mapError(error) };
   }
 
+  async updateUser(updates: { data?: { user_metadata?: Record<string, any>; email?: string } }): Promise<{ data?: { user: AuthUser } | null; error?: AuthError | null }> {
+    const { data, error } = await supabase.auth.updateUser({
+      email: updates.data?.email,
+      data: updates.data?.user_metadata,
+    });
+    
+    return {
+      data: data?.user ? { user: this.mapUser(data.user) } : null,
+      error: this.mapError(error),
+    };
+  }
+
   async signInWithOAuth(provider: string): Promise<AuthResult> {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider as any,

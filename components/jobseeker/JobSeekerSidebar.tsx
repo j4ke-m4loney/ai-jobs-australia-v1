@@ -25,6 +25,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -61,6 +62,7 @@ export function JobSeekerSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const { profile } = useProfile();
 
   const collapsed = state === "collapsed";
 
@@ -145,14 +147,17 @@ export function JobSeekerSidebar() {
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-hero rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-white">
-                  {user?.user_metadata?.first_name?.[0] ||
+                  {profile?.first_name?.[0] ||
+                    user?.user_metadata?.first_name?.[0] ||
                     user?.email?.[0]?.toUpperCase() ||
                     "JS"}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sidebar-foreground truncate capitalize">
-                  {user?.user_metadata?.first_name || "Job Seeker"}
+                  {profile?.first_name 
+                    ? `${profile.first_name} ${profile.last_name || ''}`.trim()
+                    : user?.user_metadata?.first_name || "Job Seeker"}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate">
                   {user?.email}
