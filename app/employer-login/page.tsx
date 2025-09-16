@@ -45,9 +45,8 @@ const EmployerAuthPage = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const firstName = formData.get("firstName") as string;
 
-    const { error } = await signUp(email, password, firstName, "employer");
+    const { error } = await signUp(email, password, "", "employer");
 
     if (error) {
       setError(error.message);
@@ -177,16 +176,6 @@ const EmployerAuthPage = () => {
                         <AlertDescription>{error}</AlertDescription>
                       </Alert>
                     )}
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">Your Name</Label>
-                      <Input
-                        id="firstName"
-                        name="firstName"
-                        type="text"
-                        placeholder="John Doe"
-                        required
-                      />
-                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-email">Company Email</Label>
                       <Input

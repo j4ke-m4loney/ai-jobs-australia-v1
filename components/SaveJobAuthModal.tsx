@@ -42,9 +42,8 @@ export const SaveJobAuthModal = ({
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const firstName = formData.get("firstName") as string;
 
-    const { error } = await signUp(email, password, firstName, "job_seeker");
+    const { error } = await signUp(email, password, "", "job_seeker");
 
     if (error) {
       setError(error.message);
@@ -171,16 +170,6 @@ export const SaveJobAuthModal = ({
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-firstName">Your Name</Label>
-                    <Input
-                      id="signup-firstName"
-                      name="firstName"
-                      type="text"
-                      placeholder="John Doe"
-                      required
-                    />
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input

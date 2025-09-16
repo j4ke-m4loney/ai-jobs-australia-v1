@@ -11,8 +11,8 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    firstName: string,
-    userType: "job_seeker" | "employer"
+    firstName?: string,
+    userType?: "job_seeker" | "employer"
   ) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
@@ -71,16 +71,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const signUp = async (
     email: string,
     password: string,
-    firstName: string,
-    userType: "job_seeker" | "employer"
+    firstName?: string,
+    userType?: "job_seeker" | "employer"
   ) => {
     const authService = getAuthService();
     const result = await authService.signUp({
       email,
       password,
       metadata: {
-        firstName,
-        userType,
+        ...(firstName && { firstName }),
+        ...(userType && { userType }),
       },
     });
     
