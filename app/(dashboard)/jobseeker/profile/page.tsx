@@ -163,6 +163,7 @@ const JobSeekerProfile = () => {
       await updateUserMetadata({
         first_name: data.first_name,
         last_name: data.last_name,
+        display_name: `${data.first_name} ${data.last_name}`.trim(),
       });
 
       // Update email if changed and not skipped

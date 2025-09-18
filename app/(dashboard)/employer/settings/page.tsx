@@ -68,7 +68,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 const EmployerSettings = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, updateUserMetadata } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -228,6 +228,13 @@ const EmployerSettings = () => {
         phone: formData.phone,
         company_name: formData.company,
         // Note: position field would need to be added to database schema if needed
+      });
+
+      // Update user metadata to keep auth table in sync
+      await updateUserMetadata({
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        display_name: `${formData.firstName} ${formData.lastName}`.trim(),
       });
 
       // Update email if changed and not skipped

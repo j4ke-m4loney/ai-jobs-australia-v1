@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -131,6 +132,14 @@ export const SaveJobAuthModal = ({
                     type="password"
                     required
                   />
+                </div>
+                <div className="text-right">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In & Save Job"}

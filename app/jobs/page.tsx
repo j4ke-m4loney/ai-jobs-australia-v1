@@ -101,6 +101,9 @@ export default function JobsPage() {
   );
   const [selectedSalary, setSelectedSalary] = useState("");
   const [dateFilter, setDateFilter] = useState("any");
+  const [showFeaturedOnly, setShowFeaturedOnly] = useState<boolean>(
+    searchParams.get("featured") === "true"
+  );
   const [showFilters, setShowFilters] = useState(false);
   const [showOptions, setShowOptions] = useState(true);
   const [sortBy, setSortBy] = useState("relevance");
@@ -128,6 +131,7 @@ export default function JobsPage() {
       selectedLocationTypes: selectedLocationTypes.join(","),
       selectedSalary,
       dateFilter,
+      showFeaturedOnly,
       dateSort,
       sortBy,
     }),
@@ -140,6 +144,7 @@ export default function JobsPage() {
       selectedLocationTypes,
       selectedSalary,
       dateFilter,
+      showFeaturedOnly,
       dateSort,
       sortBy,
     ]
@@ -295,6 +300,9 @@ export default function JobsPage() {
       }
       if (selectedSalary) {
         query = query.gte("salary_min", parseInt(selectedSalary));
+      }
+      if (showFeaturedOnly) {
+        query = query.eq("is_featured", true);
       }
 
       // Sorting
@@ -573,6 +581,7 @@ export default function JobsPage() {
     setSelectedLocationTypes([]);
     setSelectedSalary("");
     setDateFilter("any");
+    setShowFeaturedOnly(false);
     setSearchTerm("");
     setLocationTerm("");
   };
@@ -757,6 +766,17 @@ export default function JobsPage() {
                   </option>
                 </select>
 
+                {/* Featured Jobs Toggle */}
+                <label className="flex items-center gap-2 px-3 py-2 text-sm text-white bg-white/10 rounded-sm backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-colors">
+                  <Checkbox
+                    checked={showFeaturedOnly}
+                    onCheckedChange={(checked) => setShowFeaturedOnly(checked as boolean)}
+                    className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Star className="w-4 h-4" />
+                  Featured only
+                </label>
+
                 {/* Reset All Filters Link */}
                 {(searchTerm ||
                   locationTerm ||
@@ -765,7 +785,8 @@ export default function JobsPage() {
                   selectedJobTypes.length > 0 ||
                   selectedLocationTypes.length > 0 ||
                   selectedSalary ||
-                  dateFilter !== "any") && (
+                  dateFilter !== "any" ||
+                  showFeaturedOnly) && (
                   <button
                     onClick={clearAllFilters}
                     className="text-sm text-white/80 hover:text-white underline transition-colors ml-2"

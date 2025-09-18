@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import FeaturedJobs from "@/components/FeaturedJobs";
 import {
   Search,
   MapPin,
@@ -45,38 +46,6 @@ const HomePage = () => {
     router.push(`/jobs/${jobId}`);
   };
 
-  const featuredJobs = [
-    {
-      id: 1,
-      title: "Senior Machine Learning Engineer",
-      company: "AI Innovations",
-      location: "Sydney, NSW",
-      salary: "$120,000 - $150,000",
-      type: "Full-time",
-      posted: "2 days ago",
-      skills: ["Python", "TensorFlow", "AWS"],
-    },
-    {
-      id: 2,
-      title: "Data Scientist",
-      company: "Tech Solutions",
-      location: "Melbourne, VIC",
-      salary: "$100,000 - $130,000",
-      type: "Full-time",
-      posted: "1 week ago",
-      skills: ["R", "SQL", "Python"],
-    },
-    {
-      id: 3,
-      title: "AI Product Manager",
-      company: "Future Labs",
-      location: "Brisbane, QLD",
-      salary: "$110,000 - $140,000",
-      type: "Full-time",
-      posted: "3 days ago",
-      skills: ["Product Strategy", "Agile", "AI/ML"],
-    },
-  ];
 
   const categories = [
     { name: "Machine Learning", count: 45, icon: TrendingUp },
@@ -218,75 +187,7 @@ const HomePage = () => {
         </section>
 
         {/* Featured Jobs */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-start mb-12">
-              <div>
-                <h2 className="text-foreground text-3xl font-bold mb-3">
-                  Featured Jobs
-                </h2>
-                <p className="text-xl text-muted-foreground leading-relaxed">
-                  Roles from Australia's most innovative companies
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  user ? router.push("/jobs") : router.push("/login")
-                }
-                className="gap-2 shadow-lg"
-              >
-                View All Jobs
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredJobs.map((job) => (
-                <Card
-                  key={job.id}
-                  className="!shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer"
-                  onClick={() => handleJobClick(job.id)}
-                >
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge variant="outline">{job.type}</Badge>
-                      <span className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {job.posted}
-                      </span>
-                    </div>
-                    <CardTitle className="text-lg">{job.title}</CardTitle>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Building className="w-4 h-4" />
-                      <span>{job.company}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      <span>{job.location}</span>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-lg font-semibold text-primary mb-3">
-                      {job.salary}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {job.skills.map((skill) => (
-                        <Badge
-                          key={skill}
-                          variant="secondary"
-                          className="text-xs"
-                        >
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
+        <FeaturedJobs />
 
         {/* How It Works */}
         <section className="py-20">

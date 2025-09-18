@@ -178,11 +178,8 @@ export default function JobBasicsStep({
     });
   };
 
-  const getWordCount = (text: string) => {
-    return text
-      .trim()
-      .split(/\s+/)
-      .filter((word) => word.length > 0).length;
+  const getCharCount = (text: string) => {
+    return text.trim().length;
   };
 
   const handlePayConfigChange = (field: string, value: any) => {
@@ -319,14 +316,13 @@ export default function JobBasicsStep({
             </h3>
 
             <p className="text-sm text-muted-foreground mb-4">
-              Add up to 3 key highlights about this role (10-12 words each)
+              Add up to 3 key highlights about this role (max 80 characters each)
             </p>
 
             <div className="space-y-3">
               {highlights.map((highlight, index) => {
-                const wordCount = getWordCount(highlight);
-                const isOverLimit = wordCount > 12;
-                const isUnderMin = wordCount > 0 && wordCount < 8;
+                const charCount = getCharCount(highlight);
+                const isOverLimit = charCount > 80;
 
                 return (
                   <div key={index}>
@@ -348,27 +344,23 @@ export default function JobBasicsStep({
                         }
                         className={cn(
                           "text-base h-12 border-primary",
-                          isOverLimit && "border-red-500 focus:border-red-500",
-                          isUnderMin &&
-                            "border-yellow-500 focus:border-yellow-500"
+                          isOverLimit && "border-red-500 focus:border-red-500"
                         )}
                       />
                       <div className="flex justify-between items-center text-xs">
                         <span
                           className={cn(
                             "text-muted-foreground",
-                            isOverLimit && "text-red-500",
-                            isUnderMin && "text-yellow-600"
+                            isOverLimit && "text-red-500"
                           )}
                         >
-                          {wordCount === 0
-                            ? "No words yet"
-                            : `${wordCount} word${wordCount !== 1 ? "s" : ""}`}
-                          {isOverLimit && " (too many)"}
-                          {isUnderMin && " (too short)"}
+                          {charCount === 0
+                            ? "No characters yet"
+                            : `${charCount}/80 characters`}
+                          {isOverLimit && " (too long)"}
                         </span>
                         <span className="text-muted-foreground">
-                          Target: 8-12 words
+                          Max: 80 characters
                         </span>
                       </div>
                     </div>

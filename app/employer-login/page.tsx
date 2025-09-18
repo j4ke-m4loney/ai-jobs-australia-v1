@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -31,11 +31,12 @@ const EmployerAuthPage = () => {
   const [signUpSuccess, setSignUpSuccess] = useState(false);
 
   // If user is already logged in, redirect appropriately
-  if (user) {
-    const next = searchParams.get("next") || "/employer";
-    router.push(next);
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      const next = searchParams.get("next") || "/employer";
+      router.push(next);
+    }
+  }, [user, searchParams, router]);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -128,6 +129,14 @@ const EmployerAuthPage = () => {
                       type="password"
                       required
                     />
+                  </div>
+                  <div className="text-right">
+                    <Link
+                      href="/forgot-password"
+                      className="text-sm text-muted-foreground hover:text-primary"
+                    >
+                      Forgot password?
+                    </Link>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Signing in..." : "Sign In"}

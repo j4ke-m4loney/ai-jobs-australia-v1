@@ -296,11 +296,8 @@ const JobManagementPage = () => {
     });
   };
 
-  const getWordCount = (text: string) => {
-    return text
-      .trim()
-      .split(/\s+/)
-      .filter((word) => word.length > 0).length;
+  const getCharCount = (text: string) => {
+    return text.trim().length;
   };
 
   const handlePayConfigChange = (field: string, value: any) => {
@@ -1013,13 +1010,12 @@ const JobManagementPage = () => {
                       <Label className="text-base font-medium">Job Highlights</Label>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Add up to 3 key highlights about this role (8-12 words each)
+                      Add up to 3 key highlights about this role (max 80 characters each)
                     </p>
                     <div className="space-y-3">
                       {highlights.map((highlight, index) => {
-                        const wordCount = getWordCount(highlight);
-                        const isOverLimit = wordCount > 12;
-                        const isUnderMin = wordCount > 0 && wordCount < 8;
+                        const charCount = getCharCount(highlight);
+                        const isOverLimit = charCount > 80;
 
                         return (
                           <div key={index}>
@@ -1041,31 +1037,23 @@ const JobManagementPage = () => {
                                 }
                                 className={cn(
                                   "text-base h-12",
-                                  isOverLimit && "border-red-500 focus:border-red-500",
-                                  isUnderMin &&
-                                    "border-yellow-500 focus:border-yellow-500"
+                                  isOverLimit && "border-red-500 focus:border-red-500"
                                 )}
                               />
                               <div className="flex justify-between items-center text-xs">
                                 <span
                                   className={cn(
                                     "text-muted-foreground",
-                                    isOverLimit && "text-red-500",
-                                    isUnderMin && "text-yellow-600"
+                                    isOverLimit && "text-red-500"
                                   )}
                                 >
-                                  {wordCount === 0
-                                    ? "No words yet"
-                                    : `${wordCount} word${wordCount !== 1 ? "s" : ""}`}
+                                  {charCount === 0
+                                    ? "No characters yet"
+                                    : `${charCount}/80 characters`}
                                 </span>
                                 {isOverLimit && (
                                   <span className="text-red-500 text-xs">
-                                    Too long! Keep it under 12 words
-                                  </span>
-                                )}
-                                {isUnderMin && (
-                                  <span className="text-yellow-600 text-xs">
-                                    Add a few more words for impact
+                                    Too long! Keep it under 80 characters
                                   </span>
                                 )}
                               </div>

@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { JobFormData2, PRICING_TIERS } from "@/types/job2";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/contexts/ProfileContext";
+import { getStripe } from "@/lib/stripe-client";
 import {
   MapPin,
   Clock,
@@ -31,9 +32,9 @@ export default function ReviewPaymentStep2({
   onEdit,
 }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const { profile } = useProfile();
 
   const selectedPlan = PRICING_TIERS[formData.pricingTier];
 
@@ -111,149 +112,57 @@ export default function ReviewPaymentStep2({
       return;
     }
 
+    if (!profile?.email && !user.email) {
+      setError("Email address is required for payment processing");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
-      let companyId = null;
+      // Create checkout session
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pricingTier: formData.pricingTier,
+          jobFormData: formData,
+          userId: user.id,
+          userEmail: profile?.email || user.email,
+        }),
+      });
 
-      // First, create or find the company record if company data is provided
-      if (formData.companyName && formData.companyName.trim()) {
-        // Check if company already exists with the same name and website
-        const { data: existingCompany, error: searchError } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('name', formData.companyName.trim())
-          .maybeSingle();
+      const data = await response.json();
 
-        if (searchError) {
-          console.error('Company search error:', searchError);
-          setError('Failed to check existing companies. Please try again.');
-          return;
-        }
-
-        if (existingCompany) {
-          // Use existing company
-          companyId = existingCompany.id;
-        } else {
-          // Create new company record
-          const companyRecord = {
-            name: formData.companyName.trim(),
-            description: formData.companyDescription?.trim() || null,
-            website: formData.companyWebsite?.trim() || null,
-            // TODO: Handle logo upload - for now, set to null
-            logo_url: null,
-          };
-
-          const { data: companyData, error: companyError } = await supabase
-            .from('companies')
-            .insert(companyRecord)
-            .select()
-            .single();
-
-          if (companyError) {
-            console.error('Company creation error:', companyError);
-            setError('Failed to create company record. Please try again.');
-            return;
-          }
-
-          companyId = companyData.id;
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
       }
 
-      // Map the job form data to database schema
-      const jobRecord = {
-        employer_id: user.id,
-        company_id: companyId,
-        title: formData.jobTitle,
-        description: formData.jobDescription,
-        requirements: formData.requirements,
-        location: formData.locationAddress,
-        location_type: mapLocationType(formData.locationType),
-        job_type: mapJobType(formData.jobType),
-        category: 'ai', // Default category
-        salary_min: getSalaryMin(formData.payConfig),
-        salary_max: getSalaryMax(formData.payConfig),
-        application_method: formData.applicationMethod === 'indeed' ? 'external' : formData.applicationMethod,
-        application_url: formData.applicationMethod === 'indeed' ? null : formData.applicationUrl,
-        application_email: formData.applicationMethod === 'email' ? formData.applicationEmail : null,
-        is_featured: formData.pricingTier === 'featured' || formData.pricingTier === 'annual',
-        highlights: formData.highlights || [],
-        status: 'approved', // DEVELOPMENT: Set to approved for immediate visibility
-        payment_status: 'completed', // For now, assume payment is completed
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      };
-
-      // Insert the job into the database
-      const { data, error } = await supabase
-        .from('jobs')
-        .insert(jobRecord)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Database error:', error);
-        setError('Failed to create job posting. Please try again.');
-        return;
+      // Redirect to Stripe Checkout
+      const stripe = await getStripe();
+      if (!stripe) {
+        throw new Error('Failed to load Stripe');
       }
 
-      // Success!
-      setSubmitted(true);
-      localStorage.removeItem("postJob2FormData");
-      
-    } catch (error) {
-      console.error('Submission error:', error);
-      setError('An unexpected error occurred. Please try again.');
+      const { error: stripeError } = await stripe.redirectToCheckout({
+        sessionId: data.sessionId,
+      });
+
+      if (stripeError) {
+        throw new Error(stripeError.message || 'Failed to redirect to checkout');
+      }
+
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      setError(error.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (submitted) {
-    return (
-      <div className="text-center space-y-6">
-        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-          <CheckCircle className="w-8 h-8 text-green-600" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            Job Posted Successfully!
-          </h2>
-          <p className="text-muted-foreground">
-            Your job posting for "{formData.jobTitle}" has been submitted and
-            will be reviewed shortly.
-          </p>
-        </div>
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-            <div className="text-left">
-              <h4 className="font-medium text-blue-900 mb-1">
-                What happens next?
-              </h4>
-              <ul className="text-sm text-blue-700 space-y-1">
-                <li>• Your job will be reviewed within 24 hours</li>
-                <li>• Once approved, it will go live on AI Jobs Australia</li>
-                <li>• You'll receive email notifications about applications</li>
-                <li>• Manage your job postings from your employer dashboard</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-3 justify-center">
-          <Button onClick={() => (window.location.href = "/employer/jobs")}>
-            View My Jobs
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => (window.location.href = "/post-job2")}
-          >
-            Post Another Job
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -431,83 +340,11 @@ export default function ReviewPaymentStep2({
           ) : (
             <>
               <CreditCard className="w-4 h-4 mr-2" />
-              Pay ${selectedPlan.price}
+              Proceed to Payment
             </>
           )}
         </Button>
       </div>
     </div>
   );
-}
-
-// Helper functions to map form data to database schema
-function mapLocationType(locationType: string): string {
-  const mapping: { [key: string]: string } = {
-    'fully-remote': 'remote',
-    'in-person': 'onsite',
-    'hybrid': 'hybrid',
-    'on-the-road': 'onsite', // Map to onsite as closest match
-  };
-  return mapping[locationType] || 'onsite';
-}
-
-function mapJobType(jobType: string): string {
-  const mapping: { [key: string]: string } = {
-    'full-time': 'full-time',
-    'part-time': 'part-time',
-    'permanent': 'full-time', // Map to full-time as closest match
-    'fixed-term': 'contract',
-    'subcontract': 'contract',
-    'casual': 'part-time',
-    'temp-to-perm': 'contract',
-    'contract': 'contract',
-    'internship': 'internship',
-    'volunteer': 'internship', // Map to internship as closest match
-    'graduate': 'full-time',
-  };
-  return mapping[jobType] || 'full-time';
-}
-
-function getSalaryMin(payConfig: any): number | null {
-  if (!payConfig.showPay) return null;
-  
-  if (payConfig.payType === 'range' && payConfig.payRangeMin) {
-    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
-  }
-  if (payConfig.payType === 'minimum' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
-  }
-  if (payConfig.payType === 'fixed' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
-  }
-  
-  return null;
-}
-
-function getSalaryMax(payConfig: any): number | null {
-  if (!payConfig.showPay) return null;
-  
-  if (payConfig.payType === 'range' && payConfig.payRangeMax) {
-    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
-  }
-  if (payConfig.payType === 'maximum' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
-  }
-  if (payConfig.payType === 'fixed' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
-  }
-  
-  return null;
-}
-
-function convertToAnnualSalary(amount: number, period: string): number {
-  const multipliers: { [key: string]: number } = {
-    'hour': 2080, // 40 hours/week * 52 weeks
-    'day': 260, // ~260 working days per year
-    'week': 52,
-    'month': 12,
-    'year': 1,
-  };
-  
-  return Math.round(amount * (multipliers[period] || 1));
 }
