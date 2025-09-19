@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -706,23 +706,25 @@ export default function JobsPage() {
             className="max-w-4xl mx-auto"
           >
             <div className="flex gap-4 mb-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                <Input
+              <div className="flex-1">
+                <SearchInput
                   placeholder="Job title, keywords, or company"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-12 text-base bg-white text-foreground"
+                  onClear={() => setSearchTerm("")}
+                  leftIcon={<Search className="h-5 w-5" />}
+                  className="h-12 text-base bg-white text-foreground"
                 />
               </div>
 
-              <div className="relative flex-1">
-                <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                <Input
+              <div className="flex-1">
+                <SearchInput
                   placeholder="City, state, or remote"
                   value={locationTerm}
                   onChange={(e) => setLocationTerm(e.target.value)}
-                  className="pl-10 h-12 text-base bg-white text-foreground"
+                  onClear={() => setLocationTerm("")}
+                  leftIcon={<MapPin className="h-5 w-5" />}
+                  className="h-12 text-base bg-white text-foreground"
                 />
               </div>
 

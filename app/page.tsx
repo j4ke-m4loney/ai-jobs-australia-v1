@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
@@ -107,22 +107,24 @@ const HomePage = () => {
               {/* Search Form */}
               <div className="bg-card rounded-2xl p-6 shadow-xl border-4 border-border/50 mb-12">
                 <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                    <Input
+                  <div className="flex-1">
+                    <SearchInput
                       placeholder="Job title, keywords, or company"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 h-12 text-base border-primary/50"
+                      onClear={() => setSearchTerm("")}
+                      leftIcon={<Search className="w-5 h-5" />}
+                      className="h-12 text-base border-primary/50"
                     />
                   </div>
-                  <div className="flex-1 relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                    <Input
+                  <div className="flex-1">
+                    <SearchInput
                       placeholder="City, state, or remote"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="pl-10 h-12 text-base border-primary/50"
+                      onClear={() => setLocation("")}
+                      leftIcon={<MapPin className="w-5 h-5" />}
+                      className="h-12 text-base border-primary/50"
                     />
                   </div>
                   <Button
