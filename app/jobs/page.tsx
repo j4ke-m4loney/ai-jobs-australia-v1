@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
+import { StateSelector, AUSTRALIAN_LOCATIONS } from "@/components/ui/state-selector";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -75,6 +76,116 @@ interface Job {
   } | null;
 }
 
+// Calculate search relevance score for better result ranking
+// Check if search term matches any word in the title exactly
+function hasExactWordMatch(title: string, searchTerm: string): boolean {
+  const titleWords = title.toLowerCase().split(/[\s\-]+/); // Split on spaces and hyphens
+  const searchWords = searchTerm.toLowerCase().split(/[\s\-]+/);
+
+  return searchWords.every(searchWord =>
+    titleWords.some(titleWord => titleWord === searchWord)
+  );
+}
+
+// Check if search term matches the beginning of any word in title
+function hasWordStartMatch(title: string, searchTerm: string): boolean {
+  const titleWords = title.toLowerCase().split(/[\s\-]+/);
+  const searchWords = searchTerm.toLowerCase().split(/[\s\-]+/);
+
+  return searchWords.every(searchWord =>
+    titleWords.some(titleWord => titleWord.startsWith(searchWord))
+  );
+}
+
+function calculateSearchRelevance(job: Job, searchTerm: string): number {
+  // Use original search term, just lowercase and trim it
+  const search = searchTerm.toLowerCase().trim();
+  const title = job.title.toLowerCase();
+  const companyName = job.companies?.name?.toLowerCase() || '';
+
+  let score = 0;
+  let matchType = '';
+
+  // TITLE SCORING - Check exact matches first with highest priority
+
+  // Perfect exact match of entire title
+  if (title === search) {
+    score = 10000; // Absolute highest priority
+    matchType = 'EXACT-TITLE';
+  }
+  // All search words appear as exact words in title (e.g., "software" matches "Junior Software Engineer")
+  else if (hasExactWordMatch(title, search)) {
+    score = 5000; // Very high priority for exact word matches
+    matchType = 'EXACT-WORDS';
+  }
+  // Title starts with the exact search term
+  else if (title.startsWith(search + ' ') || title.startsWith(search + '-')) {
+    score = 3000;
+    matchType = 'TITLE-STARTS-EXACT';
+  }
+  // All search words appear as word prefixes (e.g., "soft" matches "software")
+  else if (hasWordStartMatch(title, search)) {
+    score = 1000;
+    matchType = 'WORD-PREFIX';
+  }
+  // Search term appears as a complete word (with boundaries)
+  else if (
+    title.includes(' ' + search + ' ') ||
+    title.startsWith(search + ' ') ||
+    title.endsWith(' ' + search) ||
+    title.includes('-' + search + '-') ||
+    title.includes('-' + search + ' ') ||
+    title.includes(' ' + search + '-')
+  ) {
+    score = 500;
+    matchType = 'WORD-BOUNDARY';
+  }
+  // General substring match (lowest priority for titles)
+  else if (title.includes(search)) {
+    score = 100;
+    matchType = 'SUBSTRING';
+  }
+
+  // COMPANY NAME SCORING (much lower priority, only as tiebreaker)
+  if (companyName === search) {
+    score += 20;
+    matchType += '+company-exact';
+  }
+  else if (companyName.includes(search)) {
+    score += 5;
+    matchType += '+company-contains';
+  }
+
+  // MINIMAL FEATURED BONUS (should never override relevance)
+  if (job.is_featured) {
+    score += 0.5; // Tiny bonus, only matters for identical scores
+    matchType += '+feat';
+  }
+
+  // Enhanced debug logging
+  console.log(`🔍 Search: "${search}" | Job: "${job.title}" | Score: ${score} | Type: ${matchType}`);
+
+  return score;
+}
+
+// Convert state codes to appropriate search terms for database filtering
+function getLocationSearchTerms(stateCode: string): string[] {
+  const stateMapping: Record<string, string[]> = {
+    "all": [], // Return empty array for "all" - no filtering needed
+    "nsw": ["NSW", "New South Wales", "Sydney", "Newcastle", "Wollongong"],
+    "vic": ["VIC", "Victoria", "Melbourne", "Geelong", "Ballarat"],
+    "qld": ["QLD", "Queensland", "Brisbane", "Gold Coast", "Cairns", "Townsville"],
+    "wa": ["WA", "Western Australia", "Perth", "Fremantle"],
+    "sa": ["SA", "South Australia", "Adelaide"],
+    "tas": ["TAS", "Tasmania", "Hobart", "Launceston"],
+    "act": ["ACT", "Australian Capital Territory", "Canberra"],
+    "nt": ["NT", "Northern Territory", "Darwin", "Alice Springs"],
+    "remote": ["Remote", "Work from home", "WFH", "Anywhere"]
+  };
+
+  return stateMapping[stateCode] || [];
+}
+
 export default function JobsPage() {
   console.log("Jobs component rendering...");
   const { user, loading } = useAuth();
@@ -90,8 +201,8 @@ export default function JobsPage() {
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
   );
-  const [locationTerm, setLocationTerm] = useState(
-    searchParams.get("location") || ""
+  const [selectedState, setSelectedState] = useState(
+    searchParams.get("location") || "all"
   );
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
@@ -108,6 +219,10 @@ export default function JobsPage() {
   const [showOptions, setShowOptions] = useState(true);
   const [sortBy, setSortBy] = useState("relevance");
   const [dateSort, setDateSort] = useState("newest"); // newest or oldest
+
+  // Company search safeguards
+  const companySearchInProgress = useRef(false);
+  const companySearchTimeouts = useRef<Set<NodeJS.Timeout>>(new Set());
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [hasApplied, setHasApplied] = useState<Record<string, boolean>>({});
   const [isMobile, setIsMobile] = useState(false);
@@ -124,7 +239,7 @@ export default function JobsPage() {
   const filterDeps = useMemo(
     () => ({
       searchTerm,
-      locationTerm,
+      selectedState,
       selectedCategories: selectedCategories.join(","),
       selectedLocations: selectedLocations.join(","),
       selectedJobTypes: selectedJobTypes.join(","),
@@ -137,7 +252,7 @@ export default function JobsPage() {
     }),
     [
       searchTerm,
-      locationTerm,
+      selectedState,
       selectedCategories,
       selectedLocations,
       selectedJobTypes,
@@ -224,9 +339,19 @@ export default function JobsPage() {
     }
   }, []);
 
-  const fetchJobs = useCallback(async () => {
+  const fetchJobs = useCallback(async (overrideSearch?: string, overrideLocation?: string) => {
     try {
       setJobsLoading(true);
+
+      // Use override parameters if provided, otherwise use state values
+      const effectiveSearchTerm = overrideSearch !== undefined ? overrideSearch : searchTerm;
+      const effectiveLocationTerm = overrideLocation !== undefined ? overrideLocation : selectedState;
+
+      console.log("🔍 fetchJobs called with:", {
+        effectiveSearchTerm,
+        effectiveLocationTerm,
+        fromOverride: overrideSearch !== undefined || overrideLocation !== undefined
+      });
 
       let query = supabase.from("jobs").select(`
           *,
@@ -246,11 +371,26 @@ export default function JobsPage() {
       console.log("Fetching jobs - user:", user?.id || "guest");
 
       // Apply filters with title search (working solution)
-      if (searchTerm) {
-        query = query.ilike("title", `%${searchTerm}%`);
+      if (effectiveSearchTerm) {
+        query = query.ilike("title", `%${effectiveSearchTerm}%`);
       }
-      if (locationTerm) {
-        query = query.ilike("location", `%${locationTerm}%`);
+      if (effectiveLocationTerm && effectiveLocationTerm !== "all") {
+        if (effectiveLocationTerm === "remote") {
+          // Handle remote jobs by filtering location_type
+          query = query.eq("location_type", "remote");
+        } else {
+          // Handle state-based filtering using OR conditions
+          const searchTerms = getLocationSearchTerms(effectiveLocationTerm);
+          if (searchTerms.length > 0) {
+            const locationConditions = searchTerms
+              .map(term => `location.ilike.%${term}%`)
+              .join(",");
+            query = query.or(locationConditions);
+          } else {
+            // Fallback: treat as direct location search (for backward compatibility)
+            query = query.ilike("location", `%${effectiveLocationTerm}%`);
+          }
+        }
       }
       if (selectedCategories.length > 0) {
         query = query.in("category", selectedCategories);
@@ -302,9 +442,22 @@ export default function JobsPage() {
             .order("created_at", { ascending: false });
       }
 
+      console.log("🎯 EXECUTING SUPABASE QUERY NOW with filters:", {
+        searchTerm: effectiveSearchTerm,
+        location: effectiveLocationTerm,
+        user: user?.id || "guest"
+      });
+
       const { data, error } = await query;
 
-      console.log("Jobs query result:", { data, error, count: data?.length });
+      console.log("🎯 SUPABASE QUERY COMPLETED:", {
+        resultCount: data?.length || 0,
+        error: error?.message,
+        hasData: !!data,
+        firstJobTitle: data?.[0]?.title
+      });
+
+      console.log("🔍 Checking for errors after query...");
 
       if (error) {
         console.error("Error fetching jobs:", error);
@@ -315,9 +468,36 @@ export default function JobsPage() {
 
       let jobsData = (data as Job[]) || [];
 
-      // Add company search if searchTerm is provided (separate query approach)
-      if (searchTerm && searchTerm.trim()) {
+      console.log("🔍 Initial jobsData from main query:", {
+        length: jobsData.length,
+        hasData: !!jobsData,
+        effectiveSearchTerm
+      });
+
+      // TESTING: Company search with comprehensive logging and safeguards
+      // TODO: Monitor for hanging issues
+      if (true && effectiveSearchTerm && effectiveSearchTerm.trim()) {
+        console.log("🔍 Entering company search block...");
+        console.log("🔍 Company search - search term:", effectiveSearchTerm);
+
+        // Safeguard: Prevent duplicate simultaneous company searches
+        if (companySearchInProgress.current) {
+          console.log("🚨 Company search already in progress, skipping duplicate");
+          return;
+        }
+
+        companySearchInProgress.current = true;
+        console.log("🔍 Company search lock acquired");
+
+        // Safeguard: Set timeout to prevent hanging
+        const companySearchTimeout = setTimeout(() => {
+          console.error("🚨 Company search timeout after 10 seconds");
+          companySearchInProgress.current = false;
+        }, 10000);
+        companySearchTimeouts.current.add(companySearchTimeout);
+
         try {
+          console.log("🔍 Step 1: Building company jobs query...");
           // Search for jobs by company name using a separate query
           let companyQuery = supabase.from("jobs").select(`
             *,
@@ -330,13 +510,29 @@ export default function JobsPage() {
               logo_url
             )
           `);
+          console.log("🔍 Step 1 complete: Base query created");
 
           // Apply same status filter as main query
           // companyQuery = companyQuery.eq("status", "approved");
 
           // Apply all the same filters except title search
-          if (locationTerm) {
-            companyQuery = companyQuery.ilike("location", `%${locationTerm}%`);
+          if (effectiveLocationTerm && effectiveLocationTerm !== "all") {
+            if (effectiveLocationTerm === "remote") {
+              // Handle remote jobs by filtering location_type
+              companyQuery = companyQuery.eq("location_type", "remote");
+            } else {
+              // Handle state-based filtering using OR conditions
+              const searchTerms = getLocationSearchTerms(effectiveLocationTerm);
+              if (searchTerms.length > 0) {
+                const locationConditions = searchTerms
+                  .map(term => `location.ilike.%${term}%`)
+                  .join(",");
+                companyQuery = companyQuery.or(locationConditions);
+              } else {
+                // Fallback: treat as direct location search (for backward compatibility)
+                companyQuery = companyQuery.ilike("location", `%${effectiveLocationTerm}%`);
+              }
+            }
           }
           if (selectedCategories.length > 0) {
             companyQuery = companyQuery.in("category", selectedCategories);
@@ -364,37 +560,96 @@ export default function JobsPage() {
             companyQuery = companyQuery.eq("is_featured", true);
           }
 
+          console.log("🔍 Step 2: Applying filters to company jobs query...");
+          // Apply all filters here first
+          console.log("🔍 Step 2 complete: Filters applied");
+
+          console.log("🔍 Step 3: Searching for companies matching term...");
           // First, find companies that match the search term
           const { data: matchingCompanies } = await supabase
             .from("companies")
             .select("id")
-            .ilike("name", `%${searchTerm}%`);
+            .ilike("name", `%${effectiveSearchTerm}%`);
+          console.log("🔍 Step 3 complete: Company search finished", {
+            foundCompanies: matchingCompanies?.length || 0,
+            hasData: !!matchingCompanies
+          });
 
           if (matchingCompanies && matchingCompanies.length > 0) {
+            console.log("🔍 Step 4: Processing company IDs...");
             const companyIds = matchingCompanies.map(c => c.id);
+            console.log("🔍 Company IDs extracted:", companyIds);
             companyQuery = companyQuery.in("company_id", companyIds);
+            console.log("🔍 Step 4 complete: Company filter applied to jobs query");
+
+            console.log("🔍 Step 5: Executing company jobs query...");
+            const { data: companyJobs, error: companyError } = await companyQuery;
+            console.log("🔍 Step 5 complete: Company jobs query finished", {
+              jobCount: companyJobs?.length || 0,
+              hasError: !!companyError,
+              errorMessage: companyError?.message
+            });
+
+            if (!companyError && companyJobs) {
+              console.log("🔍 Step 6: Processing and merging company jobs...");
+              const companyJobsData = companyJobs as Job[];
+              console.log(`🔍 Found ${companyJobsData.length} jobs by company search`);
+
+              console.log("🔍 Creating existing job IDs set...");
+              // Merge results and remove duplicates by job ID
+              const existingJobIds = new Set(jobsData.map(job => job.id));
+              console.log("🔍 Existing job IDs count:", existingJobIds.size);
+
+              console.log("🔍 Filtering new jobs...");
+              const newJobs = companyJobsData.filter(job => !existingJobIds.has(job.id));
+              console.log("🔍 New jobs to add:", newJobs.length);
+
+              console.log("🔍 Merging job arrays...");
+              jobsData = [...jobsData, ...newJobs];
+              console.log(`🔍 Step 6 complete: Total jobs after merging: ${jobsData.length}`);
+            } else if (companyError) {
+              console.error("🚨 Company jobs query error:", companyError);
+            } else {
+              console.log("🔍 No company jobs data returned");
+            }
           } else {
-            // No matching companies found, skip this query
-            return;
+            console.log("🔍 Step 4-6: No matching companies found, skipping company jobs query");
+            console.log("🔍 Continuing with title search results only");
           }
 
-          const { data: companyJobs, error: companyError } = await companyQuery;
+          // Cleanup: Clear timeout and release lock
+          companySearchTimeouts.current.forEach(timeout => clearTimeout(timeout));
+          companySearchTimeouts.current.clear();
+          companySearchInProgress.current = false;
+          console.log("🔍 Company search lock released (success)");
 
-          if (!companyError && companyJobs) {
-            const companyJobsData = companyJobs as Job[];
-            console.log(`Found ${companyJobsData.length} jobs by company search`);
-
-            // Merge results and remove duplicates by job ID
-            const existingJobIds = new Set(jobsData.map(job => job.id));
-            const newJobs = companyJobsData.filter(job => !existingJobIds.has(job.id));
-
-            jobsData = [...jobsData, ...newJobs];
-            console.log(`Total jobs after merging: ${jobsData.length}`);
-          }
         } catch (companySearchError) {
-          console.error("Company search failed:", companySearchError);
+          console.error("🚨 Company search failed:", companySearchError);
+
+          // Cleanup: Clear timeout and release lock on error
+          companySearchTimeouts.current.forEach(timeout => clearTimeout(timeout));
+          companySearchTimeouts.current.clear();
+          companySearchInProgress.current = false;
+          console.log("🔍 Company search lock released (error)");
+
           // Continue with title search results only
         }
+        console.log("🔍 Completed company search block");
+      } else {
+        console.log("🔍 Skipping company search - no search term");
+      }
+
+      // Add relevance scoring when search term exists
+      console.log("🔍 Checking if relevance scoring should apply...", {
+        hasSearchTerm: !!effectiveSearchTerm?.trim(),
+        jobCount: jobsData.length
+      });
+
+      if (effectiveSearchTerm && effectiveSearchTerm.trim() && jobsData.length > 0) {
+        jobsData = jobsData.map(job => ({
+          ...job,
+          _relevanceScore: calculateSearchRelevance(job, effectiveSearchTerm.trim())
+        }));
       }
 
       // Apply sorting to merged results
@@ -402,6 +657,14 @@ export default function JobsPage() {
         switch (sortBy) {
           case "date":
             jobsData.sort((a, b) => {
+              // If search exists, prioritize relevance first
+              if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+                const relevanceA = (a as any)._relevanceScore || 0;
+                const relevanceB = (b as any)._relevanceScore || 0;
+                if (relevanceA !== relevanceB) {
+                  return relevanceB - relevanceA;
+                }
+              }
               const dateA = new Date(a.created_at).getTime();
               const dateB = new Date(b.created_at).getTime();
               return dateSort === "oldest" ? dateA - dateB : dateB - dateA;
@@ -409,6 +672,14 @@ export default function JobsPage() {
             break;
           case "salary":
             jobsData.sort((a, b) => {
+              // If search exists, prioritize relevance first
+              if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+                const relevanceA = (a as any)._relevanceScore || 0;
+                const relevanceB = (b as any)._relevanceScore || 0;
+                if (relevanceA !== relevanceB) {
+                  return relevanceB - relevanceA;
+                }
+              }
               const salaryA = a.salary_max || 0;
               const salaryB = b.salary_max || 0;
               return salaryB - salaryA;
@@ -416,6 +687,14 @@ export default function JobsPage() {
             break;
           case "featured":
             jobsData.sort((a, b) => {
+              // If search exists, prioritize relevance first
+              if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+                const relevanceA = (a as any)._relevanceScore || 0;
+                const relevanceB = (b as any)._relevanceScore || 0;
+                if (relevanceA !== relevanceB) {
+                  return relevanceB - relevanceA;
+                }
+              }
               if (a.is_featured && !b.is_featured) return -1;
               if (!a.is_featured && b.is_featured) return 1;
               return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -423,6 +702,14 @@ export default function JobsPage() {
             break;
           default:
             jobsData.sort((a, b) => {
+              // If search exists, prioritize relevance first
+              if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+                const relevanceA = (a as any)._relevanceScore || 0;
+                const relevanceB = (b as any)._relevanceScore || 0;
+                if (relevanceA !== relevanceB) {
+                  return relevanceB - relevanceA;
+                }
+              }
               if (a.is_featured && !b.is_featured) return -1;
               if (!a.is_featured && b.is_featured) return 1;
               return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -430,7 +717,8 @@ export default function JobsPage() {
         }
       }
 
-      console.log(`Found ${jobsData.length} jobs`);
+      console.log("🔍 About to log job count...");
+      console.log(`🎯 FINAL RESULT: Found ${jobsData.length} jobs`);
       if (jobsData.length > 0) {
         console.log("First job:", jobsData[0]);
 
@@ -458,7 +746,7 @@ export default function JobsPage() {
     }
   }, [
     searchTerm,
-    locationTerm,
+    selectedState,
     selectedCategories,
     selectedLocations,
     selectedJobTypes,
@@ -493,59 +781,98 @@ export default function JobsPage() {
     }
 
     // Handle authentication redirect
+    // Allow guest access with guest=true parameter
     if (!user) {
       const isGuest = searchParams.get("guest") === "true";
       console.log("👤 No user, guest mode:", isGuest);
       if (!isGuest) {
+        // Redirect to login, preserving the current URL for "Maybe Later"
         const currentUrl = `${window.location.pathname}${window.location.search}`;
-        console.log("🔐 Redirecting to login");
+        console.log("🔐 Redirecting to login with next:", currentUrl);
         router.push(`/login?next=${encodeURIComponent(currentUrl)}`);
         return;
       }
+      console.log("👤 Continuing as guest");
     }
 
     // Sync URL parameters on initial load only
     if (!initialized.current && shouldSyncFromUrl.current) {
       const urlSearch = searchParams.get("search") || "";
-      const urlLocation = searchParams.get("location") || "";
+      const urlLocation = searchParams.get("location") || "all";
 
       console.log("🔧 Syncing URL params", { urlSearch, urlLocation });
       setSearchTerm(urlSearch);
-      setLocationTerm(urlLocation);
+      setSelectedState(urlLocation);
 
       shouldSyncFromUrl.current = false;
       initialized.current = true;
       console.log("✅ Initialization complete");
+
+      // Force filter effect to re-evaluate by triggering a state update
+      console.log("✅ URL sync complete - triggering filter effect");
+      // Use a micro-task to ensure initialization is complete before filter effect runs
+      setTimeout(() => {
+        console.log("🔄 Forcing filter effect re-evaluation");
+        fetchJobs();
+      }, 0);
+    } else if (!initialized.current && !loading) {
+      // No URL params to sync, just mark as initialized
+      initialized.current = true;
+      console.log("📋 No URL params to sync - triggering job fetch");
+      // Use a micro-task to ensure initialization is complete before job fetching
+      setTimeout(() => {
+        console.log("🔄 Forcing job fetch for no-params case");
+        fetchJobs();
+      }, 0);
     }
   }, [loading, user, router, searchParams]);
 
   // Reset sync flag when URL params actually change (new navigation)
   useEffect(() => {
-    if (initialized.current) {
+    const isGuest = searchParams.get("guest") === "true";
+
+    // Don't reset during initial guest mode setup
+    if (initialized.current && !isGuest) {
       shouldSyncFromUrl.current = true;
       initialized.current = false;
     }
   }, [searchParams]);
 
-  // Initial job fetching effect - triggers on component mount
+  // Initial job fetching effect - now handled in initialization effect above
+  // This ensures jobs are fetched AFTER URL params are synced
   useEffect(() => {
-    console.log("🎯 Initial job loading effect triggered!");
-    console.log("🚀 Calling fetchJobs immediately...");
-    fetchJobs();
+    console.log("🎯 Component mounted - waiting for initialization to fetch jobs");
+    // fetchJobs is now called in the initialization effect after URL params are synced
   }, []);
 
   // Job fetching effect - triggers on filter changes
   useEffect(() => {
+    const isGuest = searchParams.get("guest") === "true";
+    // Simplified condition: fetch jobs when initialized, regardless of auth loading
+    // This ensures both guest and authenticated users get search results immediately
+    const shouldProceed = initialized.current;
+
     console.log("🔍 Filter change effect triggered", {
       filterDeps,
       initialized: initialized.current,
+      loading,
+      isGuest,
+      hasUser: !!user,
+      condition: shouldProceed,
     });
 
-    if (!loading && initialized.current) {
+    if (shouldProceed) {
       console.log("🚀 Refetching jobs due to filter change");
       fetchJobs();
+    } else {
+      console.log("❌ Filter effect conditions not met", {
+        loading,
+        initialized: initialized.current,
+        isGuest,
+        hasUser: !!user,
+      });
     }
-  }, [filterDeps]);
+  }, [filterDeps, fetchJobs, user]);
 
   // Application status check effect
   useEffect(() => {
@@ -671,7 +998,7 @@ export default function JobsPage() {
     setDateFilter("any");
     setShowFeaturedOnly(false);
     setSearchTerm("");
-    setLocationTerm("");
+    setSelectedState("all");
   };
 
   if (loading) {
@@ -711,19 +1038,23 @@ export default function JobsPage() {
                   placeholder="Job title, keywords, or company"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onClear={() => setSearchTerm("")}
+                  onClear={() => {
+                    console.log("🧹 Clearing search term");
+                    setSearchTerm("");
+                  }}
                   leftIcon={<Search className="h-5 w-5" />}
                   className="h-12 text-base bg-white text-foreground"
                 />
               </div>
 
               <div className="flex-1">
-                <SearchInput
-                  placeholder="City, state, or remote"
-                  value={locationTerm}
-                  onChange={(e) => setLocationTerm(e.target.value)}
-                  onClear={() => setLocationTerm("")}
-                  leftIcon={<MapPin className="h-5 w-5" />}
+                <StateSelector
+                  placeholder="Select location"
+                  value={selectedState}
+                  onValueChange={(value) => {
+                    console.log("🗺️ Jobs page - State selected:", value);
+                    setSelectedState(value);
+                  }}
                   className="h-12 text-base bg-white text-foreground"
                 />
               </div>
@@ -869,7 +1200,7 @@ export default function JobsPage() {
 
                 {/* Reset All Filters Link */}
                 {(searchTerm ||
-                  locationTerm ||
+                  (selectedState && selectedState !== "all") ||
                   selectedCategories.length > 0 ||
                   selectedLocations.length > 0 ||
                   selectedJobTypes.length > 0 ||
@@ -984,7 +1315,7 @@ export default function JobsPage() {
                   </Card>
                 ))}
               </div>
-            ) : jobs.length === 0 ? (
+            ) : !jobsLoading && jobs.length === 0 ? (
               <div className="p-4 space-y-6">
                 {/* No results message */}
                 <div className="text-center py-8">
@@ -1000,7 +1331,7 @@ export default function JobsPage() {
                   {/* Quick actions */}
                   <div className="flex flex-wrap gap-2 justify-center mb-6">
                     {(searchTerm ||
-                      locationTerm ||
+                      (selectedState && selectedState !== "all") ||
                       selectedCategories.length > 0 ||
                       selectedLocations.length > 0) && (
                       <Button
@@ -1022,11 +1353,11 @@ export default function JobsPage() {
                         Clear search term
                       </Button>
                     )}
-                    {locationTerm && (
+                    {selectedState && selectedState !== "all" && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setLocationTerm("")}
+                        onClick={() => setSelectedState("all")}
                       >
                         Clear location
                       </Button>

@@ -21,8 +21,12 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     const handleClear = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      console.log("🧹 SearchInput handleClear called");
       if (onClear) {
+        console.log("🧹 SearchInput calling onClear callback");
         onClear();
+      } else {
+        console.log("⚠️ SearchInput no onClear callback provided");
       }
     };
 

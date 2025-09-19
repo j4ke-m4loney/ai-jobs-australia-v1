@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
+import { StateSelector } from "@/components/ui/state-selector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
@@ -10,30 +11,27 @@ import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
 import {
   Search,
-  MapPin,
   Building,
-  Clock,
   TrendingUp,
   Users,
   Star,
-  ArrowRight,
   CheckCircle,
   Zap,
-  Shield,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
 const HomePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [location, setLocation] = useState("");
+  const [selectedState, setSelectedState] = useState("all");
   const router = useRouter();
   const { user } = useAuth();
 
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.append("search", searchTerm);
-    if (location) params.append("location", location);
+    if (selectedState && selectedState !== "all") params.append("location", selectedState);
+    // Redirect to jobs page - authentication check happens there
     router.push(`/jobs?${params.toString()}`);
   };
 
@@ -45,7 +43,6 @@ const HomePage = () => {
     // If authenticated, navigate to job details
     router.push(`/jobs/${jobId}`);
   };
-
 
   const categories = [
     { name: "Machine Learning", count: 45, icon: TrendingUp },
@@ -112,18 +109,22 @@ const HomePage = () => {
                       placeholder="Job title, keywords, or company"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      onClear={() => setSearchTerm("")}
+                      onClear={() => {
+                        console.log("🧹 Homepage - Clearing search term");
+                        setSearchTerm("");
+                      }}
                       leftIcon={<Search className="w-5 h-5" />}
                       className="h-12 text-base border-primary/50"
                     />
                   </div>
                   <div className="flex-1">
-                    <SearchInput
-                      placeholder="City, state, or remote"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      onClear={() => setLocation("")}
-                      leftIcon={<MapPin className="w-5 h-5" />}
+                    <StateSelector
+                      placeholder="Select location"
+                      value={selectedState}
+                      onValueChange={(value) => {
+                        console.log("🗺️ Homepage - State selected:", value);
+                        setSelectedState(value);
+                      }}
                       className="h-12 text-base border-primary/50"
                     />
                   </div>
