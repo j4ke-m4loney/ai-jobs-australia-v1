@@ -172,44 +172,6 @@ export default function JobsPage() {
     [user]
   );
 
-  // Function to enrich jobs with company data
-  const enrichJobsWithCompanyData = async (jobs: any[]): Promise<Job[]> => {
-    if (!jobs || jobs.length === 0) return [];
-
-    // Extract unique company IDs
-    const companyIds = [
-      ...new Set(jobs.map((job) => job.company_id).filter(Boolean)),
-    ];
-
-    if (companyIds.length === 0) {
-      // No companies to fetch, return jobs as-is with companies set to null
-      return jobs.map((job) => ({ ...job, companies: null }));
-    }
-
-    // Fetch company data
-    const { data: companies, error: companiesError } = await supabase
-      .from("companies")
-      .select("id, name, description, website, logo_url")
-      .in("id", companyIds);
-
-    if (companiesError) {
-      console.error("Error fetching companies:", companiesError);
-      // Return jobs without company data
-      return jobs.map((job) => ({ ...job, companies: null }));
-    }
-
-    // Create a map of company_id -> company for easy lookup
-    const companyMap = new Map();
-    companies?.forEach((company) => {
-      companyMap.set(company.id, company);
-    });
-
-    // Merge company data into jobs
-    return jobs.map((job) => ({
-      ...job,
-      companies: job.company_id ? companyMap.get(job.company_id) : null,
-    }));
-  };
 
   const fetchSuggestions = useCallback(async () => {
     setIsLoadingSuggestions(true);
@@ -236,7 +198,14 @@ export default function JobsPage() {
           application_url,
           application_email,
           highlights,
-          company_id
+          company_id,
+          companies (
+            id,
+            name,
+            description,
+            website,
+            logo_url
+          )
         `
         )
         .eq("status", "approved")
@@ -245,9 +214,8 @@ export default function JobsPage() {
         .limit(5);
 
       if (!featuredError && featuredJobs) {
-        // Fetch company data for featured jobs
-        const jobsWithCompanies = await enrichJobsWithCompanyData(featuredJobs);
-        setSuggestedJobs(jobsWithCompanies);
+        // Company data is now included in the query, cast to Job type
+        setSuggestedJobs(featuredJobs as unknown as Job[]);
       }
     } catch (error) {
       console.error("Error fetching suggestions:", error);
@@ -262,7 +230,14 @@ export default function JobsPage() {
 
       let query = supabase.from("jobs").select(`
           *,
-          highlights
+          highlights,
+          companies (
+            id,
+            name,
+            description,
+            website,
+            logo_url
+          )
         `);
       // DEVELOPMENT: Show both approved and pending jobs
       // In production, change this back to only show approved jobs
@@ -270,11 +245,9 @@ export default function JobsPage() {
 
       console.log("Fetching jobs - user:", user?.id || "guest");
 
-      // Apply filters
+      // Apply filters with title search (working solution)
       if (searchTerm) {
-        query = query.or(
-          `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`
-        );
+        query = query.ilike("title", `%${searchTerm}%`);
       }
       if (locationTerm) {
         query = query.ilike("location", `%${locationTerm}%`);
@@ -340,14 +313,129 @@ export default function JobsPage() {
         return;
       }
 
-      const jobsData = (data as Job[]) || [];
+      let jobsData = (data as Job[]) || [];
+
+      // Add company search if searchTerm is provided (separate query approach)
+      if (searchTerm && searchTerm.trim()) {
+        try {
+          // Search for jobs by company name using a separate query
+          let companyQuery = supabase.from("jobs").select(`
+            *,
+            highlights,
+            companies (
+              id,
+              name,
+              description,
+              website,
+              logo_url
+            )
+          `);
+
+          // Apply same status filter as main query
+          // companyQuery = companyQuery.eq("status", "approved");
+
+          // Apply all the same filters except title search
+          if (locationTerm) {
+            companyQuery = companyQuery.ilike("location", `%${locationTerm}%`);
+          }
+          if (selectedCategories.length > 0) {
+            companyQuery = companyQuery.in("category", selectedCategories);
+          }
+          if (selectedJobTypes.length > 0) {
+            companyQuery = companyQuery.in("job_type", selectedJobTypes);
+          }
+          if (selectedLocationTypes.length > 0) {
+            companyQuery = companyQuery.in("location_type", selectedLocationTypes);
+          }
+          if (selectedLocations.length > 0) {
+            const locationConditions = selectedLocations
+              .map((loc) =>
+                loc === "remote"
+                  ? "location_type.eq.remote"
+                  : `location.ilike.%${loc}%`
+              )
+              .join(",");
+            companyQuery = companyQuery.or(locationConditions);
+          }
+          if (selectedSalary) {
+            companyQuery = companyQuery.gte("salary_min", parseInt(selectedSalary));
+          }
+          if (showFeaturedOnly) {
+            companyQuery = companyQuery.eq("is_featured", true);
+          }
+
+          // First, find companies that match the search term
+          const { data: matchingCompanies } = await supabase
+            .from("companies")
+            .select("id")
+            .ilike("name", `%${searchTerm}%`);
+
+          if (matchingCompanies && matchingCompanies.length > 0) {
+            const companyIds = matchingCompanies.map(c => c.id);
+            companyQuery = companyQuery.in("company_id", companyIds);
+          } else {
+            // No matching companies found, skip this query
+            return;
+          }
+
+          const { data: companyJobs, error: companyError } = await companyQuery;
+
+          if (!companyError && companyJobs) {
+            const companyJobsData = companyJobs as Job[];
+            console.log(`Found ${companyJobsData.length} jobs by company search`);
+
+            // Merge results and remove duplicates by job ID
+            const existingJobIds = new Set(jobsData.map(job => job.id));
+            const newJobs = companyJobsData.filter(job => !existingJobIds.has(job.id));
+
+            jobsData = [...jobsData, ...newJobs];
+            console.log(`Total jobs after merging: ${jobsData.length}`);
+          }
+        } catch (companySearchError) {
+          console.error("Company search failed:", companySearchError);
+          // Continue with title search results only
+        }
+      }
+
+      // Apply sorting to merged results
+      if (jobsData.length > 0) {
+        switch (sortBy) {
+          case "date":
+            jobsData.sort((a, b) => {
+              const dateA = new Date(a.created_at).getTime();
+              const dateB = new Date(b.created_at).getTime();
+              return dateSort === "oldest" ? dateA - dateB : dateB - dateA;
+            });
+            break;
+          case "salary":
+            jobsData.sort((a, b) => {
+              const salaryA = a.salary_max || 0;
+              const salaryB = b.salary_max || 0;
+              return salaryB - salaryA;
+            });
+            break;
+          case "featured":
+            jobsData.sort((a, b) => {
+              if (a.is_featured && !b.is_featured) return -1;
+              if (!a.is_featured && b.is_featured) return 1;
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+            break;
+          default:
+            jobsData.sort((a, b) => {
+              if (a.is_featured && !b.is_featured) return -1;
+              if (!a.is_featured && b.is_featured) return 1;
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+        }
+      }
+
       console.log(`Found ${jobsData.length} jobs`);
       if (jobsData.length > 0) {
         console.log("First job:", jobsData[0]);
 
-        // Enrich jobs with company data
-        const jobsWithCompanies = await enrichJobsWithCompanyData(jobsData);
-        setJobs(jobsWithCompanies);
+        // Company data is now included in the query, no need to enrich separately
+        setJobs(jobsData);
       } else {
         setJobs([]);
       }
@@ -631,7 +719,7 @@ export default function JobsPage() {
               <div className="relative flex-1">
                 <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
-                  placeholder="Location"
+                  placeholder="City, state, or remote"
                   value={locationTerm}
                   onChange={(e) => setLocationTerm(e.target.value)}
                   className="pl-10 h-12 text-base bg-white text-foreground"
@@ -644,7 +732,7 @@ export default function JobsPage() {
                 className="h-12 gap-2 bg-white text-primary hover:bg-gray-100 px-6"
               >
                 <Search className="w-5 h-5" />
-                Search
+                Search Jobs
               </Button>
             </div>
 

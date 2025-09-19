@@ -119,9 +119,9 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 <span className="font-medium text-lg">
                   {job.companies?.name || "Company"}
                 </span>
-                <Button variant="link" className="p-0 h-auto text-primary">
+                {/* <Button variant="link" className="p-0 h-auto text-primary">
                   View all jobs
-                </Button>
+                </Button> */}
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-foreground mb-3">
@@ -210,7 +210,35 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
             </div>
           )}
 
-          {/* Placeholder for company info */}
+          {/* Company Info Section */}
+          {(job.companies?.description || job.companies?.website) && (
+            <div>
+              <h3 className="font-semibold text-lg mb-3">
+                About {job.companies?.name || "the Company"}
+              </h3>
+
+              {job.companies?.description && (
+                <div className="text-foreground leading-relaxed mb-4">
+                  <p>{job.companies.description}</p>
+                </div>
+              )}
+
+              {/* Commenting out company website link to keep users focused on Apply/Save actions
+              {job.companies?.website && (
+                <div className="flex items-center gap-2">
+                  <ExternalLink className="w-4 h-4 text-primary" />
+                  <a
+                    href={job.companies.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Visit Company Website
+                  </a>
+                </div>
+              )} */}
+            </div>
+          )}
 
           {/* Apply Section */}
           <div className="border-t pt-6">

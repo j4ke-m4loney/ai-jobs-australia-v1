@@ -420,6 +420,7 @@ export default function ApplyPage() {
                   <p className="text-muted-foreground">
                     {job.companies.description || "Company description not available."}
                   </p>
+                  {/* Commenting out company website link to keep users focused on completing application
                   {job.companies.website && (
                     <a
                       href={job.companies.website}
@@ -429,7 +430,7 @@ export default function ApplyPage() {
                     >
                       Visit Company Website
                     </a>
-                  )}
+                  )} */}
                 </div>
               ) : (
                 <p className="text-muted-foreground">

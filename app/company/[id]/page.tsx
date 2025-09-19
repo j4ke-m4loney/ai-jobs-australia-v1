@@ -219,10 +219,10 @@ export default function CompanyProfilePage() {
                     <Mail className="w-4 h-4" />
                     Follow Company
                   </Button>
-                  <Button variant="outline" className="gap-2">
+                  {/* <Button variant="outline" className="gap-2">
                     <Users className="w-4 h-4" />
                     View All Jobs
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </div>
@@ -343,7 +343,9 @@ export default function CompanyProfilePage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Open Jobs</span>
-                  <span className="font-semibold">{jobs.length.toLocaleString()}</span>
+                  <span className="font-semibold">
+                    {jobs.length.toLocaleString()}
+                  </span>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">

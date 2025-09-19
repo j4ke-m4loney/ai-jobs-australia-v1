@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe, WEBHOOK_EVENTS } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { JobFormData2 } from '@/types/job2';
+
+// Type definitions for webhook data
+interface PaymentRecord {
+  id: string;
+  user_id: string;
+  pricing_tier: 'standard' | 'featured' | 'annual';
+  amount: number;
+  currency: string;
+}
+
+interface PaymentSession {
+  id: string;
+  user_id: string;
+  stripe_session_id: string;
+  pricing_tier: 'standard' | 'featured' | 'annual';
+  amount: number;
+  currency: string;
+  job_form_data: JobFormData2;
+}
 
 // Server-side Supabase client with service role for database operations
 const supabaseAdmin = createClient(
@@ -177,35 +197,11 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   }
 }
 
-async function createJobFromPayment(payment: any, paymentSession: any) {
+async function createJobFromPayment(payment: PaymentRecord, paymentSession: PaymentSession) {
   const jobFormData = paymentSession.job_form_data;
   const isFeatured = ['featured', 'annual'].includes(payment.pricing_tier);
 
-  // Map the job form data to database schema
-  const jobRecord = {
-    employer_id: payment.user_id,
-    payment_id: payment.id,
-    title: jobFormData.jobTitle,
-    description: jobFormData.jobDescription,
-    requirements: jobFormData.requirements,
-    location: jobFormData.locationAddress,
-    location_type: mapLocationType(jobFormData.locationType),
-    job_type: mapJobType(jobFormData.jobType),
-    category: 'ai', // Default category
-    salary_min: getSalaryMin(jobFormData.payConfig),
-    salary_max: getSalaryMax(jobFormData.payConfig),
-    application_method: jobFormData.applicationMethod === 'indeed' ? 'external' : jobFormData.applicationMethod,
-    application_url: jobFormData.applicationMethod === 'indeed' ? null : jobFormData.applicationUrl,
-    application_email: jobFormData.applicationMethod === 'email' ? jobFormData.applicationEmail : null,
-    is_featured: isFeatured,
-    featured_until: isFeatured ? new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) : null, // 3 days from now
-    featured_order: isFeatured ? Math.floor(Date.now() / 1000) : 0, // Use timestamp for ordering
-    highlights: jobFormData.highlights || [],
-    status: 'pending_approval', // Requires admin approval
-    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-  };
-
-  // Handle company creation/linking if needed
+  // Handle company creation/linking first
   let companyId = null;
   if (jobFormData.companyName && jobFormData.companyName.trim()) {
     const { data: existingCompany } = await supabaseAdmin
@@ -234,7 +230,30 @@ async function createJobFromPayment(payment: any, paymentSession: any) {
     }
   }
 
-  jobRecord.company_id = companyId;
+  // Map the job form data to database schema
+  const jobRecord = {
+    employer_id: payment.user_id,
+    payment_id: payment.id,
+    company_id: companyId,
+    title: jobFormData.jobTitle,
+    description: jobFormData.jobDescription,
+    requirements: jobFormData.requirements,
+    location: jobFormData.locationAddress,
+    location_type: mapLocationType(jobFormData.locationType),
+    job_type: mapJobType(jobFormData.jobType),
+    category: 'ai', // Default category
+    salary_min: getSalaryMin(jobFormData.payConfig),
+    salary_max: getSalaryMax(jobFormData.payConfig),
+    application_method: jobFormData.applicationMethod === 'indeed' ? 'external' : jobFormData.applicationMethod,
+    application_url: jobFormData.applicationMethod === 'indeed' ? null : jobFormData.applicationUrl,
+    application_email: jobFormData.applicationMethod === 'email' ? jobFormData.applicationEmail : null,
+    is_featured: isFeatured,
+    featured_until: isFeatured ? new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) : null, // 3 days from now
+    featured_order: isFeatured ? Math.floor(Date.now() / 1000) : 0, // Use timestamp for ordering
+    highlights: jobFormData.highlights || [],
+    status: 'approved', // Change from pending_approval to approved for now
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+  };
 
   // Insert the job into the database
   const { data: job, error: jobError } = await supabaseAdmin
@@ -252,7 +271,7 @@ async function createJobFromPayment(payment: any, paymentSession: any) {
   return job;
 }
 
-async function handleAnnualSubscription(session: Stripe.Checkout.Session, paymentSession: any) {
+async function handleAnnualSubscription(session: Stripe.Checkout.Session, paymentSession: PaymentSession) {
   if (!session.subscription) return;
 
   const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
@@ -349,32 +368,32 @@ function mapJobType(jobType: string): string {
   return mapping[jobType] || 'full-time';
 }
 
-function getSalaryMin(payConfig: any): number | null {
+function getSalaryMin(payConfig: JobFormData2['payConfig']): number | null {
   if (!payConfig?.showPay) return null;
 
-  if (payConfig.payType === 'range' && payConfig.payRangeMin) {
+  if (payConfig.payType === 'range' && payConfig.payRangeMin && payConfig.payPeriod) {
     return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
   }
-  if (payConfig.payType === 'minimum' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  if (payConfig.payType === 'minimum' && payConfig.payRangeMin && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
   }
-  if (payConfig.payType === 'fixed' && payConfig.payAmount) {
+  if (payConfig.payType === 'fixed' && payConfig.payAmount && payConfig.payPeriod) {
     return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
   }
 
   return null;
 }
 
-function getSalaryMax(payConfig: any): number | null {
+function getSalaryMax(payConfig: JobFormData2['payConfig']): number | null {
   if (!payConfig?.showPay) return null;
 
-  if (payConfig.payType === 'range' && payConfig.payRangeMax) {
+  if (payConfig.payType === 'range' && payConfig.payRangeMax && payConfig.payPeriod) {
     return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
   }
-  if (payConfig.payType === 'maximum' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  if (payConfig.payType === 'maximum' && payConfig.payRangeMax && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
   }
-  if (payConfig.payType === 'fixed' && payConfig.payAmount) {
+  if (payConfig.payType === 'fixed' && payConfig.payAmount && payConfig.payPeriod) {
     return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
   }
 
