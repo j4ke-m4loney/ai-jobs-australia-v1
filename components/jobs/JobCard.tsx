@@ -64,11 +64,15 @@ const getTimeAgo = (dateString: string) => {
   }
 
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) {
+  if (diffInDays <= 30) {
     return `${diffInDays}d ago`;
   }
 
-  return date.toLocaleDateString();
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths === 1) {
+    return "1 month ago";
+  }
+  return `${diffInMonths} months ago`;
 };
 
 export const JobCard: React.FC<JobCardProps> = ({

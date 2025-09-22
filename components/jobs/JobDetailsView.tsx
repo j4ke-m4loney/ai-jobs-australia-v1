@@ -63,11 +63,15 @@ const getTimeAgo = (dateString: string) => {
   }
 
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) {
+  if (diffInDays <= 30) {
     return `${diffInDays}d ago`;
   }
 
-  return date.toLocaleDateString();
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths === 1) {
+    return "1 month ago";
+  }
+  return `${diffInMonths} months ago`;
 };
 
 const getDaysUntilExpiry = (expiryDate: string) => {
@@ -245,9 +249,9 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold text-lg mb-1">Ready to apply?</h3>
-                <p className="text-sm text-muted-foreground">
+                {/* <p className="text-sm text-muted-foreground">
                   Expires in {getDaysUntilExpiry(job.expires_at)} days
-                </p>
+                </p> */}
               </div>
 
               {!hasApplied && (
