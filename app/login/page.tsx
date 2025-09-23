@@ -19,7 +19,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { User } from "lucide-react";
 
 const JobSeekerAuthPage = () => {
@@ -28,21 +30,24 @@ const JobSeekerAuthPage = () => {
   const { user, signUp, signIn } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [signUpError, setSignUpError] = useState("");
+  const [signInError, setSignInError] = useState<string | React.ReactNode>("");
   const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const [preventRedirect, setPreventRedirect] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
 
   // If user is already logged in, redirect appropriately
   useEffect(() => {
-    if (user) {
+    if (user && !preventRedirect && !signingIn) {
       const next = searchParams.get("next") || "/jobseeker";
       router.push(next);
     }
-  }, [user, searchParams, router]);
+  }, [user, preventRedirect, signingIn, searchParams, router]);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setSignUpError("");
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
@@ -51,7 +56,7 @@ const JobSeekerAuthPage = () => {
     const { error } = await signUp(email, password, "", "job_seeker");
 
     if (error) {
-      setError(error.message);
+      setSignUpError(error.message);
     } else {
       setSignUpSuccess(true);
       toast({
@@ -65,7 +70,9 @@ const JobSeekerAuthPage = () => {
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setSigningIn(true);
+    setSignInError("");
+    setPreventRedirect(false); // Reset prevent redirect flag
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
@@ -74,12 +81,55 @@ const JobSeekerAuthPage = () => {
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError(error.message);
-    } else {
-      const next = searchParams.get("next") || "/jobseeker";
-      router.push(next);
+      setSignInError(error.message);
+      setLoading(false);
+      return;
     }
+
+    // Check user type after successful sign-in
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile?.user_type === 'employer') {
+          // User is an employer trying to sign in as job seeker
+          setPreventRedirect(true); // Prevent redirect
+          await supabase.auth.signOut(); // Sign them out
+          setSignInError(
+            <>
+              This email is registered as an employer account. Please use the{' '}
+              <Link href="/employer-login" className="font-medium underline hover:no-underline">
+                employer sign-in portal
+              </Link>{' '}
+              instead.
+            </>
+          );
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Proceed with normal job seeker sign-in
+      if (!preventRedirect) {
+        const next = searchParams.get("next") || "/jobseeker";
+        router.push(next);
+      }
+    } catch (profileError) {
+      console.error('Error checking user type:', profileError);
+      // If we can't check profile, proceed normally
+      if (!preventRedirect) {
+        const next = searchParams.get("next") || "/jobseeker";
+        router.push(next);
+      }
+    }
+
     setLoading(false);
+    setSigningIn(false);
   };
 
   const getGuestUrl = () => {
@@ -118,9 +168,9 @@ const JobSeekerAuthPage = () => {
 
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
-                {error && (
+                {signInError && (
                   <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>{signInError}</AlertDescription>
                   </Alert>
                 )}
                 <div className="space-y-2">
@@ -202,9 +252,21 @@ const JobSeekerAuthPage = () => {
                 </div>
               ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
-                  {error && (
+                  {signUpError && (
                     <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
+                      <AlertDescription>
+                        {signUpError.includes('already registered') ? (
+                          <div>
+                            This email is already registered. If you have an existing employer account, please{' '}
+                            <Link href="/employer-login" className="font-medium underline hover:no-underline">
+                              sign in as an employer
+                            </Link>
+                            . Otherwise, use a different email for your job seeker account.
+                          </div>
+                        ) : (
+                          signUpError
+                        )}
+                      </AlertDescription>
                     </Alert>
                   )}
                   <div className="space-y-2">

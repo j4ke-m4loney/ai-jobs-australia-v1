@@ -85,6 +85,33 @@ export class SupabaseAuthAdapter implements AuthService {
       },
     });
 
+    // Enhanced error handling for duplicate email with different user type
+    if (error && error.message?.includes('User already registered')) {
+      // Check if user exists with different user type
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
+        .single();
+
+      // If we can't determine the existing user type, check by email in auth.users
+      // Note: This requires a server-side function or RPC call for security
+      // For now, we'll provide a more helpful generic message
+
+      const attemptedType = data.metadata?.userType || 'job_seeker';
+      const alternateType = attemptedType === 'employer' ? 'job seeker' : 'employer';
+
+      return {
+        user: null,
+        session: null,
+        error: {
+          message: `This email is already registered. If you have an existing ${alternateType} account, please sign in as a ${alternateType}. Otherwise, use a different email for your ${attemptedType === 'employer' ? 'employer' : 'job seeker'} account.`,
+          code: 'EMAIL_EXISTS_DIFFERENT_TYPE',
+          status: 409,
+        },
+      };
+    }
+
     return {
       user: this.mapUser(authData?.user ?? null),
       session: this.mapSession(authData?.session ?? null),

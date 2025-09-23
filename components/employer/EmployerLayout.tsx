@@ -4,8 +4,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { EmployerSidebar } from "@/components/employer/EmployerSidebar";
+import { useUserTypeGuard } from "@/hooks/useUserTypeGuard";
 import Image from "next/image";
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface EmployerLayoutProps {
   children: React.ReactNode;
@@ -14,11 +17,47 @@ interface EmployerLayoutProps {
 
 export const EmployerLayout = ({ children, title }: EmployerLayoutProps) => {
   const { user } = useAuth();
+  const { isUserType, getUserTypeRoute, isLoading } = useUserTypeGuard();
   const router = useRouter();
 
   if (!user) {
     router.push("/login");
     return null;
+  }
+
+  // Loading state while checking user type
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied for non-employers
+  if (!isUserType("employer")) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center max-w-md">
+          <AlertTriangle className="h-16 w-16 text-destructive mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+          <p className="text-muted-foreground mb-6">
+            This page is only available for employers. Please use your employer account to access this area.
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={() => router.push(getUserTypeRoute())}>
+              Go to My Dashboard
+            </Button>
+            <Button variant="outline" onClick={() => router.push("/")}>
+              Return Home
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
