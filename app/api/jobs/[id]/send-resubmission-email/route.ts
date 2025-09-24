@@ -23,10 +23,11 @@ interface ResubmissionEmailRequest {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ) {
   try {
-    const jobId = params.id;
+    const resolvedParams = await params;
+    const jobId = resolvedParams.id;
     const requestData: ResubmissionEmailRequest = await request.json();
 
     console.log('📧 Job resubmission email API called for job:', jobId);

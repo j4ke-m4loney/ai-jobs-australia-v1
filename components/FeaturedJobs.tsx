@@ -60,9 +60,9 @@ export default function FeaturedJobs() {
       }
 
       setJobs(data.jobs || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching featured jobs:', err);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Failed to fetch featured jobs');
     } finally {
       setLoading(false);
     }

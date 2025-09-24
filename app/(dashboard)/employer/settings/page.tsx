@@ -171,7 +171,7 @@ const EmployerSettings = () => {
               job_id: null, // Not available in payments table
               pricing_tier: payment.pricing_tier,
               amount_paid: payment.amount, // Already in cents
-              stripe_payment_intent_id: payment.stripe_payment_intent_id,
+              stripe_payment_intent_id: (payment as any).stripe_payment_intent_id || null,
               stripe_session_id: null, // Not available in this response
               status: payment.status === 'succeeded' ? 'completed' : payment.status,
               created_at: payment.created_at,

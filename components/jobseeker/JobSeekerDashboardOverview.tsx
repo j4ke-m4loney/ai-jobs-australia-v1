@@ -48,7 +48,14 @@ export const JobSeekerDashboardOverview = () => {
   const router = useRouter();
   const { savedJobIds, fetchSavedJobsWithDetails } = useSavedJobs();
   const [applications, setApplications] = useState<Application[]>([]);
-  const [savedJobs, setSavedJobs] = useState<any[]>([]);
+  const [savedJobs, setSavedJobs] = useState<{
+    id: string;
+    title: string;
+    company_name: string;
+    location: string;
+    salary_min?: number;
+    salary_max?: number;
+  }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -14,10 +14,11 @@ interface RouteParams {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ) {
   try {
-    const jobId = params.id;
+    const resolvedParams = await params;
+    const jobId = resolvedParams.id;
     const { status, rejectionReason, adminId } = await request.json();
 
     console.log('🔐 Admin Job Status API - Updating job status:', {

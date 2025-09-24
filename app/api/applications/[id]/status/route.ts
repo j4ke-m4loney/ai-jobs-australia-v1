@@ -14,10 +14,11 @@ interface RouteParams {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: RouteParams }
+  { params }: { params: Promise<RouteParams> }
 ) {
   try {
-    const applicationId = params.id;
+    const resolvedParams = await params;
+    const applicationId = resolvedParams.id;
     const { status, statusMessage } = await request.json();
 
     console.log('🔄 Application Status API - Updating status:', {

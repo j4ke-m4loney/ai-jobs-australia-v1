@@ -399,8 +399,8 @@ const JobManagementPage = () => {
 
       // Remove any undefined values to prevent database issues
       Object.keys(updateData).forEach(key => {
-        if (updateData[key] === undefined) {
-          delete updateData[key];
+        if (updateData[key as keyof typeof updateData] === undefined) {
+          delete updateData[key as keyof typeof updateData];
         }
       });
 
@@ -558,9 +558,10 @@ const JobManagementPage = () => {
             : 'job content';
 
           // Get employer name from existing job profile data
-          const employerName = job.profiles?.first_name && job.profiles?.last_name
-            ? `${job.profiles.first_name} ${job.profiles.last_name}`.trim()
-            : job.profiles?.first_name || job.profiles?.last_name || 'Employer';
+          const jobWithProfile = job as typeof job & { profiles?: { first_name?: string; last_name?: string } };
+          const employerName = jobWithProfile.profiles?.first_name && jobWithProfile.profiles?.last_name
+            ? `${jobWithProfile.profiles.first_name} ${jobWithProfile.profiles.last_name}`.trim()
+            : jobWithProfile.profiles?.first_name || jobWithProfile.profiles?.last_name || 'Employer';
 
           // Call API to send resubmission email
           const emailResponse = await fetch(`/api/jobs/${jobId}/send-resubmission-email`, {

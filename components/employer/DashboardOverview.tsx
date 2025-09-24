@@ -82,7 +82,7 @@ export function DashboardOverview() {
     description,
     variant = "default",
   }: {
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     title: string;
     value: string | number;
     description?: string;

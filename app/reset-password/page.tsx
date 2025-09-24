@@ -96,8 +96,8 @@ export default function ResetPasswordPage() {
       } else {
         setSuccess(true);
       }
-    } catch (err: any) {
-      setError("An unexpected error occurred");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
     }
     setLoading(false);
   };
