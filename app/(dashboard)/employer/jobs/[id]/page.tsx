@@ -309,38 +309,210 @@ const JobManagementPage = () => {
 
     setSaving(true);
     try {
+      // Calculate new salary values
+      const newSalaryMin = showPay && payConfig.payType === "range" ? payConfig.payRangeMin :
+                          showPay && payConfig.payType === "minimum" ? payConfig.payRangeMin :
+                          showPay && payConfig.payType === "fixed" ? payConfig.payAmount : null;
+      const newSalaryMax = showPay && payConfig.payType === "range" ? payConfig.payRangeMax :
+                          showPay && payConfig.payType === "maximum" ? payConfig.payRangeMax :
+                          showPay && payConfig.payType === "fixed" ? payConfig.payAmount : null;
+
+      // Check for significant changes that require re-approval
+      const hasSignificantChanges = (
+        job.title !== editedJob.title ||
+        job.description !== editedJob.description ||
+        job.requirements !== editedJob.requirements ||
+        job.location !== editedJob.location ||
+        job.location_type !== editedJob.location_type ||
+        job.job_type !== editedJob.job_type ||
+        job.category !== editedJob.category ||
+        job.salary_min !== newSalaryMin ||
+        job.salary_max !== newSalaryMax ||
+        JSON.stringify(job.highlights || []) !== JSON.stringify(highlights.filter(h => h.trim()))
+      );
+
+      // Determine new status based on current status and changes
+      let newStatus = job.status;
+      if (hasSignificantChanges && job.status === "approved") {
+        newStatus = "pending_approval";
+      }
+
+      // Validate critical data before database update
+      if (!user?.id) {
+        console.error('❌ User ID is missing');
+        toast.error('Authentication error. Please refresh and try again.');
+        return;
+      }
+
+      if (!jobId) {
+        console.error('❌ Job ID is missing');
+        toast.error('Job ID error. Please refresh and try again.');
+        return;
+      }
+
+      if (!editedJob.title?.trim()) {
+        console.error('❌ Job title is required');
+        toast.error('Job title is required');
+        return;
+      }
+
+      if (!editedJob.description?.trim()) {
+        console.error('❌ Job description is required');
+        toast.error('Job description is required');
+        return;
+      }
+
+      if (!editedJob.location?.trim()) {
+        console.error('❌ Job location is required');
+        toast.error('Job location is required');
+        return;
+      }
+
+      // Enhanced data sanitization with defensive handling
+      const sanitizedLocation = editedJob.location?.trim() || job.location;
+
+      // Ensure location is never null or empty (violates NOT NULL constraint)
+      if (!sanitizedLocation) {
+        toast.error('Location is required and cannot be empty');
+        return;
+      }
+
       const updateData = {
-        title: editedJob.title,
-        description: editedJob.description,
-        requirements: editedJob.requirements,
-        location: editedJob.location,
-        suburb: editedJob.suburb,
-        state: editedJob.state,
+        title: editedJob.title?.trim(),
+        description: editedJob.description?.trim(),
+        requirements: editedJob.requirements?.trim() || null,
+        location: sanitizedLocation,
         location_type: editedJob.location_type,
         job_type: editedJob.job_type,
         category: editedJob.category,
-        salary_min: showPay && payConfig.payType === "range" ? payConfig.payRangeMin : 
-                   showPay && payConfig.payType === "minimum" ? payConfig.payRangeMin :
-                   showPay && payConfig.payType === "fixed" ? payConfig.payAmount : null,
-        salary_max: showPay && payConfig.payType === "range" ? payConfig.payRangeMax : 
-                   showPay && payConfig.payType === "maximum" ? payConfig.payRangeMax :
-                   showPay && payConfig.payType === "fixed" ? payConfig.payAmount : null,
+        salary_min: newSalaryMin,
+        salary_max: newSalaryMax,
         application_method: editedJob.application_method,
-        application_url: editedJob.application_url,
-        application_email: editedJob.application_email,
+        application_url: editedJob.application_url?.trim() || null,
+        application_email: editedJob.application_email?.trim() || null,
         highlights: highlights.filter(h => h.trim()),
-        company_name: editedJob.company_name,
-        company_description: editedJob.company_description,
-        company_website: editedJob.company_website,
+        company_name: editedJob.company_name?.trim() || null,
+        company_description: editedJob.company_description?.trim() || null,
+        company_website: editedJob.company_website?.trim() || null,
+        status: newStatus,
       };
 
-      const { error } = await supabase
+      // Remove any undefined values to prevent database issues
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
+      console.log('🔍 Debug job update:', {
+        jobId,
+        userId: user?.id,
+        updateData,
+        hasSignificantChanges,
+        newStatus,
+        locationDetails: {
+          originalLocation: job.location,
+          editedLocation: editedJob.location,
+          finalLocation: updateData.location
+        }
+      });
+
+      // First, let's verify the job exists and check ownership
+      console.log('🔍 Checking job existence and ownership...');
+      const { data: existingJob, error: fetchError } = await supabase
+        .from("jobs")
+        .select("id, employer_id, status, title")
+        .eq("id", jobId)
+        .single();
+
+      console.log('📋 Existing job data:', {
+        found: !!existingJob,
+        fetchError: fetchError,
+        jobData: existingJob,
+        currentUserId: user?.id,
+        ownershipMatch: existingJob?.employer_id === user?.id
+      });
+
+      if (fetchError) {
+        console.error('❌ Error fetching job for verification:', fetchError);
+        throw new Error(`Job not found: ${fetchError.message}`);
+      }
+
+      if (!existingJob) {
+        throw new Error(`Job with ID ${jobId} not found`);
+      }
+
+      if (existingJob.employer_id !== user?.id) {
+        throw new Error(`Access denied: Job belongs to user ${existingJob.employer_id}, current user is ${user?.id}`);
+      }
+
+      console.log('📝 Attempting database update with SQL query...');
+      const { data: updatedData, error, count } = await supabase
         .from("jobs")
         .update(updateData)
         .eq("id", jobId)
-        .eq("employer_id", user?.id);
+        .eq("employer_id", user?.id)
+        .select();
 
-      if (error) throw error;
+      console.log('📊 Database update result:', {
+        success: !error,
+        error: error,
+        updatedRows: count,
+        updatedData: updatedData,
+        rowsAffected: updatedData?.length || 0
+      });
+
+      if (error) {
+        console.error('❌ Database update error - Multiple serialization approaches:');
+        console.error('1. Direct error object:', error);
+        console.error('2. JSON.stringify:', JSON.stringify(error, null, 2));
+        console.error('3. Error properties:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          stack: error.stack
+        });
+        console.error('4. Error toString():', error.toString());
+        console.error('5. Object.keys(error):', Object.keys(error));
+        console.error('6. typeof error:', typeof error);
+
+        // Handle specific constraint violations
+        if (error.code === '23502') {
+          if (error.message?.includes('location')) {
+            toast.error('Location cannot be empty');
+            return;
+          } else {
+            toast.error('Required field cannot be empty: ' + error.message);
+            return;
+          }
+        }
+
+        // Handle other common PostgreSQL errors
+        if (error.code === '23514') {
+          toast.error('Data validation failed: ' + error.message);
+          return;
+        }
+
+        // Handle generated column errors
+        if (error.message?.includes('location_display')) {
+          toast.error('Location display calculation failed - please check location format');
+          return;
+        }
+
+        throw error;
+      }
+
+      // Check if any rows were actually updated
+      if (!updatedData || updatedData.length === 0) {
+        console.error('❌ No rows were updated! Possible causes:');
+        console.error('- Job not found with ID:', jobId);
+        console.error('- User not authorized (employer_id mismatch):', user?.id);
+        console.error('- RLS policy blocking update');
+        throw new Error('No rows updated - job not found or access denied');
+      }
+
+      console.log('✅ Database update successful:', updatedData[0]);
 
       // Update the job state with validated data
       const updatedJob: Job = {
@@ -352,12 +524,8 @@ const JobManagementPage = () => {
         location_type: editedJob.location_type || job.location_type,
         job_type: editedJob.job_type || job.job_type,
         category: editedJob.category || job.category,
-        salary_min: showPay && payConfig.payType === "range" ? payConfig.payRangeMin : 
-                   showPay && payConfig.payType === "minimum" ? payConfig.payRangeMin :
-                   showPay && payConfig.payType === "fixed" ? payConfig.payAmount : null,
-        salary_max: showPay && payConfig.payType === "range" ? payConfig.payRangeMax : 
-                   showPay && payConfig.payType === "maximum" ? payConfig.payRangeMax :
-                   showPay && payConfig.payType === "fixed" ? payConfig.payAmount : null,
+        salary_min: newSalaryMin,
+        salary_max: newSalaryMax,
         application_method: editedJob.application_method || job.application_method,
         application_url: editedJob.application_url ?? job.application_url,
         application_email: editedJob.application_email ?? job.application_email,
@@ -365,11 +533,85 @@ const JobManagementPage = () => {
         company_name: editedJob.company_name,
         company_description: editedJob.company_description,
         company_website: editedJob.company_website,
+        status: newStatus,
       };
-      
+
       setJob(updatedJob);
+
+      // Send resubmission email if job was moved to pending approval
+      if (hasSignificantChanges && job.status === "approved" && newStatus === "pending_approval") {
+        try {
+          // Create description of changes made
+          const changedFields = [];
+          if (job.title !== editedJob.title) changedFields.push('title');
+          if (job.description !== editedJob.description) changedFields.push('description');
+          if (job.requirements !== editedJob.requirements) changedFields.push('requirements');
+          if (job.location !== editedJob.location) changedFields.push('location');
+          if (job.location_type !== editedJob.location_type) changedFields.push('work arrangement');
+          if (job.job_type !== editedJob.job_type) changedFields.push('job type');
+          if (job.category !== editedJob.category) changedFields.push('category');
+          if (job.salary_min !== newSalaryMin || job.salary_max !== newSalaryMax) changedFields.push('salary');
+          if (JSON.stringify(job.highlights || []) !== JSON.stringify(highlights.filter(h => h.trim()))) changedFields.push('highlights');
+
+          const changesDescription = changedFields.length > 0
+            ? changedFields.join(', ').replace(/,([^,]*)$/, ' and$1')
+            : 'job content';
+
+          // Get employer name from existing job profile data
+          const employerName = job.profiles?.first_name && job.profiles?.last_name
+            ? `${job.profiles.first_name} ${job.profiles.last_name}`.trim()
+            : job.profiles?.first_name || job.profiles?.last_name || 'Employer';
+
+          // Call API to send resubmission email
+          const emailResponse = await fetch(`/api/jobs/${jobId}/send-resubmission-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-user-id': user?.id || ''
+            },
+            body: JSON.stringify({
+              employerName,
+              jobTitle: updatedJob.title,
+              companyName: updatedJob.company_name || updatedJob.companies?.name || 'Your Company',
+              location: updatedJob.location,
+              changesDescription: `Updated ${changesDescription}`,
+              dashboardUrl: `${window.location.origin}/employer/jobs/${jobId}`
+            })
+          });
+
+          if (emailResponse.ok) {
+            console.log('✅ Job resubmission confirmation email sent');
+          } else {
+            console.error('❌ Failed to send resubmission email:', await emailResponse.text());
+          }
+        } catch (emailError) {
+          console.error('❌ Failed to send resubmission email:', emailError);
+          // Don't fail the request if email fails - job was updated successfully
+        }
+      }
+
       router.push(`/employer/jobs/${jobId}`);
-      toast.success("Job updated successfully");
+
+      // Show appropriate success message based on status change
+      if (hasSignificantChanges && job.status === "approved") {
+        toast.success("Job updated successfully. Your changes require admin approval before going live.", {
+          duration: 6000,
+        });
+
+        // Force admin dashboard refresh for status change to pending_approval
+        console.log('🔄 Job status changed to pending_approval - triggering admin refresh');
+        setTimeout(() => {
+          // Trigger Supabase real-time refresh with custom event
+          if (typeof window !== 'undefined') {
+            console.log('🔄 Dispatching forceAdminRefresh event');
+            window.dispatchEvent(new CustomEvent('forceAdminRefresh', {
+              detail: { jobId, newStatus: 'pending_approval' }
+            }));
+          }
+        }, 1000);
+      } else {
+        toast.success("Job updated successfully");
+      }
     } catch (error) {
       console.error("Error updating job:", error);
       toast.error("Failed to update job");
@@ -569,6 +811,18 @@ const JobManagementPage = () => {
               <CardDescription>
                 Update your job posting information
               </CardDescription>
+              {job.status === "approved" && (
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-amber-700">
+                      <p className="font-medium mb-1">Re-approval Required for Significant Changes</p>
+                      <p>Changes to title, description, requirements, location, job type, salary, or highlights will require admin approval before going live.</p>
+                      <p className="mt-1">Company info and application method changes are applied immediately.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="basic" className="space-y-6">

@@ -120,3 +120,84 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { userId } = await request.json();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get user's current subscription
+    const { data: subscription, error: fetchError } = await supabaseAdmin
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError || !subscription) {
+      return NextResponse.json(
+        { error: 'No active subscription found' },
+        { status: 404 }
+      );
+    }
+
+    if (subscription.status !== 'active') {
+      return NextResponse.json(
+        { error: 'Subscription is not active' },
+        { status: 400 }
+      );
+    }
+
+    // Cancel the Stripe subscription (at period end)
+    if (subscription.stripe_subscription_id) {
+      try {
+        await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+          cancel_at_period_end: true,
+        });
+      } catch (stripeError) {
+        console.error('Error cancelling Stripe subscription:', stripeError);
+        return NextResponse.json(
+          { error: 'Failed to cancel subscription with payment provider' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Update subscription status in database
+    const { error: updateError } = await supabaseAdmin
+      .from('subscriptions')
+      .update({
+        status: 'cancelled',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', subscription.id);
+
+    if (updateError) {
+      console.error('Error updating subscription status:', updateError);
+      return NextResponse.json(
+        { error: 'Failed to update subscription status' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      message: 'Subscription cancelled successfully',
+      subscription: {
+        ...subscription,
+        status: 'cancelled',
+      },
+    });
+
+  } catch (error) {
+    console.error('Error cancelling subscription:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}

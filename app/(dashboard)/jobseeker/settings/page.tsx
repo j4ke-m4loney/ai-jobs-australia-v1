@@ -66,14 +66,35 @@ const JobSeekerSettings = () => {
         return;
       }
 
-      // In a real implementation, you would fetch notification preferences from a user_settings table
-      // For now, we'll use default values
-      form.reset({
-        email: user.email,
+      // Load notification preferences from database
+      let notificationPrefs = {
         notifications_new_jobs: true,
         notifications_application_updates: true,
         notifications_job_expiry: false,
         notifications_rejection_feedback: false,
+      };
+
+      try {
+        const prefsResponse = await fetch(`/api/user/notification-preferences?userId=${user.id}`);
+        if (prefsResponse.ok) {
+          const { preferences } = await prefsResponse.json();
+          if (preferences) {
+            notificationPrefs = {
+              notifications_new_jobs: preferences.email_new_jobs ?? true,
+              notifications_application_updates: preferences.email_application_updates ?? true,
+              notifications_job_expiry: false, // Not implemented yet
+              notifications_rejection_feedback: preferences.email_promotions ?? false,
+            };
+          }
+        }
+      } catch (prefError) {
+        console.error("Error loading notification preferences:", prefError);
+        // Use defaults if loading fails
+      }
+
+      form.reset({
+        email: user.email,
+        ...notificationPrefs,
       });
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -97,8 +118,35 @@ const JobSeekerSettings = () => {
         );
       }
 
-      // TODO: Save notification preferences to a user_settings table
-      // For now, we'll just show a success message
+      // Save notification preferences
+      try {
+        const prefsResponse = await fetch('/api/user/notification-preferences', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            // Employer preferences are null for job seekers
+            email_applications: null,
+            email_job_views: null,
+            email_weekly_reports: null,
+            // Job seeker preferences
+            email_new_jobs: data.notifications_new_jobs,
+            email_similar_jobs: false, // Not implemented in UI yet
+            email_application_updates: data.notifications_application_updates,
+            email_promotions: data.notifications_rejection_feedback, // Using rejection feedback as promotions for now
+          }),
+        });
+
+        if (!prefsResponse.ok) {
+          throw new Error('Failed to save notification preferences');
+        }
+      } catch (prefError) {
+        console.error("Error saving notification preferences:", prefError);
+        // Don't fail the whole operation if notification prefs fail
+      }
+
       toast.success("Settings updated successfully");
     } catch (error) {
       console.error("Error updating settings:", error);

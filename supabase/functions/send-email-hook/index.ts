@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+const POSTMARK_SERVER_TOKEN = Deno.env.get('POSTMARK_SERVER_TOKEN')
 
 interface WebhookPayload {
   type: 'email_change' | 'signup' | 'recovery' | 'invite' | 'magiclink'
@@ -134,23 +134,27 @@ serve(async (req) => {
       This link will expire in 24 hours for security reasons.
     `
 
-    // Send email using Resend
-    if (!RESEND_API_KEY) {
-      throw new Error('RESEND_API_KEY is not configured')
+    // Send email using Postmark
+    if (!POSTMARK_SERVER_TOKEN) {
+      throw new Error('POSTMARK_SERVER_TOKEN is not configured')
     }
 
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('https://api.postmarkapp.com/email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'X-Postmark-Server-Token': POSTMARK_SERVER_TOKEN,
+        Accept: 'application/json',
       },
       body: JSON.stringify({
-        from: 'AI Jobs Australia <noreply@aijobsaustralia.com>',
-        to: [confirmationEmail], // Send only to the OLD email address
-        subject: 'Confirm Your Email Change - AI Jobs Australia',
-        html: emailHtml,
-        text: emailText,
+        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        To: confirmationEmail, // Send only to the OLD email address
+        Subject: 'Confirm Your Email Change - AI Jobs Australia',
+        HtmlBody: emailHtml,
+        TextBody: emailText,
+        Tag: 'email-change',
+        TrackOpens: true,
+        TrackLinks: 'TextOnly',
       }),
     })
 

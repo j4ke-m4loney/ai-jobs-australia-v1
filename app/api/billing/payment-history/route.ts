@@ -14,12 +14,22 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
+    console.log('🔍 Payment History API - Request received:', {
+      userId,
+      limit,
+      offset,
+      hasUserId: !!userId
+    });
+
     if (!userId) {
+      console.log('❌ Payment History API - No user ID provided');
       return NextResponse.json(
         { error: 'User ID is required' },
         { status: 400 }
       );
     }
+
+    console.log('🔍 Payment History API - Querying database for user:', userId);
 
     // Get user's payment history from database
     const { data: payments, error, count } = await supabaseAdmin
@@ -40,19 +50,40 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
+    console.log('🔍 Payment History API - Database query result:', {
+      paymentsCount: payments?.length || 0,
+      totalCount: count,
+      hasError: !!error,
+      errorMessage: error?.message,
+      samplePayment: payments?.[0] ? {
+        id: payments[0].id,
+        pricing_tier: payments[0].pricing_tier,
+        amount: payments[0].amount,
+        status: payments[0].status
+      } : null
+    });
+
     if (error) {
-      console.error('Error fetching payment history:', error);
+      console.error('❌ Payment History API - Database error:', error);
       return NextResponse.json(
         { error: 'Failed to fetch payment history' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({
+    const response = {
       payments: payments || [],
       total: count || 0,
       hasMore: (count || 0) > offset + limit,
+    };
+
+    console.log('✅ Payment History API - Sending response:', {
+      paymentsReturned: response.payments.length,
+      total: response.total,
+      hasMore: response.hasMore
     });
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Error in payment history API:', error);

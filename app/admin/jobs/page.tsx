@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { updateJobStatus, logAdminAction } from "@/lib/admin/auth";
+import { logAdminAction } from "@/lib/admin/auth";
 import {
   Card,
   CardContent,
@@ -118,20 +118,40 @@ export default function AdminJobsPage() {
           table: 'jobs'
         },
         (payload) => {
-          console.log('Real-time update received:', payload);
+          console.log('🔄 Admin Dashboard - Real-time update received:', {
+            eventType: payload.eventType,
+            table: payload.table,
+            jobId: payload.new?.id || payload.old?.id,
+            newStatus: payload.new?.status,
+            oldStatus: payload.old?.status
+          });
           // Force refresh when any job changes
           setRefreshKey(prev => prev + 1);
         }
       )
       .subscribe();
 
+    // Listen for custom force refresh events from job editing
+    const handleForceRefresh = (event: CustomEvent) => {
+      console.log('🔄 Admin Dashboard - Force refresh triggered:', event.detail);
+      setRefreshKey(prev => prev + 1);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('forceAdminRefresh', handleForceRefresh as EventListener);
+    }
+
     return () => {
       supabase.removeChannel(channel);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('forceAdminRefresh', handleForceRefresh as EventListener);
+      }
     };
   }, []);
 
   const fetchJobs = async () => {
     setIsLoading(true);
+    console.log(`🔍 Admin Dashboard - Fetching jobs with status filter: "${statusFilter}"`);
     try {
       let query = supabase
         .from("jobs")
@@ -140,7 +160,10 @@ export default function AdminJobsPage() {
         .limit(1000);
 
       if (statusFilter !== "all") {
+        console.log(`📝 Admin Dashboard - Applying status filter: ${statusFilter}`);
         query = query.eq("status", statusFilter);
+      } else {
+        console.log(`📝 Admin Dashboard - No status filter applied (showing all jobs)`);
       }
 
       const { data, error } = await query;
@@ -150,7 +173,17 @@ export default function AdminJobsPage() {
         throw error;
       }
 
-      console.log(`Fetched ${data?.length || 0} jobs with status filter: ${statusFilter}`);
+      console.log(`🔍 Admin Dashboard: Fetched ${data?.length || 0} jobs with status filter: ${statusFilter}`);
+
+      // Debug: Log pending_approval jobs specifically
+      const pendingJobs = data?.filter(job => job.status === 'pending_approval') || [];
+      console.log(`📋 Pending approval jobs (${pendingJobs.length}):`, pendingJobs.map(job => ({
+        id: job.id,
+        title: job.title,
+        status: job.status,
+        created_at: job.created_at
+      })));
+
       setJobs(data || []);
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -166,16 +199,44 @@ export default function AdminJobsPage() {
       job.id === jobId ? { ...job, status: 'approved' } : job
     ));
 
-    const result = await updateJobStatus([jobId], "approved");
-    if (result.success) {
-      toast.success("Job approved successfully");
-      await logAdminAction("approve_job", "job", jobId, {});
-      // Force refresh to get latest data
-      setTimeout(() => {
-        setRefreshKey(prev => prev + 1);
-      }, 500);
-    } else {
-      toast.error(result.error || "Failed to approve job");
+    try {
+      // Get current user for API call
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Call the API route that handles email sending
+      const response = await fetch(`/api/admin/jobs/${jobId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'approved',
+          adminId: user.id
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to approve job');
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        toast.success("Job approved successfully");
+        await logAdminAction("approve_job", "job", jobId, {});
+        // Force refresh to get latest data
+        setTimeout(() => {
+          setRefreshKey(prev => prev + 1);
+        }, 500);
+      } else {
+        throw new Error(result.error || 'Failed to approve job');
+      }
+    } catch (error: any) {
+      console.error('Error approving job:', error);
+      toast.error(error.message || "Failed to approve job");
       // Revert optimistic update on failure
       setRefreshKey(prev => prev + 1);
     }
@@ -184,21 +245,65 @@ export default function AdminJobsPage() {
   const handleReject = async () => {
     if (!jobToReject) return;
 
-    const jobIds = jobToReject === "bulk" ? selectedJobs : [jobToReject];
-    const result = await updateJobStatus(jobIds, "rejected", rejectionReason);
-
-    if (result.success) {
-      toast.success(`${jobIds.length} job(s) rejected successfully`);
-      for (const jobId of jobIds) {
-        await logAdminAction("reject_job", "job", jobId, { reason: rejectionReason });
+    try {
+      // Get current user for API call
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
       }
+
+      const jobIds = jobToReject === "bulk" ? selectedJobs : [jobToReject];
+
+      // For now, process each job individually using the API route
+      // TODO: Could optimize with bulk API endpoint later
+      let successCount = 0;
+      let errors: string[] = [];
+
+      for (const jobId of jobIds) {
+        try {
+          const response = await fetch(`/api/admin/jobs/${jobId}/status`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              status: 'rejected',
+              rejectionReason: rejectionReason,
+              adminId: user.id
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to reject job');
+          }
+
+          const result = await response.json();
+          if (result.success) {
+            successCount++;
+            await logAdminAction("reject_job", "job", jobId, { reason: rejectionReason });
+          }
+        } catch (error: any) {
+          console.error(`Error rejecting job ${jobId}:`, error);
+          errors.push(`Job ${jobId}: ${error.message}`);
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} job(s) rejected successfully`);
+      }
+      if (errors.length > 0) {
+        toast.error(`Failed to reject ${errors.length} job(s)`);
+      }
+
       setRejectDialogOpen(false);
       setRejectionReason("");
       setJobToReject(null);
       setSelectedJobs([]);
       setRefreshKey(prev => prev + 1);
-    } else {
-      toast.error(result.error || "Failed to reject job(s)");
+    } catch (error: any) {
+      console.error('Error in reject process:', error);
+      toast.error(error.message || "Failed to reject job(s)");
     }
   };
 
@@ -206,17 +311,62 @@ export default function AdminJobsPage() {
     if (!bulkAction || selectedJobs.length === 0) return;
 
     if (bulkAction === "approve") {
-      const result = await updateJobStatus(selectedJobs, "approved");
-      if (result.success) {
-        toast.success(`${selectedJobs.length} jobs approved`);
-        await logAdminAction("bulk_action", "job", "", {
-          action: "approve",
-          job_ids: selectedJobs,
-        });
+      try {
+        // Get current user for API call
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('User not authenticated');
+        }
+
+        // Process each job individually using the API route
+        let successCount = 0;
+        let errors: string[] = [];
+
+        for (const jobId of selectedJobs) {
+          try {
+            const response = await fetch(`/api/admin/jobs/${jobId}/status`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                status: 'approved',
+                adminId: user.id
+              }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || 'Failed to approve job');
+            }
+
+            const result = await response.json();
+            if (result.success) {
+              successCount++;
+            }
+          } catch (error: any) {
+            console.error(`Error approving job ${jobId}:`, error);
+            errors.push(`Job ${jobId}: ${error.message}`);
+          }
+        }
+
+        if (successCount > 0) {
+          toast.success(`${successCount} jobs approved`);
+          await logAdminAction("bulk_action", "job", "", {
+            action: "approve",
+            job_ids: selectedJobs,
+            success_count: successCount,
+          });
+        }
+        if (errors.length > 0) {
+          toast.error(`Failed to approve ${errors.length} job(s)`);
+        }
+
         setSelectedJobs([]);
         setRefreshKey(prev => prev + 1);
-      } else {
-        toast.error(result.error || "Failed to approve jobs");
+      } catch (error: any) {
+        console.error('Error in bulk approve:', error);
+        toast.error(error.message || "Failed to approve jobs");
       }
     } else if (bulkAction === "reject") {
       setJobToReject("bulk");

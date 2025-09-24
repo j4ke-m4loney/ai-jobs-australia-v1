@@ -3,6 +3,7 @@ import { stripe, WEBHOOK_EVENTS } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { JobFormData2 } from '@/types/job2';
+import { emailService } from '@/lib/email/postmark-service';
 
 // Type definitions for webhook data
 interface PaymentRecord {
@@ -251,7 +252,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     featured_until: isFeatured ? new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) : null, // 3 days from now
     featured_order: isFeatured ? Math.floor(Date.now() / 1000) : 0, // Use timestamp for ordering
     highlights: jobFormData.highlights || [],
-    status: 'approved', // Change from pending_approval to approved for now
+    status: 'pending_approval', // Jobs require admin approval before going live
     expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
   };
 
@@ -268,6 +269,83 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
   }
 
   console.log('Job created successfully:', job.id);
+
+  // Send job submission confirmation email to employer
+  console.log('📧 Attempting to send job submission confirmation email...');
+  console.log('📧 Payment user_id:', payment.user_id);
+  console.log('📧 Job ID:', job.id);
+
+  try {
+    // Get employer's email from auth.users table (where emails are actually stored)
+    const { data: userData, error: userError } = await supabaseAdmin
+      .auth.admin.getUserById(payment.user_id);
+
+    console.log('📧 User data lookup:', {
+      hasUser: !!userData,
+      email: userData?.user?.email,
+      error: userError
+    });
+
+    // Get employer's profile for the name
+    const { data: employerProfile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('id', payment.user_id)
+      .single();
+
+    console.log('📧 Employer profile lookup:', {
+      hasProfile: !!employerProfile,
+      firstName: employerProfile?.first_name,
+      lastName: employerProfile?.last_name,
+      error: profileError
+    });
+
+    const employerEmail = userData?.user?.email;
+
+    if (!userError && employerEmail) {
+      // Job submission confirmations are transactional emails - always send them
+      // (Users can't opt out of transactional emails, only marketing/notification emails)
+      console.log('📧 Sending job submission confirmation (transactional email)');
+
+      if (true) { // Always send job submission confirmations
+        console.log('📧 Sending email with data:', {
+          jobTitle: jobFormData.jobTitle,
+          companyName: jobFormData.companyName,
+          location: jobFormData.location,
+          pricingTier: payment.pricing_tier
+        });
+
+        const employerName = employerProfile?.first_name && employerProfile?.last_name
+          ? `${employerProfile.first_name} ${employerProfile.last_name}`.trim()
+          : employerProfile?.first_name || employerProfile?.last_name || 'Employer';
+
+        const emailResult = await emailService.sendJobSubmissionConfirmation({
+          employerName,
+          employerEmail: employerEmail,
+          jobTitle: jobFormData.jobTitle,
+          jobId: job.id,
+          companyName: jobFormData.companyName,
+          location: jobFormData.location,
+          pricingTier: payment.pricing_tier,
+          dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/employer/jobs/${job.id}`
+        });
+
+        console.log('✅ Job submission confirmation email sent to employer:', employerEmail);
+        console.log('✅ Email service result:', emailResult);
+      } else {
+        console.log('⚠️ Email not sent - preferences disabled');
+      }
+    } else {
+      console.log('⚠️ Email not sent - no employer email found or user lookup failed:', {
+        hasEmail: !!employerEmail,
+        userError
+      });
+    }
+  } catch (emailError) {
+    console.error('❌ Failed to send job submission confirmation email:', emailError);
+    // Don't fail the webhook if email fails - job was created successfully
+  }
+
   return job;
 }
 

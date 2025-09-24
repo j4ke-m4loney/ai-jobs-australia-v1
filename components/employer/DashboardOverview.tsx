@@ -30,7 +30,9 @@ export function DashboardOverview() {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            Dashboard Overview
+          </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
@@ -50,7 +52,9 @@ export function DashboardOverview() {
     return (
       <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            Dashboard Overview
+          </h2>
         </div>
         <Card>
           <CardContent className="p-6">
@@ -68,7 +72,7 @@ export function DashboardOverview() {
     totalApplications: 0,
     pendingApplications: 0,
     reviewedApplications: 0,
-    recentApplications: []
+    recentApplications: [],
   };
 
   const StatCard = ({
@@ -76,7 +80,7 @@ export function DashboardOverview() {
     title,
     value,
     description,
-    variant = "default"
+    variant = "default",
   }: {
     icon: any;
     title: string;
@@ -106,7 +110,9 @@ export function DashboardOverview() {
                 <p className="text-xs text-muted-foreground">{description}</p>
               )}
             </div>
-            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getVariantStyles()}`}>
+            <div
+              className={`w-12 h-12 rounded-lg flex items-center justify-center ${getVariantStyles()}`}
+            >
               <Icon className="w-6 h-6" />
             </div>
           </div>
@@ -115,33 +121,37 @@ export function DashboardOverview() {
     );
   };
 
-  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
+  const getStatusBadgeVariant = (
+    status: string
+  ): "default" | "destructive" | "outline" | "secondary" => {
     switch (status) {
-      case 'pending':
-        return 'outline';
-      case 'reviewed':
-      case 'shortlisted':
-        return 'secondary';
-      case 'rejected':
-        return 'destructive';
+      case "pending":
+        return "outline";
+      case "reviewed":
+      case "shortlisted":
+        return "secondary";
+      case "rejected":
+        return "destructive";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60)
+    );
+
     if (diffInMinutes < 60) {
       return `${diffInMinutes} min ago`;
     } else if (diffInMinutes < 1440) {
       const hours = Math.floor(diffInMinutes / 60);
-      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+      return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
     } else {
       const days = Math.floor(diffInMinutes / 1440);
-      return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+      return `${days} ${days === 1 ? "day" : "days"} ago`;
     }
   };
 
@@ -150,7 +160,9 @@ export function DashboardOverview() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Dashboard Overview</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            Dashboard Overview
+          </h2>
           <p className="text-muted-foreground">
             Manage your job postings and track applications
           </p>
@@ -188,7 +200,7 @@ export function DashboardOverview() {
         />
         <StatCard
           icon={Clock}
-          title="Pending Review"
+          title="Applicants Pending Review"
           value={displayStats.pendingApplications}
           description="Awaiting your response"
           variant={displayStats.pendingApplications > 0 ? "warning" : "default"}
@@ -209,7 +221,10 @@ export function DashboardOverview() {
             {displayStats.recentApplications.length > 0 ? (
               <div className="space-y-4">
                 {displayStats.recentApplications.map((application) => (
-                  <div key={application.id} className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                  <div
+                    key={application.id}
+                    className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  >
                     <div className="flex-1 space-y-1">
                       <p className="font-medium text-sm">
                         {application.applicantName}
@@ -227,8 +242,8 @@ export function DashboardOverview() {
                   </div>
                 ))}
                 {displayStats.totalApplications > 5 && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full"
                     onClick={() => router.push("/employer/applications")}
                   >
@@ -240,7 +255,8 @@ export function DashboardOverview() {
               <div className="text-center py-8">
                 <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">
-                  No applications yet. Post a job to start receiving applications.
+                  No applications yet. Post a job to start receiving
+                  applications.
                 </p>
               </div>
             )}
@@ -251,9 +267,7 @@ export function DashboardOverview() {
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
-              Manage your hiring process
-            </CardDescription>
+            <CardDescription>Manage your hiring process</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button

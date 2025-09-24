@@ -149,6 +149,10 @@ export async function updateJobStatus(
     }
 
     console.log(`Successfully updated ${statusData?.length || 0} job(s) to status: ${status}`);
+
+    // Note: Email sending is now handled by the API route /api/admin/jobs/[id]/status
+    // This function only handles direct database updates for other use cases
+
     return { success: true, updatedCount: statusData?.length || 0 };
   } catch (error) {
     console.error('Error in updateJobStatus:', error);

@@ -67,10 +67,44 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
+    const isAnnualPlan = pricingTier === 'annual';
+
+    let sessionConfig: any = {
       customer: customer.id,
       payment_method_types: ['card'],
-      line_items: [
+      success_url: `${request.nextUrl.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${request.nextUrl.origin}/payment-cancel?session_id={CHECKOUT_SESSION_ID}`,
+      metadata: {
+        user_id: userId,
+        pricing_tier: pricingTier,
+        job_title: jobFormData.jobTitle || '',
+      },
+      expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
+    };
+
+    if (isAnnualPlan) {
+      // Annual plan: Create as subscription
+      sessionConfig.mode = 'subscription';
+      sessionConfig.line_items = [
+        {
+          price_data: {
+            currency: 'aud',
+            product_data: {
+              name: `${pricingConfig.name}`,
+              description: pricingConfig.description,
+            },
+            unit_amount: pricingConfig.price,
+            recurring: {
+              interval: 'year',
+            },
+          },
+          quantity: 1,
+        },
+      ];
+    } else {
+      // Standard/Featured: One-time payment
+      sessionConfig.mode = 'payment';
+      sessionConfig.line_items = [
         {
           price_data: {
             currency: 'aud',
@@ -82,17 +116,10 @@ export async function POST(request: NextRequest) {
           },
           quantity: 1,
         },
-      ],
-      mode: 'payment',
-      success_url: `${request.nextUrl.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.nextUrl.origin}/payment-cancel?session_id={CHECKOUT_SESSION_ID}`,
-      metadata: {
-        user_id: userId,
-        pricing_tier: pricingTier,
-        job_title: jobFormData.jobTitle || '',
-      },
-      expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
-    });
+      ];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     // Store payment session in database
     const { error: dbError } = await supabaseAdmin

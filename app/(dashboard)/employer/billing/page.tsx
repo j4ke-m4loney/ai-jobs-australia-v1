@@ -73,56 +73,70 @@ export default function BillingPage() {
   const fetchBillingData = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // In a real implementation, these would be separate API calls
-      // For now, we'll simulate the data structure
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
 
-      // Fetch subscription data
-      // const subscriptionResponse = await fetch('/api/billing/subscription');
-      // const paymentHistoryResponse = await fetch('/api/billing/payment-history');
-      // const paymentMethodsResponse = await fetch('/api/billing/payment-methods');
+      console.log('💳 Billing Page - Fetching data for user:', user.id);
 
-      // Mock data for demonstration
-      setTimeout(() => {
-        setSubscription(null); // No active subscription
-        setPayments([
-          {
-            id: '1',
-            pricing_tier: 'featured',
-            amount: 29900,
-            currency: 'aud',
-            status: 'succeeded',
-            payment_method_type: 'card',
-            receipt_url: 'https://stripe.com/receipt/example',
-            created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: '2',
-            pricing_tier: 'standard',
-            amount: 9900,
-            currency: 'aud',
-            status: 'succeeded',
-            payment_method_type: 'card',
-            receipt_url: 'https://stripe.com/receipt/example2',
-            created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        ]);
-        setPaymentMethods([
-          {
-            id: '1',
-            card_last_four: '4242',
-            card_brand: 'visa',
-            card_exp_month: 12,
-            card_exp_year: 2025,
-            is_default: true,
-          },
-        ]);
-        setLoading(false);
-      }, 1000);
+      // Fetch real data from APIs
+      const [subscriptionResponse, paymentHistoryResponse, paymentMethodsResponse] = await Promise.all([
+        fetch(`/api/billing/subscription?userId=${user.id}`),
+        fetch(`/api/billing/payment-history?userId=${user.id}`),
+        fetch(`/api/billing/payment-methods?userId=${user.id}`)
+      ]);
+
+      console.log('💳 Billing Page - API responses received:', {
+        subscription: { status: subscriptionResponse.status, ok: subscriptionResponse.ok },
+        paymentHistory: { status: paymentHistoryResponse.status, ok: paymentHistoryResponse.ok },
+        paymentMethods: { status: paymentMethodsResponse.status, ok: paymentMethodsResponse.ok }
+      });
+
+      // Handle subscription data
+      if (subscriptionResponse.ok) {
+        const subscriptionData = await subscriptionResponse.json();
+        console.log('💳 Billing Page - Subscription data:', subscriptionData);
+        setSubscription(subscriptionData.subscription);
+      } else {
+        console.error('Failed to fetch subscription data:', subscriptionResponse.status);
+        setSubscription(null);
+      }
+
+      // Handle payment history
+      if (paymentHistoryResponse.ok) {
+        const paymentData = await paymentHistoryResponse.json();
+        console.log('💳 Billing Page - Payment history data:', {
+          paymentsReceived: paymentData.payments?.length || 0,
+          total: paymentData.total,
+          samplePayment: paymentData.payments?.[0],
+          fullData: paymentData
+        });
+        setPayments(paymentData.payments || []);
+      } else {
+        console.error('Failed to fetch payment history:', paymentHistoryResponse.status);
+        setPayments([]);
+      }
+
+      // Handle payment methods
+      if (paymentMethodsResponse.ok) {
+        const paymentMethodsData = await paymentMethodsResponse.json();
+        console.log('💳 Billing Page - Payment methods data:', paymentMethodsData);
+        setPaymentMethods(paymentMethodsData.paymentMethods || []);
+      } else {
+        console.error('Failed to fetch payment methods:', paymentMethodsResponse.status);
+        setPaymentMethods([]);
+      }
 
     } catch (err: any) {
       console.error('Error fetching billing data:', err);
       setError(err.message);
+      // Set empty data on error
+      setSubscription(null);
+      setPayments([]);
+      setPaymentMethods([]);
+    } finally {
       setLoading(false);
     }
   };

@@ -364,9 +364,8 @@ export default function JobsPage() {
             logo_url
           )
         `);
-      // DEVELOPMENT: Show both approved and pending jobs
-      // In production, change this back to only show approved jobs
-      // query = query.eq("status", "approved");
+      // Only show approved jobs in public listing
+      query = query.eq("status", "approved");
 
       console.log("Fetching jobs - user:", user?.id || "guest");
 
@@ -513,7 +512,7 @@ export default function JobsPage() {
           console.log("🔍 Step 1 complete: Base query created");
 
           // Apply same status filter as main query
-          // companyQuery = companyQuery.eq("status", "approved");
+          companyQuery = companyQuery.eq("status", "approved");
 
           // Apply all the same filters except title search
           if (effectiveLocationTerm && effectiveLocationTerm !== "all") {

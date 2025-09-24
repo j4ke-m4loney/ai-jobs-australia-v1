@@ -9,8 +9,9 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Subscription, PaymentMethod, BILLING_PLANS } from "@/types/billing";
+import { JobPurchase, PaymentMethod, BILLING_PLANS } from "@/types/billing";
 import { EmployerLayout } from "@/components/employer/EmployerLayout";
+import { AddPaymentMethodModal } from "@/components/billing/AddPaymentMethodModal";
 import {
   Card,
   CardContent,
@@ -60,9 +61,8 @@ const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
   lastName: z.string().min(1, "Last name is required").max(50, "Last name must be less than 50 characters"),
   email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(1, "Phone number is required").regex(/^(\+?61|0)[2-9]\d{8}$/, "Please enter a valid Australian phone number"),
-  company: z.string().min(1, "Company name is required").max(100, "Company name must be less than 100 characters"),
-  position: z.string().min(1, "Position is required").max(100, "Position must be less than 100 characters"),
+  phone: z.string().optional().refine((val) => !val || /^(\+?61|0)[2-9]\d{8}$/.test(val), "Please enter a valid Australian phone number"),
+  position: z.string().optional().refine((val) => !val || val.length <= 100, "Position must be less than 100 characters"),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -74,10 +74,12 @@ const EmployerSettings = () => {
   const [saving, setSaving] = useState(false);
   
   // Billing state
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [jobPurchases, setJobPurchases] = useState<JobPurchase[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [billingLoading, setBillingLoading] = useState(true);
-  const [changingPlan, setChangingPlan] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string>('standard');
+  const [subscription, setSubscription] = useState<any>(null);
+  const [cancellingSubscription, setCancellingSubscription] = useState(false);
   
   // Email change modal state
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -86,6 +88,7 @@ const EmployerSettings = () => {
     newEmail: string;
     formData: ProfileFormData;
   } | null>(null);
+  const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
 
   // Initialize form with profile data
   const form = useForm<ProfileFormData>({
@@ -95,7 +98,6 @@ const EmployerSettings = () => {
       lastName: profile?.last_name || "",
       email: user?.email || "",
       phone: profile?.phone || "",
-      company: profile?.company_name || "",
       position: "", // This field doesn't exist in profile yet
     },
   });
@@ -108,7 +110,6 @@ const EmployerSettings = () => {
         lastName: profile.last_name || "",
         email: user?.email || "",
         phone: profile.phone || "",
-        company: profile.company_name || "",
         position: "", // This field doesn't exist in profile yet
       });
     }
@@ -118,22 +119,89 @@ const EmployerSettings = () => {
   React.useEffect(() => {
     const loadBillingData = async () => {
       if (!user) return;
-      
+
       try {
         // Get session token from Supabase
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.access_token) return;
-        
-        const response = await fetch('/api/billing', {
+
+        // Check for active subscription (annual plan)
+        const subscriptionResponse = await fetch(`/api/billing/subscription?userId=${user.id}`, {
           headers: {
             'Authorization': `Bearer ${session.access_token}`
           }
         });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setSubscription(data.subscription);
-          setPaymentMethods(data.paymentMethods);
+
+        if (subscriptionResponse.ok) {
+          const { subscription: userSubscription } = await subscriptionResponse.json();
+          setSubscription(userSubscription);
+        }
+
+        // Load job purchases and payment methods
+        try {
+          const [paymentHistoryResponse, paymentMethodsResponse] = await Promise.all([
+            fetch(`/api/billing/payment-history?userId=${user.id}`),
+            fetch(`/api/billing/payment-methods?userId=${user.id}`)
+          ]);
+
+          if (paymentHistoryResponse.ok) {
+            const paymentData = await paymentHistoryResponse.json();
+            // Map payments to JobPurchase format for the settings page
+            const mappedPurchases = paymentData.payments.map((payment: any) => ({
+              id: payment.id,
+              user_id: user.id,
+              job_id: null, // Not available in payments table
+              pricing_tier: payment.pricing_tier,
+              amount_paid: payment.amount, // Already in cents
+              stripe_payment_intent_id: payment.stripe_payment_intent_id,
+              stripe_session_id: null, // Not available in this response
+              status: payment.status === 'succeeded' ? 'completed' : payment.status,
+              created_at: payment.created_at,
+              updated_at: payment.created_at
+            }));
+            setJobPurchases(mappedPurchases);
+          } else {
+            console.error('Failed to fetch payment history for settings page');
+            setJobPurchases([]);
+          }
+
+          if (paymentMethodsResponse.ok) {
+            const paymentMethodsData = await paymentMethodsResponse.json();
+            setPaymentMethods(paymentMethodsData.paymentMethods || []);
+          } else {
+            console.error('Failed to fetch payment methods for settings page');
+            setPaymentMethods([]);
+          }
+        } catch (error) {
+          console.error('Error fetching billing data for settings page:', error);
+          setJobPurchases([]);
+          setPaymentMethods([]);
+        }
+
+        // Load notification preferences
+        try {
+          const prefsResponse = await fetch(`/api/user/notification-preferences?userId=${user.id}`, {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+
+          if (prefsResponse.ok) {
+            const { preferences } = await prefsResponse.json();
+            if (preferences) {
+              setNotificationSettings({
+                emailApplications: preferences.email_applications,
+                emailJobViews: preferences.email_job_views,
+                emailWeeklyReports: preferences.email_weekly_reports,
+                pushApplications: true, // Not stored in DB yet
+                pushMessages: false,    // Not stored in DB yet
+              });
+            }
+          }
+          setNotificationPrefsLoaded(true);
+        } catch (error) {
+          console.error('Error loading notification preferences:', error);
+          setNotificationPrefsLoaded(true);
         }
       } catch (error) {
         console.error('Error loading billing data:', error);
@@ -148,50 +216,63 @@ const EmployerSettings = () => {
   }, [user]);
 
   // Billing functions
-  const changePlan = async (planType: string) => {
-    if (!user) return;
-    
-    setChangingPlan(true);
+  const handlePostJob = (planType: string) => {
+    setSelectedPlan(planType);
+    // Redirect to post job with selected plan
+    router.push(`/post-job?plan=${planType}`);
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!user || !subscription) return;
+
+    const confirmed = window.confirm(
+      `Cancel your annual plan? You'll keep unlimited posting until ${
+        subscription.current_period_end
+          ? new Date(subscription.current_period_end).toLocaleDateString()
+          : 'the end of your billing period'
+      }.`
+    );
+
+    if (!confirmed) return;
+
+    setCancellingSubscription(true);
     try {
-      // Get session token from Supabase
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
-      
-      const response = await fetch('/api/billing', {
-        method: 'POST',
+
+      const response = await fetch('/api/billing/subscription', {
+        method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          type: 'change_plan',
-          plan_type: planType
-        })
+        body: JSON.stringify({ userId: user.id })
       });
-      
+
       if (response.ok) {
-        const data = await response.json();
-        setSubscription(data.subscription);
-        toast.success(data.message || 'Plan changed successfully!');
+        const updatedSubscription = { ...subscription, status: 'cancelled' };
+        setSubscription(updatedSubscription);
+        toast.success('Annual plan cancelled successfully. You can continue posting jobs until the end of your billing period.');
       } else {
-        throw new Error('Failed to change plan');
+        throw new Error('Failed to cancel subscription');
       }
     } catch (error) {
-      console.error('Error changing plan:', error);
-      toast.error('Failed to change plan. Please try again.');
+      console.error('Error cancelling subscription:', error);
+      toast.error('Failed to cancel subscription. Please try again or contact support.');
     } finally {
-      setChangingPlan(false);
+      setCancellingSubscription(false);
     }
   };
 
-  // TODO: Uncomment for future MVP iterations
-  // const [notificationSettings, setNotificationSettings] = useState({
-  //   emailApplications: true,
-  //   emailJobViews: false,
-  //   emailWeeklyReports: true,
-  //   pushApplications: true,
-  //   pushMessages: true,
-  // });
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailApplications: true,
+    emailJobViews: false,
+    emailWeeklyReports: false,
+    pushApplications: true,
+    pushMessages: false,
+  });
+  const [notificationPrefsLoaded, setNotificationPrefsLoaded] = useState(false);
 
   // const [privacySettings, setPrivacySettings] = useState({
   //   profileVisible: true,
@@ -226,7 +307,6 @@ const EmployerSettings = () => {
         first_name: formData.firstName,
         last_name: formData.lastName,
         phone: formData.phone,
-        company_name: formData.company,
         // Note: position field would need to be added to database schema if needed
       });
 
@@ -274,9 +354,88 @@ const EmployerSettings = () => {
     setEmailChangeData(null);
   };
 
+  const handleSaveNotificationPreferences = async () => {
+    if (!user) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch('/api/user/notification-preferences', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          email_applications: notificationSettings.emailApplications,
+          email_job_views: notificationSettings.emailJobViews,
+          email_weekly_reports: notificationSettings.emailWeeklyReports,
+          // Job seeker preferences are null for employers
+          email_new_jobs: null,
+          email_similar_jobs: null,
+          email_application_updates: null,
+          email_promotions: null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save notification preferences');
+      }
+
+      toast.success("Notification preferences updated successfully!");
+    } catch (error) {
+      console.error("Error saving notification preferences:", error);
+      toast.error("Failed to update notification preferences. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     router.push("/");
+  };
+
+  // Payment method handlers
+  const handleAddPaymentMethod = () => {
+    setShowAddPaymentModal(true);
+  };
+
+  const handlePaymentMethodAdded = async () => {
+    // Refresh billing data after adding a payment method
+    try {
+      const response = await fetch(`/api/billing/payment-methods?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setPaymentMethods(data.paymentMethods || []);
+        toast.success("Payment method added successfully!");
+      }
+    } catch (error) {
+      console.error("Error refreshing payment methods:", error);
+    }
+  };
+
+  const handleDeletePaymentMethod = async (paymentMethodId: string) => {
+    if (!confirm("Are you sure you want to remove this payment method?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/billing/payment-methods?paymentMethodId=${paymentMethodId}&userId=${user.id}`,
+        { method: "DELETE" }
+      );
+
+      if (response.ok) {
+        setPaymentMethods(prev => prev.filter(pm => pm.id !== paymentMethodId));
+        toast.success("Payment method removed successfully!");
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to remove payment method");
+      }
+    } catch (error) {
+      console.error("Error deleting payment method:", error);
+      toast.error("Failed to remove payment method");
+    }
   };
 
   return (
@@ -379,7 +538,7 @@ const EmployerSettings = () => {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
+                            <FormLabel>Phone Number (Optional)</FormLabel>
                             <FormControl>
                               <Input placeholder="e.g. +61 400 123 456" {...field} />
                             </FormControl>
@@ -388,37 +547,22 @@ const EmployerSettings = () => {
                         )}
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="company"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Company</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter your company name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="position"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Position</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter your position" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                              <p className="text-sm text-muted-foreground">
-                                This field will be saved for future use
-                              </p>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="position"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Position (Optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter your position" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            <p className="text-sm text-muted-foreground">
+                              This field will be saved for future use
+                            </p>
+                          </FormItem>
+                        )}
+                      />
 
                       <Button
                         type="submit"
@@ -555,6 +699,17 @@ const EmployerSettings = () => {
                     </div>
                   </div>
                 </div>
+
+                <div className="pt-6 border-t">
+                  <Button
+                    onClick={handleSaveNotificationPreferences}
+                    disabled={saving || !notificationPrefsLoaded}
+                    className="w-full sm:w-auto"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? "Saving..." : "Save Notification Preferences"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -656,12 +811,54 @@ const EmployerSettings = () => {
 
           <TabsContent value="billing">
             <div className="space-y-6">
-              {/* Current Plan */}
+              {/* Active Subscription (if exists) */}
+              {subscription && subscription.status === 'active' && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Current Subscription</CardTitle>
+                    <CardDescription>
+                      Your active annual plan
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-foreground">Annual Plan - Unlimited Postings</p>
+                          <p className="text-sm text-muted-foreground">
+                            Active until {subscription.current_period_end
+                              ? new Date(subscription.current_period_end).toLocaleDateString()
+                              : 'end of billing period'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-green-100 text-green-800">Active</Badge>
+                          <button
+                            onClick={handleCancelSubscription}
+                            disabled={cancellingSubscription}
+                            className="text-sm text-red-600 hover:text-red-800 underline disabled:opacity-50"
+                          >
+                            {cancellingSubscription ? 'Cancelling...' : 'Cancel Plan'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Job Posting History */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Current Plan</CardTitle>
+                  <CardTitle>
+                    {subscription && subscription.status === 'active'
+                      ? 'Recent Job Postings'
+                      : 'Job Posting History'}
+                  </CardTitle>
                   <CardDescription>
-                    Manage your subscription and billing
+                    {subscription && subscription.status === 'active'
+                      ? 'Jobs posted with your annual plan'
+                      : 'View your previous job postings and payments'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -669,60 +866,70 @@ const EmployerSettings = () => {
                     <div className="flex items-center justify-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
-                  ) : (
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium">
-                          {subscription ? BILLING_PLANS[subscription.plan_type]?.name : 'Free Plan'}
-                        </h4>
-                        <Badge className={subscription?.plan_type === 'professional' ? "bg-primary" : 
-                                          subscription?.plan_type === 'enterprise' ? "bg-purple-600" : "bg-gray-600"}>
-                          {subscription ? BILLING_PLANS[subscription.plan_type]?.name : 'Free'}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {subscription ? BILLING_PLANS[subscription.plan_type]?.price_display : 'Free'} • 
-                        {subscription ? BILLING_PLANS[subscription.plan_type]?.description : 'Basic job posting'}
-                      </p>
-                      <div className="space-y-2 mb-4">
-                        {subscription && BILLING_PLANS[subscription.plan_type]?.features.map((feature, index) => (
-                          <div key={index} className="flex items-center gap-2 text-sm">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            {feature}
+                  ) : jobPurchases.length > 0 ? (
+                    <div className="space-y-4">
+                      {jobPurchases.map((purchase) => (
+                        <div key={purchase.id} className="p-4 border rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">
+                                {BILLING_PLANS[purchase.pricing_tier]?.name} Job Posting
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {new Date(purchase.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold">
+                                ${(purchase.amount_paid / 100).toFixed(2)}
+                              </p>
+                              <Badge variant={purchase.status === 'completed' ? 'default' : 'secondary'}>
+                                {purchase.status}
+                              </Badge>
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          // Show plan selection
-                          toast.info('Plan selection coming soon!');
-                        }}
-                        disabled={changingPlan}
-                      >
-                        {changingPlan ? 'Updating...' : 'Change Plan'}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">
+                        {subscription && subscription.status === 'active'
+                          ? 'No jobs posted yet'
+                          : 'No job postings yet'}
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        {subscription && subscription.status === 'active'
+                          ? 'Start posting unlimited jobs with your annual plan'
+                          : 'Post your first job to start hiring top AI talent'}
+                      </p>
+                      <Button onClick={() => router.push('/post-job')}>
+                        {subscription && subscription.status === 'active'
+                          ? 'Post Unlimited Jobs'
+                          : 'Post Your First Job'}
                       </Button>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Available Plans */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Available Plans</CardTitle>
-                  <CardDescription>
-                    Choose the plan that best fits your hiring needs
-                  </CardDescription>
-                </CardHeader>
+              {/* Available Job Posting Plans - Only show if no active subscription */}
+              {!(subscription && subscription.status === 'active') && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Post a New Job</CardTitle>
+                    <CardDescription>
+                      Choose the plan that best fits your hiring needs
+                    </CardDescription>
+                  </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {Object.values(BILLING_PLANS).map((plan) => (
-                      <div 
+                      <div
                         key={plan.id}
                         className={`p-4 border rounded-lg relative ${
-                          subscription?.plan_type === plan.id ? 'border-primary bg-primary/5' : 'border-border'
+                          selectedPlan === plan.id ? 'border-primary bg-primary/5' : 'border-border'
                         } ${plan.popular ? 'ring-2 ring-primary' : ''}`}
                       >
                         {plan.popular && (
@@ -743,20 +950,19 @@ const EmployerSettings = () => {
                             </li>
                           ))}
                         </ul>
-                        <Button 
+                        <Button
                           className="w-full"
-                          variant={subscription?.plan_type === plan.id ? "outline" : "default"}
-                          onClick={() => changePlan(plan.id)}
-                          disabled={subscription?.plan_type === plan.id || changingPlan}
+                          variant={selectedPlan === plan.id ? "default" : "outline"}
+                          onClick={() => handlePostJob(plan.id)}
                         >
-                          {subscription?.plan_type === plan.id ? 'Current Plan' : 
-                           changingPlan ? 'Updating...' : `Switch to ${plan.name}`}
+                          Post Job - {plan.price_display}
                         </Button>
                       </div>
                     ))}
                   </div>
                 </CardContent>
-              </Card>
+                </Card>
+              )}
 
               {/* Payment Method */}
               <Card>
@@ -788,9 +994,18 @@ const EmployerSettings = () => {
                                 <Badge variant="secondary">Default</Badge>
                               )}
                             </div>
-                            <Button variant="outline" size="sm">
-                              Update
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm">
+                                Update
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeletePaymentMethod(method.id)}
+                              >
+                                Delete
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -802,7 +1017,7 @@ const EmployerSettings = () => {
                       <p className="text-muted-foreground mb-4">
                         Add a payment method to upgrade your plan
                       </p>
-                      <Button variant="outline">
+                      <Button variant="outline" onClick={handleAddPaymentMethod}>
                         Add Payment Method
                       </Button>
                     </div>
@@ -843,6 +1058,16 @@ const EmployerSettings = () => {
         </AlertDialog>
 
         {/* Danger Zone */}
+
+        {/* Add Payment Method Modal */}
+        {user && (
+          <AddPaymentMethodModal
+            isOpen={showAddPaymentModal}
+            onClose={() => setShowAddPaymentModal(false)}
+            onSuccess={handlePaymentMethodAdded}
+            userId={user.id}
+          />
+        )}
       </div>
     </EmployerLayout>
   );
