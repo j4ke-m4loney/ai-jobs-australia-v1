@@ -38,11 +38,7 @@ export async function POST(request: NextRequest) {
         id,
         title,
         company_name,
-        user_id,
-        profiles!jobs_user_id_fkey (
-          first_name,
-          last_name
-        )
+        employer_id
       `)
       .eq('id', jobId)
       .single();
@@ -59,7 +55,7 @@ export async function POST(request: NextRequest) {
     const { data: applicantData, error: applicantError } = await supabaseAdmin
       .from('profiles')
       .select('first_name, last_name')
-      .eq('id', applicantId)
+      .eq('user_id', applicantId)
       .single();
 
     if (applicantError || !applicantData) {
@@ -116,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     // Get employer's email from auth.users table
     const { data: employerUserData, error: employerUserError } = await supabaseAdmin
-      .auth.admin.getUserById(jobData.user_id);
+      .auth.admin.getUserById(jobData.employer_id);
 
     const employerEmail = employerUserData?.user?.email;
 
@@ -124,7 +120,7 @@ export async function POST(request: NextRequest) {
     const { data: employerPrefs } = await supabaseAdmin
       .from('user_notification_preferences')
       .select('email_applications')
-      .eq('user_id', jobData.user_id)
+      .eq('user_id', jobData.employer_id)
       .single();
 
     // Send email notification to employer if they have the preference enabled (default: true)
@@ -132,9 +128,16 @@ export async function POST(request: NextRequest) {
 
     if (shouldSendEmail && !employerUserError && employerEmail) {
       try {
-        const employerName = jobData.profiles?.first_name && jobData.profiles?.last_name
-          ? `${jobData.profiles.first_name} ${jobData.profiles.last_name}`.trim()
-          : jobData.profiles?.first_name || jobData.profiles?.last_name || 'Employer';
+        // Get employer profile information
+        const { data: employerProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('user_id', jobData.employer_id)
+          .single();
+
+        const employerName = employerProfile?.first_name && employerProfile?.last_name
+          ? `${employerProfile.first_name} ${employerProfile.last_name}`.trim()
+          : employerProfile?.first_name || employerProfile?.last_name || 'Employer';
 
         const applicantName = applicantData?.first_name && applicantData?.last_name
           ? `${applicantData.first_name} ${applicantData.last_name}`.trim()
@@ -208,10 +211,10 @@ export async function GET(request: NextRequest) {
         title,
         company_name,
         location,
-        user_id
+        employer_id
       ),
-      profiles!job_applications_applicant_id_fkey (
-        id,
+      profiles (
+        user_id,
         first_name,
         last_name
       )
@@ -219,7 +222,7 @@ export async function GET(request: NextRequest) {
 
     if (type === 'employer') {
       // Get applications for jobs posted by this employer
-      query = query.eq('jobs.user_id', userId);
+      query = query.eq('jobs.employer_id', userId);
     } else {
       // Get applications made by this user
       query = query.eq('applicant_id', userId);

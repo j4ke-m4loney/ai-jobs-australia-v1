@@ -34,7 +34,7 @@ export async function PUT(
     }
 
     // Validate status
-    const validStatuses = ['submitted', 'viewed', 'rejected', 'accepted'];
+    const validStatuses = ['submitted', 'reviewing', 'shortlisted', 'rejected', 'accepted'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
         { error: 'Invalid status value' },
@@ -54,12 +54,7 @@ export async function PUT(
           id,
           title,
           company_name,
-          user_id
-        ),
-        profiles!job_applications_applicant_id_fkey (
-          id,
-          first_name,
-          last_name
+          employer_id
         )
       `)
       .eq('id', applicationId)
@@ -112,16 +107,23 @@ export async function PUT(
 
     if (shouldSendEmail && !userError && applicantEmail) {
       try {
-        const applicantName = application.profiles?.first_name && application.profiles?.last_name
-          ? `${application.profiles.first_name} ${application.profiles.last_name}`.trim()
-          : application.profiles?.first_name || application.profiles?.last_name || 'Job Seeker';
+        // Get applicant profile information
+        const { data: applicantProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('user_id', application.applicant_id)
+          .single();
+
+        const applicantName = applicantProfile?.first_name && applicantProfile?.last_name
+          ? `${applicantProfile.first_name} ${applicantProfile.last_name}`.trim()
+          : applicantProfile?.first_name || applicantProfile?.last_name || 'Job Seeker';
 
         await emailService.sendApplicationStatusUpdate({
           applicantName,
           applicantEmail: applicantEmail,
           jobTitle: application.jobs.title,
           companyName: application.jobs.company_name,
-          status: status as 'viewed' | 'accepted' | 'rejected',
+          status: status as 'reviewing' | 'shortlisted' | 'accepted' | 'rejected',
           statusMessage
         });
 
