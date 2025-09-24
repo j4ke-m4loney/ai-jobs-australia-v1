@@ -262,7 +262,7 @@ export default function DescribeJobStep({
                       />
                     </FormControl>
                     <p className="text-sm text-muted-foreground">
-                      Describe your company's mission, values, culture, and
+                      Describe your company&apos;s mission, values, culture, and
                       growth story.
                     </p>
                     <FormMessage />

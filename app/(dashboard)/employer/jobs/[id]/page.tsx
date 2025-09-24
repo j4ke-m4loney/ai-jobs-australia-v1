@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import { PlacesAutocomplete, PlaceResult } from "@/components/ui/places-autocomplete";
+import { PlacesAutocomplete } from "@/components/ui/places-autocomplete";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import {
@@ -80,7 +80,7 @@ interface Job {
   status: string;
   is_featured: boolean;
   highlights: string[] | null;
-  employer_questions: any[] | null;
+  employer_questions: Array<{question: string; required: boolean}> | null;
   created_at: string;
   expires_at: string;
   company_name?: string | null;
@@ -161,15 +161,7 @@ const JobManagementPage = () => {
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  useEffect(() => {
-    if (user && jobId) {
-      fetchJobDetails();
-      // TODO: Re-enable when application management is ready
-      // fetchApplicationStats();
-    }
-  }, [user, jobId]);
-
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("jobs")
@@ -244,7 +236,15 @@ const JobManagementPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, jobId, router]);
+
+  useEffect(() => {
+    if (user && jobId) {
+      fetchJobDetails();
+      // TODO: Re-enable when application management is ready
+      // fetchApplicationStats();
+    }
+  }, [user, jobId, fetchJobDetails]);
 
   // TODO: Applications Stats - Implement when application management is ready
   // const fetchApplicationStats = async () => {
@@ -300,7 +300,7 @@ const JobManagementPage = () => {
     return text.trim().length;
   };
 
-  const handlePayConfigChange = (field: string, value: any) => {
+  const handlePayConfigChange = (field: string, value: string | number) => {
     setPayConfig((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -923,7 +923,7 @@ const JobManagementPage = () => {
                             onValueChange={(value) =>
                               setHoursConfig((prev) => ({
                                 ...prev,
-                                showBy: value as any,
+                                showBy: value as "fixed" | "range" | "maximum" | "minimum",
                               }))
                             }
                           >
@@ -1053,7 +1053,7 @@ const JobManagementPage = () => {
                             onValueChange={(value) =>
                               setContractConfig((prev) => ({
                                 ...prev,
-                                period: value as any,
+                                period: value as "days" | "weeks" | "months" | "years",
                               }))
                             }
                           >

@@ -108,7 +108,7 @@ export default function ApplicationMethodStep({
                             <ExternalLink className="w-8 h-8 mb-2 text-primary" />
                             <h4 className="font-semibold">External Link</h4>
                             <p className="text-sm text-muted-foreground text-center mt-2">
-                              Direct candidates to your company's careers page
+                              Direct candidates to your company&apos;s careers page
                               or ATS
                             </p>
                           </CardContent>

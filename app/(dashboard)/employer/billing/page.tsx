@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   CreditCard,
@@ -32,7 +31,7 @@ interface Subscription {
   stripe_customer_id: string;
   stripe_subscription_id: string;
   price_per_month: number;
-  features: Record<string, any>;
+  features: string[];
 }
 
 interface Payment {
@@ -57,20 +56,13 @@ interface PaymentMethod {
 
 export default function BillingPage() {
   const { user } = useAuth();
-  const { profile } = useProfile();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchBillingData();
-    }
-  }, [user]);
-
-  const fetchBillingData = async () => {
+  const fetchBillingData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -129,9 +121,9 @@ export default function BillingPage() {
         setPaymentMethods([]);
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching billing data:', err);
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
       // Set empty data on error
       setSubscription(null);
       setPayments([]);
@@ -139,7 +131,13 @@ export default function BillingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchBillingData();
+    }
+  }, [user, fetchBillingData]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-AU', {

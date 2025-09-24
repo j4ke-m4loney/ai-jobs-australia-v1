@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +65,6 @@ import {
 import Link from "next/link";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 interface Job {
@@ -88,7 +87,6 @@ interface Job {
 
 export default function AdminJobsPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
@@ -102,9 +100,35 @@ export default function AdminJobsPage() {
   const [bulkAction, setBulkAction] = useState("");
   const [refreshKey, setRefreshKey] = useState(0); // Add refresh key for cache busting
 
+  const fetchJobs = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      let query = supabase
+        .from("jobs")
+        .select(
+          "id, title, company_name, location, location_type, job_type, salary_min, salary_max, status, is_featured, created_at, reviewed_at, rejection_reason, admin_notes"
+        )
+        .order("created_at", { ascending: false });
+
+      if (statusFilter && statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      setJobs(data || []);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+      toast.error("Failed to fetch jobs");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [statusFilter]);
+
   useEffect(() => {
     fetchJobs();
-  }, [statusFilter, refreshKey]);
+  }, [statusFilter, refreshKey, fetchJobs]);
 
   // Set up real-time subscription
   useEffect(() => {
@@ -149,7 +173,7 @@ export default function AdminJobsPage() {
     };
   }, []);
 
-  const fetchJobs = async () => {
+  const originalFetchJobs = async () => {
     setIsLoading(true);
     console.log(`🔍 Admin Dashboard - Fetching jobs with status filter: "${statusFilter}"`);
     try {
@@ -234,9 +258,9 @@ export default function AdminJobsPage() {
       } else {
         throw new Error(result.error || 'Failed to approve job');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error approving job:', error);
-      toast.error(error.message || "Failed to approve job");
+      toast.error(error instanceof Error ? error.message : "Failed to approve job");
       // Revert optimistic update on failure
       setRefreshKey(prev => prev + 1);
     }
@@ -257,7 +281,7 @@ export default function AdminJobsPage() {
       // For now, process each job individually using the API route
       // TODO: Could optimize with bulk API endpoint later
       let successCount = 0;
-      let errors: string[] = [];
+      const errors: string[] = [];
 
       for (const jobId of jobIds) {
         try {
@@ -283,9 +307,9 @@ export default function AdminJobsPage() {
             successCount++;
             await logAdminAction("reject_job", "job", jobId, { reason: rejectionReason });
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error(`Error rejecting job ${jobId}:`, error);
-          errors.push(`Job ${jobId}: ${error.message}`);
+          errors.push(`Job ${jobId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
 
@@ -301,9 +325,9 @@ export default function AdminJobsPage() {
       setJobToReject(null);
       setSelectedJobs([]);
       setRefreshKey(prev => prev + 1);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error in reject process:', error);
-      toast.error(error.message || "Failed to reject job(s)");
+      toast.error(error instanceof Error ? error.message : "Failed to reject job(s)");
     }
   };
 
@@ -320,7 +344,7 @@ export default function AdminJobsPage() {
 
         // Process each job individually using the API route
         let successCount = 0;
-        let errors: string[] = [];
+        const errors: string[] = [];
 
         for (const jobId of selectedJobs) {
           try {
@@ -344,9 +368,9 @@ export default function AdminJobsPage() {
             if (result.success) {
               successCount++;
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.error(`Error approving job ${jobId}:`, error);
-            errors.push(`Job ${jobId}: ${error.message}`);
+            errors.push(`Job ${jobId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
           }
         }
 
@@ -364,9 +388,9 @@ export default function AdminJobsPage() {
 
         setSelectedJobs([]);
         setRefreshKey(prev => prev + 1);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error in bulk approve:', error);
-        toast.error(error.message || "Failed to approve jobs");
+        toast.error(error instanceof Error ? error.message : "Failed to approve jobs");
       }
     } else if (bulkAction === "reject") {
       setJobToReject("bulk");

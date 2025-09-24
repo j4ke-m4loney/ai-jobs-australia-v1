@@ -103,8 +103,9 @@ export default function JobDetailsStep2({
   };
 
   const handleJobTypeChange = (value: string) => {
-    setSelectedJobType(value as any);
-    form.setValue("jobType", value as any);
+    const jobType = value as JobFormData2["jobType"];
+    setSelectedJobType(jobType);
+    form.setValue("jobType", jobType);
   };
 
   return (
@@ -156,7 +157,7 @@ export default function JobDetailsStep2({
                   onValueChange={(value) =>
                     setHoursConfig((prev) => ({
                       ...prev,
-                      showBy: value as any,
+                      showBy: value as "fixed" | "range" | "maximum" | "minimum",
                     }))
                   }
                 >
@@ -291,7 +292,7 @@ export default function JobDetailsStep2({
                   onValueChange={(value) =>
                     setContractConfig((prev) => ({
                       ...prev,
-                      period: value as any,
+                      period: value as "days" | "weeks" | "months" | "years",
                     }))
                   }
                 >

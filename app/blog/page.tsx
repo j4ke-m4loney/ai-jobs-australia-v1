@@ -132,7 +132,7 @@ export default function BlogPage() {
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
               Stay ahead in your AI career with expert insights, industry
-              trends, and practical advice from Australia's leading AI
+              trends, and practical advice from Australia&apos;s leading AI
               professionals.
             </p>
 

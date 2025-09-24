@@ -122,7 +122,7 @@ export default function TermsPage() {
                 Limitation of Liability
               </h2>
               <p className="mb-4">
-                AIJobsAustralia.com.au provides the platform "as is" and makes
+                AIJobsAustralia.com.au provides the platform &quot;as is&quot; and makes
                 no warranties about the accuracy, reliability, or availability
                 of the service. We are not liable for any direct, indirect, or
                 consequential damages arising from your use of the platform.

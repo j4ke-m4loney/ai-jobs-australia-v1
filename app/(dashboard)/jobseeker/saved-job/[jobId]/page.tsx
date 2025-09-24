@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,16 +13,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
 import {
-  MapPin,
-  Building,
-  Clock,
-  DollarSign,
   ArrowLeft,
-  BookOpen,
-  CheckCircle,
-  Info,
   Heart,
-  ExternalLink,
   Upload,
   FileText,
   Check,
@@ -30,6 +22,13 @@ import {
 } from "lucide-react";
 import { JobSeekerLayout } from "@/components/jobseeker/JobSeekerLayout";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
+
+interface EmployerQuestion {
+  id: string;
+  question: string;
+  required: boolean;
+  type?: string;
+}
 
 interface Job {
   id: string;
@@ -62,7 +61,7 @@ interface Job {
     website: string | null;
     logo_url: string | null;
   } | null;
-  employer_questions?: any; // Flexible type for JSON data
+  employer_questions?: EmployerQuestion[];
 }
 
 interface UserDocument {
@@ -96,14 +95,7 @@ export default function SavedJobDetailPage() {
   const [uploadingCoverLetter, setUploadingCoverLetter] = useState(false);
 
   // Fetch job details
-  useEffect(() => {
-    if (jobId && user) {
-      fetchJobDetails();
-      fetchUserDocuments();
-    }
-  }, [jobId, user]);
-
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     if (!jobId) return;
 
     setJobLoading(true);
@@ -131,9 +123,9 @@ export default function SavedJobDetailPage() {
       setJob(data as Job);
     }
     setJobLoading(false);
-  };
+  }, [jobId, router]);
 
-  const fetchUserDocuments = async () => {
+  const fetchUserDocuments = useCallback(async () => {
     if (!user) return;
 
     const { data, error } = await supabase
@@ -158,7 +150,14 @@ export default function SavedJobDetailPage() {
       if (defaultResume) setSelectedResume(defaultResume.id);
       if (defaultCoverLetter) setSelectedCoverLetter(defaultCoverLetter.id);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (jobId && user) {
+      fetchJobDetails();
+      fetchUserDocuments();
+    }
+  }, [jobId, user, fetchJobDetails, fetchUserDocuments]);
 
   const handleFileUpload = async (
     file: File,
@@ -233,9 +232,9 @@ export default function SavedJobDetailPage() {
 
     // Check required questions
     const requiredQuestions =
-      (job.employer_questions as any[])?.filter((q: any) => q.required) || [];
+      job.employer_questions?.filter((q) => q.required) || [];
     const missingAnswers = requiredQuestions.filter(
-      (q: any) => !questionAnswers[q.id]?.trim()
+      (q) => !questionAnswers[q.id]?.trim()
     );
 
     if (missingAnswers.length > 0) {
@@ -628,7 +627,7 @@ export default function SavedJobDetailPage() {
             {job.employer_questions && Array.isArray(job.employer_questions) && job.employer_questions.length > 0 && (
               <div className="space-y-4 border-t pt-6">
                 <h4 className="font-medium text-foreground">Additional Questions</h4>
-                {job.employer_questions.map((question: any) => (
+                {job.employer_questions.map((question) => (
                   <div key={question.id} className="space-y-2">
                     <Label htmlFor={`question-${question.id}`} className="text-sm font-medium">
                       {question.question}

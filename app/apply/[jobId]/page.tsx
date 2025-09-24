@@ -13,13 +13,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "sonner";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   MapPin,
   Building,
   Clock,
@@ -49,7 +42,7 @@ interface Job {
   is_featured: boolean;
   created_at: string;
   expires_at: string;
-  employer_questions: any; // Flexible type for JSON data
+  employer_questions: Array<{id: string; question: string; required: boolean}> | null;
   companies?: {
     id: string;
     name: string;
@@ -101,7 +94,7 @@ export default function ApplyPage() {
       fetchJobDetails();
       fetchUserDocuments();
     }
-  }, [jobId, user]);
+  }, [jobId, user, fetchJobDetails, fetchUserDocuments]);
 
   const fetchJobDetails = async () => {
     if (!jobId) return;
@@ -233,9 +226,9 @@ export default function ApplyPage() {
 
     // Check required questions
     const requiredQuestions =
-      (job.employer_questions as any[])?.filter((q: any) => q.required) || [];
+      job.employer_questions?.filter((q) => q.required) || [];
     const missingAnswers = requiredQuestions.filter(
-      (q: any) => !questionAnswers[q.id]?.trim()
+      (q) => !questionAnswers[q.id]?.trim()
     );
 
     if (missingAnswers.length > 0) {
@@ -621,8 +614,8 @@ export default function ApplyPage() {
                     Additional Questions
                   </Label>
                   <div className="space-y-4 mt-3">
-                    {(job.employer_questions as any[]).map(
-                      (question: any, index: number) => (
+                    {job.employer_questions.map(
+                      (question, index: number) => (
                         <div key={question.id}>
                           <Label htmlFor={`question-${question.id}`}>
                             {index + 1}. {question.question}

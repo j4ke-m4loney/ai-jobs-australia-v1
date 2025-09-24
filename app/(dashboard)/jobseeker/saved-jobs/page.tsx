@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,15 +49,7 @@ const JobSeekerSavedJobs = () => {
   const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-    fetchSavedJobs();
-  }, [user, router]);
-
-  const fetchSavedJobs = async () => {
+  const fetchSavedJobs = useCallback(async () => {
     try {
       // First get saved job IDs
       const { data: savedData, error: savedError } = await supabase
@@ -108,7 +100,15 @@ const JobSeekerSavedJobs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    fetchSavedJobs();
+  }, [user, router, fetchSavedJobs]);
 
   const handleUnsaveJob = async (jobId: string) => {
     try {
@@ -159,7 +159,7 @@ const JobSeekerSavedJobs = () => {
           <Heart className="w-6 h-6 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Saved Jobs</h1>
-            <p className="text-muted-foreground">Jobs you've saved for later</p>
+            <p className="text-muted-foreground">Jobs you&apos;ve saved for later</p>
           </div>
         </div>
 
@@ -171,7 +171,7 @@ const JobSeekerSavedJobs = () => {
                 No saved jobs yet
               </h3>
               <p className="text-muted-foreground mb-6">
-                Start browsing jobs and save the ones you're interested in.
+                Start browsing jobs and save the ones you&apos;re interested in.
               </p>
               <Button onClick={() => router.push("/jobs")} className="gap-2">
                 <Search className="w-4 h-4" />

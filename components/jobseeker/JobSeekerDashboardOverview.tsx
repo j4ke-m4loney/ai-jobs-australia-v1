@@ -14,9 +14,6 @@ import {
   Phone,
   Mail,
   Edit,
-  Building2,
-  Clock,
-  DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";

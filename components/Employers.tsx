@@ -36,7 +36,7 @@ const Employers = () => {
               </div>
 
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-                Hire Australia's{" "}
+                Hire Australia&apos;s{" "}
                 <span className="bg-gradient-hero bg-clip-text text-transparent">
                   AI Talent
                 </span>
@@ -60,7 +60,7 @@ const Employers = () => {
                           Quality Candidates
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          Access Australia's growing pool of AI professionals
+                          Access Australia&apos;s growing pool of AI professionals
                           who are specifically looking for local opportunities.
                         </p>
                       </div>

@@ -20,8 +20,6 @@ import SlimFooter from "@/components/SlimFooter";
 
 // Step Components
 import JobBasicsStep from "@/components/post-job2/JobBasicsStep";
-import JobDetailsStep2 from "@/components/post-job2/JobDetailsStep2";
-import PayBenefitsStep from "@/components/post-job2/PayBenefitsStep";
 import DescribeJobStep from "@/components/post-job2/DescribeJobStep";
 import ApplicationSettingsStep from "@/components/post-job2/ApplicationSettingsStep";
 import PricingSelectionStep from "@/components/post-job2/PricingSelectionStep";

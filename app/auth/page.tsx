@@ -49,7 +49,7 @@ export default function AuthPage() {
               Welcome to AI Jobs Australia
             </CardTitle>
             <CardDescription>
-              Choose how you'd like to get started
+              Choose how you&apos;d like to get started
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -61,7 +61,7 @@ export default function AuthPage() {
               <Link href="/login">
                 <User className="w-8 h-8 text-primary" />
                 <div className="text-center">
-                  <div className="font-semibold">I'm looking for a job</div>
+                  <div className="font-semibold">I&apos;m looking for a job</div>
                   <div className="text-sm text-muted-foreground">
                     Browse and apply for AI positions
                   </div>

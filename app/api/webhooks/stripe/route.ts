@@ -360,7 +360,7 @@ async function handleAnnualSubscription(session: Stripe.Checkout.Session, paymen
     .upsert({
       user_id: paymentSession.user_id,
       plan_type: 'annual',
-      status: subscription.status === 'active' ? 'active' : subscription.status as any,
+      status: subscription.status === 'active' ? 'active' as const : subscription.status === 'canceled' ? 'cancelled' as const : subscription.status === 'past_due' ? 'past_due' as const : 'trialing' as const,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       stripe_customer_id: subscription.customer as string,
@@ -394,7 +394,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const { error } = await supabaseAdmin
     .from('subscriptions')
     .update({
-      status: subscription.status as any,
+      status: subscription.status === 'active' ? 'active' as const : subscription.status === 'canceled' ? 'cancelled' as const : subscription.status === 'past_due' ? 'past_due' as const : 'trialing' as const,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
     })

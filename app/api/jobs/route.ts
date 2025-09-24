@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+interface PayConfig {
+  showPay?: boolean;
+  payType?: 'range' | 'minimum' | 'fixed';
+  payRangeMin?: number;
+  payRangeMax?: number;
+  payAmount?: number;
+  payPeriod?: 'hourly' | 'weekly' | 'monthly' | 'yearly';
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -130,7 +139,7 @@ function mapJobType(jobType: string): string {
   return mapping[jobType] || 'full-time';
 }
 
-function getSalaryMin(payConfig: any): number | null {
+function getSalaryMin(payConfig: PayConfig): number | null {
   if (!payConfig.showPay) return null;
   
   if (payConfig.payType === 'range' && payConfig.payRangeMin) {
@@ -146,7 +155,7 @@ function getSalaryMin(payConfig: any): number | null {
   return null;
 }
 
-function getSalaryMax(payConfig: any): number | null {
+function getSalaryMax(payConfig: PayConfig): number | null {
   if (!payConfig.showPay) return null;
   
   if (payConfig.payType === 'range' && payConfig.payRangeMax) {

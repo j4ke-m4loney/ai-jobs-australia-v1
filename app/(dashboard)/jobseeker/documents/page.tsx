@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { JobSeekerLayout } from "@/components/jobseeker/JobSeekerLayout";
 import {
   Card,
@@ -58,13 +58,7 @@ const JobSeekerDocuments = () => {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      fetchDocuments();
-    }
-  }, [user]);
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -99,7 +93,13 @@ const JobSeekerDocuments = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchDocuments();
+    }
+  }, [user, fetchDocuments]);
 
   const getDocumentsByType = (type: "resume" | "cover_letter") => {
     return documents.filter(doc => doc.document_type === type);
@@ -431,7 +431,7 @@ const JobSeekerDocuments = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Resume</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete "{document.file_name}"? This action cannot be undone.
+                              Are you sure you want to delete &quot;{document.file_name}&quot;? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -577,7 +577,7 @@ const JobSeekerDocuments = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Cover Letter</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete "{document.file_name}"? This action cannot be undone.
+                              Are you sure you want to delete &quot;{document.file_name}&quot;? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

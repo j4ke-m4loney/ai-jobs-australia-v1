@@ -19,10 +19,6 @@ import {
   Star,
   ArrowLeft,
   ArrowRight,
-  Plus,
-  X,
-  Clock,
-  DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { JobFormData2, PRICING_TIERS } from "@/types/job2";
@@ -31,8 +27,6 @@ import { toast } from "sonner";
 
 // Reuse existing step components
 import JobBasicsStep from "@/components/post-job2/JobBasicsStep";
-import JobDetailsStep2 from "@/components/post-job2/JobDetailsStep2";
-import PayBenefitsStep from "@/components/post-job2/PayBenefitsStep";
 import DescribeJobStep from "@/components/post-job2/DescribeJobStep";
 import ApplicationSettingsStep from "@/components/post-job2/ApplicationSettingsStep";
 import JobPreviewModal from "@/components/post-job2/JobPreviewModal";

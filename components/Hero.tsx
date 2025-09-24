@@ -47,8 +47,8 @@ const Hero = () => {
                   className="flex-1 h-12 text-base border-border/50 focus:border-primary"
                 />
                 <select className="h-12 px-4 rounded-lg border border-border/50 bg-background text-foreground text-base focus:border-primary focus:outline-none">
-                  <option value="job-seeker">I'm a Job Seeker</option>
-                  <option value="employer">I'm an Employer</option>
+                  <option value="job-seeker">I&apos;m a Job Seeker</option>
+                  <option value="employer">I&apos;m an Employer</option>
                 </select>
               </div>
 

@@ -4,8 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { StateSelector } from "@/components/ui/state-selector";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
@@ -35,14 +34,6 @@ const HomePage = () => {
     router.push(`/jobs?${params.toString()}`);
   };
 
-  const handleJobClick = (jobId: number) => {
-    if (!user) {
-      router.push("/auth");
-      return;
-    }
-    // If authenticated, navigate to job details
-    router.push(`/jobs/${jobId}`);
-  };
 
   const categories = [
     { name: "Machine Learning", count: 45, icon: TrendingUp },
@@ -200,7 +191,7 @@ const HomePage = () => {
                 Your AI Career Journey
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                From profile creation to your first day - we're with you every
+                From profile creation to your first day - we&apos;re with you every
                 step of the way
               </p>
             </div>
@@ -246,7 +237,7 @@ const HomePage = () => {
                 Top Companies Hiring
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of professionals working at Australia's leading
+                Join thousands of professionals working at Australia&apos;s leading
                 tech companies.
               </p>
             </div>
@@ -293,7 +284,7 @@ const HomePage = () => {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             <h2 className="text-5xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
-              Ready to Shape Australia's AI Future?
+              Ready to Shape Australia&apos;s AI Future?
             </h2>
             <p className="text-xl text-foreground mb-12 leading-relaxed">
               Join thousands of AI professionals who have already discovered

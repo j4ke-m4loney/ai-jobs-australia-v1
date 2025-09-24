@@ -102,7 +102,7 @@ export default function PricingSelectionStep({
                       : "border-border",
                     isPopular && "ring-2 ring-primary"
                   )}
-                  onClick={() => form.setValue("pricingTier", tier as any)}
+                  onClick={() => form.setValue("pricingTier", tier as "standard" | "featured" | "annual")}
                 >
                   {isPopular && (
                     <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground">
@@ -155,7 +155,7 @@ export default function PricingSelectionStep({
                       type="button"
                       variant={isSelected ? "default" : "outline"}
                       className="w-full mt-6"
-                      onClick={() => form.setValue("pricingTier", tier as any)}
+                      onClick={() => form.setValue("pricingTier", tier as "standard" | "featured" | "annual")}
                     >
                       {isSelected ? "Selected" : "Select Plan"}
                     </Button>

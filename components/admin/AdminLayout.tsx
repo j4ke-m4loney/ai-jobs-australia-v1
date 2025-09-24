@@ -120,7 +120,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-          <p className="text-muted-foreground">You don't have admin permissions.</p>
+          <p className="text-muted-foreground">You don&apos;t have admin permissions.</p>
         </div>
       </div>
     );

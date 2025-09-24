@@ -39,7 +39,7 @@ export default function NotFound() {
               Page Not Found
             </h2>
             <p className="text-muted-foreground mb-8">
-              Oops! The page you're looking for doesn't exist. It might have been
+              Oops! The page you&apos;re looking for doesn&apos;t exist. It might have been
               moved, deleted, or you entered the wrong URL.
             </p>
             

@@ -56,29 +56,6 @@ export default function PostJob2() {
   const { user, loading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
-
-  // Redirect to employer auth if not authenticated
-  if (!loading && !user) {
-    return <Navigate to="/auth/employer?next=/post-job2" replace />;
-  }
-
-  // Redirect to employer auth if user is not an employer
-  if (!loading && user && user.user_metadata?.user_type !== 'employer') {
-    return <Navigate to="/auth/employer?next=/post-job2" replace />;
-  }
-
-  // Show loading state while checking auth
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   const [formData, setFormData] = useState<JobFormData2>({
     // Job Basics
     jobTitle: "",
@@ -136,6 +113,28 @@ export default function PostJob2() {
       }
     }
   }, []);
+
+  // Redirect to employer auth if not authenticated
+  if (!loading && !user) {
+    return <Navigate to="/auth/employer?next=/post-job2" replace />;
+  }
+
+  // Redirect to employer auth if user is not an employer
+  if (!loading && user && user.user_metadata?.user_type !== 'employer') {
+    return <Navigate to="/auth/employer?next=/post-job2" replace />;
+  }
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const updateFormData = (newData: Partial<JobFormData2>) => {
     setFormData(prev => ({ ...prev, ...newData }));

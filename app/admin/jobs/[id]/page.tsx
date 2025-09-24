@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,11 +90,7 @@ export default function AdminJobReviewPage() {
   const [originalJobId, setOriginalJobId] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    fetchJobDetails();
-  }, [jobId]);
-
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("jobs")
@@ -112,7 +108,11 @@ export default function AdminJobReviewPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [jobId]);
+
+  useEffect(() => {
+    fetchJobDetails();
+  }, [jobId, fetchJobDetails]);
 
   const handleApprove = async () => {
     setIsUpdating(true);

@@ -118,7 +118,7 @@ export default function PaymentSuccessPage() {
                   <ul className="text-sm text-blue-700 space-y-1">
                     <li>• Your job will be reviewed within 24 hours</li>
                     <li>• Once approved, it will go live on AI Jobs Australia</li>
-                    <li>• You'll receive email notifications about applications</li>
+                    <li>• You&apos;ll receive email notifications about applications</li>
                     <li>• Manage your job postings from your employer dashboard</li>
                   </ul>
                 </div>

@@ -316,7 +316,7 @@ const SavedJobs = () => {
                     No saved jobs yet
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    Start browsing jobs and save the ones you're interested in
+                    Start browsing jobs and save the ones you&apos;re interested in
                     for easy access later.
                   </p>
                   <Button onClick={() => router.push("/jobs")} className="gap-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { EmployerLayout } from "@/components/employer/EmployerLayout";
@@ -71,13 +71,7 @@ const EmployerJobs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchJobsAndStats();
-    }
-  }, [user]);
-
-  const fetchJobsAndStats = async () => {
+  const fetchJobsAndStats = useCallback(async () => {
     try {
       // Fetch all jobs for this employer
       const { data: jobsData, error: jobsError } = await supabase
@@ -137,7 +131,13 @@ const EmployerJobs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchJobsAndStats();
+    }
+  }, [user, fetchJobsAndStats]);
 
   const formatSalary = (
     salaryMin: number | null,

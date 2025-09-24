@@ -15,13 +15,13 @@ const SocialProof = () => {
               Community Backed
             </Badge>
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Backed by Australia's{" "}
+              Backed by Australia&apos;s{" "}
               <span className="bg-gradient-primary bg-clip-text text-transparent">
                 AI Community
               </span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Building momentum with support from Australia's leading AI
+              Building momentum with support from Australia&apos;s leading AI
               professionals, tech companies, and industry leaders.
             </p>
           </div>
@@ -85,9 +85,9 @@ const SocialProof = () => {
               <div className="text-center">
                 <Quote className="w-12 h-12 text-primary mx-auto mb-6" />
                 <blockquote className="text-xl md:text-2xl italic text-foreground mb-6">
-                  "Finally, a dedicated platform for AI roles in Australia. As
-                  someone who's been searching through countless global job
-                  boards, this is exactly what our industry needs."
+                  &quot;Finally, a dedicated platform for AI roles in Australia. As
+                  someone who&apos;s been searching through countless global job
+                  boards, this is exactly what our industry needs.&quot;
                 </blockquote>
                 <div className="flex items-center justify-center space-x-4">
                   <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center">

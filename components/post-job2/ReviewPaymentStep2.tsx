@@ -155,9 +155,9 @@ export default function ReviewPaymentStep2({
         throw new Error(stripeError.message || 'Failed to redirect to checkout');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Payment error:', error);
-      setError(error.message || 'An unexpected error occurred. Please try again.');
+      setError((error as Error)?.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

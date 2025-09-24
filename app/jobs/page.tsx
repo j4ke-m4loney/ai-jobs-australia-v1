@@ -20,21 +20,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   MapPin,
   Search,
-  Filter,
-  Heart,
-  Eye,
   Briefcase,
   Star,
-  Calendar,
-  Users,
-  ChevronDown,
-  ChevronUp,
   SlidersHorizontal,
-  ExternalLink,
-  Mail,
-  Globe,
-  ArrowLeft,
   X,
+  Heart,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -74,6 +64,10 @@ interface Job {
     website: string | null;
     logo_url: string | null;
   } | null;
+}
+
+interface JobWithRelevance extends Job {
+  _relevanceScore?: number;
 }
 
 // Calculate search relevance score for better result ranking
@@ -658,8 +652,8 @@ export default function JobsPage() {
             jobsData.sort((a, b) => {
               // If search exists, prioritize relevance first
               if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-                const relevanceA = (a as any)._relevanceScore || 0;
-                const relevanceB = (b as any)._relevanceScore || 0;
+                const relevanceA = (a as JobWithRelevance)._relevanceScore || 0;
+                const relevanceB = (b as JobWithRelevance)._relevanceScore || 0;
                 if (relevanceA !== relevanceB) {
                   return relevanceB - relevanceA;
                 }
@@ -673,8 +667,8 @@ export default function JobsPage() {
             jobsData.sort((a, b) => {
               // If search exists, prioritize relevance first
               if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-                const relevanceA = (a as any)._relevanceScore || 0;
-                const relevanceB = (b as any)._relevanceScore || 0;
+                const relevanceA = (a as JobWithRelevance)._relevanceScore || 0;
+                const relevanceB = (b as JobWithRelevance)._relevanceScore || 0;
                 if (relevanceA !== relevanceB) {
                   return relevanceB - relevanceA;
                 }
@@ -688,8 +682,8 @@ export default function JobsPage() {
             jobsData.sort((a, b) => {
               // If search exists, prioritize relevance first
               if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-                const relevanceA = (a as any)._relevanceScore || 0;
-                const relevanceB = (b as any)._relevanceScore || 0;
+                const relevanceA = (a as JobWithRelevance)._relevanceScore || 0;
+                const relevanceB = (b as JobWithRelevance)._relevanceScore || 0;
                 if (relevanceA !== relevanceB) {
                   return relevanceB - relevanceA;
                 }
@@ -703,8 +697,8 @@ export default function JobsPage() {
             jobsData.sort((a, b) => {
               // If search exists, prioritize relevance first
               if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-                const relevanceA = (a as any)._relevanceScore || 0;
-                const relevanceB = (b as any)._relevanceScore || 0;
+                const relevanceA = (a as JobWithRelevance)._relevanceScore || 0;
+                const relevanceB = (b as JobWithRelevance)._relevanceScore || 0;
                 if (relevanceA !== relevanceB) {
                   return relevanceB - relevanceA;
                 }
@@ -835,14 +829,14 @@ export default function JobsPage() {
       shouldSyncFromUrl.current = true;
       initialized.current = false;
     }
-  }, [searchParams]);
+  }, [searchParams, loading]);
 
   // Initial job fetching effect - now handled in initialization effect above
   // This ensures jobs are fetched AFTER URL params are synced
   useEffect(() => {
     console.log("🎯 Component mounted - waiting for initialization to fetch jobs");
     // fetchJobs is now called in the initialization effect after URL params are synced
-  }, []);
+  }, [fetchJobs]);
 
   // Job fetching effect - triggers on filter changes
   useEffect(() => {
@@ -871,14 +865,14 @@ export default function JobsPage() {
         hasUser: !!user,
       });
     }
-  }, [filterDeps, fetchJobs, user]);
+  }, [filterDeps, fetchJobs, user, loading]);
 
   // Application status check effect
   useEffect(() => {
     if (selectedJob && user) {
       checkApplicationStatus(selectedJob.id);
     }
-  }, [selectedJob?.id, user?.id, checkApplicationStatus]);
+  }, [selectedJob, user, checkApplicationStatus]);
 
   // Handle screen size detection
   useEffect(() => {
@@ -1323,7 +1317,7 @@ export default function JobsPage() {
                     No exact matches found
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    We couldn't find jobs matching your criteria, but here are
+                    We couldn&apos;t find jobs matching your criteria, but here are
                     some suggestions
                   </p>
 

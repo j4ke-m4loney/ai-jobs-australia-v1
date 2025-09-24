@@ -218,7 +218,7 @@ export default function ReviewPaymentStep({ formData, onPrev }: Props) {
               </li>
               <li className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-success" />
-                <strong>Highlighted with "Featured" badge</strong>
+                <strong>Highlighted with &quot;Featured&quot; badge</strong>
               </li>
               <li className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-success" />

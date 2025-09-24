@@ -58,13 +58,14 @@ export class SupabaseAuthAdapter implements AuthService {
   /**
    * Convert Supabase error to our AuthError type
    */
-  private mapError(error: any): AuthError | null {
+  private mapError(error: unknown): AuthError | null {
     if (!error) return null;
-    
+
+    const errorObj = error as { message?: string; code?: string; status?: number };
     return {
-      message: error.message || 'An error occurred',
-      code: error.code,
-      status: error.status,
+      message: errorObj.message || 'An error occurred',
+      code: errorObj.code,
+      status: errorObj.status,
     };
   }
 
@@ -206,7 +207,7 @@ export class SupabaseAuthAdapter implements AuthService {
     return { error: this.mapError(error) };
   }
 
-  async updateUser(updates: { data?: { user_metadata?: Record<string, any>; email?: string } }): Promise<{ data?: { user: AuthUser } | null; error?: AuthError | null }> {
+  async updateUser(updates: { data?: { user_metadata?: Record<string, unknown>; email?: string } }): Promise<{ data?: { user: AuthUser } | null; error?: AuthError | null }> {
     const { data, error } = await supabase.auth.updateUser({
       email: updates.data?.email,
       data: updates.data?.user_metadata,
@@ -220,7 +221,7 @@ export class SupabaseAuthAdapter implements AuthService {
 
   async signInWithOAuth(provider: string): Promise<AuthResult> {
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: provider as any,
+      provider: provider as 'github' | 'google' | 'linkedin_oidc',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },

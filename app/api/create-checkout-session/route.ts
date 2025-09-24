@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     // Create Stripe checkout session
     const isAnnualPlan = pricingTier === 'annual';
 
-    let sessionConfig: any = {
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: customer.id,
       payment_method_types: ['card'],
       success_url: `${request.nextUrl.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -161,9 +161,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
+interface JobFormData {
+  jobTitle?: string;
+  [key: string]: unknown;
+}
+
 async function createSubscriptionCheckout(
   pricingTier: PricingTier,
-  jobFormData: any,
+  jobFormData: JobFormData,
   userId: string,
   userEmail: string
 ) {

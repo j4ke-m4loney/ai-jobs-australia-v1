@@ -52,14 +52,14 @@ export async function GET(request: NextRequest) {
           await supabaseAdmin
             .from('subscriptions')
             .update({
-              status: stripeSubscription.status as any,
+              status: stripeSubscription.status as 'active' | 'inactive' | 'canceled' | 'past_due' | 'unpaid' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'paused',
               current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
               current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
             })
             .eq('id', subscription.id);
 
           // Return updated data
-          subscription.status = stripeSubscription.status as any;
+          subscription.status = stripeSubscription.status as 'active' | 'inactive' | 'canceled' | 'past_due' | 'unpaid' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'paused';
           subscription.current_period_start = new Date(stripeSubscription.current_period_start * 1000).toISOString();
           subscription.current_period_end = new Date(stripeSubscription.current_period_end * 1000).toISOString();
         }

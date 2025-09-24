@@ -54,6 +54,28 @@ export default function PostJobPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<JobFormData>({
+    // Job Details
+    jobTitle: "",
+    location: "",
+    locationType: "onsite",
+    jobType: "full-time",
+    salaryMin: "",
+    salaryMax: "",
+    jobDescription: "",
+    requirements: "",
+
+    // Company Info
+    companyName: "",
+    companyLogo: null,
+    companyDescription: "",
+    companyWebsite: "",
+
+    // Application Method
+    applicationMethod: "external",
+    applicationUrl: "",
+    applicationEmail: "",
+  });
 
   useEffect(() => {
     // Redirect to auth if not authenticated
@@ -85,29 +107,6 @@ export default function PostJobPage() {
   if (!user || user.user_metadata?.user_type !== "employer") {
     return null;
   }
-
-  const [formData, setFormData] = useState<JobFormData>({
-    // Job Details
-    jobTitle: "",
-    location: "",
-    locationType: "onsite",
-    jobType: "full-time",
-    salaryMin: "",
-    salaryMax: "",
-    jobDescription: "",
-    requirements: "",
-
-    // Company Info
-    companyName: "",
-    companyLogo: null,
-    companyDescription: "",
-    companyWebsite: "",
-
-    // Application Method
-    applicationMethod: "external",
-    applicationUrl: "",
-    applicationEmail: "",
-  });
 
   const updateFormData = (newData: Partial<JobFormData>) => {
     setFormData((prev) => ({ ...prev, ...newData }));

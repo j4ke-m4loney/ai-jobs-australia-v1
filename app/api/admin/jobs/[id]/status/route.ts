@@ -73,7 +73,7 @@ export async function PUT(
     }
 
     // Update the job status
-    const updateData: any = {
+    const updateData: { status: string; updated_at: string } = {
       status,
       updated_at: new Date().toISOString()
     };

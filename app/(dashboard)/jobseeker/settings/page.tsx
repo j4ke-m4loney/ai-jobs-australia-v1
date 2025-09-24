@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,15 +50,7 @@ const JobSeekerSettings = () => {
     },
   });
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/auth");
-      return;
-    }
-    fetchSettings();
-  }, [user, router]);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       // Wait a bit to ensure user is fully loaded
       if (!user?.email) {
@@ -102,7 +94,15 @@ const JobSeekerSettings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, form]);
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth");
+      return;
+    }
+    fetchSettings();
+  }, [user, router, fetchSettings]);
 
   const onSubmit = async (data: SettingsFormData) => {
     setSaving(true);
@@ -275,7 +275,7 @@ const JobSeekerSettings = () => {
                       Job Expiry Alerts
                     </label>
                     <p className="text-sm text-muted-foreground">
-                      Get notified when job listings you're interested in are
+                      Get notified when job listings you&apos;re interested in are
                       about to expire
                     </p>
                   </div>
@@ -293,7 +293,7 @@ const JobSeekerSettings = () => {
                       Rejection Feedback
                     </label>
                     <p className="text-sm text-muted-foreground">
-                      Get notified if you're unlikely to progress (marked as
+                      Get notified if you&apos;re unlikely to progress (marked as
                       unlikely by employer)
                     </p>
                   </div>

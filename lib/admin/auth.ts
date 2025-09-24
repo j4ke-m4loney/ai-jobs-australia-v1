@@ -193,7 +193,7 @@ export async function logAdminAction(
   actionType: 'approve_job' | 'reject_job' | 'delete_job' | 'update_job' | 'bulk_action',
   targetType: 'job' | 'user' | 'company',
   targetId: string,
-  details: Record<string, any> = {}
+  details: Record<string, unknown> = {}
 ) {
   try {
     // For now, just log to console since admin_actions table doesn't exist yet

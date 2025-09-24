@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
-  MapPin,
-  Building,
-  Clock,
-  DollarSign,
   ArrowLeft,
-  BookOpen,
-  CheckCircle,
-  Info,
   FileText,
   Calendar,
 } from "lucide-react";
@@ -75,13 +68,7 @@ export default function AppliedJobDetailPage() {
   const [deleting, setDeleting] = useState(false);
 
   // Fetch job and application details
-  useEffect(() => {
-    if (jobId && user) {
-      fetchJobAndApplicationDetails();
-    }
-  }, [jobId, user]);
-
-  const fetchJobAndApplicationDetails = async () => {
+  const fetchJobAndApplicationDetails = useCallback(async () => {
     if (!jobId || !user) return;
 
     setJobLoading(true);
@@ -134,7 +121,13 @@ export default function AppliedJobDetailPage() {
     } finally {
       setJobLoading(false);
     }
-  };
+  }, [jobId, user]);
+
+  useEffect(() => {
+    if (jobId && user) {
+      fetchJobAndApplicationDetails();
+    }
+  }, [jobId, user, fetchJobAndApplicationDetails]);
 
   const handleDeleteApplication = async () => {
     if (!application || !job) return;
@@ -178,43 +171,8 @@ export default function AppliedJobDetailPage() {
     toast.info("You can save other jobs from the jobs listing page");
   };
 
-  const formatSalary = (min: number | null, max: number | null) => {
-    if (!min && !max) return null;
-    if (min && max)
-      return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-    if (min) return `From $${min.toLocaleString()}`;
-    if (max) return `Up to $${max.toLocaleString()}`;
-  };
 
-  const getCategoryDisplay = (category: string) => {
-    const categories = {
-      ai: "Artificial Intelligence",
-      ml: "Machine Learning",
-      "data-science": "Data Science",
-      engineering: "Engineering",
-      research: "Research",
-    };
-    return categories[category as keyof typeof categories] || category;
-  };
 
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-    );
-
-    if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    }
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) {
-      return `${diffInDays}d ago`;
-    }
-
-    return date.toLocaleDateString();
-  };
 
   const getApplicationStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {

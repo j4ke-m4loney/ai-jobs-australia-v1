@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Users,
@@ -364,7 +364,7 @@ const EmployerApplications = () => {
                   No Job Postings Yet
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  You haven't posted any jobs yet. Create your first job posting to start receiving applications.
+                  You haven&apos;t posted any jobs yet. Create your first job posting to start receiving applications.
                 </p>
                 <Button
                   onClick={() => router.push("/post-job")}
@@ -541,7 +541,7 @@ const EmployerApplications = () => {
                           <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                           <h3 className="text-lg font-semibold mb-2">No Applications Yet</h3>
                           <p className="text-muted-foreground">
-                            This job posting hasn't received any applications yet. Once candidates apply, you'll see them here.
+                            This job posting hasn&apos;t received any applications yet. Once candidates apply, you&apos;ll see them here.
                           </p>
                         </div>
                       ) : (
@@ -688,7 +688,7 @@ const EmployerApplications = () => {
                     No Job Postings Found
                   </h3>
                   <p className="text-muted-foreground">
-                    You haven't posted any jobs yet. Create your first job
+                    You haven&apos;t posted any jobs yet. Create your first job
                     posting to start receiving applications.
                   </p>
                 </div>

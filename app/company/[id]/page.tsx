@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,15 +53,7 @@ export default function CompanyProfilePage() {
   const [loading, setLoading] = useState(true);
   const [jobsLoading, setJobsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!id) {
-      router.push("/jobs");
-      return;
-    }
-    fetchCompanyData();
-  }, [id, router]);
-
-  const fetchCompanyData = async () => {
+  const fetchCompanyData = useCallback(async () => {
     try {
       // Fetch company details
       const { data: companyData, error: companyError } = await supabase
@@ -92,7 +84,15 @@ export default function CompanyProfilePage() {
       setLoading(false);
       setJobsLoading(false);
     }
-  };
+  }, [id, router]);
+
+  useEffect(() => {
+    if (!id) {
+      router.push("/jobs");
+      return;
+    }
+    fetchCompanyData();
+  }, [id, router, fetchCompanyData]);
 
   const formatSalary = (min: number | null, max: number | null) => {
     if (!min && !max) return "Salary not specified";
@@ -141,7 +141,7 @@ export default function CompanyProfilePage() {
               Company not found
             </h2>
             <p className="text-muted-foreground mb-6">
-              The company you're looking for doesn't exist.
+              The company you&apos;re looking for doesn&apos;t exist.
             </p>
             <Button onClick={() => router.push("/jobs")}>Browse Jobs</Button>
           </div>

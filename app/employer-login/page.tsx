@@ -213,7 +213,7 @@ const EmployerAuthPage = () => {
                         Account Created Successfully!
                       </h3>
                       <p className="text-muted-foreground mb-4">
-                        We've sent a verification email to your inbox. Please check your email and click the verification link to activate your account.
+                        We&apos;ve sent a verification email to your inbox. Please check your email and click the verification link to activate your account.
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Once verified, you can sign in and start posting jobs to find top AI talent.

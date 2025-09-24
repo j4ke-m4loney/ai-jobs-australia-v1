@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -71,9 +71,9 @@ export default function JobDetailPage() {
     if (user) {
       checkApplicationStatus();
     }
-  }, [id, user, router]);
+  }, [id, user, router, fetchJob, checkApplicationStatus]);
 
-  const fetchJob = async () => {
+  const fetchJob = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("jobs")
@@ -100,9 +100,9 @@ export default function JobDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, router]);
 
-  const checkApplicationStatus = async () => {
+  const checkApplicationStatus = useCallback(async () => {
     if (!user || !id) return;
 
     try {
@@ -118,7 +118,7 @@ export default function JobDetailPage() {
     } catch (error) {
       console.error("Error checking application status:", error);
     }
-  };
+  }, [user, id]);
 
   const handleApply = async () => {
     if (!user) {
@@ -197,7 +197,7 @@ export default function JobDetailPage() {
             Job not found
           </h2>
           <p className="text-muted-foreground mb-6">
-            The job you're looking for doesn't exist or has been removed.
+            The job you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <Button onClick={() => router.push("/jobs")}>Browse Jobs</Button>
         </div>
@@ -313,7 +313,7 @@ export default function JobDetailPage() {
                       Application Submitted
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      You've already applied for this position
+                      You&apos;ve already applied for this position
                     </p>
                   </div>
                 ) : (

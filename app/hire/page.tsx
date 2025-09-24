@@ -46,7 +46,7 @@ export default function HirePage() {
       icon: Target,
       title: "Get more visibility",
       description:
-        "Your jobs reach Australia's top AI talent through our specialized platform and targeted outreach.",
+        "Your jobs reach Australia&apos;s top AI talent through our specialized platform and targeted outreach.",
     },
     {
       icon: UserCheck,
@@ -103,7 +103,7 @@ export default function HirePage() {
             Get started in minutes!
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Post your AI and machine learning jobs to Australia's
+            Post your AI and machine learning jobs to Australia&apos;s
             fastest-growing tech talent community. Reach qualified candidates
             faster than ever.
           </p>
@@ -144,7 +144,7 @@ export default function HirePage() {
                     ))}
                   </div>
                   <blockquote className="text-lg italic mb-3">
-                    "{testimonials[0].quote}"
+                    &quot;{testimonials[0].quote}&quot;
                   </blockquote>
                   <cite className="text-sm font-medium">
                     {testimonials[0].name}, {testimonials[0].title}
@@ -160,7 +160,7 @@ export default function HirePage() {
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-3xl font-bold text-center mb-12">
-            Trusted by Australia's leading tech companies
+            Trusted by Australia&apos;s leading tech companies
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {companies.map((company, index) => (
@@ -189,7 +189,7 @@ export default function HirePage() {
               Why choose AI Jobs Australia?
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to find and hire Australia's best AI and
+              Everything you need to find and hire Australia&apos;s best AI and
               machine learning talent
             </p>
           </div>
@@ -249,7 +249,7 @@ export default function HirePage() {
                   <Star className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-2xl font-bold">
-                  Boost your job's visibility
+                  Boost your job&apos;s visibility
                 </h2>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                   Premium job placements get 3x more visibility and reach the

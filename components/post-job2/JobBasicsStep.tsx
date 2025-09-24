@@ -165,8 +165,8 @@ export default function JobBasicsStep({
   };
 
   const handleJobTypeChange = (value: string) => {
-    setSelectedJobType(value as any);
-    form.setValue("jobType", value as any);
+    setSelectedJobType(value as "full-time" | "part-time" | "contract" | "casual" | "internship");
+    form.setValue("jobType", value as "full-time" | "part-time" | "contract" | "casual" | "internship");
   };
 
 
@@ -182,7 +182,7 @@ export default function JobBasicsStep({
     return text.trim().length;
   };
 
-  const handlePayConfigChange = (field: string, value: any) => {
+  const handlePayConfigChange = (field: string, value: string | number) => {
     setPayConfig((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -298,7 +298,7 @@ export default function JobBasicsStep({
                       />
                     </FormControl>
                     <p className="text-sm text-muted-foreground">
-                      Enter a full address or just "Suburb, State" (e.g.,
+                      Enter a full address or just &quot;Suburb, State&quot; (e.g.,
                       Sydney, NSW)
                     </p>
                     <FormMessage />
@@ -421,7 +421,7 @@ export default function JobBasicsStep({
                     onValueChange={(value) =>
                       setHoursConfig((prev) => ({
                         ...prev,
-                        showBy: value as any,
+                        showBy: value as "fixed" | "range" | "maximum" | "minimum",
                       }))
                     }
                   >
@@ -556,7 +556,7 @@ export default function JobBasicsStep({
                     onValueChange={(value) =>
                       setContractConfig((prev) => ({
                         ...prev,
-                        period: value as any,
+                        period: value as "days" | "weeks" | "months" | "years",
                       }))
                     }
                   >

@@ -68,13 +68,13 @@ export default function ForgotPasswordPage() {
             <CardContent className="space-y-4">
               <div className="text-center space-y-4">
                 <p className="text-muted-foreground">
-                  We've sent password reset instructions to:
+                  We&apos;ve sent password reset instructions to:
                 </p>
                 <p className="font-medium text-foreground bg-muted px-3 py-2 rounded-md">
                   {email}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Click the link in the email to reset your password. If you don't see it, check your spam folder.
+                  Click the link in the email to reset your password. If you don&apos;t see it, check your spam folder.
                 </p>
               </div>
               <div className="space-y-3 pt-4">
@@ -115,7 +115,7 @@ export default function ForgotPasswordPage() {
               </CardTitle>
             </div>
             <CardDescription>
-              Enter your email address and we'll send you a link to reset your password
+              Enter your email address and we&apos;ll send you a link to reset your password
             </CardDescription>
           </CardHeader>
           <CardContent>

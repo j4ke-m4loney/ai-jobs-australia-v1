@@ -75,7 +75,7 @@ export default function PayBenefitsStep({
     );
   };
 
-  const handlePayConfigChange = (field: string, value: any) => {
+  const handlePayConfigChange = (field: string, value: string | number) => {
     setPayConfig((prev) => ({ ...prev, [field]: value }));
   };
 

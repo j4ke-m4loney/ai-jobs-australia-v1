@@ -26,7 +26,7 @@ const Footer = () => {
                 </span>
               </div>
               <p className="text-background/80 mb-6 max-w-md">
-                Australia's #1 platform for careers in AI, ML and Data Science.
+                Australia&apos;s #1 platform for careers in AI, ML and Data Science.
                 Connecting local talent with local opportunities.
               </p>
               {/* Newsletter Signup */}

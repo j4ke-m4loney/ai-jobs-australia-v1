@@ -181,7 +181,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                     Application Submitted
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    You've applied for this position
+                    You&apos;ve applied for this position
                   </div>
                 </div>
               ) : (

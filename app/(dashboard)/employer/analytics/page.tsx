@@ -47,7 +47,7 @@ const EmployerAnalytics = () => {
             </div>
             <CardTitle className="text-2xl">Advanced Analytics Coming Soon</CardTitle>
             <CardDescription className="max-w-md mx-auto">
-              We're working on bringing you detailed insights about your job postings, 
+              We&apos;re working on bringing you detailed insights about your job postings, 
               including view trends, conversion rates, and candidate engagement metrics.
             </CardDescription>
           </CardHeader>
@@ -81,7 +81,7 @@ const EmployerAnalytics = () => {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <AlertCircle className="w-5 h-5" />
-                  What's Available Now
+                  What&apos;s Available Now
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">

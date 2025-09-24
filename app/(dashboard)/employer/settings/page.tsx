@@ -67,6 +67,17 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
+interface Subscription {
+  id: string;
+  plan_type: 'standard' | 'featured' | 'annual';
+  status: 'active' | 'cancelled' | 'past_due' | 'trialing';
+  current_period_start: string;
+  current_period_end: string;
+  stripe_customer_id: string;
+  stripe_subscription_id: string;
+  price_per_month: number;
+}
+
 const EmployerSettings = () => {
   const { user, signOut, updateUserMetadata } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
@@ -78,7 +89,7 @@ const EmployerSettings = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [billingLoading, setBillingLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string>('standard');
-  const [subscription, setSubscription] = useState<any>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [cancellingSubscription, setCancellingSubscription] = useState(false);
   
   // Email change modal state
@@ -147,7 +158,14 @@ const EmployerSettings = () => {
           if (paymentHistoryResponse.ok) {
             const paymentData = await paymentHistoryResponse.json();
             // Map payments to JobPurchase format for the settings page
-            const mappedPurchases = paymentData.payments.map((payment: any) => ({
+            const mappedPurchases = paymentData.payments.map((payment: {
+              id: string;
+              pricing_tier: 'standard' | 'featured' | 'annual';
+              amount: number;
+              status: 'pending' | 'completed' | 'failed' | 'refunded';
+              created_at: string;
+              stripe_session_id: string | null;
+            }) => ({
               id: payment.id,
               user_id: user.id,
               job_id: null, // Not available in payments table
