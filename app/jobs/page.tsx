@@ -219,12 +219,9 @@ function JobsContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobsLoading, setJobsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(
-    searchParams.get("search") || ""
-  );
-  const [selectedState, setSelectedState] = useState(
-    searchParams.get("location") || "all"
-  );
+  // Initialize with server-safe defaults to prevent hydration mismatch
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedState, setSelectedState] = useState("all");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
@@ -779,6 +776,23 @@ function JobsContent() {
     fetchSuggestions,
     showFeaturedOnly,
   ]);
+
+  // Sync URL parameters with state after hydration (prevents hydration mismatch)
+  useEffect(() => {
+    const urlSearch = searchParams.get("search");
+    const urlLocation = searchParams.get("location");
+
+    if (urlSearch && urlSearch !== searchTerm) {
+      console.log("🔗 Syncing search term from URL:", urlSearch);
+      setSearchTerm(urlSearch);
+    }
+
+    if (urlLocation && urlLocation !== selectedState) {
+      console.log("🔗 Syncing location from URL:", urlLocation);
+      setSelectedState(urlLocation);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once after initial mount to prevent hydration mismatch
 
   // Auto-select first job when jobs are loaded
   useEffect(() => {
