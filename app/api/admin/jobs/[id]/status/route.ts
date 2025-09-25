@@ -74,7 +74,7 @@ export async function PUT(
     }
 
     // Update the job status
-    const updateData: { status: string; updated_at: string } = {
+    const updateData: { status: string; updated_at: string; rejection_reason?: string } = {
       status,
       updated_at: new Date().toISOString()
     };
@@ -164,8 +164,8 @@ export async function PUT(
       } catch (emailError) {
         console.error('❌ Failed to send job status update email:', {
           error: emailError,
-          message: emailError?.message,
-          stack: emailError?.stack
+          message: (emailError as Error)?.message,
+          stack: (emailError as Error)?.stack
         });
         // Don't fail the request if email fails - status was updated successfully
       }

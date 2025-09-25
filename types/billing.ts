@@ -38,6 +38,25 @@ export interface UserBalance {
   updated_at: string;
 }
 
+export interface BillingUpdateData {
+  plan_type?: string;
+  status?: string;
+  current_period_start?: string;
+  current_period_end?: string;
+  price_per_month?: number;
+  [key: string]: any; // Allow additional properties
+}
+
+export interface PaymentMethodUpdateData {
+  stripe_payment_method_id?: string;
+  card_last_four?: string;
+  card_brand?: string;
+  card_exp_month?: number;
+  card_exp_year?: number;
+  is_default?: boolean;
+  [key: string]: any; // Allow additional properties
+}
+
 // Legacy support for existing code - gradually migrate away from these
 export interface BillingPlan {
   id: string;

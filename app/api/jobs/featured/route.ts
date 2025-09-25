@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const updateData: { is_featured: boolean } = {
+    const updateData: { is_featured: boolean; featured_until?: string | null } = {
       is_featured: featured,
     };
 

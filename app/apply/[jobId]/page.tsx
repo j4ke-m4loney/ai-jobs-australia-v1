@@ -85,14 +85,7 @@ export default function ApplyPage() {
     }
   }, [user, loading, router]);
 
-  // Fetch job details
-  useEffect(() => {
-    if (jobId && user) {
-      fetchJobDetails();
-      fetchUserDocuments();
-    }
-  }, [jobId, user, fetchJobDetails, fetchUserDocuments]);
-
+  // Define callback functions first
   const fetchJobDetails = useCallback(async () => {
     if (!jobId) return;
 
@@ -149,6 +142,14 @@ export default function ApplyPage() {
       if (defaultCoverLetter) setSelectedCoverLetter(defaultCoverLetter.id);
     }
   }, [user]);
+
+  // Fetch job details and user documents on component mount
+  useEffect(() => {
+    if (jobId && user) {
+      fetchJobDetails();
+      fetchUserDocuments();
+    }
+  }, [jobId, user, fetchJobDetails, fetchUserDocuments]);
 
   const handleFileUpload = async (
     file: File,

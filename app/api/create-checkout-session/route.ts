@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { stripe, PRICING_CONFIG, isValidPricingTier, PricingTier } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 
@@ -66,8 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe checkout session
-    const isAnnualPlan = pricingTier === 'annual';
-
+    // Note: Annual plans are handled separately above, so this is always one-time payment
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: customer.id,
       payment_method_types: ['card'],
@@ -81,42 +81,21 @@ export async function POST(request: NextRequest) {
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
     };
 
-    if (isAnnualPlan) {
-      // Annual plan: Create as subscription
-      sessionConfig.mode = 'subscription';
-      sessionConfig.line_items = [
-        {
-          price_data: {
-            currency: 'aud',
-            product_data: {
-              name: `${pricingConfig.name}`,
-              description: pricingConfig.description,
-            },
-            unit_amount: pricingConfig.price,
-            recurring: {
-              interval: 'year',
-            },
+    // Standard/Featured: One-time payment
+    sessionConfig.mode = 'payment';
+    sessionConfig.line_items = [
+      {
+        price_data: {
+          currency: 'aud',
+          product_data: {
+            name: `${pricingConfig.name} Job Posting`,
+            description: pricingConfig.description,
           },
-          quantity: 1,
+          unit_amount: pricingConfig.price,
         },
-      ];
-    } else {
-      // Standard/Featured: One-time payment
-      sessionConfig.mode = 'payment';
-      sessionConfig.line_items = [
-        {
-          price_data: {
-            currency: 'aud',
-            product_data: {
-              name: `${pricingConfig.name} Job Posting`,
-              description: pricingConfig.description,
-            },
-            unit_amount: pricingConfig.price,
-          },
-          quantity: 1,
-        },
-      ];
-    }
+        quantity: 1,
+      },
+    ];
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
 

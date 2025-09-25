@@ -265,12 +265,12 @@ const JobSeekerDocuments = () => {
 
       // Create download link
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.file_name;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading document:", error);
@@ -291,7 +291,7 @@ const JobSeekerDocuments = () => {
 
   if (loading) {
     return (
-      <JobSeekerLayout title="Documents">
+      <JobSeekerLayout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -303,7 +303,7 @@ const JobSeekerDocuments = () => {
   const coverLetters = getDocumentsByType("cover_letter");
 
   return (
-    <JobSeekerLayout title="Documents">
+    <JobSeekerLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">

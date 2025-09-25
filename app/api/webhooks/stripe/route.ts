@@ -175,7 +175,8 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     .update({
       status: 'succeeded',
       stripe_charge_id: paymentIntent.latest_charge as string,
-      receipt_url: paymentIntent.charges.data[0]?.receipt_url,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      receipt_url: (paymentIntent as any).charges?.data?.[0]?.receipt_url || null,
     })
     .eq('stripe_payment_intent_id', paymentIntent.id);
 
@@ -311,7 +312,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
         console.log('📧 Sending email with data:', {
           jobTitle: jobFormData.jobTitle,
           companyName: jobFormData.companyName,
-          location: jobFormData.location,
+          location: jobFormData.locationAddress || `${jobFormData.locationSuburb}, ${jobFormData.locationState}`,
           pricingTier: payment.pricing_tier
         });
 
@@ -325,7 +326,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
           jobTitle: jobFormData.jobTitle,
           jobId: job.id,
           companyName: jobFormData.companyName,
-          location: jobFormData.location,
+          location: jobFormData.locationAddress || `${jobFormData.locationSuburb}, ${jobFormData.locationState}`,
           pricingTier: payment.pricing_tier,
           dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/employer/jobs/${job.id}`
         });
@@ -361,8 +362,10 @@ async function handleAnnualSubscription(session: Stripe.Checkout.Session, paymen
       user_id: paymentSession.user_id,
       plan_type: 'annual',
       status: subscription.status === 'active' ? 'active' as const : subscription.status === 'canceled' ? 'cancelled' as const : subscription.status === 'past_due' ? 'past_due' as const : 'trialing' as const,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
       stripe_customer_id: subscription.customer as string,
       stripe_subscription_id: subscription.id,
       price_per_month: paymentSession.amount,
@@ -395,8 +398,10 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     .from('subscriptions')
     .update({
       status: subscription.status === 'active' ? 'active' as const : subscription.status === 'canceled' ? 'cancelled' as const : subscription.status === 'past_due' ? 'past_due' as const : 'trialing' as const,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
     })
     .eq('stripe_subscription_id', subscription.id);
 

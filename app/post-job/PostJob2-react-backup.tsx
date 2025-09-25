@@ -70,7 +70,8 @@ export default function PostJob2() {
       showPay: true,
     },
     benefits: [],
-    
+    highlights: ["", "", ""],
+
     // Describe Job
     jobDescription: "",
     requirements: "",

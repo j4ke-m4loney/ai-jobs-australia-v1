@@ -141,33 +141,34 @@ function mapJobType(jobType: string): string {
 
 function getSalaryMin(payConfig: PayConfig): number | null {
   if (!payConfig.showPay) return null;
-  
+
+  const payPeriod = payConfig.payPeriod || 'yearly';
+
   if (payConfig.payType === 'range' && payConfig.payRangeMin) {
-    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
+    return convertToAnnualSalary(payConfig.payRangeMin, payPeriod);
   }
   if (payConfig.payType === 'minimum' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+    return convertToAnnualSalary(payConfig.payAmount, payPeriod);
   }
   if (payConfig.payType === 'fixed' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+    return convertToAnnualSalary(payConfig.payAmount, payPeriod);
   }
-  
+
   return null;
 }
 
 function getSalaryMax(payConfig: PayConfig): number | null {
   if (!payConfig.showPay) return null;
-  
+
+  const payPeriod = payConfig.payPeriod || 'yearly';
+
   if (payConfig.payType === 'range' && payConfig.payRangeMax) {
-    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
-  }
-  if (payConfig.payType === 'maximum' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+    return convertToAnnualSalary(payConfig.payRangeMax, payPeriod);
   }
   if (payConfig.payType === 'fixed' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+    return convertToAnnualSalary(payConfig.payAmount, payPeriod);
   }
-  
+
   return null;
 }
 

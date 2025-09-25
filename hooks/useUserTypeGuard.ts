@@ -54,7 +54,8 @@ export const useRequireUserType = (
       // Determine redirect destination
       let destination = redirectTo;
       if (!destination) {
-        switch (profile.user_type) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        switch ((profile as any).user_type) {
           case "job_seeker":
             destination = "/jobseeker";
             break;

@@ -48,16 +48,7 @@ const SavedJobs = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("saved_date");
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/auth/jobseeker");
-      return;
-    }
-
-    // Check if user is a job seeker
-    checkUserType();
-  }, [user, router, checkUserType]);
-
+  // Define callback functions first
   const checkUserType = useCallback(async () => {
     if (!user) return;
 
@@ -80,14 +71,15 @@ const SavedJobs = () => {
         return;
       }
 
-      fetchSavedJobs();
+      return true; // Return true if user is job seeker
     } catch (error) {
       console.error("Error checking user type:", error);
       router.push("/auth/jobseeker");
+      return false;
     }
   }, [user, router]);
 
-  const fetchSavedJobs = async () => {
+  const fetchSavedJobs = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -119,7 +111,8 @@ const SavedJobs = () => {
 
       const formattedJobs =
         data?.map((item) => ({
-          ...item.jobs,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(item.jobs as any),
           saved_at: item.created_at,
         })) || [];
 
@@ -130,7 +123,25 @@ const SavedJobs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Effect to check user type and load saved jobs
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth/jobseeker");
+      return;
+    }
+
+    // Check if user is a job seeker, then fetch saved jobs
+    const checkAndFetch = async () => {
+      const isJobSeeker = await checkUserType();
+      if (isJobSeeker) {
+        fetchSavedJobs();
+      }
+    };
+
+    checkAndFetch();
+  }, [user, router, checkUserType, fetchSavedJobs]);
 
   const handleUnsaveJob = async (jobId: string) => {
     try {

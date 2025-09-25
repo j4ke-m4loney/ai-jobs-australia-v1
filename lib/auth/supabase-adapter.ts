@@ -89,6 +89,7 @@ export class SupabaseAuthAdapter implements AuthService {
     // Enhanced error handling for duplicate email with different user type
     if (error && error.message?.includes('User already registered')) {
       // Check if user exists with different user type
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { data: _unusedExistingProfile } = await supabase
         .from('profiles')
         .select('user_type')
@@ -214,12 +215,14 @@ export class SupabaseAuthAdapter implements AuthService {
     });
     
     return {
-      data: data?.user ? { user: this.mapUser(data.user) } : null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: data?.user ? { user: this.mapUser(data.user) } as any : null,
       error: this.mapError(error),
     };
   }
 
   async signInWithOAuth(provider: string): Promise<AuthResult> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data: _unusedData, error } = await supabase.auth.signInWithOAuth({
       provider: provider as 'github' | 'google' | 'linkedin_oidc',
       options: {

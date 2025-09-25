@@ -349,7 +349,7 @@ export default function SavedJobDetailPage() {
 
   if (loading || jobLoading) {
     return (
-      <JobSeekerLayout title="Job Details">
+      <JobSeekerLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -365,7 +365,7 @@ export default function SavedJobDetailPage() {
   }
 
   return (
-    <JobSeekerLayout title="Job Details">
+    <JobSeekerLayout>
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">
@@ -383,7 +383,13 @@ export default function SavedJobDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="lg:col-span-1">
             <JobDetailsView
-              job={job}
+              job={{
+                ...job,
+                application_method: job.application_method || 'external',
+                application_url: job.application_url || null,
+                application_email: job.application_email || null
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              } as any}
               onApply={handleApply}
               onSaveClick={handleSaveClick}
               isJobSaved={true}

@@ -126,7 +126,7 @@ const JobSeekerSettings = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            userId: user.id,
+            userId: user?.id,
             // Employer preferences are null for job seekers
             email_applications: null,
             email_job_views: null,
@@ -159,7 +159,7 @@ const JobSeekerSettings = () => {
   // Don't render form until we have user data and form is ready
   if (loading || !user) {
     return (
-      <JobSeekerLayout title="Settings">
+      <JobSeekerLayout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -168,7 +168,7 @@ const JobSeekerSettings = () => {
   }
 
   return (
-    <JobSeekerLayout title="Settings">
+    <JobSeekerLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <Settings className="w-6 h-6 text-primary" />

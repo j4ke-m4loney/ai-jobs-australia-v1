@@ -61,17 +61,7 @@ export default function JobDetailPage() {
   const [hasApplied, setHasApplied] = useState(false);
   const [applying, setApplying] = useState(false);
 
-  useEffect(() => {
-    if (!id) {
-      router.push("/jobs");
-      return;
-    }
-    fetchJob();
-    if (user) {
-      checkApplicationStatus();
-    }
-  }, [id, user, router, fetchJob, checkApplicationStatus]);
-
+  // Define callback functions first
   const fetchJob = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -118,6 +108,18 @@ export default function JobDetailPage() {
       console.error("Error checking application status:", error);
     }
   }, [user, id]);
+
+  // Effect to fetch job and check application status
+  useEffect(() => {
+    if (!id) {
+      router.push("/jobs");
+      return;
+    }
+    fetchJob();
+    if (user) {
+      checkApplicationStatus();
+    }
+  }, [id, user, router, fetchJob, checkApplicationStatus]);
 
   const handleApply = async () => {
     if (!user) {

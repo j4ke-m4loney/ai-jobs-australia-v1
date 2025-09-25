@@ -140,9 +140,12 @@ export default function AdminJobsPage() {
           console.log('🔄 Admin Dashboard - Real-time update received:', {
             eventType: payload.eventType,
             table: payload.table,
-            jobId: payload.new?.id || payload.old?.id,
-            newStatus: payload.new?.status,
-            oldStatus: payload.old?.status
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            jobId: (payload.new as any)?.id || (payload.old as any)?.id,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            newStatus: (payload.new as any)?.status,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            oldStatus: (payload.old as any)?.status
           });
           // Force refresh when any job changes
           setRefreshKey(prev => prev + 1);
@@ -385,7 +388,7 @@ export default function AdminJobsPage() {
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
+      <Badge variant={config.variant === 'success' ? 'default' : config.variant} className="flex items-center gap-1">
         <Icon className="h-3 w-3" />
         {config.label}
       </Badge>

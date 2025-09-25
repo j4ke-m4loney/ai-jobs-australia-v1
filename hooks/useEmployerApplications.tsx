@@ -228,8 +228,8 @@ export const useEmployerApplications = (selectedJobId?: string) => {
         applicant_id: app.applicant_id,
         status: app.status || "pending",
         created_at: app.created_at,
-        resume_url: app.resume_url,
-        cover_letter_url: app.cover_letter_url,
+        resume_url: app.resume_url ?? undefined,
+        cover_letter_url: app.cover_letter_url ?? undefined,
         job: {
           id: app.job_id,
           title: jobsMap.get(app.job_id)?.title || "Unknown Job",
@@ -303,12 +303,14 @@ export const useEmployerApplications = (selectedJobId?: string) => {
     if (user) {
       fetchJobs();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
     if (user) {
       fetchApplications();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedJobId]);
 
   // Set up real-time subscription
@@ -333,6 +335,7 @@ export const useEmployerApplications = (selectedJobId?: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedJobId]);
 
   return {

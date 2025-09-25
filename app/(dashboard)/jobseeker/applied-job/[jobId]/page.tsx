@@ -240,9 +240,14 @@ export default function AppliedJobDetailPage() {
         {/* Job Details using centralized component */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="lg:col-span-1">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <JobDetailsView
-              job={job as any}
+              job={{
+                ...job,
+                application_method: job.application_method || 'external',
+                application_url: job.application_url || null,
+                application_email: job.application_email || null
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              } as any}
               onApply={handleApply}
               onSaveClick={handleSaveClick}
               isJobSaved={false}

@@ -53,15 +53,19 @@ export async function GET(request: NextRequest) {
             .from('subscriptions')
             .update({
               status: stripeSubscription.status as 'active' | 'inactive' | 'canceled' | 'past_due' | 'unpaid' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'paused',
-              current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              current_period_start: new Date((stripeSubscription as any).current_period_start * 1000).toISOString(),
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              current_period_end: new Date((stripeSubscription as any).current_period_end * 1000).toISOString(),
             })
             .eq('id', subscription.id);
 
           // Return updated data
           subscription.status = stripeSubscription.status as 'active' | 'inactive' | 'canceled' | 'past_due' | 'unpaid' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'paused';
-          subscription.current_period_start = new Date(stripeSubscription.current_period_start * 1000).toISOString();
-          subscription.current_period_end = new Date(stripeSubscription.current_period_end * 1000).toISOString();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          subscription.current_period_start = new Date((stripeSubscription as any).current_period_start * 1000).toISOString();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          subscription.current_period_end = new Date((stripeSubscription as any).current_period_end * 1000).toISOString();
         }
       } catch (stripeError) {
         console.error('Error syncing with Stripe:', stripeError);

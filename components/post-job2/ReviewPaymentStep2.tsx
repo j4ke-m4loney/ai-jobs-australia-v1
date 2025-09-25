@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { JobFormData2, PRICING_TIERS } from "@/types/job2";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/contexts/ProfileContext";
+// import { useProfile } from "@/contexts/ProfileContext"; // Not used after removing email checks
 import { getStripe } from "@/lib/stripe-client";
 import {
   MapPin,
@@ -34,7 +34,7 @@ export default function ReviewPaymentStep2({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const { profile } = useProfile();
+  // const { profile } = useProfile(); // Unused after removing email checks
 
   const selectedPlan = PRICING_TIERS[formData.pricingTier];
 
@@ -112,7 +112,7 @@ export default function ReviewPaymentStep2({
       return;
     }
 
-    if (!profile?.email && !user.email) {
+    if (!user.email) {
       setError("Email address is required for payment processing");
       return;
     }
@@ -131,7 +131,7 @@ export default function ReviewPaymentStep2({
           pricingTier: formData.pricingTier,
           jobFormData: formData,
           userId: user.id,
-          userEmail: profile?.email || user.email,
+          userEmail: user.email,
         }),
       });
 

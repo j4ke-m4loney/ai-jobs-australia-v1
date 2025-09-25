@@ -60,6 +60,7 @@ serve(async (req) => {
     // Use the token for the new email to verify the change
     // According to Supabase docs, when secure email change is enabled,
     // token_hash_new is for the new email verification
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const _verificationToken = payload.token_new || payload.token
     const tokenHash = payload.token_hash_new || payload.token_hash
 

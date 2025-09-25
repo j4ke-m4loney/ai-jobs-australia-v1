@@ -105,6 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updateUserMetadata = async (metadata: Record<string, string | number | boolean | undefined>) => {
     const authService = getAuthService();
+    if (!authService || !authService.updateUser) return;
+
     const { data, error } = await authService.updateUser({
       data: { user_metadata: metadata }
     });
@@ -116,7 +118,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const resetPassword = async (email: string) => {
     const authService = getAuthService();
-    const result = await authService.resetPassword!(email);
+    if (!authService || !authService.resetPassword) {
+      return { error: new Error("Auth service not available") as any };
+    }
+
+    const result = await authService.resetPassword(email);
     return { error: result.error ?? null };
   };
 

@@ -200,7 +200,7 @@ export default function AdminJobReviewPage() {
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1 w-fit">
+      <Badge variant={config.variant as "default" | "destructive" | "outline" | "secondary" | null | undefined} className="flex items-center gap-1 w-fit">
         <Icon className="h-3 w-3" />
         {config.label}
       </Badge>

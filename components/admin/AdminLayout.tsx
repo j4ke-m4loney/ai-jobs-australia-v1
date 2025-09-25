@@ -68,11 +68,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    checkAdminAccess();
-    fetchPendingCount();
-  }, [checkAdminAccess, fetchPendingCount]);
-
+  // Define callback functions first
   const checkAdminAccess = useCallback(async () => {
     const adminUser = await getCurrentAdminUser();
     if (!adminUser) {
@@ -95,6 +91,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       console.error("Error fetching pending count:", error);
     }
   }, []);
+
+  // Effect to check admin access and fetch pending count
+  useEffect(() => {
+    checkAdminAccess();
+    fetchPendingCount();
+  }, [checkAdminAccess, fetchPendingCount]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

@@ -138,7 +138,7 @@ export default function ApplicationSettingsStep({
                     key={method.value}
                     type="button"
                     onClick={() =>
-                      form.setValue("applicationMethod", method.value as "external" | "platform")
+                      form.setValue("applicationMethod", method.value as "email" | "external" | "indeed")
                     }
                     className={cn(
                       "p-4 border rounded-lg text-left transition-all hover:border-primary flex items-center gap-3",

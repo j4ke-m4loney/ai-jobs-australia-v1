@@ -122,9 +122,12 @@ export async function PUT(
         await emailService.sendApplicationStatusUpdate({
           applicantName,
           applicantEmail: applicantEmail,
-          jobTitle: application.jobs.title,
-          companyName: application.jobs.company_name,
-          status: status as 'reviewing' | 'shortlisted' | 'accepted' | 'rejected',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          jobTitle: (application.jobs as any)?.title,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          companyName: (application.jobs as any)?.company_name,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          status: status as any,
           statusMessage
         });
 

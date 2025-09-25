@@ -267,7 +267,7 @@ export default function AdminNewJobPage() {
 
     } catch (error) {
       console.error("Error posting job:", error);
-      toast.error(`Failed to post job: ${error.message || 'Please try again.'}`);
+      toast.error(`Failed to post job: ${(error as Error)?.message || 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -289,6 +289,8 @@ export default function AdminNewJobPage() {
             formData={formData}
             updateFormData={updateFormData}
             onNext={handleNext}
+            onPrev={() => setCurrentStep(currentStep - 1)}
+            onShowPreview={() => {}}
           />
         );
       case 3:
@@ -297,6 +299,7 @@ export default function AdminNewJobPage() {
             formData={formData}
             updateFormData={updateFormData}
             onNext={handleNext}
+            onPrev={() => setCurrentStep(currentStep - 1)}
           />
         );
       case 4:

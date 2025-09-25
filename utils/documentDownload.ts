@@ -64,7 +64,6 @@ export const downloadDocument = async (
     if (error) {
       console.error("Storage error details:", {
         message: error.message,
-        statusCode: error.statusCode,
         error: error
       });
       

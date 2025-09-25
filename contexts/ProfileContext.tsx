@@ -171,6 +171,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!authLoading) {
       fetchProfile();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
   const value = {
@@ -185,4 +186,4 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export type { Profile };
+// Profile type is already exported at the top of the file

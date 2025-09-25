@@ -154,7 +154,7 @@ const JobSeekerSavedJobs = () => {
   }
 
   return (
-    <JobSeekerLayout title="Saved Jobs">
+    <JobSeekerLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <Heart className="w-6 h-6 text-primary" />

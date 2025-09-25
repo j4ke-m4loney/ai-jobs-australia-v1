@@ -64,6 +64,7 @@ export function PlacesAutocomplete({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Initialize Google Maps
@@ -91,7 +92,7 @@ export function PlacesAutocomplete({
         console.error("Failed to load Google Maps:", err);
         setError("Failed to load Google Maps");
       });
-  }, []);
+  }, [isLoaded]);
 
   // Initialize autocomplete when Google Maps is loaded
   useEffect(() => {
@@ -239,6 +240,7 @@ export function PlacesAutocomplete({
   };
 
   // Check if Google Places dropdown is currently visible and active
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _unusedIsGooglePlacesActive = () => {
     const pacContainer = document.querySelector('.pac-container');
     return pacContainer && 
