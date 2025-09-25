@@ -130,7 +130,7 @@ export default function PostJob2() {
       router.push("/auth?next=/post-job");
       return;
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, profile?.user_type]);
 
   // Set mounted state to handle client-side only operations
   useEffect(() => {

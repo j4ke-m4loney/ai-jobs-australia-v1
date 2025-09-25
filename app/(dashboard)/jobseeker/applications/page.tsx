@@ -18,6 +18,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface Application {
   id: string;
@@ -150,7 +151,7 @@ const JobSeekerApplications = () => {
 
   if (loading) {
     return (
-      <JobSeekerLayout title="My Applications">
+      <JobSeekerLayout>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -159,7 +160,7 @@ const JobSeekerApplications = () => {
   }
 
   return (
-    <JobSeekerLayout title="My Applications">
+    <JobSeekerLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <FileText className="w-6 h-6 text-primary" />
@@ -270,9 +271,11 @@ const JobSeekerApplications = () => {
                             {/* Company Logo */}
                             <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                               {application.job.companies?.logo_url ? (
-                                <img
+                                <Image
                                   src={application.job.companies.logo_url}
                                   alt={application.job.companies.name || "Company"}
+                                  width={32}
+                                  height={32}
                                   className="w-8 h-8 rounded"
                                 />
                               ) : (

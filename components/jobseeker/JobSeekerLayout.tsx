@@ -12,10 +12,9 @@ import { Button } from "@/components/ui/button";
 
 interface JobSeekerLayoutProps {
   children: React.ReactNode;
-  title: string;
 }
 
-export const JobSeekerLayout = ({ children, title }: JobSeekerLayoutProps) => {
+export const JobSeekerLayout = ({ children }: JobSeekerLayoutProps) => {
   const { user } = useAuth();
   const { isUserType, getUserTypeRoute, isLoading } = useUserTypeGuard();
   const router = useRouter();

@@ -15,14 +15,12 @@ import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { JobFormData2 } from "@/types/job2";
 import {
-  FileText,
   Building2,
-  Globe,
   Upload,
-  ImageIcon,
   Eye,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 
 const schema = z.object({
   jobDescription: z
@@ -191,13 +189,14 @@ export default function DescribeJobStep({
                 </label>
                 <div className="flex items-center gap-4">
                   <div
-                    className="w-16 h-16 border-2 border-dashed border-primary rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                    className="w-16 h-16 border-2 border-dashed border-primary rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors relative"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {logoPreview ? (
-                      <img
+                      <Image
                         src={logoPreview}
                         alt="Company logo"
+                        fill
                         className="w-full h-full object-cover rounded-lg"
                       />
                     ) : (

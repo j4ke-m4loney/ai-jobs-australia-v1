@@ -64,7 +64,7 @@ export function PlacesAutocomplete({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [_isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Initialize Google Maps
   useEffect(() => {
@@ -239,7 +239,7 @@ export function PlacesAutocomplete({
   };
 
   // Check if Google Places dropdown is currently visible and active
-  const isGooglePlacesActive = () => {
+  const _unusedIsGooglePlacesActive = () => {
     const pacContainer = document.querySelector('.pac-container');
     return pacContainer && 
       (pacContainer as HTMLElement).style.display !== 'none' &&

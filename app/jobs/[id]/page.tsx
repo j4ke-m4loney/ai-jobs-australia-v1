@@ -14,7 +14,6 @@ import {
   DollarSign,
   Clock,
   Building2,
-  Globe,
   ArrowLeft,
   ExternalLink,
   Mail,

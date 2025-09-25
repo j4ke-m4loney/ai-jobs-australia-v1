@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, Rocket, CheckCircle } from "lucide-react";
+import { Rocket, CheckCircle } from "lucide-react";
 
 const PostJobLoginPage = () => {
   const searchParams = useSearchParams();

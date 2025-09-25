@@ -1,7 +1,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, DollarSign, Heart } from "lucide-react";
+import { Clock, Heart } from "lucide-react";
+import Image from "next/image";
 
 interface Job {
   id: string;
@@ -74,13 +75,6 @@ const getTimeAgo = (dateString: string) => {
   return `${diffInMonths} months ago`;
 };
 
-const getDaysUntilExpiry = (expiryDate: string) => {
-  const days = Math.ceil(
-    (new Date(expiryDate).getTime() - new Date().getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
-  return Math.max(0, days);
-};
 
 export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
   job,
@@ -99,9 +93,11 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
               {/* Company Logo - only show if exists */}
               {job.companies?.logo_url && (
                 <div className="mb-4">
-                  <img
+                  <Image
                     src={job.companies.logo_url}
                     alt={job.companies.name || "Company logo"}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-lg object-contain"
                   />
                 </div>

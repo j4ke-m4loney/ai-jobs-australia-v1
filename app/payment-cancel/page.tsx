@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +8,9 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export default function PaymentCancelPage() {
-  const searchParams = useSearchParams();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _searchParams = useSearchParams();
   const router = useRouter();
-  const sessionId = searchParams.get('session_id');
 
   return (
     <div className="min-h-screen flex flex-col bg-muted">

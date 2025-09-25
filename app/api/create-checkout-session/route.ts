@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, PRICING_CONFIG, isValidPricingTier, PricingTier } from '@/lib/stripe';
-import { supabase } from '@/integrations/supabase/client';
 import { createClient } from '@supabase/supabase-js';
 
 // Server-side Supabase client with service role for database operations

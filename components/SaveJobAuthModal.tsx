@@ -10,13 +10,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { User, Heart, CheckCircle } from "lucide-react";
+import { Heart, CheckCircle } from "lucide-react";
 
 interface SaveJobAuthModalProps {
   isOpen: boolean;

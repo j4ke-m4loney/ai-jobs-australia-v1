@@ -19,6 +19,7 @@ import {
   Calendar,
   Gift,
 } from "lucide-react";
+import Image from "next/image";
 
 interface Props {
   isOpen: boolean;
@@ -142,10 +143,11 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
               </div>
 
               {formData.companyLogo && (
-                <div className="w-16 h-16 border rounded-lg overflow-hidden">
-                  <img
+                <div className="w-16 h-16 border rounded-lg overflow-hidden relative">
+                  <Image
                     src={URL.createObjectURL(formData.companyLogo)}
                     alt="Company logo"
+                    fill
                     className="w-full h-full object-cover"
                   />
                 </div>

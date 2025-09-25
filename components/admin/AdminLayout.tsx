@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { getCurrentAdminUser } from "@/lib/admin/auth";
@@ -15,8 +15,6 @@ import {
   Menu,
   X,
   CheckCircle,
-  XCircle,
-  Clock,
   AlertTriangle,
   Plus,
 } from "lucide-react";
@@ -73,9 +71,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     checkAdminAccess();
     fetchPendingCount();
-  }, []);
+  }, [checkAdminAccess, fetchPendingCount]);
 
-  const checkAdminAccess = async () => {
+  const checkAdminAccess = useCallback(async () => {
     const adminUser = await getCurrentAdminUser();
     if (!adminUser) {
       router.push("/");
@@ -83,9 +81,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       setIsAdmin(true);
     }
     setIsLoading(false);
-  };
+  }, [router]);
 
-  const fetchPendingCount = async () => {
+  const fetchPendingCount = useCallback(async () => {
     try {
       const { count } = await supabase
         .from("jobs")
@@ -96,7 +94,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     } catch (error) {
       console.error("Error fetching pending count:", error);
     }
-  };
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

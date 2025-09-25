@@ -11,7 +11,6 @@ import {
   Building2,
   Globe,
   MapPin,
-  Users,
   Calendar,
   Briefcase,
   ArrowLeft,
@@ -20,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
+import Image from "next/image";
 
 interface Company {
   id: string;
@@ -170,9 +170,11 @@ export default function CompanyProfilePage() {
           <CardHeader>
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {company.logo_url ? (
-                <img
+                <Image
                   src={company.logo_url}
                   alt={`${company.name} logo`}
+                  width={96}
+                  height={96}
                   className="w-24 h-24 rounded-lg object-contain bg-white border"
                 />
               ) : (

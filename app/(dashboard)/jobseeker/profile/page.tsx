@@ -29,7 +29,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { User, MapPin, Phone, Mail, Briefcase, Code, FileText, AlertTriangle } from "lucide-react";
+import { User, MapPin, Phone, Mail, Briefcase, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,

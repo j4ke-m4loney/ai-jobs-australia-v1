@@ -121,7 +121,7 @@ export default function AppliedJobDetailPage() {
     } finally {
       setJobLoading(false);
     }
-  }, [jobId, user]);
+  }, [jobId, user, router]);
 
   useEffect(() => {
     if (jobId && user) {
@@ -165,7 +165,8 @@ export default function AppliedJobDetailPage() {
     toast.info("You have already applied to this position");
   };
 
-  const handleSaveClick = (jobId: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleSaveClick = (_jobId: string) => {
     // Navigate to save/unsave functionality if needed
     // For now, just show info since they've already applied
     toast.info("You can save other jobs from the jobs listing page");
@@ -203,16 +204,10 @@ export default function AppliedJobDetailPage() {
     );
   };
 
-  // TODO: Job expiration functionality needs to be implemented in the job posting process
-  // For now, we'll check if expires_at exists and is in the past
-  const isJobExpired = () => {
-    if (!job?.expires_at) return false;
-    return new Date(job.expires_at) < new Date();
-  };
 
   if (loading || jobLoading) {
     return (
-      <JobSeekerLayout title="Job Details">
+      <JobSeekerLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -228,7 +223,7 @@ export default function AppliedJobDetailPage() {
   }
 
   return (
-    <JobSeekerLayout title="Job Details">
+    <JobSeekerLayout>
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">
@@ -245,8 +240,9 @@ export default function AppliedJobDetailPage() {
         {/* Job Details using centralized component */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="lg:col-span-1">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <JobDetailsView
-              job={job}
+              job={job as any}
               onApply={handleApply}
               onSaveClick={handleSaveClick}
               isJobSaved={false}

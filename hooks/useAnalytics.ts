@@ -53,7 +53,7 @@ export function useAnalytics() {
         const jobIds = jobs?.map(job => job.id) || [];
 
         // Initialize analytics data
-        let analyticsData: AnalyticsData = {
+        const analyticsData: AnalyticsData = {
           totalJobs,
           activeJobs,
           totalApplications: 0,
@@ -82,7 +82,7 @@ export function useAnalytics() {
           const recentApps = applications?.slice(0, 5) || [];
           const applicantIds = [...new Set(recentApps.map(app => app.applicant_id))];
           
-          let profilesMap = new Map();
+          const profilesMap = new Map();
           if (applicantIds.length > 0) {
             const { data: profiles } = await supabase
               .from('profiles')
@@ -185,7 +185,7 @@ export function useAnalytics() {
     }
   };
 
-  const trackApplicationEvent = async (applicationId: string, eventType: string, metadata?: any) => {
+  const trackApplicationEvent = async (applicationId: string, eventType: string, metadata?: Record<string, string | number | boolean | null | undefined>) => {
     try {
       await supabase
         .from('application_events')

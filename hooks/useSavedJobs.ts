@@ -52,7 +52,7 @@ export const useSavedJobs = () => {
 
       if (error) throw error;
       toast.success('Job saved successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Revert optimistic update
       setSavedJobIds(prev => {
         const newSet = new Set(prev);
@@ -60,7 +60,7 @@ export const useSavedJobs = () => {
         return newSet;
       });
       
-      if (error.code === '23505') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
         toast.error('Job is already saved');
       } else {
         toast.error('Failed to save job');

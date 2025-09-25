@@ -21,7 +21,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { JobFormData2, PRICING_TIERS } from "@/types/job2";
+import { JobFormData2 } from "@/types/job2";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 

@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   PlacesAutocomplete,
-  PlaceResult,
   isGooglePlacesDropdownActive,
 } from "@/components/ui/places-autocomplete";
 import { Button } from "@/components/ui/button";
@@ -28,13 +27,9 @@ import { Switch } from "@/components/ui/switch";
 import { JobFormData2 } from "@/types/job2";
 import {
   Briefcase,
-  MapPin,
-  Navigation,
   Clock,
   Calendar,
   DollarSign,
-  ChevronDown,
-  ChevronUp,
   Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -140,6 +135,7 @@ export default function JobBasicsStep({
     contractConfig,
     formData.payConfig,
     updateFormData,
+    highlights,
   ]);
 
   const requiresHoursConfig = selectedJobType === "part-time";
@@ -380,7 +376,8 @@ export default function JobBasicsStep({
             <FormField
               control={form.control}
               name="jobType"
-              render={({ field }) => (
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              render={({ field: _field /* intentionally unused */ }) => (
                 <FormItem>
                   <FormLabel className="text-base font-medium">
                     Job type *

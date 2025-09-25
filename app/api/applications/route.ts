@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get applicant email from auth.users table
-    const { data: applicantUserData, error: applicantUserError } = await supabaseAdmin
+    const { data: applicantUserData } = await supabaseAdmin
       .auth.admin.getUserById(applicantId);
 
     const applicantEmail = applicantUserData?.user?.email;

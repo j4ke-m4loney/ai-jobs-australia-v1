@@ -213,7 +213,16 @@ export const useEmployerApplications = (selectedJobId?: string) => {
       });
 
       // Transform the data to match the expected interface
-      const transformedApplications: JobApplication[] = applicationsData.map((app: any) => ({
+      type RawApplicationData = {
+        id: string;
+        job_id: string;
+        applicant_id: string;
+        status: string | null;
+        created_at: string;
+        resume_url: string | null;
+        cover_letter_url: string | null;
+      };
+      const transformedApplications: JobApplication[] = applicationsData.map((app: RawApplicationData) => ({
         id: app.id,
         job_id: app.job_id,
         applicant_id: app.applicant_id,

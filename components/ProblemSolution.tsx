@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 
 const ProblemSolution = () => {

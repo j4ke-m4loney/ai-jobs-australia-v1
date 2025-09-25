@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { JobFormData } from "@/types/job";
 import { Building2, Globe, Upload, ImageIcon } from "lucide-react";
 import { useState, useRef } from "react";
+import Image from "next/image";
 
 const schema = z.object({
   companyName: z.string().min(2, "Company name is required"),
@@ -101,13 +102,14 @@ export default function CompanyInfoStep({
           </label>
           <div className="flex items-center gap-4">
             <div
-              className="w-16 h-16 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
+              className="w-16 h-16 border-2 border-dashed border-border rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors relative"
               onClick={() => fileInputRef.current?.click()}
             >
               {logoPreview ? (
-                <img
+                <Image
                   src={logoPreview}
                   alt="Company logo"
+                  fill
                   className="w-full h-full object-cover rounded-lg"
                 />
               ) : (

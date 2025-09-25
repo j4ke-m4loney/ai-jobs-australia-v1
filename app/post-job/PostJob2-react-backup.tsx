@@ -2,15 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Check, Briefcase, MapPin, DollarSign, FileText, Settings, CreditCard, Eye } from "lucide-react";
+import { Check, Briefcase, FileText, Settings, CreditCard, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { JobFormData2 } from "@/types/job2";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Step Components
 import JobBasicsStep from "@/components/post-job2/JobBasicsStep";
-import JobDetailsStep2 from "@/components/post-job2/JobDetailsStep2";
-import PayBenefitsStep from "@/components/post-job2/PayBenefitsStep";
 import DescribeJobStep from "@/components/post-job2/DescribeJobStep";
 import ApplicationSettingsStep from "@/components/post-job2/ApplicationSettingsStep";
 import PricingSelectionStep from "@/components/post-job2/PricingSelectionStep";
@@ -211,7 +209,7 @@ export default function PostJob2() {
               />
             </div>
             
-            {steps.map((step, index) => {
+            {steps.map((step) => {
               const Icon = step.icon;
               const isCompleted = currentStep > step.id;
               const isCurrent = currentStep === step.id;

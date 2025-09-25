@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -166,7 +165,11 @@ export default function SavedJobDetailPage() {
     if (!user) return;
 
     const isResume = documentType === "resume";
-    isResume ? setUploadingResume(true) : setUploadingCoverLetter(true);
+    if (isResume) {
+      setUploadingResume(true);
+    } else {
+      setUploadingCoverLetter(true);
+    }
 
     try {
       // Upload to storage
@@ -218,7 +221,11 @@ export default function SavedJobDetailPage() {
         }`
       );
     } finally {
-      isResume ? setUploadingResume(false) : setUploadingCoverLetter(false);
+      if (isResume) {
+        setUploadingResume(false);
+      } else {
+        setUploadingCoverLetter(false);
+      }
     }
   };
 
@@ -312,7 +319,7 @@ export default function SavedJobDetailPage() {
     document.getElementById('application-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSaveClick = async (jobId: string) => {
+  const handleSaveClick = async () => {
     await handleUnsaveJob();
   };
 
@@ -337,43 +344,8 @@ export default function SavedJobDetailPage() {
   }, [user, jobId]);
 
 
-  const formatSalary = (min: number | null, max: number | null) => {
-    if (!min && !max) return null;
-    if (min && max)
-      return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-    if (min) return `From $${min.toLocaleString()}`;
-    if (max) return `Up to $${max.toLocaleString()}`;
-  };
 
-  const getCategoryDisplay = (category: string) => {
-    const categories = {
-      ai: "Artificial Intelligence",
-      ml: "Machine Learning",
-      "data-science": "Data Science",
-      engineering: "Engineering",
-      research: "Research",
-    };
-    return categories[category as keyof typeof categories] || category;
-  };
 
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-    );
-
-    if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    }
-
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) {
-      return `${diffInDays}d ago`;
-    }
-
-    return date.toLocaleDateString();
-  };
 
   if (loading || jobLoading) {
     return (

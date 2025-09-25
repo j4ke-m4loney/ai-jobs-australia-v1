@@ -89,7 +89,7 @@ export class SupabaseAuthAdapter implements AuthService {
     // Enhanced error handling for duplicate email with different user type
     if (error && error.message?.includes('User already registered')) {
       // Check if user exists with different user type
-      const { data: existingProfile } = await supabase
+      const { data: _unusedExistingProfile } = await supabase
         .from('profiles')
         .select('user_type')
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
@@ -220,7 +220,7 @@ export class SupabaseAuthAdapter implements AuthService {
   }
 
   async signInWithOAuth(provider: string): Promise<AuthResult> {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { data: _unusedData, error } = await supabase.auth.signInWithOAuth({
       provider: provider as 'github' | 'google' | 'linkedin_oidc',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,

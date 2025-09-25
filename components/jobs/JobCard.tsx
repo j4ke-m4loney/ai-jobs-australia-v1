@@ -2,7 +2,8 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
+import Image from "next/image";
 
 interface Job {
   id: string;
@@ -158,9 +159,11 @@ export const JobCard: React.FC<JobCardProps> = ({
             {/* Company Logo - only show if exists */}
             {job.companies?.logo_url && (
               <div className="w-12 h-12">
-                <img
+                <Image
                   src={job.companies.logo_url}
                   alt={job.companies.name || "Company logo"}
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded object-contain"
                 />
               </div>

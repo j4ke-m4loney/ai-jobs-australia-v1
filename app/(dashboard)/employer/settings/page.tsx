@@ -21,8 +21,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Form,
   FormControl,
@@ -32,14 +30,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
-  Settings,
   User,
-  Bell,
-  Shield,
   CreditCard,
-  LogOut,
   Save,
   Mail,
   AlertTriangle,
@@ -79,7 +72,7 @@ interface Subscription {
 }
 
 const EmployerSettings = () => {
-  const { user, signOut, updateUserMetadata } = useAuth();
+  const { user, updateUserMetadata } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -171,9 +164,9 @@ const EmployerSettings = () => {
               job_id: null, // Not available in payments table
               pricing_tier: payment.pricing_tier,
               amount_paid: payment.amount, // Already in cents
-              stripe_payment_intent_id: (payment as any).stripe_payment_intent_id || null,
+              stripe_payment_intent_id: 'stripe_payment_intent_id' in payment ? (payment as typeof payment & { stripe_payment_intent_id?: string }).stripe_payment_intent_id || null : null,
               stripe_session_id: null, // Not available in this response
-              status: payment.status === 'succeeded' ? 'completed' : payment.status,
+              status: payment.status,
               created_at: payment.created_at,
               updated_at: payment.created_at
             }));
@@ -216,10 +209,8 @@ const EmployerSettings = () => {
               });
             }
           }
-          setNotificationPrefsLoaded(true);
         } catch (error) {
           console.error('Error loading notification preferences:', error);
-          setNotificationPrefsLoaded(true);
         }
       } catch (error) {
         console.error('Error loading billing data:', error);
@@ -268,7 +259,7 @@ const EmployerSettings = () => {
       });
 
       if (response.ok) {
-        const updatedSubscription = { ...subscription, status: 'cancelled' };
+        const updatedSubscription = { ...subscription, status: 'cancelled' as const };
         setSubscription(updatedSubscription);
         toast.success('Annual plan cancelled successfully. You can continue posting jobs until the end of your billing period.');
       } else {
@@ -283,6 +274,7 @@ const EmployerSettings = () => {
   };
 
   // Notification settings state
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [notificationSettings, setNotificationSettings] = useState({
     emailApplications: true,
     emailJobViews: false,
@@ -290,7 +282,6 @@ const EmployerSettings = () => {
     pushApplications: true,
     pushMessages: false,
   });
-  const [notificationPrefsLoaded, setNotificationPrefsLoaded] = useState(false);
 
   // const [privacySettings, setPrivacySettings] = useState({
   //   profileVisible: true,
@@ -372,46 +363,7 @@ const EmployerSettings = () => {
     setEmailChangeData(null);
   };
 
-  const handleSaveNotificationPreferences = async () => {
-    if (!user) return;
 
-    setSaving(true);
-    try {
-      const response = await fetch('/api/user/notification-preferences', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          email_applications: notificationSettings.emailApplications,
-          email_job_views: notificationSettings.emailJobViews,
-          email_weekly_reports: notificationSettings.emailWeeklyReports,
-          // Job seeker preferences are null for employers
-          email_new_jobs: null,
-          email_similar_jobs: null,
-          email_application_updates: null,
-          email_promotions: null,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save notification preferences');
-      }
-
-      toast.success("Notification preferences updated successfully!");
-    } catch (error) {
-      console.error("Error saving notification preferences:", error);
-      toast.error("Failed to update notification preferences. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/");
-  };
 
   // Payment method handlers
   const handleAddPaymentMethod = () => {
@@ -420,6 +372,8 @@ const EmployerSettings = () => {
 
   const handlePaymentMethodAdded = async () => {
     // Refresh billing data after adding a payment method
+    if (!user) return;
+
     try {
       const response = await fetch(`/api/billing/payment-methods?userId=${user.id}`);
       if (response.ok) {
@@ -433,7 +387,7 @@ const EmployerSettings = () => {
   };
 
   const handleDeletePaymentMethod = async (paymentMethodId: string) => {
-    if (!confirm("Are you sure you want to remove this payment method?")) {
+    if (!user || !confirm("Are you sure you want to remove this payment method?")) {
       return;
     }
 

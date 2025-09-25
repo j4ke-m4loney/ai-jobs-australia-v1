@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import Image from "next/image";
 
 import {
   Star,
   Users,
   Target,
   CheckCircle,
-  Search,
   UserCheck,
   Calendar,
   ArrowRight,
@@ -129,9 +129,11 @@ export default function HirePage() {
           <Card className="border-0 shadow-lg">
             <CardContent className="p-8">
               <div className="flex items-center gap-6">
-                <img
+                <Image
                   src={testimonials[0].avatar}
                   alt={testimonials[0].name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full object-cover"
                 />
                 <div className="flex-1">

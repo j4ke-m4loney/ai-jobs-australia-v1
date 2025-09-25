@@ -8,9 +8,6 @@ import { logAdminAction } from "@/lib/admin/auth";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   Table,
@@ -42,7 +39,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   Search,
-  Filter,
   CheckCircle,
   XCircle,
   Eye,
@@ -52,7 +48,6 @@ import {
   AlertTriangle,
   Building,
   MapPin,
-  DollarSign,
   RefreshCw,
 } from "lucide-react";
 import {
@@ -173,49 +168,6 @@ export default function AdminJobsPage() {
     };
   }, []);
 
-  const originalFetchJobs = async () => {
-    setIsLoading(true);
-    console.log(`🔍 Admin Dashboard - Fetching jobs with status filter: "${statusFilter}"`);
-    try {
-      let query = supabase
-        .from("jobs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1000);
-
-      if (statusFilter !== "all") {
-        console.log(`📝 Admin Dashboard - Applying status filter: ${statusFilter}`);
-        query = query.eq("status", statusFilter);
-      } else {
-        console.log(`📝 Admin Dashboard - No status filter applied (showing all jobs)`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching jobs:", error);
-        throw error;
-      }
-
-      console.log(`🔍 Admin Dashboard: Fetched ${data?.length || 0} jobs with status filter: ${statusFilter}`);
-
-      // Debug: Log pending_approval jobs specifically
-      const pendingJobs = data?.filter(job => job.status === 'pending_approval') || [];
-      console.log(`📋 Pending approval jobs (${pendingJobs.length}):`, pendingJobs.map(job => ({
-        id: job.id,
-        title: job.title,
-        status: job.status,
-        created_at: job.created_at
-      })));
-
-      setJobs(data || []);
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-      toast.error("Failed to fetch jobs");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleApprove = async (jobId: string) => {
     // Optimistic update

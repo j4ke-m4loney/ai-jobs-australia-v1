@@ -15,12 +15,10 @@ import {
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const router = useRouter();
 
   const blogPosts = [
     {

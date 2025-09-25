@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
+import Image from "next/image";
 
 interface SavedJob {
   id: string;
@@ -45,7 +46,7 @@ interface SavedJob {
 const JobSeekerSavedJobs = () => {
   const { user } = useAuth();
   const router = useRouter();
-  const { toggleSaveJob, isJobSaved } = useSavedJobs();
+  const { toggleSaveJob } = useSavedJobs();
   const [savedJobs, setSavedJobs] = useState<SavedJob[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -192,9 +193,11 @@ const JobSeekerSavedJobs = () => {
                       {/* Company Logo */}
                       <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                         {savedJob.job.companies?.logo_url ? (
-                          <img
+                          <Image
                             src={savedJob.job.companies.logo_url}
                             alt={savedJob.job.companies.name || "Company"}
+                            width={32}
+                            height={32}
                             className="w-8 h-8 rounded"
                           />
                         ) : (

@@ -40,7 +40,6 @@ import {
   AlertTriangle,
   Copy,
   Star,
-  Calendar,
   User,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -108,7 +107,7 @@ export default function AdminJobReviewPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [jobId]);
+  }, [jobId, router]);
 
   useEffect(() => {
     fetchJobDetails();

@@ -9,13 +9,13 @@ export interface AuthUser {
   metadata: {
     firstName?: string;
     userType?: 'job_seeker' | 'employer';
-    [key: string]: any; // Allow provider-specific metadata
+    [key: string]: string | number | boolean | undefined; // Allow provider-specific metadata
   };
   // Legacy support for existing code - will be removed in future
   user_metadata?: {
     first_name?: string;
     user_type?: 'job_seeker' | 'employer';
-    [key: string]: any;
+    [key: string]: string | number | boolean | undefined;
   };
   createdAt?: string;
   lastSignInAt?: string;
@@ -46,7 +46,7 @@ export interface SignUpData {
   metadata?: {
     firstName?: string;
     userType?: 'job_seeker' | 'employer';
-    [key: string]: any;
+    [key: string]: string | number | boolean | undefined;
   };
 }
 
@@ -85,12 +85,12 @@ export interface AuthService {
   updatePassword?(newPassword: string): Promise<{ error?: AuthError | null }>;
   
   // User management
-  updateUser?(updates: { data?: { user_metadata?: Record<string, any>; email?: string } }): Promise<{ data?: { user: AuthUser } | null; error?: AuthError | null }>;
+  updateUser?(updates: { data?: { user_metadata?: Record<string, string | number | boolean | undefined>; email?: string } }): Promise<{ data?: { user: AuthUser } | null; error?: AuthError | null }>;
   
   // Provider-specific features (optional)
   signInWithOAuth?(provider: string): Promise<AuthResult>;
   signInWithMagicLink?(email: string): Promise<{ error?: AuthError | null }>;
   
   // Get the raw provider client (escape hatch for provider-specific features)
-  getRawClient?(): any;
+  getRawClient?(): unknown;
 }

@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Briefcase,
   Users,
-  BarChart3,
   Building2,
   Settings,
   Plus,
@@ -67,7 +66,6 @@ const menuItems = [
 export function EmployerSidebar() {
   const { state } = useSidebar();
   const pathname = usePathname();
-  const router = useRouter();
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
 

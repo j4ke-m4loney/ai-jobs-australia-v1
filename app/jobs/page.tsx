@@ -5,15 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
-import { StateSelector, AUSTRALIAN_LOCATIONS } from "@/components/ui/state-selector";
+import { StateSelector } from "@/components/ui/state-selector";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -745,11 +741,12 @@ export default function JobsPage() {
     selectedJobTypes,
     selectedLocationTypes,
     selectedSalary,
-    dateFilter,
     dateSort,
     sortBy,
     selectedJob,
     user,
+    fetchSuggestions,
+    showFeaturedOnly,
   ]);
 
   // Auto-select first job when jobs are loaded
@@ -818,7 +815,7 @@ export default function JobsPage() {
         fetchJobs();
       }, 0);
     }
-  }, [loading, user, router, searchParams]);
+  }, [loading, user, router, searchParams, fetchJobs]);
 
   // Reset sync flag when URL params actually change (new navigation)
   useEffect(() => {
@@ -829,7 +826,7 @@ export default function JobsPage() {
       shouldSyncFromUrl.current = true;
       initialized.current = false;
     }
-  }, [searchParams, loading]);
+  }, [searchParams, loading, fetchJobs]);
 
   // Initial job fetching effect - now handled in initialization effect above
   // This ensures jobs are fetched AFTER URL params are synced
@@ -865,7 +862,7 @@ export default function JobsPage() {
         hasUser: !!user,
       });
     }
-  }, [filterDeps, fetchJobs, user, loading]);
+  }, [filterDeps, fetchJobs, user, loading, searchParams]);
 
   // Application status check effect
   useEffect(() => {
@@ -948,39 +945,6 @@ export default function JobsPage() {
     return categories[category as keyof typeof categories] || category;
   };
 
-  const handleCategoryChange = (category: string, checked: boolean) => {
-    if (checked) {
-      setSelectedCategories([...selectedCategories, category]);
-    } else {
-      setSelectedCategories(selectedCategories.filter((c) => c !== category));
-    }
-  };
-
-  const handleLocationChange = (location: string, checked: boolean) => {
-    if (checked) {
-      setSelectedLocations([...selectedLocations, location]);
-    } else {
-      setSelectedLocations(selectedLocations.filter((l) => l !== location));
-    }
-  };
-
-  const handleJobTypeChange = (jobType: string, checked: boolean) => {
-    if (checked) {
-      setSelectedJobTypes([...selectedJobTypes, jobType]);
-    } else {
-      setSelectedJobTypes(selectedJobTypes.filter((jt) => jt !== jobType));
-    }
-  };
-
-  const handleLocationTypeChange = (locationType: string, checked: boolean) => {
-    if (checked) {
-      setSelectedLocationTypes([...selectedLocationTypes, locationType]);
-    } else {
-      setSelectedLocationTypes(
-        selectedLocationTypes.filter((lt) => lt !== locationType)
-      );
-    }
-  };
 
   const clearAllFilters = () => {
     setSelectedCategories([]);

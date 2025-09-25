@@ -4,11 +4,7 @@ import { z } from "zod";
 import { useState } from "react";
 import {
   Form,
-  FormControl,
-  FormField,
-  FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,7 +19,6 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { JobFormData2, BENEFITS_OPTIONS } from "@/types/job2";
 import { DollarSign, Gift, ChevronDown, ChevronUp } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const schema = z.object({
   showPay: z.boolean(),
@@ -59,7 +54,8 @@ export default function PayBenefitsStep({
     : BENEFITS_OPTIONS.slice(0, 6);
   const hiddenBenefitsCount = BENEFITS_OPTIONS.length - 6;
 
-  const onSubmit = (values: z.infer<typeof schema>) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onSubmit = (_unusedValues: z.infer<typeof schema>) => {
     updateFormData({
       payConfig: showPay ? payConfig : { showPay: false },
       benefits: selectedBenefits,

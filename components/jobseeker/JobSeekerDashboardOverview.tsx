@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,9 +62,9 @@ export const JobSeekerDashboardOverview = () => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user]);
+  }, [user, fetchDashboardData]);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       // Fetch applications
       const { data: applicationsData, error: applicationsError } =
@@ -117,7 +117,7 @@ export const JobSeekerDashboardOverview = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const getProfileCompleteness = () => {
     if (!profile) return 0;
@@ -136,13 +136,6 @@ export const JobSeekerDashboardOverview = () => {
     return Math.round((completedFields / fields.length) * 100);
   };
 
-  const formatSalary = (min: number | null, max: number | null) => {
-    if (!min && !max) return "Not specified";
-    if (min && max)
-      return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-    if (min) return `From $${min.toLocaleString()}`;
-    return `Up to $${max?.toLocaleString()}`;
-  };
 
   if (loading) {
     return (

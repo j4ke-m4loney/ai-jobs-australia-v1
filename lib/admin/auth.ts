@@ -129,7 +129,7 @@ export async function updateJobStatus(
           .from('jobs')
           .update({ rejection_reason: rejectionReason })
           .in('id', jobIds);
-      } catch (e) {
+      } catch (_error) {
         console.log('rejection_reason column may not exist yet');
       }
     }
@@ -144,7 +144,7 @@ export async function updateJobStatus(
           reviewed_by: userId
         })
         .in('id', jobIds);
-    } catch (e) {
+    } catch (_e) {
       console.log('Review metadata columns may not exist yet');
     }
 

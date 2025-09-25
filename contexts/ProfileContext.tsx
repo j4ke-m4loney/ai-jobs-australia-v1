@@ -95,14 +95,18 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Check if this is initial profile creation (no existing profile)
     const isNewProfile = !profile;
-    const { user_type, ...safeUpdates } = updates;
-    
+    const { user_type, ...otherUpdates } = updates;
+
+    let safeUpdates: Partial<Profile>;
     if (user_type && !isNewProfile) {
       console.warn("Attempted to update user_type on existing profile - this field is immutable");
+      safeUpdates = otherUpdates;
     } else if (user_type && isNewProfile) {
       // Allow user_type to be set during initial profile creation
       console.log("Setting user_type for new profile:", user_type);
-      (safeUpdates as any).user_type = user_type;
+      safeUpdates = { ...otherUpdates, user_type };
+    } else {
+      safeUpdates = otherUpdates;
     }
 
     try {

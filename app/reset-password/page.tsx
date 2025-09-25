@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
       supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken
-      }).then(({ data, error }) => {
+      }).then(({ error }) => {
         if (error) {
           console.error('Error setting session:', error);
           setValidToken(false);

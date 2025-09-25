@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +17,6 @@ import {
   Eye,
   Trash2,
   Filter,
-  SortAsc,
   Briefcase,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -57,9 +56,9 @@ const SavedJobs = () => {
 
     // Check if user is a job seeker
     checkUserType();
-  }, [user, router]);
+  }, [user, router, checkUserType]);
 
-  const checkUserType = async () => {
+  const checkUserType = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -86,7 +85,7 @@ const SavedJobs = () => {
       console.error("Error checking user type:", error);
       router.push("/auth/jobseeker");
     }
-  };
+  }, [user, router]);
 
   const fetchSavedJobs = async () => {
     if (!user) return;

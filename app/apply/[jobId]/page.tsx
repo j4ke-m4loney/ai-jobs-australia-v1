@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "sonner";
 import {
   MapPin,
@@ -64,7 +62,6 @@ export default function ApplyPage() {
   const params = useParams();
   const jobId = params.jobId as string;
   const { user, loading } = useAuth();
-  const { profile } = useProfile();
   const router = useRouter();
 
   const [job, setJob] = useState<Job | null>(null);
@@ -96,7 +93,7 @@ export default function ApplyPage() {
     }
   }, [jobId, user, fetchJobDetails, fetchUserDocuments]);
 
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     if (!jobId) return;
 
     setJobLoading(true);
@@ -124,9 +121,9 @@ export default function ApplyPage() {
       setJob(data as Job);
     }
     setJobLoading(false);
-  };
+  }, [jobId, router]);
 
-  const fetchUserDocuments = async () => {
+  const fetchUserDocuments = useCallback(async () => {
     if (!user) return;
 
     const { data, error } = await supabase
@@ -151,7 +148,7 @@ export default function ApplyPage() {
       if (defaultResume) setSelectedResume(defaultResume.id);
       if (defaultCoverLetter) setSelectedCoverLetter(defaultCoverLetter.id);
     }
-  };
+  }, [user]);
 
   const handleFileUpload = async (
     file: File,
@@ -160,7 +157,11 @@ export default function ApplyPage() {
     if (!user) return;
 
     const isResume = documentType === "resume";
-    isResume ? setUploadingResume(true) : setUploadingCoverLetter(true);
+    if (isResume) {
+      setUploadingResume(true);
+    } else {
+      setUploadingCoverLetter(true);
+    }
 
     try {
       // Upload to storage
@@ -212,7 +213,11 @@ export default function ApplyPage() {
         }`
       );
     } finally {
-      isResume ? setUploadingResume(false) : setUploadingCoverLetter(false);
+      if (isResume) {
+        setUploadingResume(false);
+      } else {
+        setUploadingCoverLetter(false);
+      }
     }
   };
 

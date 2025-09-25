@@ -21,7 +21,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Settings, Mail, Bell, AlertTriangle } from "lucide-react";
+import { Settings, Mail, Bell } from "lucide-react";
 
 const settingsSchema = z.object({
   email: z.string().email("Invalid email address"),

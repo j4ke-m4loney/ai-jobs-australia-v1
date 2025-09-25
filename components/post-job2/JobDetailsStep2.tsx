@@ -4,7 +4,6 @@ import { z } from "zod";
 import { useState } from "react";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
@@ -115,7 +114,8 @@ export default function JobDetailsStep2({
           <FormField
             control={form.control}
             name="jobType"
-            render={({ field }) => (
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            render={({ field: _field /* intentionally unused */ }) => (
               <FormItem>
                 <FormLabel className="flex items-center gap-2 text-base font-medium">
                   <Clock className="w-5 h-5" />

@@ -3,14 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
-  ChevronLeft,
-  ChevronRight,
   Check,
   Briefcase,
   MapPin,
-  DollarSign,
   FileText,
   CreditCard,
 } from "lucide-react";
@@ -185,7 +181,8 @@ export default function PostJobPage() {
               />
             </div>
 
-            {steps.map((step, index) => {
+            {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
+            {steps.map((step, _index) => {
               const Icon = step.icon;
               const isCompleted = currentStep > step.id;
               const isCurrent = currentStep === step.id;

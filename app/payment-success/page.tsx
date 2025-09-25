@@ -15,7 +15,6 @@ export default function PaymentSuccessPage() {
 
   const [loading, setLoading] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'processing' | 'error'>('processing');
-  const [jobTitle, setJobTitle] = useState<string>('');
 
   useEffect(() => {
     if (!sessionId) {
