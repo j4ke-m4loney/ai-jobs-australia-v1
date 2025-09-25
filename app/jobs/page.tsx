@@ -1003,185 +1003,16 @@ function JobsContent() {
     setSelectedState("all");
   };
 
-  // Memoize the search form to prevent re-renders on auth state changes
-  const searchForm = useMemo(() => (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        fetchJobs();
-      }}
-      className="max-w-4xl mx-auto"
-    >
-      <div className="flex gap-4 mb-4">
-        <div className="flex-1">
-          <SearchInput
-            key="jobs-search-input"
-            placeholder="Job title, keywords, or company"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onClear={() => setSearchTerm("")}
-            leftIcon={<Search className="h-5 w-5" />}
-            className="h-12 text-base bg-white text-gray-900"
-          />
-        </div>
+  // Debug: Monitor searchTerm state changes
+  useEffect(() => {
+    console.log("🔍 DEBUG: searchTerm state changed:", {
+      searchTerm,
+      length: searchTerm.length,
+      userAuthenticated: !!user,
+      userId: user?.id || 'guest'
+    });
+  }, [searchTerm, user]);
 
-        <div className="flex-1">
-          <StateSelector
-            placeholder="Select location"
-            value={selectedState}
-            onValueChange={(value) => {
-              console.log("🗺️ Jobs page - State selected:", value);
-              setSelectedState(value);
-            }}
-            className="h-12 text-base bg-white text-gray-900"
-          />
-        </div>
-
-        <Button
-          type="submit"
-          size="lg"
-          className="h-12 gap-2 bg-white text-primary hover:bg-gray-100 px-6"
-        >
-          <Search className="w-5 h-5" />
-          Search Jobs
-        </Button>
-      </div>
-
-      {/* Options Link */}
-      {showOptions && (
-        <div className="flex justify-end mt-2">
-          <button
-            onClick={() => {
-              setShowOptions(false);
-              setShowFilters(true);
-            }}
-            className="text-white/80 hover:text-white underline text-sm transition-opacity duration-300 flex items-center gap-1"
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            Options
-          </button>
-        </div>
-      )}
-
-      {/* Filter Pills */}
-      {showFilters && (
-        <div className="flex flex-wrap items-center gap-2 mt-2 animate-fade-in">
-          <select
-            value={
-              selectedJobTypes.length > 0 ? selectedJobTypes[0] : "all"
-            }
-            onChange={(e) => {
-              if (e.target.value === "all") {
-                setSelectedJobTypes([]);
-              } else {
-                setSelectedJobTypes([e.target.value]);
-              }
-            }}
-            className="h-10 pl-3 pr-2 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
-          >
-            <option value="all" className="text-black">
-              Any job type
-            </option>
-            <option value="full-time" className="text-black">
-              Full time
-            </option>
-            <option value="part-time" className="text-black">
-              Part time
-            </option>
-            <option value="contract" className="text-black">
-              Contract
-            </option>
-            <option value="internship" className="text-black">
-              Casual/Temporary
-            </option>
-            <option value="permanent" className="text-black">
-              Permanent
-            </option>
-          </select>
-
-          <select
-            value={selectedSalary}
-            onChange={(e) => setSelectedSalary(e.target.value)}
-            className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
-          >
-            <option value="" className="text-black">
-              Any Salary
-            </option>
-            <option value="30000" className="text-black">
-              $30,000+
-            </option>
-            <option value="50000" className="text-black">
-              $50,000+
-            </option>
-            <option value="70000" className="text-black">
-              $70,000+
-            </option>
-            <option value="90000" className="text-black">
-              $90,000+
-            </option>
-            <option value="110000" className="text-black">
-              $110,000+
-            </option>
-            <option value="140000" className="text-black">
-              $140,000+
-            </option>
-          </select>
-
-          <select
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
-          >
-            <option value="any" className="text-black">
-              Listed any time
-            </option>
-            <option value="24h" className="text-black">
-              Last 24 hours
-            </option>
-            <option value="7d" className="text-black">
-              Last 7 days
-            </option>
-            <option value="30d" className="text-black">
-              Last 30 days
-            </option>
-          </select>
-
-          {/* Featured Jobs Toggle */}
-          <label className="flex items-center gap-2 px-3 py-2 text-sm text-white bg-white/10 rounded-sm backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-colors">
-            <Checkbox
-              checked={showFeaturedOnly}
-              onCheckedChange={(checked) => setShowFeaturedOnly(checked as boolean)}
-              className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-            />
-            <Star className="w-4 h-4" />
-            Featured only
-          </label>
-
-          {/* Reset All Filters Link */}
-          {(searchTerm ||
-            (selectedState && selectedState !== "all") ||
-            selectedCategories.length > 0 ||
-            selectedLocations.length > 0 ||
-            selectedJobTypes.length > 0 ||
-            selectedLocationTypes.length > 0 ||
-            selectedSalary ||
-            dateFilter !== "any" ||
-            showFeaturedOnly) && (
-            <button
-              onClick={clearAllFilters}
-              className="text-sm text-white/80 hover:text-white underline transition-colors ml-2"
-            >
-              Reset all
-              <br />
-              filters
-            </button>
-          )}
-        </div>
-      )}
-    </form>
-  ), [searchTerm, selectedState, selectedJobTypes, selectedSalary, dateFilter,
-      showFeaturedOnly, showOptions, showFilters, selectedCategories.length,
-      selectedLocations.length, selectedLocationTypes.length, fetchJobs]);
 
   if (loading) {
     return (
@@ -1207,7 +1038,192 @@ function JobsContent() {
             Find Your Dream AI Job
           </h1>
 
-          {searchForm}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              fetchJobs();
+            }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="flex gap-4 mb-4">
+              <div className="flex-1">
+                <SearchInput
+                  key="jobs-search-input"
+                  placeholder="Job title, keywords, or company"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    console.log("🔍 DEBUG: SearchInput onChange fired", {
+                      newValue: e.target.value,
+                      currentSearchTerm: searchTerm,
+                      userAuthenticated: !!user,
+                      userId: user?.id || 'guest'
+                    });
+                    setSearchTerm(e.target.value);
+                    console.log("🔍 DEBUG: setSearchTerm called with:", e.target.value);
+                  }}
+                  onClear={() => {
+                    console.log("🧹 DEBUG: SearchInput onClear fired");
+                    setSearchTerm("");
+                  }}
+                  leftIcon={<Search className="h-5 w-5" />}
+                  className="h-12 text-base bg-white text-gray-900"
+                />
+              </div>
+
+              <div className="flex-1">
+                <StateSelector
+                  placeholder="Select location"
+                  value={selectedState}
+                  onValueChange={(value) => {
+                    console.log("🗺️ Jobs page - State selected:", value);
+                    setSelectedState(value);
+                  }}
+                  className="h-12 text-base bg-white text-gray-900"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                size="lg"
+                className="h-12 gap-2 bg-white text-primary hover:bg-gray-100 px-6"
+              >
+                <Search className="w-5 h-5" />
+                Search Jobs
+              </Button>
+            </div>
+
+            {/* Options Link */}
+            {showOptions && (
+              <div className="flex justify-end mt-2">
+                <button
+                  onClick={() => {
+                    setShowOptions(false);
+                    setShowFilters(true);
+                  }}
+                  className="text-white/80 hover:text-white underline text-sm transition-opacity duration-300 flex items-center gap-1"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Options
+                </button>
+              </div>
+            )}
+
+            {/* Filter Pills */}
+            {showFilters && (
+              <div className="flex flex-wrap items-center gap-2 mt-2 animate-fade-in">
+                <select
+                  value={
+                    selectedJobTypes.length > 0 ? selectedJobTypes[0] : "all"
+                  }
+                  onChange={(e) => {
+                    if (e.target.value === "all") {
+                      setSelectedJobTypes([]);
+                    } else {
+                      setSelectedJobTypes([e.target.value]);
+                    }
+                  }}
+                  className="h-10 pl-3 pr-2 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
+                >
+                  <option value="all" className="text-black">
+                    Any job type
+                  </option>
+                  <option value="full-time" className="text-black">
+                    Full time
+                  </option>
+                  <option value="part-time" className="text-black">
+                    Part time
+                  </option>
+                  <option value="contract" className="text-black">
+                    Contract
+                  </option>
+                  <option value="internship" className="text-black">
+                    Casual/Temporary
+                  </option>
+                  <option value="permanent" className="text-black">
+                    Permanent
+                  </option>
+                </select>
+
+                <select
+                  value={selectedSalary}
+                  onChange={(e) => setSelectedSalary(e.target.value)}
+                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
+                >
+                  <option value="" className="text-black">
+                    Any Salary
+                  </option>
+                  <option value="30000" className="text-black">
+                    $30,000+
+                  </option>
+                  <option value="50000" className="text-black">
+                    $50,000+
+                  </option>
+                  <option value="70000" className="text-black">
+                    $70,000+
+                  </option>
+                  <option value="90000" className="text-black">
+                    $90,000+
+                  </option>
+                  <option value="110000" className="text-black">
+                    $110,000+
+                  </option>
+                  <option value="140000" className="text-black">
+                    $140,000+
+                  </option>
+                </select>
+
+                <select
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center]"
+                >
+                  <option value="any" className="text-black">
+                    Listed any time
+                  </option>
+                  <option value="24h" className="text-black">
+                    Last 24 hours
+                  </option>
+                  <option value="7d" className="text-black">
+                    Last 7 days
+                  </option>
+                  <option value="30d" className="text-black">
+                    Last 30 days
+                  </option>
+                </select>
+
+                {/* Featured Jobs Toggle */}
+                <label className="flex items-center gap-2 px-3 py-2 text-sm text-white bg-white/10 rounded-sm backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-colors">
+                  <Checkbox
+                    checked={showFeaturedOnly}
+                    onCheckedChange={(checked) => setShowFeaturedOnly(checked as boolean)}
+                    className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                  <Star className="w-4 h-4" />
+                  Featured only
+                </label>
+
+                {/* Reset All Filters Link */}
+                {(searchTerm ||
+                  (selectedState && selectedState !== "all") ||
+                  selectedCategories.length > 0 ||
+                  selectedLocations.length > 0 ||
+                  selectedJobTypes.length > 0 ||
+                  selectedLocationTypes.length > 0 ||
+                  selectedSalary ||
+                  dateFilter !== "any" ||
+                  showFeaturedOnly) && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-sm text-white/80 hover:text-white underline transition-colors ml-2"
+                  >
+                    Reset all
+                    <br />
+                    filters
+                  </button>
+                )}
+              </div>
+            )}
+          </form>
         </div>
       </div>
 
