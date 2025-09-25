@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,28 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "lucide-react";
 
-const JobSeekerAuthPage = () => {
+// Loading component for Suspense fallback
+function LoginLoading() {
+  return (
+    <div className="min-h-screen flex flex-col bg-muted">
+      <Header />
+      <div className="flex-1 flex items-center justify-center px-4 pt-32 pb-20">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Loading...
+            </h2>
+          </CardContent>
+        </Card>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Main component that uses useSearchParams
+const JobSeekerAuthContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, signUp, signIn } = useAuth();
@@ -320,4 +341,11 @@ const JobSeekerAuthPage = () => {
   );
 };
 
-export default JobSeekerAuthPage;
+// Main page component with Suspense wrapper
+export default function JobSeekerAuthPage() {
+  return (
+    <Suspense fallback={<LoginLoading />}>
+      <JobSeekerAuthContent />
+    </Suspense>
+  );
+}

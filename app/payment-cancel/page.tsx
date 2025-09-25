@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,28 @@ import { XCircle, ArrowLeft } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-export default function PaymentCancelPage() {
+// Loading component for Suspense fallback
+function PaymentCancelLoading() {
+  return (
+    <div className="min-h-screen flex flex-col bg-muted">
+      <Header />
+      <div className="flex-1 flex items-center justify-center pt-32 pb-20">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Loading...
+            </h2>
+          </CardContent>
+        </Card>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Main component that uses useSearchParams
+function PaymentCancelContent() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _searchParams = useSearchParams();
   const router = useRouter();
@@ -65,5 +87,14 @@ export default function PaymentCancelPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+// Main page component with Suspense wrapper
+export default function PaymentCancelPage() {
+  return (
+    <Suspense fallback={<PaymentCancelLoading />}>
+      <PaymentCancelContent />
+    </Suspense>
   );
 }

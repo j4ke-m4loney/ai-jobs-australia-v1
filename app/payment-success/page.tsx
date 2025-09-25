@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,28 @@ import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
-export default function PaymentSuccessPage() {
+// Loading component for Suspense fallback
+function PaymentSuccessLoading() {
+  return (
+    <div className="min-h-screen flex flex-col bg-muted">
+      <Header />
+      <div className="flex-1 flex items-center justify-center pt-32 pb-20">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Loading...
+            </h2>
+          </CardContent>
+        </Card>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Main component that uses useSearchParams
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get('session_id');
@@ -137,5 +158,14 @@ export default function PaymentSuccessPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+// Main page component with Suspense wrapper
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense fallback={<PaymentSuccessLoading />}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }

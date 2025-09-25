@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,7 +80,21 @@ interface Job {
   payment_status?: string;
 }
 
-export default function AdminJobsPage() {
+// Loading component for Suspense fallback
+function AdminJobsLoading() {
+  return (
+    <AdminLayout>
+      <div className="container mx-auto py-6">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    </AdminLayout>
+  );
+}
+
+// Main component that uses useSearchParams
+function AdminJobsContent() {
   const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -648,5 +662,14 @@ export default function AdminJobsPage() {
         </Dialog>
       </div>
     </AdminLayout>
+  );
+}
+
+// Main page component with Suspense wrapper
+export default function AdminJobsPage() {
+  return (
+    <Suspense fallback={<AdminJobsLoading />}>
+      <AdminJobsContent />
+    </Suspense>
   );
 }

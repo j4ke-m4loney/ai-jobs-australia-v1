@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -176,7 +176,38 @@ function getLocationSearchTerms(stateCode: string): string[] {
   return stateMapping[stateCode] || [];
 }
 
-export default function JobsPage() {
+// Loading component for Suspense fallback
+function JobsLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-subtle">
+      <Header />
+      <div className="bg-primary text-white py-8 mt-16">
+        <div className="container mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-6 text-center">
+            Find Your Dream AI Job
+          </h1>
+          <div className="max-w-4xl mx-auto">
+            <div className="flex gap-4">
+              <div className="flex-1 h-12 bg-white/20 rounded animate-pulse"></div>
+              <div className="flex-1 h-12 bg-white/20 rounded animate-pulse"></div>
+              <div className="h-12 w-32 bg-white/20 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading jobs...</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Main component that uses useSearchParams
+function JobsContent() {
   console.log("Jobs component rendering...");
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -1526,5 +1557,14 @@ export default function JobsPage() {
         onAuthSuccess={handleAuthSuccess}
       />
     </div>
+  );
+}
+
+// Main page component with Suspense wrapper
+export default function JobsPage() {
+  return (
+    <Suspense fallback={<JobsLoading />}>
+      <JobsContent />
+    </Suspense>
   );
 }

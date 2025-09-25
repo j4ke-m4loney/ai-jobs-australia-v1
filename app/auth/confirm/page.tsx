@@ -1,11 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
-export default function EmailConfirmPage() {
+// Loading component for Suspense fallback
+function EmailConfirmLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+        <p className="text-lg font-medium">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main component that uses useSearchParams
+function EmailConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -59,5 +72,14 @@ export default function EmailConfirmPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// Main page component with Suspense wrapper
+export default function EmailConfirmPage() {
+  return (
+    <Suspense fallback={<EmailConfirmLoading />}>
+      <EmailConfirmContent />
+    </Suspense>
   );
 }

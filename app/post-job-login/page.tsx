@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Rocket, CheckCircle } from "lucide-react";
 
-const PostJobLoginPage = () => {
+// Loading component for Suspense fallback
+function PostJobLoginLoading() {
+  return (
+    <div className="min-h-screen flex flex-col bg-muted">
+      <EmployerHeader />
+      <div className="flex-1 flex items-center justify-center px-4 pt-32 pb-20">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Loading...
+            </h2>
+          </CardContent>
+        </Card>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Main component that uses useSearchParams
+const PostJobLoginContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, signUp, signIn } = useAuth();
@@ -268,4 +289,11 @@ const PostJobLoginPage = () => {
   );
 };
 
-export default PostJobLoginPage;
+// Main page component with Suspense wrapper
+export default function PostJobLoginPage() {
+  return (
+    <Suspense fallback={<PostJobLoginLoading />}>
+      <PostJobLoginContent />
+    </Suspense>
+  );
+}
