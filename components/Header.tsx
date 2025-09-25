@@ -7,7 +7,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LogOut, User, Briefcase, Menu, X, Search, FileText, LogIn, Building } from "lucide-react";
+import { LogOut, User, Briefcase, Menu, X, Search, /* FileText, */ LogIn, Building } from "lucide-react";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -71,12 +71,13 @@ const Header = () => {
           >
             Browse Jobs
           </Link>
-          <Link
+          {/* Blog temporarily disabled - TODO: Re-enable when content is ready */}
+          {/* <Link
             href="/blog"
             className="text-muted-foreground hover:text-foreground transition-all font-medium"
           >
             Blog
-          </Link>
+          </Link> */}
         </nav>
 
         {/* Desktop Actions */}
@@ -161,14 +162,15 @@ const Header = () => {
               <Search className="w-5 h-5 flex-shrink-0" />
               Browse Jobs
             </Link>
-            <Link
+            {/* Blog temporarily disabled - TODO: Re-enable when content is ready */}
+            {/* <Link
               href="/blog"
               onClick={closeMobileMenu}
               className="flex items-center gap-3 py-3 px-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium"
             >
               <FileText className="w-5 h-5 flex-shrink-0" />
               Blog
-            </Link>
+            </Link> */}
 
             {/* Mobile Actions */}
             <div className="border-t border-border/30 pt-4 space-y-3">
