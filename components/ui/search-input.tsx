@@ -18,6 +18,20 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     const hasValue = Boolean(value && String(value).length > 0);
     const showClear = showClearButton && hasValue && (isFocused || isHovered);
 
+    // Debug logging for state tracking
+    React.useEffect(() => {
+      console.log("🔍 SearchInput state update:", {
+        value: value,
+        hasValue,
+        isFocused,
+        isHovered,
+        showClear,
+        valueType: typeof value,
+        valueLength: value ? String(value).length : 0,
+        browser: typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other') : 'Unknown'
+      });
+    }, [value, hasValue, isFocused, isHovered, showClear]);
+
     const handleClear = (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
@@ -45,18 +59,37 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         <Input
           ref={ref}
           value={value}
+          data-debug-value={value || ''}
+          data-debug-has-value={hasValue.toString()}
+          data-debug-focused={isFocused.toString()}
+          data-debug-show-clear={showClear.toString()}
           className={cn(
             leftIcon ? "pl-10" : "pl-3",
             showClear ? "pr-10" : "pr-3",
             className
           )}
           onFocus={(e) => {
+            console.log("🎯 SearchInput onFocus fired", {
+              value: e.target.value,
+              browser: typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other') : 'SSR'
+            });
             setIsFocused(true);
             props.onFocus?.(e);
           }}
           onBlur={(e) => {
+            console.log("🎯 SearchInput onBlur fired", {
+              value: e.target.value,
+              browser: typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other') : 'SSR'
+            });
             setIsFocused(false);
             props.onBlur?.(e);
+          }}
+          onChange={(e) => {
+            console.log("🎯 SearchInput onChange fired", {
+              value: e.target.value,
+              browser: typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other') : 'SSR'
+            });
+            props.onChange?.(e);
           }}
           {...props}
         />

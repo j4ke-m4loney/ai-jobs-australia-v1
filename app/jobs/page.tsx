@@ -1040,10 +1040,7 @@ function JobsContent() {
                   placeholder="Job title, keywords, or company"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onClear={() => {
-                    console.log("🧹 Clearing search term");
-                    setSearchTerm("");
-                  }}
+                  onClear={() => setSearchTerm("")}
                   leftIcon={<Search className="h-5 w-5" />}
                   className="h-12 text-base bg-white text-gray-900"
                 />
