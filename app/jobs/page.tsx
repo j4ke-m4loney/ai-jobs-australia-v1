@@ -1045,7 +1045,7 @@ function JobsContent() {
                     setSearchTerm("");
                   }}
                   leftIcon={<Search className="h-5 w-5" />}
-                  className="h-12 text-base bg-white text-foreground"
+                  className="h-12 text-base bg-white text-gray-900"
                 />
               </div>
 
@@ -1057,7 +1057,7 @@ function JobsContent() {
                     console.log("🗺️ Jobs page - State selected:", value);
                     setSelectedState(value);
                   }}
-                  className="h-12 text-base bg-white text-foreground"
+                  className="h-12 text-base bg-white text-gray-900"
                 />
               </div>
 
