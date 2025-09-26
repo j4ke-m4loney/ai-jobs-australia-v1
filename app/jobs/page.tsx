@@ -860,7 +860,7 @@ function JobsContent() {
         fetchJobs();
       }, 0);
     }
-  }, [loading, user, router, searchParams, fetchJobs]);
+  }, [loading, user, router, searchParams]);
 
   // Reset sync flag when URL params actually change (new navigation)
   useEffect(() => {
@@ -871,14 +871,14 @@ function JobsContent() {
       shouldSyncFromUrl.current = true;
       initialized.current = false;
     }
-  }, [searchParams, loading, fetchJobs]);
+  }, [searchParams, loading]);
 
   // Initial job fetching effect - now handled in initialization effect above
   // This ensures jobs are fetched AFTER URL params are synced
   useEffect(() => {
     console.log("🎯 Component mounted - waiting for initialization to fetch jobs");
     // fetchJobs is now called in the initialization effect after URL params are synced
-  }, [fetchJobs]);
+  }, []);
 
   // Job fetching effect - triggers on filter changes
   useEffect(() => {
@@ -907,7 +907,7 @@ function JobsContent() {
         hasUser: !!user,
       });
     }
-  }, [filterDeps, fetchJobs, user, loading, searchParams]);
+  }, [filterDeps, user, loading, searchParams]);
 
   // Application status check effect
   useEffect(() => {
