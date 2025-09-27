@@ -21,33 +21,56 @@ function EmailConfirmLoading() {
 function EmailConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, refreshSession } = useAuth();
+  const { user, refreshSession, loading } = useAuth();
 
   useEffect(() => {
+    // Don't do anything while auth is still loading
+    if (loading) {
+      console.log("Email confirmation: Auth context still loading...");
+      return;
+    }
+
     // Function to handle the redirect
     const handleRedirect = async () => {
-      // First, try to refresh the session to ensure we have the latest user data
       console.log("Email confirmation: Starting redirect flow");
+      console.log("Email confirmation: Current auth state", {
+        user: user ? "exists" : "null",
+        loading,
+        userId: user?.id,
+        metadata: user?.user_metadata,
+      });
 
+      // First, try to refresh the session to ensure we have the latest user data
       try {
+        console.log("Email confirmation: Refreshing session...");
         await refreshSession();
-        console.log("Email confirmation: Session refreshed");
+        console.log("Email confirmation: Session refreshed successfully");
       } catch (error) {
         console.error("Email confirmation: Failed to refresh session", error);
       }
 
-      // Small delay to ensure the auth state is fully updated
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait a bit more for the session to be fully processed
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Get user type from URL parameter or user metadata
+      // Get user type from URL parameter first, then fallback to user metadata
       const urlUserType = searchParams.get("userType");
-      const userType = urlUserType || user?.user_metadata?.user_type || user?.metadata?.userType;
+      console.log("Email confirmation: URL userType parameter:", urlUserType);
 
-      console.log("Email confirmation: User type detected", {
+      // If we have a user, get their stored type
+      let userStoredType = null;
+      if (user) {
+        userStoredType = user.user_metadata?.user_type || user.metadata?.userType;
+        console.log("Email confirmation: User stored type:", userStoredType);
+      }
+
+      // Prioritize URL parameter over stored user type for initial redirect
+      const userType = urlUserType || userStoredType;
+
+      console.log("Email confirmation: Final user type determination", {
         urlUserType,
-        userType,
-        user: user ? "exists" : "null",
-        metadata: user?.user_metadata,
+        userStoredType,
+        finalUserType: userType,
+        user: user ? `${user.id} (${user.email})` : "null",
       });
 
       // Determine redirect path based on user type
@@ -55,36 +78,34 @@ function EmailConfirmContent() {
 
       if (userType === "employer") {
         redirectPath = "/employer/settings?verified=true";
+        console.log("Email confirmation: Redirecting employer to settings");
       } else if (userType === "job_seeker") {
         redirectPath = "/jobseeker/profile?verified=true";
+        console.log("Email confirmation: Redirecting job seeker to profile");
       } else if (user) {
-        // If user exists but no type specified, check their actual type
-        const actualUserType = user.user_metadata?.user_type || user.metadata?.userType;
-        console.log("Email confirmation: Falling back to user's actual type", actualUserType);
-
-        if (actualUserType === "employer") {
-          redirectPath = "/employer/settings?verified=true";
-        } else if (actualUserType === "job_seeker") {
-          redirectPath = "/jobseeker/profile?verified=true";
-        }
+        // If user exists but no clear type, default to job seeker (most common case)
+        console.log("Email confirmation: No clear user type, defaulting to job seeker");
+        redirectPath = "/jobseeker/profile?verified=true";
       } else {
-        // No user and no type, redirect to login
-        console.log("Email confirmation: No user or type found, redirecting to login");
-        redirectPath = "/login?verified=true";
+        // No user authenticated, redirect to login
+        console.log("Email confirmation: No authenticated user, redirecting to login");
+        redirectPath = "/login?verified=true&message=Please log in to complete verification";
       }
 
-      console.log("Email confirmation: Redirecting to", redirectPath);
+      console.log("Email confirmation: Final redirect decision:", redirectPath);
+
       // Perform the redirect
       router.push(redirectPath);
     };
 
-    // Start the redirect process with a longer initial delay
+    // Wait for Supabase to process the email confirmation
+    // This needs to be longer to ensure the auth state is properly updated
     const timer = setTimeout(() => {
       handleRedirect();
-    }, 2000); // Increased delay to ensure Supabase has processed the confirmation
+    }, 3000); // Increased to 3 seconds for more reliable processing
 
     return () => clearTimeout(timer);
-  }, [user, searchParams, router, refreshSession]);
+  }, [user, loading, searchParams, router, refreshSession]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted">
