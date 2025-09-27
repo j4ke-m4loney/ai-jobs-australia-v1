@@ -81,8 +81,7 @@ export class SupabaseAuthAdapter implements AuthService {
         emailRedirectTo: redirectUrl,
         data: {
           first_name: data.metadata?.firstName,
-          user_type: userType,  // Use the normalized userType here
-          userType: userType,    // Also include as userType for consistency
+          user_type: data.metadata?.userType,
           ...data.metadata,
         },
       },

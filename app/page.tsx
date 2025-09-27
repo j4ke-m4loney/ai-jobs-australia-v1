@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
-import { AuthErrorHandler } from "@/components/AuthErrorHandler";
 import {
   Search,
   Building,
@@ -81,11 +80,6 @@ const HomePage = () => {
       <Header />
 
       <main>
-        {/* Auth Error Handler */}
-        <div className="container mx-auto px-4 pt-4">
-          <AuthErrorHandler />
-        </div>
-
         {/* Hero Search Section */}
         <section className="pt-20 pb-16 bg-gradient-to-br from-background via-muted/30 to-primary-light/20">
           <div className="container mx-auto px-4">
