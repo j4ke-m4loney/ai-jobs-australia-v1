@@ -1,6 +1,7 @@
 # AI Jobs Australia - Comprehensive Testing Plan
 
 ## Overview
+
 This document provides a complete testing strategy for the AI Jobs Australia platform, covering all user workflows, payment processing, email notifications, and system integrations. The platform serves three distinct user types: Job Seekers, Employers, and Admins, each with specific functionality and workflows.
 
 ## User Types & Core Workflows
@@ -8,12 +9,14 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ### 1. **JOB SEEKER WORKFLOW**
 
 #### **Account & Profile Management**
-- **Registration**: Create job seeker account via `/login` page
-- **Email Verification**: Confirm account via email link → `/auth/confirm`
+
+- **Registration**: Create job seeker account via `/login` page ✅
+- **Email Verification**: Confirm account via email link → `/auth/confirm` ✅
 - **Profile Setup**: Complete profile at `/jobseeker/profile`
 - **Document Upload**: Upload resume/cover letter at `/jobseeker/documents`
 
 #### **Job Search & Application**
+
 - **Job Browsing**: Search and filter jobs on `/jobs` page
 - **Job Details**: View full job details with company info
 - **Save Jobs**: Save interesting jobs to `/jobseeker/saved-jobs`
@@ -21,6 +24,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 - **Application Tracking**: Monitor status in `/jobseeker/applications`
 
 #### **Email Notifications (Job Seeker)**
+
 - **Application Status Updates**: Email when application status changes (viewed/accepted/rejected)
 
 ---
@@ -28,24 +32,28 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ### 2. **EMPLOYER WORKFLOW**
 
 #### **Account & Profile Management**
+
 - **Registration**: Create employer account via `/employer-login` or `/post-job-login`
 - **Email Verification**: Confirm account via verification email
 - **Company Profile**: Complete company details at `/employer/company-profile`
 - **Billing Setup**: Configure payment methods at `/employer/billing`
 
 #### **Job Posting & Payment**
+
 - **Job Creation**: Post jobs via `/post-job` interface
 - **Pricing Selection**: Choose from Standard ($99), Featured ($299), or Annual ($999)
 - **Payment Processing**: Stripe checkout for job posting fees
 - **Job Submission**: Job goes to admin for approval (pending_approval status)
 
 #### **Job Management**
+
 - **Job Dashboard**: View all jobs at `/employer/jobs`
 - **Application Management**: Review applications at `/employer/applications`
 - **Job Editing**: Modify approved jobs (triggers re-approval if significant changes)
 - **Analytics**: View job performance at `/employer/analytics`
 
 #### **Email Notifications (Employer)**
+
 1. **Job Submission Confirmation**: Sent immediately after posting job for approval
 2. **Job Approval Notification**: Sent when admin approves job (job goes live)
 3. **Job Rejection Notification**: Sent when admin rejects job (with reason)
@@ -57,12 +65,14 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ### 3. **ADMIN WORKFLOW**
 
 #### **Job Review & Approval**
+
 - **Admin Dashboard**: Access job queue at `/admin/jobs`
 - **Job Review**: Detailed review at `/admin/jobs/[id]`
 - **Bulk Operations**: Approve/reject multiple jobs simultaneously
 - **Job Status Management**: Set jobs to approved, rejected, or pending
 
 #### **Quality Control**
+
 - **Content Review**: Check job descriptions for compliance
 - **Company Verification**: Ensure legitimate company postings
 - **Rejection Reasons**: Provide feedback for rejected jobs
@@ -76,6 +86,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ### **Transactional Emails Sent**
 
 #### 1. **Job Submission Confirmation**
+
 - **Trigger**: Employer submits job after payment
 - **Recipient**: Employer
 - **Subject**: `Job Submitted for Approval: [Job Title]`
@@ -83,6 +94,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 - **Tag**: `job-submission`
 
 #### 2. **Job Approval Notification**
+
 - **Trigger**: Admin approves job
 - **Recipient**: Employer
 - **Subject**: `Your job posting is now live: [Job Title]`
@@ -90,6 +102,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 - **Tag**: `job-status`
 
 #### 3. **Job Rejection Notification**
+
 - **Trigger**: Admin rejects job
 - **Recipient**: Employer
 - **Subject**: `Job posting requires attention: [Job Title]`
@@ -97,6 +110,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 - **Tag**: `job-status`
 
 #### 4. **Job Resubmission Confirmation**
+
 - **Trigger**: Employer edits approved job (significant changes)
 - **Recipient**: Employer
 - **Subject**: `Job Changes Under Review: [Job Title]`
@@ -104,6 +118,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 - **Tag**: `job-resubmission`
 
 #### 5. **New Application Notification**
+
 - **Trigger**: Job seeker applies to employer's job
 - **Recipient**: Employer
 - **Subject**: `New Application: [Job Title]`
@@ -111,6 +126,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 - **Tag**: `job-application`
 
 #### 6. **Application Status Update**
+
 - **Trigger**: Employer changes application status
 - **Recipient**: Job Seeker
 - **Subject**: Varies by status:
@@ -125,17 +141,20 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ## Payment & Stripe Integration
 
 ### **Pricing Tiers**
+
 - **Standard**: $99 AUD (30-day listing)
 - **Featured**: $299 AUD (30-day featured listing)
 - **Annual**: $999 AUD (unlimited postings for 1 year - subscription)
 
 ### **Payment Flow**
+
 1. Employer selects pricing tier → Stripe Checkout
 2. Payment success → Webhook processes payment
 3. Job automatically submitted for admin approval
 4. Confirmation email sent to employer
 
 ### **Webhook Events Handled**
+
 - `checkout.session.completed` - Job creation after payment
 - `checkout.session.expired` - Cleanup failed payments
 - `payment_intent.succeeded` - Payment confirmation
@@ -149,13 +168,16 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ### **JOB SEEKER TESTING**
 
 #### **Account Setup & Profile**
+
 1. ✅ **Registration Test**
+
    - Navigate to `/login`
    - Create new job seeker account
    - Verify email confirmation workflow
    - Check redirect to `/jobseeker/profile?verified=true`
 
 2. ✅ **Profile Completion**
+
    - Complete all required profile fields
    - Upload profile photo
    - Add skills and experience levels
@@ -170,19 +192,23 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
    - Test download functionality
 
 #### **Job Search & Application**
+
 4. ✅ **Job Discovery**
+
    - Search jobs on `/jobs` page
    - Test search filters (location, category, salary, remote)
    - Verify search results accuracy
    - Test pagination and sorting
 
 5. ✅ **Job Interaction**
+
    - View job details page
    - Save jobs to favorites list
    - Verify saved jobs appear in `/jobseeker/saved-jobs`
    - Remove jobs from favorites
 
 6. ✅ **Application Process**
+
    - Apply to jobs via `/apply/[jobId]`
    - Submit with custom cover letter message
    - Verify application confirmation
@@ -196,12 +222,15 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ### **EMPLOYER TESTING**
 
 #### **Account Setup & Company Profile**
+
 1. ✅ **Registration Test**
+
    - Create account via `/employer-login` or `/post-job-login`
    - Complete email verification
    - Check redirect to `/employer/settings?verified=true`
 
 2. ✅ **Company Profile Setup**
+
    - Navigate to `/employer/company-profile`
    - Complete company details (name, description, website, location)
    - Upload company logo
@@ -214,13 +243,16 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
    - Update payment methods
 
 #### **Job Posting & Payment**
+
 4. ✅ **Job Creation**
+
    - Navigate to `/post-job`
    - Complete job form (title, description, requirements, location)
    - Select application method (email/external URL)
    - Save draft and resume editing
 
 5. ✅ **Payment Processing**
+
    - **Standard Tier ($99)**:
      - Select Standard pricing
      - Complete Stripe checkout
@@ -242,7 +274,9 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
    - View job analytics in `/employer/analytics`
 
 #### **Application Management**
+
 7. ✅ **Application Review**
+
    - Access `/employer/applications`
    - Filter applications by job and status
    - Download applicant resumes and cover letters
@@ -257,19 +291,23 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ### **ADMIN TESTING**
 
 #### **Authentication & Access**
+
 1. ✅ **Admin Login**
    - Access `/admin` with admin credentials
    - Verify admin-only access restrictions
    - Test user type authentication guards
 
 #### **Job Review & Approval**
+
 2. ✅ **Job Queue Management**
+
    - Access `/admin/jobs`
    - View pending jobs queue
    - Filter jobs by status, date, pricing tier
    - Search jobs by title or company
 
 3. ✅ **Individual Job Review**
+
    - Navigate to `/admin/jobs/[id]`
    - Review job details thoroughly
    - Approve jobs individually
@@ -277,6 +315,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
    - Verify employers receive approval/rejection emails
 
 4. ✅ **Bulk Operations**
+
    - Select multiple jobs
    - Approve jobs in bulk
    - Reject multiple jobs with reasons
@@ -291,17 +330,21 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ### **EMAIL TESTING**
 
 #### **Email Delivery Verification**
+
 1. ✅ **Job Submission Emails**
+
    - Trigger: Complete job posting payment
    - Verify employer receives submission confirmation
    - Check email content accuracy and formatting
 
 2. ✅ **Job Status Emails**
+
    - Trigger admin approval/rejection actions
    - Verify employers receive timely notifications
    - Test rejection emails include feedback
 
 3. ✅ **Application Emails**
+
    - Submit job applications
    - Verify employers receive new application notifications
    - Test application status update emails to job seekers
@@ -315,23 +358,28 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ### **INTEGRATION TESTING**
 
 #### **End-to-End Workflows**
+
 1. ✅ **Complete Job Lifecycle**
+
    - Employer registers → posts job → pays → admin approves → job goes live
    - Job seeker registers → searches → applies → receives status updates
    - Employer manages applications → updates statuses
 
 2. ✅ **Payment Integration**
+
    - Test all Stripe checkout flows
    - Verify webhook processing
    - Test payment failures and retries
    - Validate subscription management for annual plans
 
 3. ✅ **Real-time Updates**
+
    - Test dashboard updates across user types
    - Verify application status syncing
    - Check job status propagation
 
 4. ✅ **Security Testing**
+
    - Verify user type access restrictions
    - Test document access permissions
    - Validate job ownership controls
@@ -348,12 +396,14 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 ## Testing Checklist Summary
 
 ### **Pre-Testing Setup**
+
 - [ ] Configure test environment with valid API keys (Stripe, Postmark)
 - [ ] Set up test database with sample data
 - [ ] Create test user accounts for each user type
 - [ ] Configure email testing environment
 
 ### **Core Functionality**
+
 - [ ] User registration and authentication flows
 - [ ] Job posting and payment processing
 - [ ] Application submission and management
@@ -361,6 +411,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 - [ ] Email notification delivery
 
 ### **Integration Points**
+
 - [ ] Stripe payment processing and webhooks
 - [ ] Postmark email delivery
 - [ ] File upload/download functionality
@@ -368,6 +419,7 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 - [ ] Cross-user workflow interactions
 
 ### **Edge Cases & Error Handling**
+
 - [ ] Payment failures and retries
 - [ ] Email delivery failures
 - [ ] File upload errors and size limits

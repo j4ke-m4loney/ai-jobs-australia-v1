@@ -18,6 +18,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   updateUserMetadata: (metadata: Record<string, string | number | boolean | undefined>) => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -126,6 +127,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return { error: result.error ?? null };
   };
 
+  const refreshSession = async () => {
+    const authService = getAuthService();
+    if (!authService || !authService.refreshSession) {
+      console.error("Auth service does not support session refresh");
+      return;
+    }
+
+    const result = await authService.refreshSession();
+    if (result.session) {
+      setSession(result.session);
+      if (result.user) {
+        setUser(result.user);
+      }
+    }
+  };
+
   const value = {
     user,
     session,
@@ -135,6 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     signOut,
     updateUserMetadata,
     resetPassword,
+    refreshSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
