@@ -11,6 +11,7 @@ import type {
   AuthStateChangeCallback,
   UnsubscribeFunction,
 } from '@/types/auth.types';
+import { getSiteUrl } from '@/lib/utils/get-site-url';
 
 /**
  * Supabase adapter that implements the AuthService interface
@@ -71,7 +72,7 @@ export class SupabaseAuthAdapter implements AuthService {
 
   async signUp(data: SignUpData): Promise<AuthResult> {
     const userType = data.metadata?.userType || 'job_seeker';
-    const redirectUrl = `${window.location.origin}/auth/confirm?userType=${userType}`;
+    const redirectUrl = `${getSiteUrl()}/auth/confirm?userType=${userType}`;
 
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
@@ -191,7 +192,7 @@ export class SupabaseAuthAdapter implements AuthService {
   }
 
   async resetPassword(email: string): Promise<{ error?: AuthError | null }> {
-    const redirectUrl = `${window.location.origin}/reset-password`;
+    const redirectUrl = `${getSiteUrl()}/reset-password`;
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
@@ -226,7 +227,7 @@ export class SupabaseAuthAdapter implements AuthService {
     const { data: _unusedData, error } = await supabase.auth.signInWithOAuth({
       provider: provider as 'github' | 'google' | 'linkedin_oidc',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${getSiteUrl()}/auth/callback`,
       },
     });
 
@@ -242,7 +243,7 @@ export class SupabaseAuthAdapter implements AuthService {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${getSiteUrl()}/auth/callback`,
       },
     });
     
