@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { StateSelector } from "@/components/ui/state-selector";
@@ -24,7 +24,49 @@ const HomePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedState, setSelectedState] = useState("all");
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  // Handle Supabase auth redirect with hash tokens
+  useEffect(() => {
+    // Check if we have hash parameters (from Supabase email confirmation)
+    if (typeof window !== 'undefined' && window.location.hash) {
+      console.log("Homepage: Detected hash in URL", window.location.hash);
+
+      // Parse hash parameters
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+
+      // Check if this is a signup confirmation
+      if (accessToken && type === 'signup') {
+        console.log("Homepage: Detected signup confirmation via hash");
+
+        // Wait for auth context to load
+        if (!loading && user) {
+          console.log("Homepage: User authenticated after signup", {
+            userId: user.id,
+            userType: user.user_metadata?.user_type || user.metadata?.userType,
+            email: user.email
+          });
+
+          // Determine user type and redirect accordingly
+          const userType = user.user_metadata?.user_type || user.metadata?.userType || 'job_seeker';
+
+          // Clear the hash from the URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          // Redirect based on user type
+          if (userType === 'employer') {
+            console.log("Homepage: Redirecting employer to settings");
+            router.push('/employer/settings?verified=true');
+          } else {
+            console.log("Homepage: Redirecting job seeker to profile");
+            router.push('/jobseeker/profile?verified=true');
+          }
+        }
+      }
+    }
+  }, [user, loading, router]);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
