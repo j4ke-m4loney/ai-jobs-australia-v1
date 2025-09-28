@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { StateSelector } from "@/components/ui/state-selector";
@@ -23,66 +23,8 @@ import { useAuth } from "@/contexts/AuthContext";
 const HomePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedState, setSelectedState] = useState("all");
-  const [isSignupConfirmation, setIsSignupConfirmation] = useState(false);
-  const [hasRedirected, setHasRedirected] = useState(false);
   const router = useRouter();
-  const { user, loading } = useAuth();
-
-  // First effect: Detect hash parameters on mount
-  useEffect(() => {
-    // Check if we have hash parameters (from Supabase email confirmation)
-    if (typeof window !== 'undefined' && window.location.hash) {
-      console.log("Homepage: Detected hash in URL", window.location.hash);
-
-      // Parse hash parameters
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const type = hashParams.get('type');
-
-      // Check if this is a signup confirmation
-      if (accessToken && type === 'signup') {
-        console.log("Homepage: Detected signup confirmation via hash");
-        setIsSignupConfirmation(true);
-
-        // Clear the hash from the URL immediately
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-  }, []); // Run only on mount
-
-  // Second effect: Handle redirect when user is authenticated
-  useEffect(() => {
-    // Only proceed if:
-    // 1. We detected a signup confirmation
-    // 2. We haven't redirected yet
-    // 3. Auth is not loading
-    // 4. User is authenticated
-    if (isSignupConfirmation && !hasRedirected && !loading && user) {
-      console.log("Homepage: User authenticated after signup", {
-        userId: user.id,
-        userType: user.user_metadata?.user_type || user.metadata?.userType,
-        email: user.email
-      });
-
-      // Determine user type and redirect accordingly
-      const userType = user.user_metadata?.user_type || user.metadata?.userType || 'job_seeker';
-
-      // Mark as redirected to prevent multiple redirects
-      setHasRedirected(true);
-
-      // Small delay to ensure everything is loaded
-      setTimeout(() => {
-        // Redirect based on user type
-        if (userType === 'employer') {
-          console.log("Homepage: Redirecting employer to settings");
-          router.push('/employer/settings?verified=true');
-        } else {
-          console.log("Homepage: Redirecting job seeker to profile");
-          router.push('/jobseeker/profile?verified=true');
-        }
-      }, 500);
-    }
-  }, [user, loading, isSignupConfirmation, hasRedirected, router]);
+  const { user } = useAuth();
 
   const handleSearch = () => {
     const params = new URLSearchParams();
