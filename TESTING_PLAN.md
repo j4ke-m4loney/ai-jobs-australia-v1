@@ -12,13 +12,13 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 
 - **Registration**: Create job seeker account via `/login` page ✅
 - **Email Verification**: Confirm account via email link → `/auth/confirm` ✅
-- **Profile Setup**: Complete profile at `/jobseeker/profile`
-- **Document Upload**: Upload resume/cover letter at `/jobseeker/documents`
+- **Profile Setup**: Complete profile at `/jobseeker/profile` ✅
+- **Document Upload**: Upload resume/cover letter at `/jobseeker/documents` ✅
 
 #### **Job Search & Application**
 
-- **Job Browsing**: Search and filter jobs on `/jobs` page
-- **Job Details**: View full job details with company info
+- **Job Browsing**: Search and filter jobs on `/jobs` page ✅
+- **Job Details**: View full job details with company info ✅
 - **Save Jobs**: Save interesting jobs to `/jobseeker/saved-jobs`
 - **Apply for Jobs**: Submit applications via `/apply/[jobId]`
 - **Application Tracking**: Monitor status in `/jobseeker/applications`
