@@ -4,17 +4,21 @@ import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
+  const token = requestUrl.searchParams.get('token');
+  const type = requestUrl.searchParams.get('type');
+  const tokenHash = requestUrl.searchParams.get('token_hash');
 
   console.log('🔄 Auth callback handler started', {
     url: requestUrl.toString(),
-    hasCode: !!code,
-    codeLength: code?.length || 0,
+    hasToken: !!token,
+    type,
+    hasTokenHash: !!tokenHash,
+    tokenLength: token?.length || 0,
     searchParams: Object.fromEntries(requestUrl.searchParams.entries())
   });
 
-  if (code) {
-    console.log('✅ Code parameter found, proceeding with authentication');
+  if (token && type) {
+    console.log('✅ Email verification parameters found, proceeding with verification');
 
     const cookieStore = await cookies();
 
@@ -37,30 +41,34 @@ export async function GET(request: NextRequest) {
     );
 
     try {
-      console.log('🔐 Exchanging code for session...');
-      const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code);
+      console.log('🔐 Verifying email token...', { token: token.substring(0, 10) + '...', type });
+
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash || token,
+        type: type as 'email' | 'signup' | 'recovery' | 'email_change',
+      });
 
       if (error) {
-        console.error('❌ Auth callback error:', error);
+        console.error('❌ Auth verification error:', error);
         return NextResponse.redirect(`${requestUrl.origin}/auth/error?message=${encodeURIComponent(error.message)}`);
       }
 
-      console.log('✅ Session exchange successful', {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        userId: session?.user?.id,
-        userEmail: session?.user?.email
+      console.log('✅ Email verification successful', {
+        hasSession: !!data.session,
+        hasUser: !!data.user,
+        userId: data.user?.id,
+        userEmail: data.user?.email
       });
 
-      if (session?.user) {
-        const userType = session.user.user_metadata?.user_type || 'job_seeker';
+      if (data.session?.user) {
+        const userType = data.session.user.user_metadata?.user_type || 'job_seeker';
 
         console.log('👤 User data analysis', {
-          userId: session.user.id,
-          email: session.user.email,
-          userMetadata: session.user.user_metadata,
+          userId: data.session.user.id,
+          email: data.session.user.email,
+          userMetadata: data.session.user.user_metadata,
           detectedUserType: userType,
-          allUserData: session.user
+          allUserData: data.session.user
         });
 
         // Redirect based on user type after successful email confirmation
@@ -76,17 +84,17 @@ export async function GET(request: NextRequest) {
         console.log('🚀 Executing redirect to:', redirectUrl);
         return NextResponse.redirect(redirectUrl);
       } else {
-        console.log('❌ No user in session after authentication');
+        console.log('❌ No user in session after verification');
       }
     } catch (error) {
       console.error('❌ Auth callback error during processing:', error);
       return NextResponse.redirect(`${requestUrl.origin}/auth/error?message=${encodeURIComponent('Authentication failed')}`);
     }
   } else {
-    console.log('❌ No code parameter found in callback URL');
+    console.log('❌ No token or type parameter found in callback URL');
   }
 
-  // No code parameter, redirect to home
+  // No token parameter, redirect to home
   console.log('🏠 Redirecting to home page (fallback)');
   return NextResponse.redirect(`${requestUrl.origin}/`);
 }
