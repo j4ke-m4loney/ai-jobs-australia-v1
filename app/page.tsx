@@ -27,7 +27,7 @@ const HomePage = () => {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  // Handle email verification redirect
+  // Handle email verification redirect - only for newly verified users
   useEffect(() => {
     // Don't do anything while auth is still loading
     if (loading) {
@@ -35,7 +35,7 @@ const HomePage = () => {
       return;
     }
 
-    // Check if user just completed email verification
+    // Check if user exists and we haven't redirected yet
     if (user && !hasRedirected) {
       console.log("📍 Home page: Checking if user needs profile redirect", {
         userId: user.id,
@@ -44,13 +44,14 @@ const HomePage = () => {
         userMetadata: user.user_metadata
       });
 
-      // Check if this is a newly verified user who needs to complete profile
-      const userType = user.user_metadata?.user_type || user.metadata?.userType || 'job_seeker';
-      const hasCompletedProfile = localStorage.getItem(`user_${user.id}_profile_complete`);
+      // Check if we've already redirected this user before
+      const hasBeenRedirected = localStorage.getItem(`user_${user.id}_initial_redirect_complete`);
 
-      // If user doesn't have a completed profile marker, redirect to profile setup
-      if (!hasCompletedProfile) {
-        console.log("📍 Home page: New verified user detected, redirecting to profile setup", {
+      // Only redirect if this is their first visit after email verification
+      if (!hasBeenRedirected) {
+        const userType = user.user_metadata?.user_type || user.metadata?.userType || 'job_seeker';
+
+        console.log("📍 Home page: First time user detected, performing one-time redirect", {
           userType,
           userId: user.id
         });
@@ -58,19 +59,19 @@ const HomePage = () => {
         // Mark as redirected to prevent multiple redirects
         setHasRedirected(true);
 
-        // Mark that this redirect has been attempted
-        localStorage.setItem(`user_${user.id}_profile_redirect_attempted`, 'true');
+        // IMPORTANT: Mark that we've done the initial redirect for this user
+        localStorage.setItem(`user_${user.id}_initial_redirect_complete`, 'true');
 
         // Redirect based on user type
         if (userType === 'employer') {
-          console.log("📍 Home page: Redirecting employer to settings");
+          console.log("📍 Home page: Redirecting employer to settings (one-time)");
           router.push('/employer/settings?verified=true');
         } else {
-          console.log("📍 Home page: Redirecting job seeker to profile");
+          console.log("📍 Home page: Redirecting job seeker to profile (one-time)");
           router.push('/jobseeker/profile?verified=true');
         }
       } else {
-        console.log("📍 Home page: User already has completed profile, no redirect needed");
+        console.log("📍 Home page: User has already been redirected once, allowing normal navigation");
       }
     }
   }, [user, loading, hasRedirected, router]);
