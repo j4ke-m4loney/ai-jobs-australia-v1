@@ -71,11 +71,15 @@ export class SupabaseAuthAdapter implements AuthService {
   }
 
   async signUp(data: SignUpData): Promise<AuthResult> {
+    const callbackUrl = `${getSiteUrl()}/auth/callback`;
+    console.log('📧 Setting up signup with callback URL:', callbackUrl);
+    console.log('📧 Signup metadata:', data.metadata);
+
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
-        emailRedirectTo: `${getSiteUrl()}/auth/callback`,
+        emailRedirectTo: callbackUrl,
         data: {
           first_name: data.metadata?.firstName,
           user_type: data.metadata?.userType,
