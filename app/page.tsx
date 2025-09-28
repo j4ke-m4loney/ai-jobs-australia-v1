@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { StateSelector } from "@/components/ui/state-selector";
@@ -23,8 +23,57 @@ import { useAuth } from "@/contexts/AuthContext";
 const HomePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedState, setSelectedState] = useState("all");
+  const [hasRedirected, setHasRedirected] = useState(false);
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  // Handle email verification redirect
+  useEffect(() => {
+    // Don't do anything while auth is still loading
+    if (loading) {
+      console.log("📍 Home page: Auth context still loading...");
+      return;
+    }
+
+    // Check if user just completed email verification
+    if (user && !hasRedirected) {
+      console.log("📍 Home page: Checking if user needs profile redirect", {
+        userId: user.id,
+        email: user.email,
+        userType: user.user_metadata?.user_type || user.metadata?.userType,
+        userMetadata: user.user_metadata
+      });
+
+      // Check if this is a newly verified user who needs to complete profile
+      const userType = user.user_metadata?.user_type || user.metadata?.userType || 'job_seeker';
+      const hasCompletedProfile = localStorage.getItem(`user_${user.id}_profile_complete`);
+
+      // If user doesn't have a completed profile marker, redirect to profile setup
+      if (!hasCompletedProfile) {
+        console.log("📍 Home page: New verified user detected, redirecting to profile setup", {
+          userType,
+          userId: user.id
+        });
+
+        // Mark as redirected to prevent multiple redirects
+        setHasRedirected(true);
+
+        // Mark that this redirect has been attempted
+        localStorage.setItem(`user_${user.id}_profile_redirect_attempted`, 'true');
+
+        // Redirect based on user type
+        if (userType === 'employer') {
+          console.log("📍 Home page: Redirecting employer to settings");
+          router.push('/employer/settings?verified=true');
+        } else {
+          console.log("📍 Home page: Redirecting job seeker to profile");
+          router.push('/jobseeker/profile?verified=true');
+        }
+      } else {
+        console.log("📍 Home page: User already has completed profile, no redirect needed");
+      }
+    }
+  }, [user, loading, hasRedirected, router]);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
