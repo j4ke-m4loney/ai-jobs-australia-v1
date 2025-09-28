@@ -71,8 +71,7 @@ export class SupabaseAuthAdapter implements AuthService {
   }
 
   async signUp(data: SignUpData): Promise<AuthResult> {
-    const userType = data.metadata?.userType || 'job_seeker';
-    const redirectUrl = `${getSiteUrl()}/auth/confirm?userType=${userType}`;
+    const redirectUrl = `${getSiteUrl()}/auth/confirm`;
 
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,

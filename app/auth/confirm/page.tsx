@@ -52,23 +52,14 @@ function EmailConfirmContent() {
       // Wait a bit more for the session to be fully processed
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Get user type from URL parameter first, then fallback to user metadata
-      const urlUserType = searchParams.get("userType");
-      console.log("Email confirmation: URL userType parameter:", urlUserType);
-
-      // If we have a user, get their stored type
-      let userStoredType = null;
+      // Get user type from user metadata (no longer using URL parameters)
+      let userType = null;
       if (user) {
-        userStoredType = user.user_metadata?.user_type || user.metadata?.userType;
-        console.log("Email confirmation: User stored type:", userStoredType);
+        userType = user.user_metadata?.user_type || user.metadata?.userType;
+        console.log("Email confirmation: User stored type:", userType);
       }
 
-      // Prioritize URL parameter over stored user type for initial redirect
-      const userType = urlUserType || userStoredType;
-
       console.log("Email confirmation: Final user type determination", {
-        urlUserType,
-        userStoredType,
         finalUserType: userType,
         user: user ? `${user.id} (${user.email})` : "null",
       });
