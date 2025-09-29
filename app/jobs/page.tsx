@@ -88,6 +88,12 @@ function hasWordStartMatch(title: string, searchTerm: string): boolean {
 }
 
 function calculateSearchRelevance(job: Job, searchTerm: string): number {
+  // Safety check for null/undefined job or missing title
+  if (!job || !job.title) {
+    console.warn('⚠️ calculateSearchRelevance called with invalid job:', job);
+    return 0;
+  }
+
   // Use original search term, just lowercase and trim it
   const search = searchTerm.toLowerCase().trim();
   const title = job.title.toLowerCase();
@@ -485,6 +491,9 @@ function JobsContent() {
 
       let jobsData = (data as Job[]) || [];
 
+      // Filter out any null/invalid jobs from the initial query
+      jobsData = jobsData.filter(job => job && job.title && job.id);
+
       console.log("🔍 Initial jobsData from main query:", {
         length: jobsData.length,
         hasData: !!jobsData,
@@ -618,7 +627,8 @@ function JobsContent() {
               console.log("🔍 Existing job IDs count:", existingJobIds.size);
 
               console.log("🔍 Filtering new jobs...");
-              const newJobs = companyJobsData.filter(job => !existingJobIds.has(job.id));
+              const newJobs = companyJobsData
+                .filter(job => job && job.title && job.id && !existingJobIds.has(job.id));
               console.log("🔍 New jobs to add:", newJobs.length);
 
               console.log("🔍 Merging job arrays...");
@@ -663,10 +673,13 @@ function JobsContent() {
       });
 
       if (effectiveSearchTerm && effectiveSearchTerm.trim() && jobsData.length > 0) {
-        jobsData = jobsData.map(job => ({
-          ...job,
-          _relevanceScore: calculateSearchRelevance(job, effectiveSearchTerm.trim())
-        }));
+        // Filter out any null/invalid jobs before processing
+        jobsData = jobsData
+          .filter(job => job && job.title)
+          .map(job => ({
+            ...job,
+            _relevanceScore: calculateSearchRelevance(job, effectiveSearchTerm.trim())
+          }));
       }
 
       // Apply sorting to merged results
