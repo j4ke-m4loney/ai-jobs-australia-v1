@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface Application {
   id: string;
@@ -139,10 +140,12 @@ const JobSeekerApplications = () => {
     return `Up to $${max?.toLocaleString()}`;
   };
 
-  const filteredApplications = applications.filter((app) => {
-    if (filter === "all") return true;
-    return app.status === filter;
-  });
+  const filteredApplications = applications
+    .filter((app) => app && app.job && app.job.id && app.job.title) // Filter out null/invalid applications
+    .filter((app) => {
+      if (filter === "all") return true;
+      return app.status === filter;
+    });
 
   const statusCounts = applications.reduce((acc, app) => {
     acc[app.status] = (acc[app.status] || 0) + 1;
@@ -259,8 +262,9 @@ const JobSeekerApplications = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-4">
-                  {filteredApplications.map((application) => (
+                <ErrorBoundary>
+                  <div className="space-y-4">
+                    {filteredApplications.map((application) => (
                     <Card
                       key={application.id}
                       className="hover:shadow-md transition-shadow"
@@ -270,10 +274,10 @@ const JobSeekerApplications = () => {
                           <div className="flex gap-4 flex-1">
                             {/* Company Logo */}
                             <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                              {application.job.companies?.logo_url ? (
+                              {application.job?.companies?.logo_url ? (
                                 <Image
                                   src={application.job.companies.logo_url}
-                                  alt={application.job.companies.name || "Company"}
+                                  alt={application.job.companies?.name || "Company"}
                                   width={32}
                                   height={32}
                                   className="w-8 h-8 rounded"
@@ -291,11 +295,11 @@ const JobSeekerApplications = () => {
                                   router.push(`/jobseeker/applied-job/${application.job.id}`)
                                 }
                               >
-                                {application.job.title}
+                                {application.job?.title || "Job Title"}
                               </h3>
 
                               <p className="text-sm text-muted-foreground mb-2">
-                                {application.job.companies?.name ||
+                                {application.job?.companies?.name ||
                                   "Company"}
                               </p>
 
@@ -345,8 +349,9 @@ const JobSeekerApplications = () => {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </ErrorBoundary>
               )}
       </div>
     </JobSeekerLayout>
