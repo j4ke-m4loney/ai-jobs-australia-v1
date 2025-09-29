@@ -19,9 +19,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Star,
   Download,
-  Mail,
   Phone,
   MapPin,
   Calendar,
@@ -188,7 +186,6 @@ const EmployerApplications = () => {
       `${application.profiles?.first_name || ""} ${
         application.profiles?.last_name || ""
       }`.trim() || "Unknown Applicant";
-    const userEmail = application.profiles?.email || "Email not provided";
 
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -233,10 +230,6 @@ const EmployerApplications = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-4 text-xs sm:text-sm">
-            <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <span className="truncate">{userEmail}</span>
-            </div>
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <span className="truncate">
