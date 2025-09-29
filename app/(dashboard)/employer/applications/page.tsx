@@ -177,16 +177,18 @@ const EmployerApplications = () => {
     application,
     isSelected,
     onToggleSelect,
+    applicationNumber,
   }: {
     application: JobApplication;
     isSelected: boolean;
     onToggleSelect: (id: string) => void;
+    applicationNumber?: number;
   }) => {
     const applicantName =
       `${application.profiles?.first_name || ""} ${
         application.profiles?.last_name || ""
       }`.trim() || "Unknown Applicant";
-    const userEmail = application.profiles?.user_id || "";
+    const userEmail = application.profiles?.email || "Email not provided";
 
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -208,9 +210,16 @@ const EmployerApplications = () => {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
-                <h3 className="font-semibold text-base sm:text-lg truncate">
-                  {applicantName}
-                </h3>
+                <div className="flex items-center gap-2">
+                  {applicationNumber && (
+                    <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium bg-blue-100 text-blue-800 rounded-full flex-shrink-0">
+                      {applicationNumber}
+                    </span>
+                  )}
+                  <h3 className="font-semibold text-base sm:text-lg truncate">
+                    {applicantName}
+                  </h3>
+                </div>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {application.job.title}
                 </p>
@@ -249,13 +258,14 @@ const EmployerApplications = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-2">
+            {/* Commented out experience level display - not useful for employers */}
+            {/* <div className="flex items-center gap-2">
               <Star className="w-4 h-4 text-warning flex-shrink-0" />
               <span className="text-xs sm:text-sm font-medium truncate">
                 {application.profiles?.experience_level ||
                   "Experience level not specified"}
               </span>
-            </div>
+            </div> */}
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               {application.resume_url && (
@@ -545,7 +555,7 @@ const EmployerApplications = () => {
                           </p>
                         </div>
                       ) : (
-                        applications.map((application) => (
+                        applications.map((application, index) => (
                           <ApplicationCard
                             key={application.id}
                             application={application}
@@ -553,6 +563,7 @@ const EmployerApplications = () => {
                               application.id
                             )}
                             onToggleSelect={toggleApplicationSelection}
+                            applicationNumber={index + 1}
                           />
                         ))
                       )}
@@ -577,7 +588,7 @@ const EmployerApplications = () => {
                       </Button>
                     </div>
                     <div className="space-y-4">
-                      {filterApplications("reviewing").map((application) => (
+                      {filterApplications("reviewing").map((application, index) => (
                         <ApplicationCard
                           key={application.id}
                           application={application}
@@ -585,6 +596,7 @@ const EmployerApplications = () => {
                             application.id
                           )}
                           onToggleSelect={toggleApplicationSelection}
+                          applicationNumber={index + 1}
                         />
                       ))}
                     </div>
@@ -610,7 +622,7 @@ const EmployerApplications = () => {
                       </Button>
                     </div>
                     <div className="space-y-4">
-                      {filterApplications("shortlisted").map((application) => (
+                      {filterApplications("shortlisted").map((application, index) => (
                         <ApplicationCard
                           key={application.id}
                           application={application}
@@ -618,6 +630,7 @@ const EmployerApplications = () => {
                             application.id
                           )}
                           onToggleSelect={toggleApplicationSelection}
+                          applicationNumber={index + 1}
                         />
                       ))}
                     </div>
@@ -641,7 +654,7 @@ const EmployerApplications = () => {
                       </Button>
                     </div>
                     <div className="space-y-4">
-                      {filterApplications("rejected").map((application) => (
+                      {filterApplications("rejected").map((application, index) => (
                         <ApplicationCard
                           key={application.id}
                           application={application}
@@ -649,6 +662,7 @@ const EmployerApplications = () => {
                             application.id
                           )}
                           onToggleSelect={toggleApplicationSelection}
+                          applicationNumber={index + 1}
                         />
                       ))}
                     </div>
