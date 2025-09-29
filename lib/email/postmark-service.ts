@@ -71,6 +71,17 @@ export interface JobResubmissionEmailData {
   dashboardUrl: string;
 }
 
+export interface BatchedApplicationEmailData {
+  employerName: string;
+  employerEmail: string;
+  jobTitle: string;
+  jobId: string;
+  applicationCount: number;
+  applicantNames: string[];
+  timeFrame: string;
+  dashboardUrl: string;
+}
+
 export class PostmarkEmailService {
   private static instance: PostmarkEmailService;
 
@@ -672,6 +683,139 @@ export class PostmarkEmailService {
       ${data.dashboardUrl}
 
       Need to make more changes? You can continue editing your job posting in your dashboard while it's under review.
+
+      Questions? Contact our support team - we're here to help!
+      You can manage your notification preferences in your account settings.
+    `;
+  }
+
+  /**
+   * Send batched email notification to employer for multiple applications
+   */
+  async sendBatchedApplicationNotification(data: BatchedApplicationEmailData): Promise<boolean> {
+    if (!isEmailServiceAvailable()) {
+      return false;
+    }
+
+    try {
+      await postmarkClient!.sendEmail({
+        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        To: data.employerEmail,
+        Subject: `${data.applicationCount} new applications: ${data.jobTitle}`,
+        HtmlBody: this.getBatchedApplicationNotificationHtml(data),
+        TextBody: this.getBatchedApplicationNotificationText(data),
+        Tag: 'batch-job-application',
+        TrackOpens: true,
+        TrackLinks: Models.LinkTrackingOptions.None,
+        MessageStream: 'outbound'
+      });
+
+      console.log(`✅ Batched application notification sent to ${data.employerEmail} for ${data.applicationCount} applications`);
+      return true;
+    } catch (error) {
+      console.error('Failed to send batched application notification:', error);
+      return false;
+    }
+  }
+
+  private getBatchedApplicationNotificationHtml(data: BatchedApplicationEmailData): string {
+    const applicantList = data.applicantNames.map((name, index) =>
+      `<li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">${index + 1}. ${name}</li>`
+    ).join('');
+
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Applications - AI Jobs Australia</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">AI Jobs Australia</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">New Job Applications</p>
+          </div>
+
+          <div style="background: #f9f9f9; padding: 25px; border-radius: 8px; border-left: 4px solid #10b981; margin-bottom: 20px;">
+            <h2 style="color: #333; margin-top: 0;">📝 ${data.applicationCount} New Applications Received</h2>
+            <p>Hello ${data.employerName},</p>
+            <p>Great news! You've received <strong>${data.applicationCount} new applications</strong> for your job posting ${data.timeFrame}.</p>
+
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #667eea; font-size: 20px;">${data.jobTitle}</h3>
+
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <h4 style="color: #495057; margin-top: 0; margin-bottom: 15px;">New Applicants:</h4>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  ${applicantList}
+                </ul>
+              </div>
+
+              <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                <p style="margin: 0; color: #1565c0;">
+                  <strong>💡 Tip:</strong> Review applications quickly to maintain candidate engagement.
+                  The best candidates often have multiple opportunities!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.dashboardUrl}?job=${data.jobId}"
+               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      padding: 15px 30px;
+                      text-decoration: none;
+                      border-radius: 5px;
+                      font-weight: bold;
+                      display: inline-block;
+                      font-size: 16px;">
+              Review Applications Now
+            </a>
+          </div>
+
+          <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
+            <h3 style="color: #856404; margin-top: 0;">🔔 Email Batching Active</h3>
+            <p style="color: #856404; margin-bottom: 0;">
+              To prevent inbox flooding, we group multiple applications and send you updates when you receive 5+ applications
+              or after 1 hour (whichever comes first). You can adjust these preferences in your dashboard settings.
+            </p>
+          </div>
+
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+            <p>Each applicant has uploaded their resume and details for your review.</p>
+            <p>Questions? Contact our support team - we're here to help!</p>
+            <p>You can manage your notification preferences in your account settings.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private getBatchedApplicationNotificationText(data: BatchedApplicationEmailData): string {
+    const applicantList = data.applicantNames.map((name, index) => `${index + 1}. ${name}`).join('\n');
+
+    return `
+      AI Jobs Australia - New Job Applications
+
+      Hello ${data.employerName},
+
+      Great news! You've received ${data.applicationCount} new applications for your job posting ${data.timeFrame}.
+
+      Job: ${data.jobTitle}
+
+      New Applicants:
+      ${applicantList}
+
+      Tip: Review applications quickly to maintain candidate engagement.
+      The best candidates often have multiple opportunities!
+
+      Review applications: ${data.dashboardUrl}?job=${data.jobId}
+
+      Email Batching Active:
+      To prevent inbox flooding, we group multiple applications and send you updates when you receive 5+ applications
+      or after 1 hour (whichever comes first). You can adjust these preferences in your dashboard settings.
 
       Questions? Contact our support team - we're here to help!
       You can manage your notification preferences in your account settings.

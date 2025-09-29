@@ -68,6 +68,8 @@ export default function ApplyPage() {
   const [jobLoading, setJobLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [userDocuments, setUserDocuments] = useState<UserDocument[]>([]);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [checkingApplication, setCheckingApplication] = useState(false);
 
   // Form state
   const [selectedResume, setSelectedResume] = useState<string>("");
@@ -143,13 +145,40 @@ export default function ApplyPage() {
     }
   }, [user]);
 
+  // Check if user has already applied for this job
+  const checkExistingApplication = useCallback(async () => {
+    if (!user || !jobId) return;
+
+    setCheckingApplication(true);
+    try {
+      const response = await fetch(
+        `/api/applications?userId=${user.id}&jobId=${jobId}&type=applicant`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const hasExistingApplication = data.applications && data.applications.length > 0;
+        setHasApplied(hasExistingApplication);
+
+        if (hasExistingApplication) {
+          toast.info("You have already applied for this job.");
+        }
+      }
+    } catch (error) {
+      console.error("Error checking existing application:", error);
+    } finally {
+      setCheckingApplication(false);
+    }
+  }, [user, jobId]);
+
   // Fetch job details and user documents on component mount
   useEffect(() => {
     if (jobId && user) {
       fetchJobDetails();
       fetchUserDocuments();
+      checkExistingApplication();
     }
-  }, [jobId, user, fetchJobDetails, fetchUserDocuments]);
+  }, [jobId, user, fetchJobDetails, fetchUserDocuments, checkExistingApplication]);
 
   const handleFileUpload = async (
     file: File,
@@ -225,6 +254,12 @@ export default function ApplyPage() {
   const handleSubmitApplication = async () => {
     if (!user || !job) return;
 
+    // Check if user has already applied
+    if (hasApplied) {
+      toast.error("You have already applied for this job");
+      return;
+    }
+
     if (!selectedResume) {
       toast.error("Please select or upload a resume");
       return;
@@ -250,21 +285,33 @@ export default function ApplyPage() {
         ? userDocuments.find((doc) => doc.id === selectedCoverLetter)
         : null;
 
-      const { error } = await supabase.from("job_applications").insert({
-        job_id: job.id,
-        applicant_id: user.id,
-        resume_url: resumeDoc?.file_path,
-        cover_letter_url: coverLetterDoc?.file_path,
-        status: "submitted",
+      // Call the API endpoint instead of direct Supabase insert
+      const response = await fetch("/api/applications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          jobId: job.id,
+          applicantId: user.id,
+          resumeUrl: resumeDoc?.file_path,
+          coverLetterUrl: coverLetterDoc?.file_path,
+        }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit application");
+      }
 
       toast.success("Application submitted successfully!");
+      setHasApplied(true); // Update local state to prevent duplicate submissions
       router.push("/jobseeker/applications");
     } catch (error) {
       console.error("Application error:", error);
-      toast.error("Failed to submit application");
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit application";
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -653,14 +700,24 @@ export default function ApplyPage() {
             <div className="pt-6 border-t">
               <Button
                 onClick={handleSubmitApplication}
-                disabled={submitting || !selectedResume}
+                disabled={submitting || !selectedResume || hasApplied || checkingApplication}
                 size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-white"
+                className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50"
               >
-                {submitting ? (
+                {checkingApplication ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Checking Application Status...
+                  </>
+                ) : submitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Submitting Application...
+                  </>
+                ) : hasApplied ? (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Already Applied
                   </>
                 ) : (
                   <>
