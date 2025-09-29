@@ -41,11 +41,13 @@ A comprehensive company profile management system that allows employers to maint
 
 ## 💡 Other Future Features
 
-### 📧 Enhanced Email Notifications
-- Customizable notification preferences
-- Application status updates for job seekers
-- Employer notification templates
-- Digest emails for weekly summaries
+### 📧 Advanced Notification Features
+- **Job View Milestones**: Email notifications when jobs reach view thresholds (100, 500, 1000+ views)
+- **Weekly Analytics Reports**: Automated weekly performance summaries and statistics via email
+- **Direct Messaging System**: Real-time push notifications for employer-candidate communication
+- **Application Status Updates**: Email notifications for job seekers when application status changes
+- **Customizable Notification Templates**: Allow employers to personalize notification content
+- **Digest Email Options**: Daily/weekly summary emails with batched notifications
 
 ### 🔍 Advanced Search & Filtering
 - Saved search preferences
@@ -131,6 +133,12 @@ A comprehensive company profile management system that allows employers to maint
 - Ensure proper TypeScript typing for all new features
 - Add comprehensive tests for new functionality
 - Update documentation with implementation details
+
+### Advanced Notification Features Implementation Notes
+- UI components for Job Views, Weekly Reports, and Direct Messages are preserved in commented code in `employer/settings/page.tsx`
+- Database schema already supports additional notification preferences via the `user_notification_preferences` table
+- Notification preference state management is structured to easily accommodate new features
+- Email batching system is in place and can be extended for new notification types
 
 ---
 

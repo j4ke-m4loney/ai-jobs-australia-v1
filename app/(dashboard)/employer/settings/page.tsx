@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   Form,
   FormControl,
@@ -202,12 +205,10 @@ const EmployerSettings = () => {
             if (preferences) {
               setNotificationSettings({
                 emailApplications: preferences.email_applications,
-                emailJobViews: preferences.email_job_views,
-                emailWeeklyReports: preferences.email_weekly_reports,
-                pushApplications: true, // Not stored in DB yet
-                pushMessages: false,    // Not stored in DB yet
+                pushApplications: preferences.push_applications ?? true,
               });
             }
+            setNotificationPrefsLoaded(true);
           }
         } catch (error) {
           console.error('Error loading notification preferences:', error);
@@ -274,21 +275,18 @@ const EmployerSettings = () => {
   };
 
   // Notification settings state
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [notificationSettings, setNotificationSettings] = useState({
     emailApplications: true,
-    emailJobViews: false,
-    emailWeeklyReports: false,
     pushApplications: true,
-    pushMessages: false,
   });
+  const [notificationPrefsLoaded, setNotificationPrefsLoaded] = useState(false);
 
-  // const [privacySettings, setPrivacySettings] = useState({
-  //   profileVisible: true,
-  //   showCompanyLogo: true,
-  //   allowDirectMessages: true,
-  //   dataAnalytics: true,
-  // });
+  const [privacySettings, setPrivacySettings] = useState({
+    profileVisible: true,
+    showCompanyLogo: true,
+    allowDirectMessages: true,
+    dataAnalytics: true,
+  });
 
   const handleSaveProfile = async (formData: ProfileFormData) => {
     // Check if email has changed
@@ -363,6 +361,42 @@ const EmployerSettings = () => {
     setEmailChangeData(null);
   };
 
+  // Notification preferences handler
+  const handleSaveNotificationPreferences = async () => {
+    if (!user) return;
+
+    setSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      const response = await fetch('/api/user/notification-preferences', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          email_applications: notificationSettings.emailApplications,
+          push_applications: notificationSettings.pushApplications,
+        })
+      });
+
+      if (response.ok) {
+        toast.success("Notification preferences updated successfully!");
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to update notification preferences");
+      }
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      toast.error("Failed to update notification preferences. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
 
 
   // Payment method handlers
@@ -414,24 +448,18 @@ const EmployerSettings = () => {
     <EmployerLayout title="Settings">
       <div className="max-w-4xl mx-auto">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Profile
             </TabsTrigger>
-            {/* TODO: Uncomment for future MVP iterations
             <TabsTrigger
               value="notifications"
               className="flex items-center gap-2"
             >
-              <Bell className="w-4 h-4" />
+              <Mail className="w-4 h-4" />
               Notifications
             </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              Privacy
-            </TabsTrigger>
-            */}
             <TabsTrigger value="billing" className="flex items-center gap-2">
               <CreditCard className="w-4 h-4" />
               Billing
@@ -551,7 +579,6 @@ const EmployerSettings = () => {
             </Card>
           </TabsContent>
 
-          {/* TODO: Uncomment for future MVP iterations
           <TabsContent value="notifications">
             <Card>
               <CardHeader>
@@ -585,6 +612,7 @@ const EmployerSettings = () => {
                       />
                     </div>
 
+                    {/* TODO: Uncomment when job view tracking is implemented
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="email-views">Job Views</Label>
@@ -603,7 +631,9 @@ const EmployerSettings = () => {
                         }
                       />
                     </div>
+                    */}
 
+                    {/* TODO: Uncomment when weekly analytics reports are implemented
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="email-reports">Weekly Reports</Label>
@@ -622,6 +652,7 @@ const EmployerSettings = () => {
                         }
                       />
                     </div>
+                    */}
                   </div>
                 </div>
 
@@ -651,6 +682,7 @@ const EmployerSettings = () => {
                       />
                     </div>
 
+                    {/* TODO: Uncomment when direct messaging system is implemented
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="push-messages">Direct Messages</Label>
@@ -669,6 +701,7 @@ const EmployerSettings = () => {
                         }
                       />
                     </div>
+                    */}
                   </div>
                 </div>
 
@@ -779,7 +812,6 @@ const EmployerSettings = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          */}
 
           <TabsContent value="billing">
             <div className="space-y-6">

@@ -403,14 +403,29 @@ export async function POST(request: NextRequest) {
     const employerEmail = employerUserData?.user?.email;
 
     // Check employer's notification preferences
-    const { data: employerPrefs } = await supabaseAdmin
+    const { data: employerPrefs, error: prefsError } = await supabaseAdmin
       .from('user_notification_preferences')
       .select('email_applications')
       .eq('user_id', jobData.employer_id)
       .single();
 
+    // Log preference check for debugging
+    console.log('📧 Notification preferences check:', {
+      employerId: jobData.employer_id,
+      prefsFound: !!employerPrefs,
+      prefsError: prefsError?.message,
+      emailApplications: employerPrefs?.email_applications
+    });
+
     // Send email notification to employer if they have the preference enabled (default: true)
+    // If no preferences found (null), default to sending emails (true)
     const shouldSendEmail = !employerPrefs || employerPrefs.email_applications !== false;
+
+    console.log('📧 Email notification decision:', {
+      shouldSendEmail,
+      hasEmployerEmail: !!employerEmail,
+      employerUserError: employerUserError?.message
+    });
 
     if (shouldSendEmail && !employerUserError && employerEmail) {
       try {
@@ -448,6 +463,12 @@ export async function POST(request: NextRequest) {
         console.error('❌ Failed to handle application notification:', emailError);
         // Don't fail the request if email fails - application was created successfully
       }
+    } else {
+      console.log('📧 Email notification skipped:', {
+        reason: !shouldSendEmail ? 'notification preference disabled' :
+                employerUserError ? 'employer user error' :
+                !employerEmail ? 'no employer email' : 'unknown'
+      });
     }
 
     return NextResponse.json({
