@@ -37,8 +37,7 @@ async function processOverdueBatches(): Promise<void> {
         application_ids,
         applicant_names,
         created_at,
-        scheduled_for,
-        jobs(title)
+        scheduled_for
       `)
       .eq('processed', false)
       .lte('scheduled_for', new Date().toISOString())
@@ -49,6 +48,19 @@ async function processOverdueBatches(): Promise<void> {
     }
 
     console.log(`📧 Processing ${overdueQueues.length} overdue email batches (lazy processing)`);
+
+    // Fetch job titles separately to avoid TypeScript foreign key issues
+    const jobIds = [...new Set(overdueQueues.map(q => q.job_id))];
+    const { data: jobs } = await supabaseAdmin
+      .from('jobs')
+      .select('id, title')
+      .in('id', jobIds);
+
+    // Create a lookup map for job titles
+    const jobTitleMap = new Map();
+    (jobs || []).forEach(job => {
+      jobTitleMap.set(job.id, job.title);
+    });
 
     // Process each overdue batch
     for (const queue of overdueQueues) {
@@ -76,11 +88,11 @@ async function processOverdueBatches(): Promise<void> {
         const timeFrame = queueAge < 120 ? 'in the last hour' : `in the last ${Math.round(queueAge / 60)} hours`;
 
         // Send the batched email
-        const jobTitle = Array.isArray(queue.jobs) ? queue.jobs[0]?.title : queue.jobs?.title;
+        const jobTitle = jobTitleMap.get(queue.job_id) || 'Job Post';
         const emailSent = await emailService.sendBatchedApplicationNotification({
           employerName,
           employerEmail,
-          jobTitle: jobTitle || 'Job Post',
+          jobTitle,
           jobId: queue.job_id,
           applicationCount: queue.application_ids.length,
           applicantNames: queue.applicant_names,
