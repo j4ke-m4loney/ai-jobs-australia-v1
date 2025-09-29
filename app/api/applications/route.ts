@@ -10,7 +10,6 @@ const supabaseAdmin = createClient(
 
 // Volume-based batching configuration
 const BATCH_THRESHOLD = 5; // Send batch email after 5 applications
-const BATCH_TIMEOUT_HOURS = 1; // Or after 1 hour, whichever comes first
 
 interface EmailBatchingParams {
   jobId: string;
@@ -39,7 +38,7 @@ async function processOverdueBatches(): Promise<void> {
         applicant_names,
         created_at,
         scheduled_for,
-        jobs!inner(title)
+        jobs(title)
       `)
       .eq('processed', false)
       .lte('scheduled_for', new Date().toISOString())
@@ -77,10 +76,11 @@ async function processOverdueBatches(): Promise<void> {
         const timeFrame = queueAge < 120 ? 'in the last hour' : `in the last ${Math.round(queueAge / 60)} hours`;
 
         // Send the batched email
+        const jobTitle = Array.isArray(queue.jobs) ? queue.jobs[0]?.title : queue.jobs?.title;
         const emailSent = await emailService.sendBatchedApplicationNotification({
           employerName,
           employerEmail,
-          jobTitle: queue.jobs.title,
+          jobTitle: jobTitle || 'Job Post',
           jobId: queue.job_id,
           applicationCount: queue.application_ids.length,
           applicantNames: queue.applicant_names,
@@ -203,7 +203,6 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
       await sendBatchEmail({
         queueId: existingQueue.id,
         jobId,
-        employerId,
         employerName,
         employerEmail,
         jobTitle,
@@ -213,7 +212,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
     }
   } else {
     // Create new queue entry
-    const { data: newQueue } = await supabaseAdmin
+    await supabaseAdmin
       .from('email_notification_queue')
       .insert({
         job_id: jobId,
@@ -221,9 +220,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
         application_ids: [applicationId],
         applicant_names: [applicantName],
         scheduled_for: new Date(now.getTime() + (60 * 60 * 1000)).toISOString() // 1 hour from now
-      })
-      .select()
-      .single();
+      });
 
     console.log(`📦 Created new batch queue entry`);
   }
@@ -243,7 +240,6 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
 async function sendBatchEmail(params: {
   queueId: string;
   jobId: string;
-  employerId: string;
   employerName: string;
   employerEmail: string;
   jobTitle: string;
@@ -253,7 +249,6 @@ async function sendBatchEmail(params: {
   const {
     queueId,
     jobId,
-    employerId,
     employerName,
     employerEmail,
     jobTitle,
@@ -349,11 +344,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get applicant email from auth.users table
-    const { data: applicantUserData } = await supabaseAdmin
-      .auth.admin.getUserById(applicantId);
-
-    const applicantEmail = applicantUserData?.user?.email;
+    // Note: We no longer fetch applicant email for privacy reasons
 
     // Check if application already exists
     const { data: existingApplication } = await supabaseAdmin
