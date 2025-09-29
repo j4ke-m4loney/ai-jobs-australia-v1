@@ -1,0 +1,31 @@
+User-agent: *
+Allow: /
+Allow: /jobs
+Allow: /jobs/*
+Allow: /company/*
+Allow: /hire
+Allow: /contact
+Allow: /terms
+Allow: /privacy-policy
+
+# Block all user dashboard and admin areas
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /employer
+Disallow: /employer/*
+Disallow: /jobseeker
+Disallow: /jobseeker/*
+Disallow: /apply/*
+Disallow: /auth
+Disallow: /auth/*
+Disallow: /login
+Disallow: /employer-login
+Disallow: /post-job-login
+Disallow: /post-job
+Disallow: /post-job-v0
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /payment-success
+Disallow: /payment-cancel
+
+Sitemap: https://aijobsaustralia.com/sitemap.xml
