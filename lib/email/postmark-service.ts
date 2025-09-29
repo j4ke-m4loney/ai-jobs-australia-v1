@@ -706,7 +706,7 @@ export class PostmarkEmailService {
         TextBody: this.getBatchedApplicationNotificationText(data),
         Tag: 'batch-job-application',
         TrackOpens: true,
-        TrackLinks: 'None',
+        TrackLinks: Models.LinkTrackingOptions.None,
         MessageStream: 'outbound'
       });
 
