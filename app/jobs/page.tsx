@@ -29,6 +29,7 @@ import { useSavedJobs } from "@/hooks/useSavedJobs";
 import { SaveJobAuthModal } from "@/components/SaveJobAuthModal";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface Job {
   id: string;
@@ -1527,18 +1528,20 @@ function JobsContent() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4 p-4 max-w-lg mx-auto">
-                {jobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    isSelected={selectedJob?.id === job.id}
-                    onClick={handleJobClick}
-                    onSaveClick={handleToggleSaveJob}
-                    isJobSaved={isJobSaved(job.id)}
-                  />
-                ))}
-              </div>
+              <ErrorBoundary>
+                <div className="space-y-4 p-4 max-w-lg mx-auto">
+                  {jobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      isSelected={selectedJob?.id === job.id}
+                      onClick={handleJobClick}
+                      onSaveClick={handleToggleSaveJob}
+                      isJobSaved={isJobSaved(job.id)}
+                    />
+                  ))}
+                </div>
+              </ErrorBoundary>
             )}
 
             {/* Footer spacer to ensure scrolling works */}

@@ -365,7 +365,7 @@ export const JobSeekerDashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {savedJobs.slice(0, 3).map((savedJob) => (
+              {savedJobs.filter(job => job && job.title && job.id).slice(0, 3).map((savedJob) => (
                 <div
                   key={savedJob.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
@@ -375,7 +375,7 @@ export const JobSeekerDashboardOverview = () => {
                 >
                   <div className="flex-1">
                     <h4 className="font-medium text-foreground">
-                      {savedJob.title}
+                      {savedJob?.title || "Job Title"}
                     </h4>
                     <p className="text-sm text-muted-foreground">
                       {savedJob.company_name || "Company"} •{" "}
@@ -424,14 +424,14 @@ export const JobSeekerDashboardOverview = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {applications.slice(0, 3).map((application) => (
+              {applications.filter(app => app && app.job && app.job.title && app.job.id).slice(0, 3).map((application) => (
                 <div
                   key={application.id}
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex-1">
                     <h4 className="font-medium text-foreground">
-                      {application.job.title}
+                      {application.job?.title || "Job Title"}
                     </h4>
                     <p className="text-sm text-muted-foreground">
                       {application.job.companies?.name || "Company"} •{" "}
