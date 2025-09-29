@@ -874,7 +874,7 @@ function JobsContent() {
         fetchJobs();
       }, 0);
     }
-  }, [loading, user, router, searchParams]);
+  }, [loading, user, router, searchParams, fetchJobs]);
 
   // Reset sync flag when URL params actually change (new navigation)
   useEffect(() => {
@@ -921,7 +921,7 @@ function JobsContent() {
         hasUser: !!user,
       });
     }
-  }, [filterDeps, user, loading, searchParams]);
+  }, [filterDeps, user, loading, searchParams, fetchJobs]);
 
   // Application status check effect
   useEffect(() => {
