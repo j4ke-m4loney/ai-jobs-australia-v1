@@ -29,6 +29,7 @@ import { useSavedJobs } from "@/hooks/useSavedJobs";
 import { SaveJobAuthModal } from "@/components/SaveJobAuthModal";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface Job {
   id: string;
@@ -88,6 +89,12 @@ function hasWordStartMatch(title: string, searchTerm: string): boolean {
 }
 
 function calculateSearchRelevance(job: Job, searchTerm: string): number {
+  // Safety check for null/undefined job or missing title
+  if (!job || !job.title) {
+    console.warn('⚠️ calculateSearchRelevance called with invalid job:', job);
+    return 0;
+  }
+
   // Use original search term, just lowercase and trim it
   const search = searchTerm.toLowerCase().trim();
   const title = job.title.toLowerCase();
@@ -485,6 +492,9 @@ function JobsContent() {
 
       let jobsData = (data as Job[]) || [];
 
+      // Filter out any null/invalid jobs from the initial query
+      jobsData = jobsData.filter(job => job && job.title && job.id);
+
       console.log("🔍 Initial jobsData from main query:", {
         length: jobsData.length,
         hasData: !!jobsData,
@@ -618,7 +628,8 @@ function JobsContent() {
               console.log("🔍 Existing job IDs count:", existingJobIds.size);
 
               console.log("🔍 Filtering new jobs...");
-              const newJobs = companyJobsData.filter(job => !existingJobIds.has(job.id));
+              const newJobs = companyJobsData
+                .filter(job => job && job.title && job.id && !existingJobIds.has(job.id));
               console.log("🔍 New jobs to add:", newJobs.length);
 
               console.log("🔍 Merging job arrays...");
@@ -663,10 +674,13 @@ function JobsContent() {
       });
 
       if (effectiveSearchTerm && effectiveSearchTerm.trim() && jobsData.length > 0) {
-        jobsData = jobsData.map(job => ({
-          ...job,
-          _relevanceScore: calculateSearchRelevance(job, effectiveSearchTerm.trim())
-        }));
+        // Filter out any null/invalid jobs before processing
+        jobsData = jobsData
+          .filter(job => job && job.title)
+          .map(job => ({
+            ...job,
+            _relevanceScore: calculateSearchRelevance(job, effectiveSearchTerm.trim())
+          }));
       }
 
       // Apply sorting to merged results
@@ -860,7 +874,7 @@ function JobsContent() {
         fetchJobs();
       }, 0);
     }
-  }, [loading, user, router, searchParams]);
+  }, [loading, user, router, searchParams, fetchJobs]);
 
   // Reset sync flag when URL params actually change (new navigation)
   useEffect(() => {
@@ -907,7 +921,7 @@ function JobsContent() {
         hasUser: !!user,
       });
     }
-  }, [filterDeps, user, loading, searchParams]);
+  }, [filterDeps, user, loading, searchParams, fetchJobs]);
 
   // Application status check effect
   useEffect(() => {
@@ -1514,18 +1528,20 @@ function JobsContent() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4 p-4 max-w-lg mx-auto">
-                {jobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    isSelected={selectedJob?.id === job.id}
-                    onClick={handleJobClick}
-                    onSaveClick={handleToggleSaveJob}
-                    isJobSaved={isJobSaved(job.id)}
-                  />
-                ))}
-              </div>
+              <ErrorBoundary>
+                <div className="space-y-4 p-4 max-w-lg mx-auto">
+                  {jobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      isSelected={selectedJob?.id === job.id}
+                      onClick={handleJobClick}
+                      onSaveClick={handleToggleSaveJob}
+                      isJobSaved={isJobSaved(job.id)}
+                    />
+                  ))}
+                </div>
+              </ErrorBoundary>
             )}
 
             {/* Footer spacer to ensure scrolling works */}

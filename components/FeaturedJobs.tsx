@@ -179,7 +179,7 @@ export default function FeaturedJobs() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {jobs.map((job) => (
+          {jobs.filter(job => job && job.title && job.id).map((job) => (
             <Card
               key={job.id}
               className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 border-primary/20 relative overflow-hidden"

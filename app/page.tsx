@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   Search,
   Building,
@@ -231,7 +232,9 @@ const HomePage = () => {
         </section>
 
         {/* Featured Jobs */}
-        <FeaturedJobs />
+        <ErrorBoundary>
+          <FeaturedJobs />
+        </ErrorBoundary>
 
         {/* How It Works */}
         <section className="py-20">
