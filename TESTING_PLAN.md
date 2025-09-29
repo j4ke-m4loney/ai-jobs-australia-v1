@@ -19,9 +19,9 @@ This document provides a complete testing strategy for the AI Jobs Australia pla
 
 - **Job Browsing**: Search and filter jobs on `/jobs` page ✅
 - **Job Details**: View full job details with company info ✅
-- **Save Jobs**: Save interesting jobs to `/jobseeker/saved-jobs`
-- **Apply for Jobs**: Submit applications via `/apply/[jobId]`
-- **Application Tracking**: Monitor status in `/jobseeker/applications`
+- **Save Jobs**: Save interesting jobs to `/jobseeker/saved-jobs`✅
+- **Apply for Jobs**: Submit applications via `/apply/[jobId]`✅
+- **Application Tracking**: Monitor status in `/jobseeker/applications`✅
 
 #### **Email Notifications (Job Seeker)**
 
