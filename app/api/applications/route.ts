@@ -23,6 +23,99 @@ interface EmailBatchingParams {
 }
 
 /**
+ * Process any overdue email batches before handling new application
+ * This is "lazy processing" - we check for overdue batches when new apps arrive
+ */
+async function processOverdueBatches(): Promise<void> {
+  try {
+    // Find all unprocessed queue entries that are overdue (scheduled_for <= now)
+    const { data: overdueQueues } = await supabaseAdmin
+      .from('email_notification_queue')
+      .select(`
+        id,
+        job_id,
+        employer_id,
+        application_ids,
+        applicant_names,
+        created_at,
+        scheduled_for,
+        jobs!inner(title)
+      `)
+      .eq('processed', false)
+      .lte('scheduled_for', new Date().toISOString())
+      .order('created_at', { ascending: true });
+
+    if (!overdueQueues || overdueQueues.length === 0) {
+      return; // No overdue batches
+    }
+
+    console.log(`📧 Processing ${overdueQueues.length} overdue email batches (lazy processing)`);
+
+    // Process each overdue batch
+    for (const queue of overdueQueues) {
+      try {
+        // Get employer details
+        const { data: employerUserData } = await supabaseAdmin
+          .auth.admin.getUserById(queue.employer_id);
+
+        const employerEmail = employerUserData?.user?.email;
+        if (!employerEmail) continue;
+
+        // Get employer profile for name
+        const { data: employerProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('user_id', queue.employer_id)
+          .single();
+
+        const employerName = employerProfile?.first_name && employerProfile?.last_name
+          ? `${employerProfile.first_name} ${employerProfile.last_name}`.trim()
+          : employerProfile?.first_name || employerProfile?.last_name || 'Employer';
+
+        // Calculate time frame for the email
+        const queueAge = Math.round((new Date().getTime() - new Date(queue.created_at).getTime()) / (1000 * 60));
+        const timeFrame = queueAge < 120 ? 'in the last hour' : `in the last ${Math.round(queueAge / 60)} hours`;
+
+        // Send the batched email
+        const emailSent = await emailService.sendBatchedApplicationNotification({
+          employerName,
+          employerEmail,
+          jobTitle: queue.jobs.title,
+          jobId: queue.job_id,
+          applicationCount: queue.application_ids.length,
+          applicantNames: queue.applicant_names,
+          timeFrame,
+          dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/employer/applications`
+        });
+
+        if (emailSent) {
+          // Mark queue as processed
+          await supabaseAdmin
+            .from('email_notification_queue')
+            .update({ processed: true })
+            .eq('id', queue.id);
+
+          // Update email tracking
+          await supabaseAdmin
+            .from('job_email_tracking')
+            .upsert({
+              job_id: queue.job_id,
+              last_email_sent: new Date().toISOString(),
+              application_count_since_last: 0
+            });
+
+          console.log(`✅ Processed overdue batch for job ${queue.job_id}: ${queue.application_ids.length} applications`);
+        }
+      } catch (batchError) {
+        console.error(`❌ Error processing overdue batch ${queue.id}:`, batchError);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error in lazy processing of overdue batches:', error);
+  }
+}
+
+/**
  * Handles volume-based email batching for application notifications
  * Logic: First application sends immediately, subsequent applications are batched
  * until 5 applications are received OR 1 hour passes
@@ -333,7 +426,10 @@ export async function POST(request: NextRequest) {
           ? `${applicantData.first_name} ${applicantData.last_name}`.trim()
           : applicantData?.first_name || applicantData?.last_name || 'Job Seeker';
 
-        // Implement volume-based batching logic
+        // First, process any overdue batches (lazy processing)
+        await processOverdueBatches();
+
+        // Then handle the current application with batching logic
         await handleEmailBatching({
           jobId: jobData.id,
           employerId: jobData.employer_id,
