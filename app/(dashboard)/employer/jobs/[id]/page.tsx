@@ -514,6 +514,56 @@ const JobManagementPage = () => {
 
       console.log('✅ Database update successful:', updatedData[0]);
 
+      // Update the companies table if company info was changed and a company_id exists
+      if (job.company_id && editedJob.company_name?.trim()) {
+        try {
+          const { error: companyError } = await supabase
+            .from('companies')
+            .update({
+              name: editedJob.company_name.trim(),
+              description: editedJob.company_description?.trim() || null,
+              website: editedJob.company_website?.trim() || null,
+            })
+            .eq('id', job.company_id);
+
+          if (companyError) {
+            console.error('⚠️ Failed to update companies table:', companyError);
+            // Don't fail the whole update - job was updated successfully
+          } else {
+            console.log('✅ Companies table updated successfully for company_id:', job.company_id);
+          }
+        } catch (companyUpdateError) {
+          console.error('⚠️ Error updating companies table:', companyUpdateError);
+          // Don't fail the whole update - job was updated successfully
+        }
+      } else if (!job.company_id && editedJob.company_name?.trim()) {
+        // If no company_id exists but company name is provided, create a new company record
+        try {
+          const { data: newCompany, error: createError } = await supabase
+            .from('companies')
+            .insert({
+              name: editedJob.company_name.trim(),
+              description: editedJob.company_description?.trim() || null,
+              website: editedJob.company_website?.trim() || null,
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('⚠️ Failed to create company record:', createError);
+          } else if (newCompany) {
+            // Link the new company to the job
+            await supabase
+              .from('jobs')
+              .update({ company_id: newCompany.id })
+              .eq('id', jobId);
+            console.log('✅ New company created and linked:', newCompany.id);
+          }
+        } catch (companyCreateError) {
+          console.error('⚠️ Error creating company record:', companyCreateError);
+        }
+      }
+
       // Update the job state with validated data
       const updatedJob: Job = {
         ...job,
