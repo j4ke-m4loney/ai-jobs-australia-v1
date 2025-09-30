@@ -42,7 +42,7 @@ interface JobDetailsViewProps {
   onSaveClick: (jobId: string) => void;
   isJobSaved: boolean;
   hasApplied: boolean;
-  scrollContainerRef?: React.RefObject<HTMLDivElement>;
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 // Helper functions
