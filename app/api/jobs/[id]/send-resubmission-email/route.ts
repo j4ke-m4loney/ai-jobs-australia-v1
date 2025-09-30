@@ -75,6 +75,24 @@ export async function POST(
       );
     }
 
+    // Check if the employer is an admin - don't send emails for admin-edited jobs
+    const { data: employerProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('user_type')
+      .eq('user_id', userId)
+      .single();
+
+    const isEmployerAdmin = employerProfile?.user_type === 'admin';
+
+    if (isEmployerAdmin) {
+      console.log('⚠️ Skipping resubmission email - employer is admin');
+      return NextResponse.json({
+        success: true,
+        message: 'Email skipped - admin user',
+        skipped: true
+      });
+    }
+
     // Send the resubmission confirmation email
     const emailResult = await emailService.sendJobResubmissionConfirmation({
       employerName: requestData.employerName,
