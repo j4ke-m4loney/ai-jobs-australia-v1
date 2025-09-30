@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
   Check,
   Briefcase,
@@ -374,13 +375,13 @@ export default function AdminNewJobPage() {
                     updateFormData({ companyWebsite: e.target.value })
                   }
                 />
-                <Textarea
-                  placeholder="Company description (optional)"
-                  value={formData.companyDescription}
-                  onChange={(e) =>
-                    updateFormData({ companyDescription: e.target.value })
+                <RichTextEditor
+                  value={formData.companyDescription || ""}
+                  onChange={(value) =>
+                    updateFormData({ companyDescription: value })
                   }
-                  rows={3}
+                  placeholder="Company description (optional)"
+                  minHeight="120px"
                 />
               </div>
 

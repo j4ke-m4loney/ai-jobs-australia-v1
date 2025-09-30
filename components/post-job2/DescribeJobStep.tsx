@@ -32,7 +32,8 @@ const schema = z.object({
   companyName: z.string().min(2, "Company name is required"),
   companyDescription: z
     .string()
-    .min(50, "Company description must be at least 50 characters"),
+    .optional()
+    .or(z.literal("")),
   companyWebsite: z
     .string()
     .url("Please enter a valid website URL")
@@ -251,13 +252,15 @@ export default function DescribeJobStep({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-base font-medium">
-                      Company Description *
+                      Company Description
                     </FormLabel>
                     <FormControl>
-                      <Textarea
+                      <RichTextEditor
+                        value={field.value || ""}
+                        onChange={field.onChange}
                         placeholder="Tell candidates about your company, culture, mission, and what makes it a great place to work..."
-                        className="min-h-[120px] text-base border-primary"
-                        {...field}
+                        minHeight="120px"
+                        className="border-primary"
                       />
                     </FormControl>
                     <p className="text-sm text-muted-foreground">
