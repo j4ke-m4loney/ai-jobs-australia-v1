@@ -785,7 +785,7 @@ function JobsContent() {
     selectedSalary,
     dateSort,
     sortBy,
-    selectedJob,
+    // selectedJob removed - it's only used for checking, not as a filter
     user,
     fetchSuggestions,
     showFeaturedOnly,
@@ -987,11 +987,17 @@ function JobsContent() {
     setPendingJobId(null);
   };
 
+  const jobDetailsScrollRef = useRef<HTMLDivElement>(null);
+
   const handleJobClick = (job: Job) => {
     if (isMobile) {
       // On mobile, navigate to apply page
       router.push(`/apply/${job.id}`);
     } else {
+      // Reset scroll position BEFORE updating selected job
+      if (jobDetailsScrollRef.current) {
+        jobDetailsScrollRef.current.scrollTop = 0;
+      }
       // On desktop, show in sidebar
       setSelectedJob(job);
     }
@@ -1574,6 +1580,7 @@ function JobsContent() {
               onSaveClick={handleToggleSaveJob}
               isJobSaved={isJobSaved(selectedJob.id)}
               hasApplied={hasApplied[selectedJob.id] || false}
+              scrollContainerRef={jobDetailsScrollRef}
             />
           ) : (
             <div className="lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] flex items-center justify-center mx-4">

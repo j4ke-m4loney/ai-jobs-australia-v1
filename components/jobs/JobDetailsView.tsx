@@ -42,6 +42,7 @@ interface JobDetailsViewProps {
   onSaveClick: (jobId: string) => void;
   isJobSaved: boolean;
   hasApplied: boolean;
+  scrollContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
 // Helper functions
@@ -91,9 +92,16 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
   onSaveClick,
   isJobSaved,
   hasApplied,
+  scrollContainerRef,
 }) => {
   return (
-    <div className="lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] lg:overflow-y-auto">
+    <div
+      ref={scrollContainerRef}
+      className="lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] lg:overflow-y-auto"
+      style={{
+        overscrollBehavior: 'contain'
+      }}
+    >
       <div className="border border-primary/50 bg-white m-4 rounded-lg">
         {/* Job Header */}
         <div className="p-6 border-b mx-4">
