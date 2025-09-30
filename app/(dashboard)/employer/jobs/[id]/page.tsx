@@ -1359,16 +1359,16 @@ const JobManagementPage = () => {
                   <div className="space-y-2">
                     <Label htmlFor="application_method">Application Method</Label>
                     <Select
-                      value={editedJob.application_method || "email"}
+                      value={editedJob.application_method || "indeed"}
                       onValueChange={(value) => setEditedJob({ ...editedJob, application_method: value })}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="external">Redirect to Company Website</SelectItem>
                         <SelectItem value="email">Email</SelectItem>
-                        <SelectItem value="url">External URL</SelectItem>
-                        <SelectItem value="platform">Through Platform</SelectItem>
+                        <SelectItem value="indeed">AI Jobs Australia applications</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1383,7 +1383,7 @@ const JobManagementPage = () => {
                       />
                     </div>
                   )}
-                  {editedJob.application_method === "url" && (
+                  {editedJob.application_method === "external" && (
                     <div className="space-y-2">
                       <Label htmlFor="application_url">Application URL</Label>
                       <Input
@@ -1459,11 +1459,11 @@ const JobManagementPage = () => {
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="font-medium">Method:</span>{" "}
-                        {job.application_method === "email" 
+                        {job.application_method === "email"
                           ? `Email to ${job.application_email}`
-                          : job.application_method === "url"
-                          ? `External URL: ${job.application_url}`
-                          : "Through platform"}
+                          : job.application_method === "external"
+                          ? `Redirect to Company Website: ${job.application_url}`
+                          : "AI Jobs Australia applications"}
                       </div>
                       <div>
                         <span className="font-medium">Expires:</span>{" "}
