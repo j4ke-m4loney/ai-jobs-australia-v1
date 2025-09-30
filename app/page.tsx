@@ -351,8 +351,8 @@ const HomePage = () => {
                 className="h-16 px-12 text-lg bg-gradient-hero hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 onClick={() =>
                   user
-                    ? router.push("/jobseeker/dashboard")
-                    : router.push("/auth/jobseeker")
+                    ? router.push("/jobs")
+                    : router.push("/login")
                 }
               >
                 <Zap className="w-6 h-6 mr-3" />
