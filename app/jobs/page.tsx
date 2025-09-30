@@ -950,6 +950,18 @@ function JobsContent() {
 
     if (!selectedJob) return;
 
+    // If external application, open link
+    if (selectedJob.application_method === "external" && selectedJob.application_url) {
+      window.open(selectedJob.application_url, "_blank");
+      return;
+    }
+
+    // If email application, open email client
+    if (selectedJob.application_method === "email" && selectedJob.application_email) {
+      window.location.href = `mailto:${selectedJob.application_email}?subject=Application for ${selectedJob.title}`;
+      return;
+    }
+
     // Navigate to dedicated apply page with full application functionality
     router.push(`/apply/${selectedJob.id}`);
   };
