@@ -227,8 +227,8 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
               </h3>
 
               {job.companies?.description && (
-                <div className="text-foreground leading-relaxed mb-4">
-                  <p>{job.companies.description}</p>
+                <div className="text-foreground leading-relaxed mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
+                  <div dangerouslySetInnerHTML={{ __html: job.companies.description }} />
                 </div>
               )}
 
