@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { StateSelector } from "@/components/ui/state-selector";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -237,9 +236,6 @@ function JobsContent() {
   );
   const [selectedSalary, setSelectedSalary] = useState("");
   const [dateFilter, setDateFilter] = useState("any");
-  const [showFeaturedOnly, setShowFeaturedOnly] = useState<boolean>(
-    searchParams.get("featured") === "true"
-  );
   const [showFilters, setShowFilters] = useState(false);
   const [showOptions, setShowOptions] = useState(true);
   const [sortBy, setSortBy] = useState("relevance");
@@ -271,7 +267,6 @@ function JobsContent() {
       selectedLocationTypes: selectedLocationTypes.join(","),
       selectedSalary,
       dateFilter,
-      showFeaturedOnly,
       dateSort,
       sortBy,
     }),
@@ -284,7 +279,6 @@ function JobsContent() {
       selectedLocationTypes,
       selectedSalary,
       dateFilter,
-      showFeaturedOnly,
       dateSort,
       sortBy,
     ]
@@ -438,9 +432,6 @@ function JobsContent() {
       if (selectedSalary) {
         query = query.gte("salary_min", parseInt(selectedSalary));
       }
-      if (showFeaturedOnly) {
-        query = query.eq("is_featured", true);
-      }
 
       // Sorting
       switch (sortBy) {
@@ -582,9 +573,6 @@ function JobsContent() {
           }
           if (selectedSalary) {
             companyQuery = companyQuery.gte("salary_min", parseInt(selectedSalary));
-          }
-          if (showFeaturedOnly) {
-            companyQuery = companyQuery.eq("is_featured", true);
           }
 
           console.log("🔍 Step 2: Applying filters to company jobs query...");
@@ -788,7 +776,6 @@ function JobsContent() {
     // selectedJob removed - it's only used for checking, not as a filter
     user,
     fetchSuggestions,
-    showFeaturedOnly,
   ]);
 
   // Sync URL parameters with state after hydration (prevents hydration mismatch)
@@ -1030,7 +1017,6 @@ function JobsContent() {
     setSelectedLocationTypes([]);
     setSelectedSalary("");
     setDateFilter("any");
-    setShowFeaturedOnly(false);
     setSearchTerm("");
     setSelectedState("all");
   };
@@ -1207,7 +1193,7 @@ function JobsContent() {
                 <select
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi/+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center] min-w-0 flex-shrink-0"
+                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center] min-w-0 flex-shrink-0"
                 >
                   <option value="any" className="text-black">
                     Listed any time
@@ -1223,17 +1209,6 @@ function JobsContent() {
                   </option>
                 </select>
 
-                {/* Featured Jobs Toggle */}
-                <label className="flex items-center gap-2 px-3 py-2 text-sm text-white bg-white/10 rounded-sm backdrop-blur-sm cursor-pointer hover:bg-white/20 transition-colors">
-                  <Checkbox
-                    checked={showFeaturedOnly}
-                    onCheckedChange={(checked) => setShowFeaturedOnly(checked as boolean)}
-                    className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                  <Star className="w-4 h-4" />
-                  Featured only
-                </label>
-
                 {/* Reset All Filters Link */}
                 {(searchTerm ||
                   (selectedState && selectedState !== "all") ||
@@ -1242,8 +1217,7 @@ function JobsContent() {
                   selectedJobTypes.length > 0 ||
                   selectedLocationTypes.length > 0 ||
                   selectedSalary ||
-                  dateFilter !== "any" ||
-                  showFeaturedOnly) && (
+                  dateFilter !== "any") && (
                   <button
                     onClick={clearAllFilters}
                     className="text-sm text-white/80 hover:text-white underline transition-colors ml-2"
