@@ -223,6 +223,9 @@ function JobsContent() {
   console.log("🔍 Auth state:", { user: user?.id, loading });
 
   const [jobs, setJobs] = useState<Job[]>([]);
+
+  // DEBUG: Track component renders
+  console.log('🔄 JOBS PAGE RENDER:', new Date().getTime());
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobsLoading, setJobsLoading] = useState(true);
   // Initialize with server-safe defaults to prevent hydration mismatch
@@ -255,6 +258,7 @@ function JobsContent() {
   // Track if we should sync URL params (only on initial load, not after manual actions)
   const shouldSyncFromUrl = useRef(true);
   const initialized = useRef(false);
+  const previousSearchParamsRef = useRef<string>("");
 
   // Memoized filter dependencies to prevent unnecessary re-renders
   const filterDeps = useMemo(
@@ -359,6 +363,7 @@ function JobsContent() {
   }, []);
 
   const fetchJobs = useCallback(async (overrideSearch?: string, overrideLocation?: string) => {
+    console.log('🗄️ FETCH JOBS CALLED:', new Date().getTime(), new Error().stack);
     try {
       setJobsLoading(true);
 
@@ -797,10 +802,11 @@ function JobsContent() {
 
   // Auto-select first job when jobs are loaded
   useEffect(() => {
+    console.log('🎯 AUTO-SELECT EFFECT:', { jobsLength: jobs.length, hasSelected: !!selectedJob });
     if (jobs.length > 0 && !selectedJob) {
       setSelectedJob(jobs[0]);
     }
-  }, [jobs, selectedJob]);
+  }, [jobs]); // Only depends on jobs, not selectedJob to prevent re-renders on selection
 
   // Consolidated initialization and authentication effect
   useEffect(() => {
@@ -867,10 +873,33 @@ function JobsContent() {
   useEffect(() => {
     const isGuest = searchParams.get("guest") === "true";
 
-    // Don't reset during initial guest mode setup
-    if (initialized.current && !isGuest) {
+    // Get current search params without jobId (filter params only)
+    const currentParams = new URLSearchParams(searchParams.toString());
+    currentParams.delete("jobId"); // Ignore jobId changes
+    const currentFilterParams = currentParams.toString();
+
+    // Only reset if filter params changed, not just jobId
+    const filterParamsChanged = previousSearchParamsRef.current !== "" &&
+                                previousSearchParamsRef.current !== currentFilterParams;
+
+    console.log("🔍 searchParams effect:", {
+      previous: previousSearchParamsRef.current,
+      current: currentFilterParams,
+      filterParamsChanged,
+      initialized: initialized.current
+    });
+
+    // Update the ref for next comparison
+    if (previousSearchParamsRef.current === "") {
+      previousSearchParamsRef.current = currentFilterParams;
+    }
+
+    // Don't reset during initial guest mode setup or if only jobId changed
+    if (initialized.current && !isGuest && filterParamsChanged) {
+      console.log("🔄 Filter params changed, resetting initialization");
       shouldSyncFromUrl.current = true;
       initialized.current = false;
+      previousSearchParamsRef.current = currentFilterParams;
     }
   }, [searchParams, loading]);
 
@@ -883,7 +912,6 @@ function JobsContent() {
 
   // Job fetching effect - triggers on filter changes
   useEffect(() => {
-    const isGuest = searchParams.get("guest") === "true";
     // Simplified condition: fetch jobs when initialized, regardless of auth loading
     // This ensures both guest and authenticated users get search results immediately
     const shouldProceed = initialized.current;
@@ -892,7 +920,6 @@ function JobsContent() {
       filterDeps,
       initialized: initialized.current,
       loading,
-      isGuest,
       hasUser: !!user,
       condition: shouldProceed,
     });
@@ -904,11 +931,10 @@ function JobsContent() {
       console.log("❌ Filter effect conditions not met", {
         loading,
         initialized: initialized.current,
-        isGuest,
         hasUser: !!user,
       });
     }
-  }, [filterDeps, user, loading, searchParams, fetchJobs]);
+  }, [filterDeps, user, loading, fetchJobs]); // Removed searchParams - handled in separate effect
 
   // Application status check effect
   useEffect(() => {
@@ -927,6 +953,19 @@ function JobsContent() {
     window.addEventListener("resize", checkScreenSize);
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
+  // Handle direct links on initial page load only (one-time check)
+  useEffect(() => {
+    // Only run once when jobs are loaded and we have a jobId in URL
+    const jobIdParam = new URLSearchParams(window.location.search).get('jobId');
+    console.log('🔗 URL PARAM EFFECT:', { jobIdParam, jobsLength: jobs.length, hasSelected: !!selectedJob });
+    if (jobIdParam && jobs.length > 0 && !selectedJob) {
+      const job = jobs.find(j => j.id === jobIdParam);
+      if (job) {
+        setSelectedJob(job);
+      }
+    }
+  }, [jobs]); // Only depends on jobs loading, not searchParams
 
   const handleApply = () => {
     if (!user) {
@@ -977,15 +1016,21 @@ function JobsContent() {
   const jobDetailsScrollRef = useRef<HTMLDivElement>(null);
 
   const handleJobClick = (job: Job) => {
+    console.log('👆 CLICK JOB:', job.id, new Date().getTime());
     if (isMobile) {
       // On mobile, navigate to apply page
       router.push(`/apply/${job.id}`);
     } else {
-      // Reset scroll position BEFORE updating selected job
+      // On desktop, update URL without triggering router change (prevents refetch)
+      const params = new URLSearchParams(window.location.search);
+      params.set('jobId', job.id);
+      window.history.pushState(null, '', `/jobs?${params.toString()}`);
+
+      // Update state to show job details in right panel
       if (jobDetailsScrollRef.current) {
         jobDetailsScrollRef.current.scrollTop = 0;
       }
-      // On desktop, show in sidebar
+      console.log('👆 SETTING SELECTED JOB:', job.id);
       setSelectedJob(job);
     }
   };

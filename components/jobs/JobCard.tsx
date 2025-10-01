@@ -137,11 +137,12 @@ export const JobCard: React.FC<JobCardProps> = ({
               </span>
             </div>
 
-            {job.show_salary !== false && formatSalary(job.salary_min, job.salary_max) && (
-              <div className="text-sm font-semibold text-green-600 mb-3">
-                {formatSalary(job.salary_min, job.salary_max)}
-              </div>
-            )}
+            {job.show_salary !== false &&
+              formatSalary(job.salary_min, job.salary_max) && (
+                <div className="text-sm font-semibold text-green-600 mb-3">
+                  {formatSalary(job.salary_min, job.salary_max)}
+                </div>
+              )}
 
             {/* Job Highlights */}
             {job.highlights && job.highlights.length > 0 && (
