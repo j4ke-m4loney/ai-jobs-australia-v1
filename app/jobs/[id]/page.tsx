@@ -11,11 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import {
   MapPin,
-  Calendar,
   DollarSign,
   Clock,
   Building2,
-  ArrowLeft,
   ExternalLink,
   Mail,
   Briefcase,
@@ -206,14 +204,6 @@ export default function JobDetailPage() {
     return `${diffInMonths} months ago`;
   };
 
-  const getDaysUntilExpiry = (expiryDate: string) => {
-    const days = Math.ceil(
-      (new Date(expiryDate).getTime() - new Date().getTime()) /
-        (1000 * 60 * 60 * 24)
-    );
-    return Math.max(0, days);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
@@ -253,10 +243,10 @@ export default function JobDetailPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-start gap-4">
-                  {job.companies?.logo_url && (
+                  {job.companies?.[0]?.logo_url && (
                     <Image
-                      src={job.companies.logo_url}
-                      alt={job.companies?.name || "Company logo"}
+                      src={job.companies[0].logo_url}
+                      alt={job.companies[0]?.name || "Company logo"}
                       width={64}
                       height={64}
                       className="w-16 h-16 rounded-lg object-contain"
@@ -273,7 +263,7 @@ export default function JobDetailPage() {
                     <CardTitle className="text-2xl mb-2">{job.title}</CardTitle>
                     <div className="flex items-center gap-2 text-muted-foreground mb-3">
                       <Building2 className="w-4 h-4" />
-                      <span className="font-medium">{job.companies?.name || "Unknown Company"}</span>
+                      <span className="font-medium">{job.companies?.[0]?.name || "Unknown Company"}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
