@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Heart } from "lucide-react";
@@ -188,7 +189,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
               <span>Posted {getTimeAgo(job.created_at)}</span>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex items-center gap-3">
               {hasApplied ? (
                 <div className="text-center py-2 px-4">
                   <div className="text-sm font-medium text-green-600">
@@ -199,12 +200,22 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                   </div>
                 </div>
               ) : (
-                <Button
-                  onClick={onApply}
-                  className="bg-primary hover:bg-primary/90 text-white px-6"
-                >
-                  Apply
-                </Button>
+                <>
+                  <Link
+                    href={`/jobs/${job.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline font-medium"
+                  >
+                    View
+                  </Link>
+                  <Button
+                    onClick={onApply}
+                    className="bg-primary hover:bg-primary/90 text-white px-6"
+                  >
+                    Apply
+                  </Button>
+                </>
               )}
             </div>
           </div>

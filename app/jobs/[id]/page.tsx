@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 import {
   MapPin,
   Calendar,
@@ -23,6 +24,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 interface Job {
   id: string;
@@ -171,6 +174,38 @@ export default function JobDetailPage() {
     return `Up to $${max?.toLocaleString()}`;
   };
 
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60)
+    );
+
+    // Less than 60 minutes - show minutes
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}min ago`;
+    }
+
+    // Less than 24 hours - show hours
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    }
+
+    // Less than 30 days - show days
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays <= 30) {
+      return `${diffInDays}d ago`;
+    }
+
+    // Show months
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths === 1) {
+      return "1 month ago";
+    }
+    return `${diffInMonths} months ago`;
+  };
+
   const getDaysUntilExpiry = (expiryDate: string) => {
     const days = Math.ceil(
       (new Date(expiryDate).getTime() - new Date().getTime()) /
@@ -208,17 +243,9 @@ export default function JobDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto px-4 py-8">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/jobs")}
-          className="mb-6 gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Jobs
-        </Button>
+      <Header />
 
+      <div className="container mx-auto px-4 py-8 mt-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -226,9 +253,15 @@ export default function JobDetailPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Building2 className="w-8 h-8 text-primary" />
-                  </div>
+                  {job.companies?.logo_url && (
+                    <Image
+                      src={job.companies.logo_url}
+                      alt={job.companies?.name || "Company logo"}
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 rounded-lg object-contain"
+                    />
+                  )}
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       {job.is_featured && (
@@ -236,14 +269,11 @@ export default function JobDetailPage() {
                           Featured
                         </Badge>
                       )}
-                      <Badge variant="secondary" className="capitalize">
-                        {job.category}
-                      </Badge>
                     </div>
                     <CardTitle className="text-2xl mb-2">{job.title}</CardTitle>
                     <div className="flex items-center gap-2 text-muted-foreground mb-3">
                       <Building2 className="w-4 h-4" />
-                      <span className="font-medium">{job.companies?.[0]?.name || "Company Name"}</span>
+                      <span className="font-medium">{job.companies?.name || "Unknown Company"}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
@@ -254,14 +284,12 @@ export default function JobDetailPage() {
                         <Briefcase className="w-4 h-4" />
                         <span className="capitalize">{job.job_type}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        {formatSalary(job.salary_min, job.salary_max)}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {getDaysUntilExpiry(job.expires_at)} days left
-                      </div>
+                      {(job.salary_min || job.salary_max) && (
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-4 h-4" />
+                          {formatSalary(job.salary_min, job.salary_max)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -321,33 +349,9 @@ export default function JobDetailPage() {
                   <>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <span>
-                          Posted:{" "}
-                          {new Date(job.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-muted-foreground" />
-                        <span>
-                          Expires:{" "}
-                          {new Date(job.expires_at).toLocaleDateString()}
-                        </span>
+                        <span>Posted {getTimeAgo(job.created_at)}</span>
                       </div>
-                      {job.application_method === "external" &&
-                        job.application_url && (
-                          <div className="flex items-center gap-2">
-                            <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                            <span>External application</span>
-                          </div>
-                        )}
-                      {job.application_method === "email" &&
-                        job.application_email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-muted-foreground" />
-                            <span>Email application</span>
-                          </div>
-                        )}
                     </div>
 
                     <Separator />
@@ -394,38 +398,11 @@ export default function JobDetailPage() {
                 )}
               </CardContent>
             </Card>
-
-            {/* Job Details */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Job Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type</span>
-                  <span className="font-medium capitalize">{job.job_type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Location</span>
-                  <span className="font-medium capitalize">
-                    {job.location_type}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Category</span>
-                  <span className="font-medium capitalize">{job.category}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Salary</span>
-                  <span className="font-medium">
-                    {formatSalary(job.salary_min, job.salary_max)}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }
