@@ -150,11 +150,24 @@ export default function JobBasicsStep({
   ].includes(selectedJobType);
 
   const onSubmit = (values: z.infer<typeof schema>) => {
+    // Validate that salary is provided
+    const hasValidSalary =
+      (payConfig.payType === "fixed" && payConfig.payAmount && payConfig.payAmount > 0) ||
+      (payConfig.payType === "range" && payConfig.payRangeMin && payConfig.payRangeMax && payConfig.payRangeMin > 0 && payConfig.payRangeMax > 0) ||
+      (payConfig.payType === "maximum" && payConfig.payRangeMax && payConfig.payRangeMax > 0) ||
+      (payConfig.payType === "minimum" && payConfig.payRangeMin && payConfig.payRangeMin > 0);
+
+    if (!hasValidSalary) {
+      // Show error using form state (we'll need to add a custom error message)
+      alert("Please provide salary information. This is required for job filtering.");
+      return;
+    }
+
     updateFormData({
       ...values,
       hoursConfig: requiresHoursConfig ? hoursConfig : undefined,
       contractConfig: requiresContractConfig ? contractConfig : undefined,
-      payConfig: showPay ? payConfig : { showPay: false },
+      payConfig: payConfig,
       highlights: highlights,
     });
     onNext();
@@ -579,124 +592,63 @@ export default function JobBasicsStep({
             </h3>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <FormLabel className="text-base font-medium">
-                  Show pay on job post
+              <div>
+                <FormLabel className="flex items-center gap-2 text-base font-medium mb-2">
+                  <DollarSign className="w-5 h-5" />
+                  Salary Range <span className="text-red-500">*</span>
                 </FormLabel>
-                <Switch
-                  checked={showPay}
-                  onCheckedChange={(checked) => {
-                    setShowPay(checked);
-                    form.setValue("showPay", checked);
-                  }}
-                />
+                <p className="text-sm text-muted-foreground mb-3">
+                  Salary information is required for job filtering. Use the toggle below to control whether the salary is publicly displayed.
+                </p>
               </div>
 
-              {showPay && (
-                <div className="bg-muted/50 p-4 rounded-lg space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">
-                      Show pay as
-                    </label>
-                    <Select
-                      value={payConfig.payType || "range"}
-                      onValueChange={(value) =>
-                        handlePayConfigChange("payType", value)
-                      }
-                    >
-                      <SelectTrigger className="mt-1 border-primary">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="fixed">Fixed amount</SelectItem>
-                        <SelectItem value="range">Range</SelectItem>
-                        <SelectItem value="maximum">Maximum</SelectItem>
-                        <SelectItem value="minimum">Minimum</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+              {/* Always show salary input fields */}
+              <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Show pay as
+                  </label>
+                  <Select
+                    value={payConfig.payType || "range"}
+                    onValueChange={(value) =>
+                      handlePayConfigChange("payType", value)
+                    }
+                  >
+                    <SelectTrigger className="mt-1 border-primary">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">Fixed amount</SelectItem>
+                      <SelectItem value="range">Range</SelectItem>
+                      <SelectItem value="maximum">Maximum</SelectItem>
+                      <SelectItem value="minimum">Minimum</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {payConfig.payType === "fixed" && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">
-                          Amount
-                        </label>
-                        <Input
-                          type="number"
-                          placeholder="80000"
-                          value={payConfig.payAmount || ""}
-                          onChange={(e) =>
-                            handlePayConfigChange(
-                              "payAmount",
-                              parseInt(e.target.value) || 0
-                            )
-                          }
-                          className="mt-1 border-primary"
-                        />
-                      </div>
-                    )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {payConfig.payType === "fixed" && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Amount
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="80000"
+                        value={payConfig.payAmount || ""}
+                        onChange={(e) =>
+                          handlePayConfigChange(
+                            "payAmount",
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="mt-1 border-primary"
+                      />
+                    </div>
+                  )}
 
-                    {payConfig.payType === "range" && (
-                      <>
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">
-                            Minimum
-                          </label>
-                          <Input
-                            type="number"
-                            placeholder="70000"
-                            value={payConfig.payRangeMin || ""}
-                            onChange={(e) =>
-                              handlePayConfigChange(
-                                "payRangeMin",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className="mt-1 border-primary"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">
-                            Maximum
-                          </label>
-                          <Input
-                            type="number"
-                            placeholder="100000"
-                            value={payConfig.payRangeMax || ""}
-                            onChange={(e) =>
-                              handlePayConfigChange(
-                                "payRangeMax",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className="mt-1 border-primary"
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {payConfig.payType === "maximum" && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">
-                          Maximum
-                        </label>
-                        <Input
-                          type="number"
-                          placeholder="100000"
-                          value={payConfig.payRangeMax || ""}
-                          onChange={(e) =>
-                            handlePayConfigChange(
-                              "payRangeMax",
-                              parseInt(e.target.value) || 0
-                            )
-                          }
-                          className="mt-1 border-primary"
-                        />
-                      </div>
-                    )}
-
-                    {payConfig.payType === "minimum" && (
+                  {payConfig.payType === "range" && (
+                    <>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">
                           Minimum
@@ -714,33 +666,110 @@ export default function JobBasicsStep({
                           className="mt-1 border-primary"
                         />
                       </div>
-                    )}
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">
+                          Maximum
+                        </label>
+                        <Input
+                          type="number"
+                          placeholder="100000"
+                          value={payConfig.payRangeMax || ""}
+                          onChange={(e) =>
+                            handlePayConfigChange(
+                              "payRangeMax",
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className="mt-1 border-primary"
+                        />
+                      </div>
+                    </>
+                  )}
 
+                  {payConfig.payType === "maximum" && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
-                        Per
+                        Maximum
                       </label>
-                      <Select
-                        value={payConfig.payPeriod || "year"}
-                        onValueChange={(value) =>
-                          handlePayConfigChange("payPeriod", value)
+                      <Input
+                        type="number"
+                        placeholder="100000"
+                        value={payConfig.payRangeMax || ""}
+                        onChange={(e) =>
+                          handlePayConfigChange(
+                            "payRangeMax",
+                            parseInt(e.target.value) || 0
+                          )
                         }
-                      >
-                        <SelectTrigger className="mt-1 border-primary">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hour">Hour</SelectItem>
-                          <SelectItem value="day">Day</SelectItem>
-                          <SelectItem value="week">Week</SelectItem>
-                          <SelectItem value="month">Month</SelectItem>
-                          <SelectItem value="year">Year</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        className="mt-1 border-primary"
+                      />
                     </div>
+                  )}
+
+                  {payConfig.payType === "minimum" && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Minimum
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="70000"
+                        value={payConfig.payRangeMin || ""}
+                        onChange={(e) =>
+                          handlePayConfigChange(
+                            "payRangeMin",
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="mt-1 border-primary"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Per
+                    </label>
+                    <Select
+                      value={payConfig.payPeriod || "year"}
+                      onValueChange={(value) =>
+                        handlePayConfigChange("payPeriod", value)
+                      }
+                    >
+                      <SelectTrigger className="mt-1 border-primary">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hour">Hour</SelectItem>
+                        <SelectItem value="day">Day</SelectItem>
+                        <SelectItem value="week">Week</SelectItem>
+                        <SelectItem value="month">Month</SelectItem>
+                        <SelectItem value="year">Year</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Display Toggle */}
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <FormLabel className="text-base font-medium">
+                    Display salary publicly
+                  </FormLabel>
+                  <p className="text-sm text-muted-foreground">
+                    Toggle off to hide salary from job seekers (still used for filtering)
+                  </p>
+                </div>
+                <Switch
+                  checked={showPay}
+                  onCheckedChange={(checked) => {
+                    setShowPay(checked);
+                    form.setValue("showPay", checked);
+                    setPayConfig((prev) => ({ ...prev, showPay: checked }));
+                  }}
+                />
+              </div>
 
             </div>
           </div>

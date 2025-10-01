@@ -67,6 +67,53 @@ interface AdminOptions {
   postOnBehalfOf: string;
 }
 
+// Helper functions to calculate salary from payConfig
+function convertToAnnualSalary(amount: number, period: string): number {
+  const multipliers: { [key: string]: number } = {
+    'hour': 2080,
+    'day': 260,
+    'week': 52,
+    'month': 12,
+    'year': 1,
+  };
+
+  return Math.round(amount * (multipliers[period] || 1));
+}
+
+function getSalaryMin(payConfig: JobFormData2['payConfig']): number | null {
+  // Always calculate salary for filtering purposes, regardless of showPay
+  if (!payConfig) return null;
+
+  if (payConfig.payType === 'range' && payConfig.payRangeMin && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'minimum' && payConfig.payRangeMin && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'fixed' && payConfig.payAmount && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  }
+
+  return null;
+}
+
+function getSalaryMax(payConfig: JobFormData2['payConfig']): number | null {
+  // Always calculate salary for filtering purposes, regardless of showPay
+  if (!payConfig) return null;
+
+  if (payConfig.payType === 'range' && payConfig.payRangeMax && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'maximum' && payConfig.payRangeMax && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'fixed' && payConfig.payAmount && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  }
+
+  return null;
+}
+
 export default function AdminNewJobPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -211,8 +258,9 @@ export default function AdminNewJobPage() {
         location_type: locationTypeMap[formData.locationType] || "onsite",
         job_type: formData.jobType,
         category: "ai", // Default category
-        salary_min: formData.payConfig.payRangeMin || null,
-        salary_max: formData.payConfig.payRangeMax || null,
+        salary_min: getSalaryMin(formData.payConfig),
+        salary_max: getSalaryMax(formData.payConfig),
+        show_salary: formData.payConfig.showPay,
 
         // Application settings
         application_method: formData.applicationMethod === "external" ? "external" : "email",

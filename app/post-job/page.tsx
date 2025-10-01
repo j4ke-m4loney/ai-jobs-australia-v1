@@ -76,6 +76,8 @@ const defaultFormData: JobFormData2 = {
   // Pay and Benefits
   payConfig: {
     showPay: true,
+    payType: "range",
+    payPeriod: "year",
   },
   benefits: [],
 

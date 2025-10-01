@@ -74,6 +74,7 @@ interface Job {
   category: string;
   salary_min: number | null;
   salary_max: number | null;
+  show_salary?: boolean;
   application_method: string;
   application_url: string | null;
   application_email: string | null;
@@ -118,6 +119,63 @@ const HTMLRenderer = ({ content }: { content: string }) => (
     }}
   />
 );
+
+// Helper functions to calculate salary from payConfig
+function convertToAnnualSalary(amount: number, period: string): number {
+  const multipliers: { [key: string]: number } = {
+    'hour': 2080,
+    'day': 260,
+    'week': 52,
+    'month': 12,
+    'year': 1,
+  };
+
+  return Math.round(amount * (multipliers[period] || 1));
+}
+
+function getSalaryMin(payConfig: {
+  payType: "fixed" | "range" | "maximum" | "minimum";
+  payAmount: number | null;
+  payRangeMin: number | null;
+  payRangeMax: number | null;
+  payPeriod: "hour" | "day" | "week" | "month" | "year";
+}): number | null {
+  if (!payConfig) return null;
+
+  if (payConfig.payType === 'range' && payConfig.payRangeMin && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'minimum' && payConfig.payRangeMin && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'fixed' && payConfig.payAmount && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  }
+
+  return null;
+}
+
+function getSalaryMax(payConfig: {
+  payType: "fixed" | "range" | "maximum" | "minimum";
+  payAmount: number | null;
+  payRangeMin: number | null;
+  payRangeMax: number | null;
+  payPeriod: "hour" | "day" | "week" | "month" | "year";
+}): number | null {
+  if (!payConfig) return null;
+
+  if (payConfig.payType === 'range' && payConfig.payRangeMax && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'maximum' && payConfig.payRangeMax && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
+  }
+  if (payConfig.payType === 'fixed' && payConfig.payAmount && payConfig.payPeriod) {
+    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  }
+
+  return null;
+}
 
 const JobManagementPage = () => {
   const params = useParams();
@@ -200,7 +258,8 @@ const JobManagementPage = () => {
       
       // Initialize pay configuration from existing salary data
       const hasExistingSalary = data.salary_min || data.salary_max;
-      setShowPay(!!hasExistingSalary);
+      // Use show_salary from database, default to true if not set for backward compatibility
+      setShowPay(data.show_salary !== false);
       if (hasExistingSalary) {
         setPayConfig({
           payType: data.salary_min && data.salary_max ? "range" : "minimum",
@@ -309,13 +368,9 @@ const JobManagementPage = () => {
 
     setSaving(true);
     try {
-      // Calculate new salary values
-      const newSalaryMin = showPay && payConfig.payType === "range" ? payConfig.payRangeMin :
-                          showPay && payConfig.payType === "minimum" ? payConfig.payRangeMin :
-                          showPay && payConfig.payType === "fixed" ? payConfig.payAmount : null;
-      const newSalaryMax = showPay && payConfig.payType === "range" ? payConfig.payRangeMax :
-                          showPay && payConfig.payType === "maximum" ? payConfig.payRangeMax :
-                          showPay && payConfig.payType === "fixed" ? payConfig.payAmount : null;
+      // Calculate new salary values - always save salary for filtering, regardless of showPay
+      const newSalaryMin = getSalaryMin(payConfig);
+      const newSalaryMax = getSalaryMax(payConfig);
 
       // Check for significant changes that require re-approval
       const hasSignificantChanges = (
@@ -387,6 +442,7 @@ const JobManagementPage = () => {
         category: editedJob.category,
         salary_min: newSalaryMin,
         salary_max: newSalaryMax,
+        show_salary: showPay,
         application_method: editedJob.application_method,
         application_url: editedJob.application_url?.trim() || null,
         application_email: editedJob.application_email?.trim() || null,
@@ -1124,20 +1180,17 @@ const JobManagementPage = () => {
 
                     {/* Pay Configuration */}
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-base font-medium">
-                          Show pay on job post
+                      <div>
+                        <Label className="text-base font-medium mb-2 block">
+                          Salary Range <span className="text-red-500">*</span>
                         </Label>
-                        <Switch
-                          checked={showPay}
-                          onCheckedChange={(checked) => {
-                            setShowPay(checked);
-                          }}
-                        />
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Salary information is required for job filtering. Use the toggle below to control whether the salary is publicly displayed.
+                        </p>
                       </div>
 
-                      {showPay && (
-                        <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+                      {/* Always show salary input fields */}
+                      <div className="bg-muted/50 p-4 rounded-lg space-y-4">
                           <div>
                             <label className="text-sm font-medium text-muted-foreground">
                               Show pay as
@@ -1284,7 +1337,24 @@ const JobManagementPage = () => {
                             </div>
                           </div>
                         </div>
-                      )}
+
+                      {/* Display Toggle */}
+                      <div className="flex items-center justify-between pt-2">
+                        <div>
+                          <Label className="text-base font-medium">
+                            Display salary publicly
+                          </Label>
+                          <p className="text-sm text-muted-foreground">
+                            Toggle off to hide salary from job seekers (still used for filtering)
+                          </p>
+                        </div>
+                        <Switch
+                          checked={showPay}
+                          onCheckedChange={(checked) => {
+                            setShowPay(checked);
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </TabsContent>

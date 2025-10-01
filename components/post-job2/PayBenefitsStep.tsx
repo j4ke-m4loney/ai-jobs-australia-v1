@@ -22,6 +22,26 @@ import { DollarSign, Gift, ChevronDown, ChevronUp } from "lucide-react";
 
 const schema = z.object({
   showPay: z.boolean(),
+  payType: z.enum(["fixed", "range", "maximum", "minimum"]),
+  payPeriod: z.enum(["hour", "day", "week", "month", "year"]),
+  payAmount: z.number().optional(),
+  payRangeMin: z.number().optional(),
+  payRangeMax: z.number().optional(),
+}).refine((data) => {
+  // Validate based on pay type
+  if (data.payType === "fixed") {
+    return data.payAmount && data.payAmount > 0;
+  } else if (data.payType === "range") {
+    return data.payRangeMin && data.payRangeMax && data.payRangeMin > 0 && data.payRangeMax > data.payRangeMin;
+  } else if (data.payType === "minimum") {
+    return data.payRangeMin && data.payRangeMin > 0;
+  } else if (data.payType === "maximum") {
+    return data.payRangeMax && data.payRangeMax > 0;
+  }
+  return false;
+}, {
+  message: "Please provide valid salary information",
+  path: ["payAmount"],
 });
 
 interface Props {
@@ -46,6 +66,11 @@ export default function PayBenefitsStep({
     resolver: zodResolver(schema),
     defaultValues: {
       showPay: formData.payConfig.showPay,
+      payType: formData.payConfig.payType || "range",
+      payPeriod: formData.payConfig.payPeriod || "year",
+      payAmount: formData.payConfig.payAmount,
+      payRangeMin: formData.payConfig.payRangeMin,
+      payRangeMax: formData.payConfig.payRangeMax,
     },
   });
 
@@ -54,10 +79,16 @@ export default function PayBenefitsStep({
     : BENEFITS_OPTIONS.slice(0, 6);
   const hiddenBenefitsCount = BENEFITS_OPTIONS.length - 6;
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const onSubmit = (_unusedValues: z.infer<typeof schema>) => {
+  const onSubmit = (values: z.infer<typeof schema>) => {
     updateFormData({
-      payConfig: showPay ? payConfig : { showPay: false },
+      payConfig: {
+        showPay: values.showPay,
+        payType: values.payType,
+        payPeriod: values.payPeriod,
+        payAmount: values.payAmount,
+        payRangeMin: values.payRangeMin,
+        payRangeMax: values.payRangeMax,
+      },
       benefits: selectedBenefits,
     });
     onNext();
@@ -81,43 +112,39 @@ export default function PayBenefitsStep({
         <div className="space-y-6">
           {/* Pay Configuration */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <FormLabel className="flex items-center gap-2 text-base font-medium">
+            <div>
+              <FormLabel className="flex items-center gap-2 text-base font-medium mb-2">
                 <DollarSign className="w-5 h-5" />
-                Show pay on job post
+                Salary Range <span className="text-red-500">*</span>
               </FormLabel>
-              <Switch
-                checked={showPay}
-                onCheckedChange={(checked) => {
-                  setShowPay(checked);
-                  form.setValue("showPay", checked);
-                }}
-              />
+              <p className="text-sm text-muted-foreground mb-3">
+                Salary information is required for job filtering. Use the toggle below to control whether the salary is publicly displayed.
+              </p>
             </div>
 
-            {showPay && (
-              <div className="bg-muted/50 p-4 rounded-lg space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Show pay as
-                  </label>
-                  <Select
-                    value={payConfig.payType || "range"}
-                    onValueChange={(value) =>
-                      handlePayConfigChange("payType", value)
-                    }
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fixed">Fixed amount</SelectItem>
-                      <SelectItem value="range">Range</SelectItem>
-                      <SelectItem value="maximum">Maximum</SelectItem>
-                      <SelectItem value="minimum">Minimum</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            {/* Always show salary input fields */}
+            <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">
+                  Show pay as
+                </label>
+                <Select
+                  value={payConfig.payType || "range"}
+                  onValueChange={(value) =>
+                    handlePayConfigChange("payType", value)
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">Fixed amount</SelectItem>
+                    <SelectItem value="range">Range</SelectItem>
+                    <SelectItem value="maximum">Maximum</SelectItem>
+                    <SelectItem value="minimum">Minimum</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {payConfig.payType === "fixed" && (
@@ -243,7 +270,25 @@ export default function PayBenefitsStep({
                   </div>
                 </div>
               </div>
-            )}
+
+            {/* Display Toggle */}
+            <div className="flex items-center justify-between pt-2">
+              <div>
+                <FormLabel className="text-base font-medium">
+                  Display salary publicly
+                </FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Toggle off to hide salary from job seekers (still used for filtering)
+                </p>
+              </div>
+              <Switch
+                checked={showPay}
+                onCheckedChange={(checked) => {
+                  setShowPay(checked);
+                  form.setValue("showPay", checked);
+                }}
+              />
+            </div>
           </div>
 
           {/* Benefits */}

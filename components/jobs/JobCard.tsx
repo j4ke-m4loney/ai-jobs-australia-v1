@@ -19,6 +19,7 @@ interface Job {
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;
+  show_salary?: boolean;
   is_featured: boolean;
   created_at: string;
   expires_at: string;
@@ -136,7 +137,7 @@ export const JobCard: React.FC<JobCardProps> = ({
               </span>
             </div>
 
-            {formatSalary(job.salary_min, job.salary_max) && (
+            {job.show_salary !== false && formatSalary(job.salary_min, job.salary_max) && (
               <div className="text-sm font-semibold text-green-600 mb-3">
                 {formatSalary(job.salary_min, job.salary_max)}
               </div>

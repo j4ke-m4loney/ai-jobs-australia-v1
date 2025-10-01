@@ -58,6 +58,7 @@ export default function PostJobPage() {
     jobType: "full-time",
     salaryMin: "",
     salaryMax: "",
+    showSalary: true,
     jobDescription: "",
     requirements: "",
 

@@ -246,6 +246,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     category: 'ai', // Default category
     salary_min: getSalaryMin(jobFormData.payConfig),
     salary_max: getSalaryMax(jobFormData.payConfig),
+    show_salary: jobFormData.payConfig.showPay,
     application_method: jobFormData.applicationMethod === 'indeed' ? 'external' : jobFormData.applicationMethod,
     application_url: jobFormData.applicationMethod === 'indeed' ? null : jobFormData.applicationUrl,
     application_email: jobFormData.applicationMethod === 'email' ? jobFormData.applicationEmail : null,
@@ -452,7 +453,8 @@ function mapJobType(jobType: string): string {
 }
 
 function getSalaryMin(payConfig: JobFormData2['payConfig']): number | null {
-  if (!payConfig?.showPay) return null;
+  // Always calculate salary for filtering purposes, regardless of showPay
+  if (!payConfig) return null;
 
   if (payConfig.payType === 'range' && payConfig.payRangeMin && payConfig.payPeriod) {
     return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
@@ -468,7 +470,8 @@ function getSalaryMin(payConfig: JobFormData2['payConfig']): number | null {
 }
 
 function getSalaryMax(payConfig: JobFormData2['payConfig']): number | null {
-  if (!payConfig?.showPay) return null;
+  // Always calculate salary for filtering purposes, regardless of showPay
+  if (!payConfig) return null;
 
   if (payConfig.payType === 'range' && payConfig.payRangeMax && payConfig.payPeriod) {
     return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);

@@ -6,6 +6,7 @@ export interface JobFormData {
   jobType: "full-time" | "part-time" | "contract" | "internship";
   salaryMin: string;
   salaryMax: string;
+  showSalary: boolean;
   jobDescription: string;
   requirements: string;
   

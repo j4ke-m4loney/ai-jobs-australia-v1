@@ -33,12 +33,12 @@ export interface JobFormData2 {
   
   // Pay and Benefits
   payConfig: {
-    showPay: boolean;
-    payType?: "fixed" | "range" | "maximum" | "minimum";
+    showPay: boolean; // Controls public display of salary
+    payType: "fixed" | "range" | "maximum" | "minimum"; // Required
     payAmount?: number;
     payRangeMin?: number;
     payRangeMax?: number;
-    payPeriod?: "hour" | "day" | "week" | "month" | "year";
+    payPeriod: "hour" | "day" | "week" | "month" | "year"; // Required
     currency?: string;
   };
   benefits: string[];
