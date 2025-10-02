@@ -49,7 +49,7 @@ interface Job {
     description: string | null;
     website: string | null;
     logo_url: string | null;
-  }[] | null;
+  } | null;
 }
 
 export default function JobDetailPage() {
@@ -126,7 +126,7 @@ export default function JobDetailPage() {
   const handleApply = async () => {
     if (!user) {
       toast.error("Please sign in to apply for jobs");
-      router.push("/auth");
+      router.push("/login");
       return;
     }
 
@@ -244,10 +244,10 @@ export default function JobDetailPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-start gap-4">
-                  {job.companies?.[0]?.logo_url && (
+                  {job.companies?.logo_url && (
                     <Image
-                      src={job.companies[0].logo_url}
-                      alt={job.companies[0]?.name || "Company logo"}
+                      src={job.companies.logo_url}
+                      alt={job.companies?.name || "Company logo"}
                       width={64}
                       height={64}
                       className="w-16 h-16 rounded-lg object-contain"
@@ -264,7 +264,7 @@ export default function JobDetailPage() {
                     <CardTitle className="text-2xl mb-2">{job.title}</CardTitle>
                     <div className="flex items-center gap-2 text-muted-foreground mb-3">
                       <Building2 className="w-4 h-4" />
-                      <span className="font-medium">{job.companies?.[0]?.name || "Unknown Company"}</span>
+                      <span className="font-medium">{job.companies?.name || "Unknown Company"}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
@@ -354,21 +354,7 @@ export default function JobDetailPage() {
                         className="w-full gap-2"
                         disabled={applying}
                       >
-                        {applying ? (
-                          "Applying..."
-                        ) : job.application_method === "external" ? (
-                          <>
-                            <ExternalLink className="w-4 h-4" />
-                            Apply on Company Site
-                          </>
-                        ) : job.application_method === "email" ? (
-                          <>
-                            <Mail className="w-4 h-4" />
-                            Apply via Email
-                          </>
-                        ) : (
-                          "Apply Now"
-                        )}
+                        {applying ? "Applying..." : "Apply"}
                       </Button>
 
                       <Button

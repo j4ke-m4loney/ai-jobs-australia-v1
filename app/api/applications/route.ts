@@ -519,11 +519,6 @@ export async function GET(request: NextRequest) {
         company_name,
         location,
         employer_id
-      ),
-      profiles (
-        user_id,
-        first_name,
-        last_name
       )
     `);
 

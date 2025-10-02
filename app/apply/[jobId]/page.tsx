@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +23,8 @@ import {
   BookOpen,
   CheckCircle,
   Info,
+  ExternalLink,
+  Mail,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -41,7 +44,14 @@ interface Job {
   is_featured: boolean;
   created_at: string;
   expires_at: string;
-  employer_questions: Array<{id: string; question: string; required: boolean}> | null;
+  application_method: string;
+  application_url: string | null;
+  application_email: string | null;
+  employer_questions: Array<{
+    id: string;
+    question: string;
+    required: boolean;
+  }> | null;
   companies?: {
     id: string;
     name: string;
@@ -95,7 +105,8 @@ export default function ApplyPage() {
     setJobLoading(true);
     const { data, error } = await supabase
       .from("jobs")
-      .select(`
+      .select(
+        `
         *,
         companies (
           id,
@@ -104,7 +115,8 @@ export default function ApplyPage() {
           website,
           logo_url
         )
-      `)
+      `
+      )
       .eq("id", jobId)
       .eq("status", "approved")
       .single();
@@ -158,7 +170,8 @@ export default function ApplyPage() {
 
       if (response.ok) {
         const data = await response.json();
-        const hasExistingApplication = data.applications && data.applications.length > 0;
+        const hasExistingApplication =
+          data.applications && data.applications.length > 0;
         setHasApplied(hasExistingApplication);
 
         if (hasExistingApplication) {
@@ -179,7 +192,13 @@ export default function ApplyPage() {
       fetchUserDocuments();
       checkExistingApplication();
     }
-  }, [jobId, user, fetchJobDetails, fetchUserDocuments, checkExistingApplication]);
+  }, [
+    jobId,
+    user,
+    fetchJobDetails,
+    fetchUserDocuments,
+    checkExistingApplication,
+  ]);
 
   const handleFileUpload = async (
     file: File,
@@ -311,7 +330,8 @@ export default function ApplyPage() {
       router.push("/jobseeker/applications");
     } catch (error) {
       console.error("Application error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to submit application";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to submit application";
       toast.error(errorMessage);
     } finally {
       setSubmitting(false);
@@ -376,9 +396,15 @@ export default function ApplyPage() {
         <Card className="mb-8">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Building className="w-8 h-8 text-primary" />
-              </div>
+              {job.companies?.logo_url && (
+                <Image
+                  src={job.companies.logo_url}
+                  alt={job.companies?.name || "Company logo"}
+                  width={64}
+                  height={64}
+                  className="w-16 h-16 rounded-lg object-contain"
+                />
+              )}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   {job.is_featured && (
@@ -457,220 +483,267 @@ export default function ApplyPage() {
               </div>
             )}
 
-            {/* Company Info Section - placeholder for future enhancement */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                About the Company
-              </h3>
-              {job.companies ? (
+            {/* Company Info Section */}
+            {job.companies?.description && (
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Building className="w-5 h-5" />
+                  About the Company
+                </h3>
                 <div className="space-y-3">
                   <p className="text-muted-foreground">
-                    {job.companies.description || "Company description not available."}
+                    {job.companies.description}
                   </p>
-                  {/* Commenting out company website link to keep users focused on completing application
-                  {job.companies.website && (
-                    <a
-                      href={job.companies.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-primary hover:underline"
-                    >
-                      Visit Company Website
-                    </a>
-                  )} */}
                 </div>
-              ) : (
-                <p className="text-muted-foreground">
-                  Company information not available.
-                </p>
-              )}
-            </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Application Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Submit Your Application
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Resume Section */}
-            <div>
-              <Label className="text-base font-semibold">Resume *</Label>
-              <p className="text-sm text-muted-foreground mb-3">
-                Select an existing resume or upload a new one
+        {/* Application Form - Conditional based on application method */}
+        {job.application_method === "external" ? (
+          // External Application - Redirect to company website
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ExternalLink className="w-5 h-5" />
+                Ready to Apply?
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                This position requires you to apply directly on the company's
+                website.
               </p>
+              <Button
+                onClick={() =>
+                  job.application_url &&
+                  window.open(job.application_url, "_blank")
+                }
+                size="lg"
+                className="w-full bg-primary hover:bg-primary/90 text-white"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Apply Now
+              </Button>
+            </CardContent>
+          </Card>
+        ) : job.application_method === "email" ? (
+          // Email Application - Open mailto link
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="w-5 h-5" />
+                Apply via Email
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                This position requires you to apply via email.
+              </p>
+              <Button
+                onClick={() =>
+                  job.application_email &&
+                  (window.location.href = `mailto:${job.application_email}?subject=Application for ${job.title}`)
+                }
+                size="lg"
+                className="w-full bg-primary hover:bg-primary/90 text-white"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Apply via Email
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          // Internal Application - Full application form
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Submit Your Application
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Resume Section */}
+              <div>
+                <Label className="text-base font-semibold">Resume *</Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Select an existing resume or upload a new one
+                </p>
 
-              <div className="space-y-3">
-                {resumes.length > 0 && (
-                  <div className="space-y-2">
-                    {resumes.map((resume) => (
-                      <div
-                        key={resume.id}
-                        className="flex items-center space-x-2"
-                      >
-                        <input
-                          type="radio"
-                          id={`resume-${resume.id}`}
-                          name="resume"
-                          value={resume.id}
-                          checked={selectedResume === resume.id}
-                          onChange={(e) => setSelectedResume(e.target.value)}
-                          className="text-primary"
-                        />
-                        <Label
-                          htmlFor={`resume-${resume.id}`}
-                          className="flex-1 cursor-pointer"
+                <div className="space-y-3">
+                  {resumes.length > 0 && (
+                    <div className="space-y-2">
+                      {resumes.map((resume) => (
+                        <div
+                          key={resume.id}
+                          className="flex items-center space-x-2"
                         >
-                          {resume.file_name}
-                          {resume.is_default && (
-                            <Badge variant="secondary" className="ml-2 text-xs">
-                              Default
-                            </Badge>
-                          )}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div>
-                  <input
-                    type="file"
-                    id="resume-upload"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(file, "resume");
-                    }}
-                    className="hidden"
-                  />
-                  <Label htmlFor="resume-upload">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="cursor-pointer"
-                      disabled={uploadingResume}
-                      asChild
-                    >
-                      <span>
-                        <Upload className="w-4 h-4 mr-2" />
-                        {uploadingResume ? "Uploading..." : "Upload New Resume"}
-                      </span>
-                    </Button>
-                  </Label>
-                </div>
-              </div>
-            </div>
-
-            {/* Cover Letter Section */}
-            <div>
-              <Label className="text-base font-semibold">
-                Cover Letter (Optional)
-              </Label>
-              <p className="text-sm text-muted-foreground mb-3">
-                Select an existing cover letter or upload a new one
-              </p>
-
-              <div className="space-y-3">
-                {coverLetters.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        id="no-cover-letter"
-                        name="cover-letter"
-                        value=""
-                        checked={selectedCoverLetter === ""}
-                        onChange={() => setSelectedCoverLetter("")}
-                        className="text-primary"
-                      />
-                      <Label
-                        htmlFor="no-cover-letter"
-                        className="cursor-pointer"
-                      >
-                        No cover letter
-                      </Label>
+                          <input
+                            type="radio"
+                            id={`resume-${resume.id}`}
+                            name="resume"
+                            value={resume.id}
+                            checked={selectedResume === resume.id}
+                            onChange={(e) => setSelectedResume(e.target.value)}
+                            className="text-primary"
+                          />
+                          <Label
+                            htmlFor={`resume-${resume.id}`}
+                            className="flex-1 cursor-pointer"
+                          >
+                            {resume.file_name}
+                            {resume.is_default && (
+                              <Badge
+                                variant="secondary"
+                                className="ml-2 text-xs"
+                              >
+                                Default
+                              </Badge>
+                            )}
+                          </Label>
+                        </div>
+                      ))}
                     </div>
+                  )}
 
-                    {coverLetters.map((coverLetter) => (
-                      <div
-                        key={coverLetter.id}
-                        className="flex items-center space-x-2"
+                  <div>
+                    <input
+                      type="file"
+                      id="resume-upload"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, "resume");
+                      }}
+                      className="hidden"
+                    />
+                    <Label htmlFor="resume-upload">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="cursor-pointer"
+                        disabled={uploadingResume}
+                        asChild
                       >
+                        <span>
+                          <Upload className="w-4 h-4 mr-2" />
+                          {uploadingResume
+                            ? "Uploading..."
+                            : "Upload New Resume"}
+                        </span>
+                      </Button>
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cover Letter Section */}
+              <div>
+                <Label className="text-base font-semibold">
+                  Cover Letter (Optional)
+                </Label>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Select an existing cover letter or upload a new one
+                </p>
+
+                <div className="space-y-3">
+                  {coverLetters.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
                         <input
                           type="radio"
-                          id={`cover-letter-${coverLetter.id}`}
+                          id="no-cover-letter"
                           name="cover-letter"
-                          value={coverLetter.id}
-                          checked={selectedCoverLetter === coverLetter.id}
-                          onChange={(e) =>
-                            setSelectedCoverLetter(e.target.value)
-                          }
+                          value=""
+                          checked={selectedCoverLetter === ""}
+                          onChange={() => setSelectedCoverLetter("")}
                           className="text-primary"
                         />
                         <Label
-                          htmlFor={`cover-letter-${coverLetter.id}`}
-                          className="flex-1 cursor-pointer"
+                          htmlFor="no-cover-letter"
+                          className="cursor-pointer"
                         >
-                          {coverLetter.file_name}
-                          {coverLetter.is_default && (
-                            <Badge variant="secondary" className="ml-2 text-xs">
-                              Default
-                            </Badge>
-                          )}
+                          No cover letter
                         </Label>
                       </div>
-                    ))}
-                  </div>
-                )}
 
-                <div>
-                  <input
-                    type="file"
-                    id="cover-letter-upload"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(file, "cover_letter");
-                    }}
-                    className="hidden"
-                  />
-                  <Label htmlFor="cover-letter-upload">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="cursor-pointer"
-                      disabled={uploadingCoverLetter}
-                      asChild
-                    >
-                      <span>
-                        <Upload className="w-4 h-4 mr-2" />
-                        {uploadingCoverLetter
-                          ? "Uploading..."
-                          : "Upload New Cover Letter"}
-                      </span>
-                    </Button>
-                  </Label>
+                      {coverLetters.map((coverLetter) => (
+                        <div
+                          key={coverLetter.id}
+                          className="flex items-center space-x-2"
+                        >
+                          <input
+                            type="radio"
+                            id={`cover-letter-${coverLetter.id}`}
+                            name="cover-letter"
+                            value={coverLetter.id}
+                            checked={selectedCoverLetter === coverLetter.id}
+                            onChange={(e) =>
+                              setSelectedCoverLetter(e.target.value)
+                            }
+                            className="text-primary"
+                          />
+                          <Label
+                            htmlFor={`cover-letter-${coverLetter.id}`}
+                            className="flex-1 cursor-pointer"
+                          >
+                            {coverLetter.file_name}
+                            {coverLetter.is_default && (
+                              <Badge
+                                variant="secondary"
+                                className="ml-2 text-xs"
+                              >
+                                Default
+                              </Badge>
+                            )}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div>
+                    <input
+                      type="file"
+                      id="cover-letter-upload"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, "cover_letter");
+                      }}
+                      className="hidden"
+                    />
+                    <Label htmlFor="cover-letter-upload">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="cursor-pointer"
+                        disabled={uploadingCoverLetter}
+                        asChild
+                      >
+                        <span>
+                          <Upload className="w-4 h-4 mr-2" />
+                          {uploadingCoverLetter
+                            ? "Uploading..."
+                            : "Upload New Cover Letter"}
+                        </span>
+                      </Button>
+                    </Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Employer Questions */}
-            {job.employer_questions &&
-              Array.isArray(job.employer_questions) &&
-              job.employer_questions.length > 0 && (
-                <div>
-                  <Label className="text-base font-semibold">
-                    Additional Questions
-                  </Label>
-                  <div className="space-y-4 mt-3">
-                    {job.employer_questions.map(
-                      (question, index: number) => (
+              {/* Employer Questions */}
+              {job.employer_questions &&
+                Array.isArray(job.employer_questions) &&
+                job.employer_questions.length > 0 && (
+                  <div>
+                    <Label className="text-base font-semibold">
+                      Additional Questions
+                    </Label>
+                    <div className="space-y-4 mt-3">
+                      {job.employer_questions.map((question, index: number) => (
                         <div key={question.id}>
                           <Label htmlFor={`question-${question.id}`}>
                             {index + 1}. {question.question}
@@ -692,49 +765,53 @@ export default function ApplyPage() {
                             placeholder="Enter your answer..."
                           />
                         </div>
-                      )
-                    )}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-
-            {/* Submit Button */}
-            <div className="pt-6 border-t">
-              <Button
-                onClick={handleSubmitApplication}
-                disabled={submitting || !selectedResume || hasApplied || checkingApplication}
-                size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50"
-              >
-                {checkingApplication ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Checking Application Status...
-                  </>
-                ) : submitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Submitting Application...
-                  </>
-                ) : hasApplied ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Already Applied
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Submit Application
-                  </>
                 )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+
+              {/* Submit Button */}
+              <div className="pt-6 border-t">
+                <Button
+                  onClick={handleSubmitApplication}
+                  disabled={
+                    submitting ||
+                    !selectedResume ||
+                    hasApplied ||
+                    checkingApplication
+                  }
+                  size="lg"
+                  className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50"
+                >
+                  {checkingApplication ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Checking Application Status...
+                    </>
+                  ) : submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Submitting Application...
+                    </>
+                  ) : hasApplied ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Already Applied
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Submit Application
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
-      
+
       <Footer />
     </div>
   );
-};
-
+}
