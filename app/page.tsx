@@ -42,37 +42,54 @@ const HomePage = () => {
         userId: user.id,
         email: user.email,
         userType: user.user_metadata?.user_type || user.metadata?.userType,
-        userMetadata: user.user_metadata
+        userMetadata: user.user_metadata,
       });
 
       // Check if we've already redirected this user before
-      const hasBeenRedirected = localStorage.getItem(`user_${user.id}_initial_redirect_complete`);
+      const hasBeenRedirected = localStorage.getItem(
+        `user_${user.id}_initial_redirect_complete`
+      );
 
       // Only redirect if this is their first visit after email verification
       if (!hasBeenRedirected) {
-        const userType = user.user_metadata?.user_type || user.metadata?.userType || 'job_seeker';
+        const userType =
+          user.user_metadata?.user_type ||
+          user.metadata?.userType ||
+          "job_seeker";
 
-        console.log("📍 Home page: First time user detected, performing one-time redirect", {
-          userType,
-          userId: user.id
-        });
+        console.log(
+          "📍 Home page: First time user detected, performing one-time redirect",
+          {
+            userType,
+            userId: user.id,
+          }
+        );
 
         // Mark as redirected to prevent multiple redirects
         setHasRedirected(true);
 
         // IMPORTANT: Mark that we've done the initial redirect for this user
-        localStorage.setItem(`user_${user.id}_initial_redirect_complete`, 'true');
+        localStorage.setItem(
+          `user_${user.id}_initial_redirect_complete`,
+          "true"
+        );
 
         // Redirect based on user type
-        if (userType === 'employer') {
-          console.log("📍 Home page: Redirecting employer to settings (one-time)");
-          router.push('/employer/settings?verified=true');
+        if (userType === "employer") {
+          console.log(
+            "📍 Home page: Redirecting employer to settings (one-time)"
+          );
+          router.push("/employer/settings?verified=true");
         } else {
-          console.log("📍 Home page: Redirecting job seeker to profile (one-time)");
-          router.push('/jobseeker/profile?verified=true');
+          console.log(
+            "📍 Home page: Redirecting job seeker to profile (one-time)"
+          );
+          router.push("/jobseeker/profile?verified=true");
         }
       } else {
-        console.log("📍 Home page: User has already been redirected once, allowing normal navigation");
+        console.log(
+          "📍 Home page: User has already been redirected once, allowing normal navigation"
+        );
       }
     }
   }, [user, loading, hasRedirected, router]);
@@ -80,11 +97,11 @@ const HomePage = () => {
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.append("search", searchTerm);
-    if (selectedState && selectedState !== "all") params.append("location", selectedState);
+    if (selectedState && selectedState !== "all")
+      params.append("location", selectedState);
     // Redirect to jobs page - authentication check happens there
     router.push(`/jobs?${params.toString()}`);
   };
-
 
   const categories = [
     { name: "Machine Learning", count: 45, icon: TrendingUp },
@@ -136,7 +153,7 @@ const HomePage = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="pt-10 text-4xl md:text-6xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
-                Find Your Dream AI Job
+                The #1 Home for AI Jobs In Australia
               </h1>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Discover the latest opportunities in Artificial Intelligence,
@@ -244,8 +261,8 @@ const HomePage = () => {
                 Your AI Career Journey
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                From profile creation to your first day - we&apos;re with you every
-                step of the way
+                From profile creation to your first day - we&apos;re with you
+                every step of the way
               </p>
             </div>
 
@@ -290,8 +307,8 @@ const HomePage = () => {
                 Top Companies Hiring
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of professionals working at Australia&apos;s leading
-                tech companies.
+                Join thousands of professionals working at Australia&apos;s
+                leading tech companies.
               </p>
             </div>
 
@@ -350,9 +367,7 @@ const HomePage = () => {
                 size="lg"
                 className="h-16 px-12 text-lg bg-gradient-hero hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 onClick={() =>
-                  user
-                    ? router.push("/jobs")
-                    : router.push("/login")
+                  user ? router.push("/jobs") : router.push("/login")
                 }
               >
                 <Zap className="w-6 h-6 mr-3" />
