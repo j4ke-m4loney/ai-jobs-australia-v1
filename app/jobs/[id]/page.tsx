@@ -36,6 +36,7 @@ interface Job {
   category: string;
   salary_min: number | null;
   salary_max: number | null;
+  show_salary?: boolean;
   application_method: string;
   application_url: string | null;
   application_email: string | null;
@@ -274,12 +275,13 @@ export default function JobDetailPage() {
                         <Briefcase className="w-4 h-4" />
                         <span className="capitalize">{job.job_type}</span>
                       </div>
-                      {(job.salary_min || job.salary_max) && (
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4" />
-                          {formatSalary(job.salary_min, job.salary_max)}
-                        </div>
-                      )}
+                      {job.show_salary !== false &&
+                        (job.salary_min || job.salary_max) && (
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-4 h-4" />
+                            {formatSalary(job.salary_min, job.salary_max)}
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>

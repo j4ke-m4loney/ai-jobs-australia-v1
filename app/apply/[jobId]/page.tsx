@@ -37,6 +37,7 @@ interface Job {
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;
+  show_salary?: boolean;
   is_featured: boolean;
   created_at: string;
   expires_at: string;
@@ -409,14 +410,15 @@ export default function ApplyPage() {
                   </div>
                 </div>
 
-                {formatSalary(job.salary_min, job.salary_max) && (
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    <span className="font-semibold text-green-600 text-lg">
-                      {formatSalary(job.salary_min, job.salary_max)}
-                    </span>
-                  </div>
-                )}
+                {job.show_salary !== false &&
+                  formatSalary(job.salary_min, job.salary_max) && (
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <span className="font-semibold text-green-600 text-lg">
+                        {formatSalary(job.salary_min, job.salary_max)}
+                      </span>
+                    </div>
+                  )}
               </div>
             </div>
           </CardContent>
