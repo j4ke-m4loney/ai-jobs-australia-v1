@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { stripe, PRICING_CONFIG, isValidPricingTier, PricingTier } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
+import { getSiteUrl } from '@/lib/utils/get-site-url';
 
 // Server-side Supabase client with service role for database operations
 const supabaseAdmin = createClient(
@@ -196,8 +197,8 @@ async function createSubscriptionCheckout(
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment-cancel?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${getSiteUrl()}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${getSiteUrl()}/payment-cancel?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         user_id: userId,
         pricing_tier: pricingTier,

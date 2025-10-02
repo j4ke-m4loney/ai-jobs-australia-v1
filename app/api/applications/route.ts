@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { emailService } from '@/lib/email/postmark-service';
+import { getSiteUrl } from '@/lib/utils/get-site-url';
 
 // Server-side Supabase client with service role for database operations
 const supabaseAdmin = createClient(
@@ -97,7 +98,7 @@ async function processOverdueBatches(): Promise<void> {
           applicationCount: queue.application_ids.length,
           applicantNames: queue.applicant_names,
           timeFrame,
-          dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/employer/applications`
+          dashboardUrl: `${getSiteUrl()}/employer/applications`
         });
 
         if (emailSent) {
@@ -168,7 +169,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
         month: 'long',
         day: 'numeric',
       }),
-      dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/employer/applications`
+      dashboardUrl: `${getSiteUrl()}/employer/applications`
     });
 
     // Update tracking table
@@ -277,7 +278,7 @@ async function sendBatchEmail(params: {
     applicationCount: applicationIds.length,
     applicantNames,
     timeFrame: applicationIds.length === 1 ? 'today' : 'in the last hour',
-    dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/employer/applications`
+    dashboardUrl: `${getSiteUrl()}/employer/applications`
   });
 
   // Mark queue as processed

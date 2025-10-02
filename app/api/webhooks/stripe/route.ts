@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { JobFormData2 } from '@/types/job2';
 import { emailService } from '@/lib/email/postmark-service';
+import { getSiteUrl } from '@/lib/utils/get-site-url';
 
 // Type definitions for webhook data
 interface PaymentRecord {
@@ -329,7 +330,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
           companyName: jobFormData.companyName,
           location: jobFormData.locationAddress || `${jobFormData.locationSuburb}, ${jobFormData.locationState}`,
           pricingTier: payment.pricing_tier,
-          dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/employer/jobs/${job.id}`
+          dashboardUrl: `${getSiteUrl()}/employer/jobs/${job.id}`
         });
 
         console.log('✅ Job submission confirmation email sent to employer:', employerEmail);

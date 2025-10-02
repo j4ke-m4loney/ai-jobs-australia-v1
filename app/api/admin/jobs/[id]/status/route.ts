@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { emailService } from '@/lib/email/postmark-service';
+import { getSiteUrl } from '@/lib/utils/get-site-url';
 
 // Server-side Supabase client with service role for database operations
 const supabaseAdmin = createClient(
@@ -167,7 +168,7 @@ export async function PUT(
           jobId: job.id,
           status: status as 'approved' | 'rejected',
           rejectionReason,
-          dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/employer/jobs/${job.id}`
+          dashboardUrl: `${getSiteUrl()}/employer/jobs/${job.id}`
         });
 
         console.log('✅ Job status update email sent successfully to:', employerEmail);
