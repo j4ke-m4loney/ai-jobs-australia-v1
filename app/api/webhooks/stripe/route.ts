@@ -256,6 +256,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     featured_order: isFeatured ? Math.floor(Date.now() / 1000) : 0, // Use timestamp for ordering
     highlights: jobFormData.highlights || [],
     status: 'pending_approval', // Jobs require admin approval before going live
+    payment_status: 'completed', // Payment succeeded via Stripe webhook
     expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
   };
 
