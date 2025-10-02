@@ -210,8 +210,8 @@ export default function ApplicationSettingsStep({
             />
           )}
 
-          {/* Hiring Timeline */}
-          <FormField
+          {/* Hiring Timeline - COMMENTED OUT - Can be restored later */}
+          {/* <FormField
             control={form.control}
             name="hiringTimeline"
             render={({ field }) => (
@@ -240,7 +240,7 @@ export default function ApplicationSettingsStep({
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
 
           {/* Communication Preferences */}
           <div className="space-y-4">
@@ -269,7 +269,8 @@ export default function ApplicationSettingsStep({
                 />
               </div>
 
-              <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
+              {/* Phone Screening - COMMENTED OUT - Can be restored later */}
+              {/* <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                 <div className="flex items-center gap-3">
                   <Phone className="w-4 h-4 text-muted-foreground" />
                   <div>
@@ -285,7 +286,7 @@ export default function ApplicationSettingsStep({
                     updateCommunicationPref("phoneScreening", checked)
                   }
                 />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
