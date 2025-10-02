@@ -512,7 +512,7 @@ export default function ApplyPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                This position requires you to apply directly on the company's
+                This position requires you to apply directly on the company&apos;s
                 website.
               </p>
               <Button

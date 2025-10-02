@@ -14,8 +14,6 @@ import {
   DollarSign,
   Clock,
   Building2,
-  ExternalLink,
-  Mail,
   Briefcase,
   Users,
   Heart,

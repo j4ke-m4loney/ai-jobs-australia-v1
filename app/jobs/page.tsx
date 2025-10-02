@@ -16,7 +16,6 @@ import {
   MapPin,
   Search,
   Briefcase,
-  Star,
   SlidersHorizontal,
   X,
   Heart,

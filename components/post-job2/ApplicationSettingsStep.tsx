@@ -12,16 +12,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { JobFormData2 } from "@/types/job2";
-import { Mail, ExternalLink, Settings, Clock, Phone, Eye } from "lucide-react";
+import { Mail, ExternalLink, Settings, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
