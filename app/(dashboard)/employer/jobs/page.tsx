@@ -32,6 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { formatSalary } from "@/lib/salary-utils";
 
 interface Job {
   id: string;
@@ -43,6 +44,7 @@ interface Job {
   category: string;
   salary_min: number | null;
   salary_max: number | null;
+  salary_period?: string;
   is_featured: boolean;
   status: string;
   created_at: string;
@@ -138,19 +140,6 @@ const EmployerJobs = () => {
       fetchJobsAndStats();
     }
   }, [user, fetchJobsAndStats]);
-
-  const formatSalary = (
-    salaryMin: number | null,
-    salaryMax: number | null
-  ): string => {
-    if (!salaryMin && !salaryMax) return "Salary not specified";
-    if (salaryMin && salaryMax && salaryMin !== salaryMax) {
-      return `$${salaryMin.toLocaleString()} - $${salaryMax.toLocaleString()}`;
-    }
-    if (salaryMin) return `$${salaryMin.toLocaleString()}`;
-    if (salaryMax) return `Up to $${salaryMax.toLocaleString()}`;
-    return "Salary not specified";
-  };
 
   const formatJobType = (jobType: string): string => {
     return jobType.charAt(0).toUpperCase() + jobType.slice(1).replace("-", " ");
@@ -321,7 +310,7 @@ const EmployerJobs = () => {
                         <div className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4 flex-shrink-0" />
                           <span className="truncate">
-                            {formatSalary(job.salary_min, job.salary_max)}
+                            {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">

@@ -33,12 +33,12 @@ export function formatSalary(
 
 function getPeriodText(period: string): string {
   const periodMap: { [key: string]: string } = {
-    hour: ' an hour',
+    hour: ' an hr',
     day: ' per day',
-    week: ' per week',
-    month: ' per month',
-    year: ' per year',
+    week: ' per wk',
+    month: ' per mo',
+    year: ' per yr',
   };
 
-  return periodMap[period] || ' per year';
+  return periodMap[period] || ' per yr';
 }
