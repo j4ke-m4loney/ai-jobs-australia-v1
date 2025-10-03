@@ -26,6 +26,7 @@ import {
   ExternalLink,
   Mail,
 } from "lucide-react";
+import { formatSalary } from "@/lib/salary-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -40,6 +41,7 @@ interface Job {
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;
+  salary_period?: string;
   show_salary?: boolean;
   is_featured: boolean;
   created_at: string;
@@ -338,14 +340,6 @@ export default function ApplyPage() {
     }
   };
 
-  const formatSalary = (min: number | null, max: number | null) => {
-    if (!min && !max) return null;
-    if (min && max)
-      return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-    if (min) return `From $${min.toLocaleString()}`;
-    if (max) return `Up to $${max.toLocaleString()}`;
-  };
-
   const getCategoryDisplay = (category: string) => {
     const categories = {
       ai: "Artificial Intelligence",
@@ -437,11 +431,11 @@ export default function ApplyPage() {
                 </div>
 
                 {job.show_salary !== false &&
-                  formatSalary(job.salary_min, job.salary_max) && (
+                  formatSalary(job.salary_min, job.salary_max, job.salary_period) && (
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4 text-green-600" />
                       <span className="font-semibold text-green-600 text-lg">
-                        {formatSalary(job.salary_min, job.salary_max)}
+                        {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
                       </span>
                     </div>
                   )}
@@ -512,8 +506,8 @@ export default function ApplyPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                This position requires you to apply directly on the company&apos;s
-                website.
+                This position requires you to apply directly on the
+                company&apos;s website.
               </p>
               <Button
                 onClick={() =>

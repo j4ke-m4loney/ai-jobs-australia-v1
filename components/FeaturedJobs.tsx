@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatSalary } from '@/lib/salary-utils';
 import {
   MapPin,
   Building,
@@ -32,6 +33,7 @@ interface FeaturedJob {
   job_type: string;
   salary_min?: number;
   salary_max?: number;
+  salary_period?: string;
   is_featured: boolean;
   featured_until: string;
   highlights: string[];
@@ -76,27 +78,6 @@ export default function FeaturedJobs() {
     router.push(`/jobs/${jobId}`);
   };
 
-  const formatSalary = (min?: number, max?: number) => {
-    if (!min && !max) return 'Salary not specified';
-
-    const formatAmount = (amount: number) => {
-      if (amount >= 1000) {
-        return `$${(amount / 1000).toFixed(0)}k`;
-      }
-      return `$${amount.toLocaleString()}`;
-    };
-
-    if (min && max) {
-      return `${formatAmount(min)} - ${formatAmount(max)}`;
-    }
-    if (min) {
-      return `From ${formatAmount(min)}`;
-    }
-    if (max) {
-      return `Up to ${formatAmount(max)}`;
-    }
-    return 'Salary not specified';
-  };
 
   const formatJobType = (jobType: string) => {
     return jobType
@@ -223,7 +204,7 @@ export default function FeaturedJobs() {
 
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <DollarSign className="w-4 h-4" />
-                    <span>{formatSalary(job.salary_min, job.salary_max)}</span>
+                    <span>{formatSalary(job.salary_min ?? null, job.salary_max ?? null, job.salary_period)}</span>
                   </div>
                 </div>
 

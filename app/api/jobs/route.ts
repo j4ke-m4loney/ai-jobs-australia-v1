@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       category: 'ai', // Default category, could be determined from title/description
       salary_min: getSalaryMin(jobData.payConfig),
       salary_max: getSalaryMax(jobData.payConfig),
+      salary_period: jobData.payConfig.payPeriod || 'year',
       application_method: jobData.applicationMethod,
       application_url: jobData.applicationUrl,
       application_email: jobData.applicationEmail,
@@ -140,46 +141,28 @@ function mapJobType(jobType: string): string {
 }
 
 function getSalaryMin(payConfig: PayConfig): number | null {
-  if (!payConfig.showPay) return null;
-
-  const payPeriod = payConfig.payPeriod || 'yearly';
-
+  // Store the original salary value, not converted to annual
   if (payConfig.payType === 'range' && payConfig.payRangeMin) {
-    return convertToAnnualSalary(payConfig.payRangeMin, payPeriod);
+    return payConfig.payRangeMin;
   }
   if (payConfig.payType === 'minimum' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payPeriod);
+    return payConfig.payAmount;
   }
   if (payConfig.payType === 'fixed' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payPeriod);
+    return payConfig.payAmount;
   }
 
   return null;
 }
 
 function getSalaryMax(payConfig: PayConfig): number | null {
-  if (!payConfig.showPay) return null;
-
-  const payPeriod = payConfig.payPeriod || 'yearly';
-
+  // Store the original salary value, not converted to annual
   if (payConfig.payType === 'range' && payConfig.payRangeMax) {
-    return convertToAnnualSalary(payConfig.payRangeMax, payPeriod);
+    return payConfig.payRangeMax;
   }
   if (payConfig.payType === 'fixed' && payConfig.payAmount) {
-    return convertToAnnualSalary(payConfig.payAmount, payPeriod);
+    return payConfig.payAmount;
   }
 
   return null;
-}
-
-function convertToAnnualSalary(amount: number, period: string): number {
-  const multipliers: { [key: string]: number } = {
-    'hour': 2080, // 40 hours/week * 52 weeks
-    'day': 260, // ~260 working days per year
-    'week': 52,
-    'month': 12,
-    'year': 1,
-  };
-  
-  return Math.round(amount * (multipliers[period] || 1));
 }

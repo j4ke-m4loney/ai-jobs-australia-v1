@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart } from "lucide-react";
 import Image from "next/image";
+import { formatSalary } from "@/lib/salary-utils";
 
 interface Job {
   id: string;
@@ -19,6 +20,7 @@ interface Job {
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;
+  salary_period?: string;
   show_salary?: boolean;
   is_featured: boolean;
   created_at: string;
@@ -47,13 +49,6 @@ interface JobCardProps {
 }
 
 // Helper functions
-const formatSalary = (min: number | null, max: number | null) => {
-  if (!min && !max) return null;
-  if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-  if (min) return `From $${min.toLocaleString()}`;
-  if (max) return `Up to $${max.toLocaleString()}`;
-};
-
 const getTimeAgo = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
@@ -138,9 +133,9 @@ export const JobCard: React.FC<JobCardProps> = ({
             </div>
 
             {job.show_salary !== false &&
-              formatSalary(job.salary_min, job.salary_max) && (
+              formatSalary(job.salary_min, job.salary_max, job.salary_period) && (
                 <div className="text-sm font-semibold text-green-600 mb-3">
-                  {formatSalary(job.salary_min, job.salary_max)}
+                  {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
                 </div>
               )}
 

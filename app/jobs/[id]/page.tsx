@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
+import { formatSalary } from "@/lib/salary-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -34,6 +35,7 @@ interface Job {
   category: string;
   salary_min: number | null;
   salary_max: number | null;
+  salary_period?: string;
   show_salary?: boolean;
   application_method: string;
   application_url: string | null;
@@ -163,14 +165,6 @@ export default function JobDetailPage() {
     }
   };
 
-  const formatSalary = (min: number | null, max: number | null) => {
-    if (!min && !max) return "Salary not specified";
-    if (min && max)
-      return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-    if (min) return `From $${min.toLocaleString()}`;
-    return `Up to $${max?.toLocaleString()}`;
-  };
-
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -277,7 +271,7 @@ export default function JobDetailPage() {
                         (job.salary_min || job.salary_max) && (
                           <div className="flex items-center gap-1">
                             <DollarSign className="w-4 h-4" />
-                            {formatSalary(job.salary_min, job.salary_max)}
+                            {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
                           </div>
                         )}
                     </div>

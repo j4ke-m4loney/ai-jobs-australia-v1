@@ -74,6 +74,7 @@ interface Job {
   category: string;
   salary_min: number | null;
   salary_max: number | null;
+  salary_period?: string;
   show_salary?: boolean;
   application_method: string;
   application_url: string | null;
@@ -121,18 +122,6 @@ const HTMLRenderer = ({ content }: { content: string }) => (
 );
 
 // Helper functions to calculate salary from payConfig
-function convertToAnnualSalary(amount: number, period: string): number {
-  const multipliers: { [key: string]: number } = {
-    'hour': 2080,
-    'day': 260,
-    'week': 52,
-    'month': 12,
-    'year': 1,
-  };
-
-  return Math.round(amount * (multipliers[period] || 1));
-}
-
 function getSalaryMin(payConfig: {
   payType: "fixed" | "range" | "maximum" | "minimum";
   payAmount: number | null;
@@ -140,16 +129,17 @@ function getSalaryMin(payConfig: {
   payRangeMax: number | null;
   payPeriod: "hour" | "day" | "week" | "month" | "year";
 }): number | null {
+  // Store original salary values, not converted to annual
   if (!payConfig) return null;
 
-  if (payConfig.payType === 'range' && payConfig.payRangeMin && payConfig.payPeriod) {
-    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
+  if (payConfig.payType === 'range' && payConfig.payRangeMin) {
+    return payConfig.payRangeMin;
   }
-  if (payConfig.payType === 'minimum' && payConfig.payRangeMin && payConfig.payPeriod) {
-    return convertToAnnualSalary(payConfig.payRangeMin, payConfig.payPeriod);
+  if (payConfig.payType === 'minimum' && payConfig.payRangeMin) {
+    return payConfig.payRangeMin;
   }
-  if (payConfig.payType === 'fixed' && payConfig.payAmount && payConfig.payPeriod) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  if (payConfig.payType === 'fixed' && payConfig.payAmount) {
+    return payConfig.payAmount;
   }
 
   return null;
@@ -162,16 +152,17 @@ function getSalaryMax(payConfig: {
   payRangeMax: number | null;
   payPeriod: "hour" | "day" | "week" | "month" | "year";
 }): number | null {
+  // Store original salary values, not converted to annual
   if (!payConfig) return null;
 
-  if (payConfig.payType === 'range' && payConfig.payRangeMax && payConfig.payPeriod) {
-    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
+  if (payConfig.payType === 'range' && payConfig.payRangeMax) {
+    return payConfig.payRangeMax;
   }
-  if (payConfig.payType === 'maximum' && payConfig.payRangeMax && payConfig.payPeriod) {
-    return convertToAnnualSalary(payConfig.payRangeMax, payConfig.payPeriod);
+  if (payConfig.payType === 'maximum' && payConfig.payRangeMax) {
+    return payConfig.payRangeMax;
   }
-  if (payConfig.payType === 'fixed' && payConfig.payAmount && payConfig.payPeriod) {
-    return convertToAnnualSalary(payConfig.payAmount, payConfig.payPeriod);
+  if (payConfig.payType === 'fixed' && payConfig.payAmount) {
+    return payConfig.payAmount;
   }
 
   return null;
@@ -266,7 +257,7 @@ const JobManagementPage = () => {
           payAmount: null,
           payRangeMin: data.salary_min,
           payRangeMax: data.salary_max,
-          payPeriod: "year"
+          payPeriod: (data.salary_period as "hour" | "day" | "week" | "month" | "year") || "year"
         });
       }
 
@@ -442,6 +433,7 @@ const JobManagementPage = () => {
         category: editedJob.category,
         salary_min: newSalaryMin,
         salary_max: newSalaryMax,
+        salary_period: payConfig.payPeriod || 'year',
         show_salary: showPay,
         application_method: editedJob.application_method,
         application_url: editedJob.application_url?.trim() || null,
