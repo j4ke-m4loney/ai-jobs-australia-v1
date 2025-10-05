@@ -254,6 +254,11 @@ function JobsContent() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [pendingJobId, setPendingJobId] = useState<string | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const JOBS_PER_PAGE = 25;
+
   // Track if we should sync URL params (only on initial load, not after manual actions)
   const shouldSyncFromUrl = useRef(true);
   const initialized = useRef(false);
@@ -386,7 +391,7 @@ function JobsContent() {
             website,
             logo_url
           )
-        `);
+        `, { count: 'exact' });
       // Only show approved jobs in public listing
       query = query.eq("status", "approved");
 
@@ -464,13 +469,23 @@ function JobsContent() {
       console.log("🎯 EXECUTING SUPABASE QUERY NOW with filters:", {
         searchTerm: effectiveSearchTerm,
         location: effectiveLocationTerm,
-        user: user?.id || "guest"
+        user: user?.id || "guest",
+        page: currentPage
       });
 
-      const { data, error } = await query;
+      // Apply pagination - calculate offset
+      const offset = (currentPage - 1) * JOBS_PER_PAGE;
+      const { data, error, count: totalCount } = await query.range(offset, offset + JOBS_PER_PAGE - 1);
+
+      // Set total count for pagination
+      if (totalCount !== null) {
+        setTotalJobs(totalCount);
+      }
 
       console.log("🎯 SUPABASE QUERY COMPLETED:", {
         resultCount: data?.length || 0,
+        totalCount,
+        page: currentPage,
         error: error?.message,
         hasData: !!data,
         firstJobTitle: data?.[0]?.title
@@ -777,6 +792,8 @@ function JobsContent() {
     selectedSalary,
     dateSort,
     sortBy,
+    currentPage,
+    JOBS_PER_PAGE,
     // selectedJob removed - it's only used for checking, not as a filter
     user,
     fetchSuggestions,
@@ -934,6 +951,20 @@ function JobsContent() {
       });
     }
   }, [filterDeps, user, loading, fetchJobs]); // Removed searchParams - handled in separate effect
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    if (initialized.current) {
+      setCurrentPage(1);
+    }
+  }, [searchTerm, selectedState, selectedCategories, selectedLocations, selectedJobTypes, selectedLocationTypes, selectedSalary, dateSort, sortBy]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    if (currentPage > 1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
 
   // Application status check effect
   useEffect(() => {
@@ -1288,7 +1319,7 @@ function JobsContent() {
                   variant="secondary"
                   className="bg-primary text-white font-semibold px-2 py-1 hover:bg-primary/90 transition-colors"
                 >
-                  {jobs.length.toLocaleString()} jobs
+                  {totalJobs > 0 ? totalJobs.toLocaleString() : jobs.length.toLocaleString()} jobs
                 </Badge>
                 {/* <span className="text-sm text-muted-foreground">
                   New to you
@@ -1580,10 +1611,69 @@ function JobsContent() {
               </ErrorBoundary>
             )}
 
+            {/* Pagination Controls */}
+            {totalJobs > JOBS_PER_PAGE && (
+              <div className="flex items-center justify-center gap-2 p-4">
+                {/* Previous Button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="h-10 w-10"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </Button>
+
+                {/* Page Numbers */}
+                {Array.from({ length: Math.min(5, Math.ceil(totalJobs / JOBS_PER_PAGE)) }, (_, i) => {
+                  const totalPages = Math.ceil(totalJobs / JOBS_PER_PAGE);
+                  let pageNum;
+
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="icon"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className="h-10 w-10"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+
+                {/* Next Button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalJobs / JOBS_PER_PAGE), p + 1))}
+                  disabled={currentPage >= Math.ceil(totalJobs / JOBS_PER_PAGE)}
+                  className="h-10 w-10"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
+              </div>
+            )}
+
             {/* Footer spacer to ensure scrolling works */}
             <div className="h-20 p-4">
               <div className="text-center text-sm text-muted-foreground">
-                End of job listings
+                {totalJobs > 0 && `Showing ${Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, totalJobs)} - ${Math.min(currentPage * JOBS_PER_PAGE, totalJobs)} of ${totalJobs} jobs`}
               </div>
             </div>
           </div>
