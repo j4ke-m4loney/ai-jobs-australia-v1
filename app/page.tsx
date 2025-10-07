@@ -205,7 +205,7 @@ const HomePage = () => {
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+              {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary mb-2">
                     150+
@@ -222,7 +222,7 @@ const HomePage = () => {
                   </div>
                   <div className="text-muted-foreground">Job Seekers</div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </section>
