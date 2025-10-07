@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import Image from "next/image";
 
 const HomePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -135,12 +136,18 @@ const HomePage = () => {
   ];
 
   const topCompanies = [
-    { name: "Google", logo: "🔍", jobs: 12 },
-    { name: "Microsoft", logo: "💻", jobs: 8 },
-    { name: "Atlassian", logo: "🔵", jobs: 15 },
-    { name: "Canva", logo: "🎨", jobs: 6 },
-    { name: "Xero", logo: "💚", jobs: 4 },
-    { name: "Salesforce", logo: "☁️", jobs: 9 },
+    { name: "Google", logo: "/companies/google.webp" },
+    { name: "Microsoft", logo: "/companies/microsoft.png" },
+    { name: "Atlassian", logo: "/companies/atlassian.png" },
+    { name: "Canva", logo: "/companies/canva.png" },
+    { name: "Telstra", logo: "/companies/Telstra.webp" },
+    { name: "Westpac", logo: "/companies/Westpac.png" },
+    { name: "Commbank", logo: "/companies/CommBank-Logo.webp" },
+    { name: "Amazon", logo: "/companies/Amazon.webp" },
+    { name: "Xero", logo: "/companies/xero.svg" },
+    { name: "Deloitte", logo: "/companies/deloitte.png" },
+    { name: "Oracle", logo: "/companies/Oracle.png" },
+    { name: "Sportsbet", logo: "/companies/sportsbet.svg" },
   ];
 
   return (
@@ -220,8 +227,35 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Job Categories */}
-        <section className="py-16 bg-muted/30">
+        {/* Top Companies */}
+        <section className="py-8 bg-muted/30">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-foreground text-3xl font-bold">
+                Top Companies Hiring in Aus
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center max-w-5xl mx-auto">
+              {topCompanies.map((company) => (
+                <div
+                  key={company.name}
+                  className="relative w-32 h-16 grayscale  transition-all duration-300 opacity-60"
+                >
+                  <Image
+                    src={company.logo}
+                    alt={`${company.name} logo`}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Job Categories - Commented out for now */}
+        {/* <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <h2 className="text-foreground text-3xl font-bold text-center mb-12">
               Browse by Category
@@ -246,7 +280,7 @@ const HomePage = () => {
               })}
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Featured Jobs */}
         <ErrorBoundary>
@@ -295,54 +329,6 @@ const HomePage = () => {
                   </div>
                 );
               })}
-            </div>
-          </div>
-        </section>
-
-        {/* Top Companies */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-foreground text-3xl font-bold mb-4">
-                Top Companies Hiring
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of professionals working at Australia&apos;s
-                leading tech companies.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
-              {topCompanies.map((company) => (
-                <Card
-                  key={company.name}
-                  className="!shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group p-6"
-                >
-                  <div className="text-center">
-                    <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">
-                      {company.logo}
-                    </div>
-                    <h3 className="font-semibold mb-2">{company.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {company.jobs} open roles
-                    </p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-
-            <div className="text-center">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() =>
-                  user ? router.push("/jobs") : router.push("/login")
-                }
-                className="gap-2"
-              >
-                <Building className="w-5 h-5" />
-                View All Companies
-              </Button>
             </div>
           </div>
         </section>
