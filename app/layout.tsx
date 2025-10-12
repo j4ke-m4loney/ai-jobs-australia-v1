@@ -19,8 +19,16 @@ export const metadata: Metadata = {
   title: "AI Jobs Australia",
   description: "Australia's leading platform for AI and ML careers",
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    icon: [
+      { url: "/aja-favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/aja-favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/aja-favicon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/aja-favicon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/aja-favicon-192.png", sizes: "192x192", type: "image/png" },
+    ],
   },
 };
 
