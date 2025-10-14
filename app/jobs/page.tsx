@@ -757,6 +757,13 @@ function JobsContent() {
 
       console.log("🔍 About to log job count...");
       console.log(`🎯 FINAL RESULT: Found ${jobsData.length} jobs`);
+
+      // Update total jobs count after merging company search results
+      // Only override the database count when we have a search term (company search adds extra results)
+      if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+        setTotalJobs(jobsData.length);
+      }
+
       if (jobsData.length > 0) {
         console.log("First job:", jobsData[0]);
 
