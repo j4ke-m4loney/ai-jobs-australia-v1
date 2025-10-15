@@ -16,8 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Jobs Australia",
-  description: "Australia's leading platform for AI and ML careers",
+  title: "AI Jobs Australia | #1 Home for AI Opportunities In Australia",
+  description:
+    "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
   icons: {
     icon: [
       { url: "/aja-favicon-16.png", sizes: "16x16", type: "image/png" },
