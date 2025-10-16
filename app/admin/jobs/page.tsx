@@ -109,31 +109,48 @@ function AdminJobsContent() {
   const [bulkAction, setBulkAction] = useState("");
   const [refreshKey, setRefreshKey] = useState(0); // Add refresh key for cache busting
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 50;
+
   const fetchJobs = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Calculate range for pagination
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+
       let query = supabase
         .from("jobs")
         .select(
-          "id, title, company_name, location, location_type, job_type, salary_min, salary_max, status, is_featured, created_at, reviewed_at, rejection_reason, admin_notes"
+          "id, title, company_name, location, location_type, job_type, salary_min, salary_max, status, is_featured, created_at, reviewed_at, rejection_reason, admin_notes",
+          { count: 'exact' }
         )
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (statusFilter && statusFilter !== "all") {
         query = query.eq("status", statusFilter);
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       if (error) throw error;
 
       setJobs(data || []);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error("Error fetching jobs:", error);
       toast.error("Failed to fetch jobs");
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, currentPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchQuery]);
 
   useEffect(() => {
     fetchJobs();
@@ -621,6 +638,102 @@ function AdminJobsContent() {
             )}
           </CardContent>
         </Card>
+
+        {/* Pagination Controls */}
+        {!isLoading && filteredJobs.length > 0 && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} jobs
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {(() => {
+                      const totalPages = Math.ceil(totalCount / pageSize);
+                      const pages = [];
+
+                      // Always show first page
+                      if (totalPages > 0) {
+                        pages.push(
+                          <Button
+                            key={1}
+                            variant={currentPage === 1 ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(1)}
+                            className="w-10"
+                          >
+                            1
+                          </Button>
+                        );
+                      }
+
+                      // Show ellipsis if needed
+                      if (currentPage > 3) {
+                        pages.push(<span key="ellipsis1" className="px-2">...</span>);
+                      }
+
+                      // Show pages around current page
+                      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+                        pages.push(
+                          <Button
+                            key={i}
+                            variant={currentPage === i ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(i)}
+                            className="w-10"
+                          >
+                            {i}
+                          </Button>
+                        );
+                      }
+
+                      // Show ellipsis if needed
+                      if (currentPage < totalPages - 2) {
+                        pages.push(<span key="ellipsis2" className="px-2">...</span>);
+                      }
+
+                      // Always show last page
+                      if (totalPages > 1) {
+                        pages.push(
+                          <Button
+                            key={totalPages}
+                            variant={currentPage === totalPages ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(totalPages)}
+                            className="w-10"
+                          >
+                            {totalPages}
+                          </Button>
+                        );
+                      }
+
+                      return pages;
+                    })()}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalCount / pageSize), prev + 1))}
+                    disabled={currentPage >= Math.ceil(totalCount / pageSize)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Rejection Dialog */}
         <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
