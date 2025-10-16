@@ -28,4 +28,4 @@ Disallow: /forgot-password
 Disallow: /payment-success
 Disallow: /payment-cancel
 
-Sitemap: https://aijobsaustralia.com/sitemap.xml
+Sitemap: https://www.aijobsaustralia.com.au/sitemap.xml

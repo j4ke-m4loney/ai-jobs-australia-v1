@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
+import Head from "next/head";
 import {
   MapPin,
   DollarSign,
@@ -225,8 +226,12 @@ export default function JobDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <Header />
+    <>
+      <Head>
+        <link rel="canonical" href={`https://www.aijobsaustralia.com.au/jobs/${id}`} />
+      </Head>
+      <div className="min-h-screen bg-gradient-subtle">
+        <Header />
 
       <div className="container mx-auto px-4 py-8 mt-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -373,6 +378,7 @@ export default function JobDetailPage() {
       </div>
 
       <Footer />
-    </div>
+      </div>
+    </>
   );
 }

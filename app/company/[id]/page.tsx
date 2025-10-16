@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import Head from "next/head";
 import {
   Building2,
   Globe,
@@ -151,8 +152,12 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <Header />
+    <>
+      <Head>
+        <link rel="canonical" href={`https://www.aijobsaustralia.com.au/company/${id}`} />
+      </Head>
+      <div className="min-h-screen bg-gradient-subtle">
+        <Header />
 
       <main className="container mx-auto px-4 pt-20 pb-8">
         {/* Back Button */}
@@ -368,6 +373,7 @@ export default function CompanyProfilePage() {
           </div>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 }
