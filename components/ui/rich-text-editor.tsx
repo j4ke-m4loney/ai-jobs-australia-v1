@@ -361,14 +361,105 @@ export const RichTextEditor = React.forwardRef<
     [executeCommand, handleEnterInList, handleBackspaceInList, handleTabInList, handleInput, updateActiveStates]
   );
 
+  const sanitizeHtml = useCallback((html: string): string => {
+    // Create a temporary div to parse the HTML
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+
+    // Function to recursively clean nodes
+    const cleanNode = (node: Node): Node | null => {
+      // Remove script tags and other dangerous elements
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        const tagName = element.tagName.toLowerCase();
+
+        // Block dangerous tags
+        if (['script', 'style', 'iframe', 'object', 'embed'].includes(tagName)) {
+          return null;
+        }
+
+        // Allowed tags with formatting
+        const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'p', 'br', 'div', 'span', 'a'];
+
+        if (allowedTags.includes(tagName)) {
+          // Create a clean element
+          const cleanElement = document.createElement(tagName);
+
+          // Preserve href for links only
+          if (tagName === 'a' && element.getAttribute('href')) {
+            cleanElement.setAttribute('href', element.getAttribute('href') || '');
+            cleanElement.setAttribute('target', '_blank');
+            cleanElement.setAttribute('rel', 'noopener noreferrer');
+          }
+
+          // Recursively clean and append children
+          Array.from(node.childNodes).forEach(child => {
+            const cleanedChild = cleanNode(child);
+            if (cleanedChild) {
+              cleanElement.appendChild(cleanedChild);
+            }
+          });
+
+          return cleanElement;
+        } else {
+          // For unrecognized tags, just extract their text content
+          const fragment = document.createDocumentFragment();
+          Array.from(node.childNodes).forEach(child => {
+            const cleanedChild = cleanNode(child);
+            if (cleanedChild) {
+              fragment.appendChild(cleanedChild);
+            }
+          });
+          return fragment;
+        }
+      } else if (node.nodeType === Node.TEXT_NODE) {
+        // Keep text nodes
+        return node.cloneNode(false);
+      }
+
+      return null;
+    };
+
+    // Clean all child nodes
+    const cleanTemp = document.createElement('div');
+    Array.from(temp.childNodes).forEach(child => {
+      const cleaned = cleanNode(child);
+      if (cleaned) {
+        cleanTemp.appendChild(cleaned);
+      }
+    });
+
+    return cleanTemp.innerHTML;
+  }, []);
+
   const handlePaste = useCallback(
     (e: React.ClipboardEvent) => {
       e.preventDefault();
-      const text = e.clipboardData.getData("text/plain");
-      document.execCommand("insertText", false, text);
+
+      // Try to get HTML from clipboard first
+      const html = e.clipboardData.getData("text/html");
+
+      if (html) {
+        // Sanitize and insert HTML content
+        const sanitizedHtml = sanitizeHtml(html);
+
+        // Use insertHTML command to preserve formatting
+        const success = document.execCommand("insertHTML", false, sanitizedHtml);
+
+        if (!success) {
+          // Fallback: insert plain text if insertHTML fails
+          const text = e.clipboardData.getData("text/plain");
+          document.execCommand("insertText", false, text);
+        }
+      } else {
+        // No HTML available, use plain text
+        const text = e.clipboardData.getData("text/plain");
+        document.execCommand("insertText", false, text);
+      }
+
       handleInput();
     },
-    [handleInput]
+    [handleInput, sanitizeHtml]
   );
 
   const handleSelectionChange = useCallback(() => {
@@ -545,14 +636,31 @@ export const RichTextEditor = React.forwardRef<
               color: hsl(var(--muted-foreground));
               pointer-events: none;
             }
-            [contenteditable] ul {
+            [contenteditable] p {
+              margin: 0.75rem 0;
+              line-height: 1.5;
+            }
+            [contenteditable] p:first-child {
+              margin-top: 0;
+            }
+            [contenteditable] p:last-child {
+              margin-bottom: 0;
+            }
+            [contenteditable] ul,
+            [contenteditable] ol {
               list-style-type: disc;
+              margin: 0.75rem 0;
               margin-left: 1.5rem;
               padding-left: 0;
+            }
+            [contenteditable] ol {
+              list-style-type: decimal;
             }
             [contenteditable] ul ul {
               list-style-type: circle;
               margin-left: 1.5rem;
+              margin-top: 0.25rem;
+              margin-bottom: 0.25rem;
             }
             [contenteditable] ul ul ul {
               list-style-type: square;
@@ -562,6 +670,15 @@ export const RichTextEditor = React.forwardRef<
               line-height: 1.5;
             }
             [contenteditable] li:last-child {
+              margin-bottom: 0;
+            }
+            [contenteditable] div {
+              margin: 0.5rem 0;
+            }
+            [contenteditable] div:first-child {
+              margin-top: 0;
+            }
+            [contenteditable] div:last-child {
               margin-bottom: 0;
             }
           `,
