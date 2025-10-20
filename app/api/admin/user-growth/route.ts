@@ -70,18 +70,33 @@ function aggregateUserData(profiles: Profile[], period: string): GrowthDataPoint
   const now = new Date();
   const dataMap = new Map<string, number>();
 
-  // Count new users per period
-  profiles.forEach(profile => {
-    const date = new Date(profile.created_at);
-    const key = getDateKey(date, period);
-    dataMap.set(key, (dataMap.get(key) || 0) + 1);
-  });
-
   // Generate date range based on period
   const dateRange = generateDateRange(now, period);
 
-  // Build final data array with cumulative totals
-  let cumulativeTotal = 0;
+  // Get the start date of our range
+  const firstDateKey = dateRange[0];
+  const rangeStartDate = parseDateKey(firstDateKey, period);
+
+  // Count users who registered BEFORE the date range (baseline)
+  let baselineUsers = 0;
+  profiles.forEach(profile => {
+    const date = new Date(profile.created_at);
+    if (date < rangeStartDate) {
+      baselineUsers++;
+    }
+  });
+
+  // Count new users per period within the date range
+  profiles.forEach(profile => {
+    const date = new Date(profile.created_at);
+    if (date >= rangeStartDate) {
+      const key = getDateKey(date, period);
+      dataMap.set(key, (dataMap.get(key) || 0) + 1);
+    }
+  });
+
+  // Build final data array with cumulative totals starting from baseline
+  let cumulativeTotal = baselineUsers;
   const result: GrowthDataPoint[] = dateRange.map(dateKey => {
     const newUsers = dataMap.get(dateKey) || 0;
     cumulativeTotal += newUsers;
@@ -180,4 +195,37 @@ function getWeekNumber(date: Date): number {
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
+function parseDateKey(dateKey: string, period: string): Date {
+  switch (period) {
+    case 'daily': {
+      // Format: "2025-01-20"
+      const [year, month, day] = dateKey.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    case 'weekly': {
+      // Format: "2025-W03"
+      const [yearStr, weekStr] = dateKey.split('-W');
+      const year = parseInt(yearStr);
+      const week = parseInt(weekStr);
+      // Get first day of the year
+      const firstDay = new Date(year, 0, 1);
+      // Calculate the start of the week
+      const daysToAdd = (week - 1) * 7;
+      return new Date(year, 0, 1 + daysToAdd);
+    }
+    case 'monthly': {
+      // Format: "2025-01"
+      const [year, month] = dateKey.split('-').map(Number);
+      return new Date(year, month - 1, 1);
+    }
+    case 'yearly': {
+      // Format: "2025"
+      const year = parseInt(dateKey);
+      return new Date(year, 0, 1);
+    }
+    default:
+      return new Date();
+  }
 }
