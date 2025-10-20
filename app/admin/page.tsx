@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { UserGrowthChart } from "@/components/admin/UserGrowthChart";
 
 interface AdminStats {
   total_jobs: number;
@@ -216,6 +217,9 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* User Growth Analytics */}
+        <UserGrowthChart />
 
         {/* Recent Activity */}
         <Card>

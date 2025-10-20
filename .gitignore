@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Development instructions (local only)
 /instructions/
+
+# Future features planning (local only)
+future_features.md
