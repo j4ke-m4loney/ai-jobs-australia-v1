@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface GrowthDataPoint {
   date: string;
@@ -35,6 +36,7 @@ export function UserGrowthChart() {
   const [data, setData] = useState<GrowthDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [percentageChange, setPercentageChange] = useState<number>(0);
   const [visibleMetrics, setVisibleMetrics] = useState({
     totalUsers: true,
     newUsers: true,
@@ -75,6 +77,7 @@ export function UserGrowthChart() {
 
       const result = await response.json();
       setData(result.data || []);
+      setPercentageChange(result.percentageChange || 0);
     } catch (err) {
       console.error('Error fetching growth data:', err);
       setError('Failed to load user growth data');
@@ -190,9 +193,29 @@ export function UserGrowthChart() {
                    period === 'monthly' ? 'This Month' :
                    'This Year'}
                 </p>
-                <p className="text-2xl font-bold text-green-600">
-                  +{newUsersThisPeriod.toLocaleString()}
-                </p>
+                <div className="flex items-baseline gap-3">
+                  <p className="text-2xl font-bold text-green-600">
+                    +{newUsersThisPeriod.toLocaleString()}
+                  </p>
+                  {percentageChange !== 0 && (
+                    <div className={`flex items-center gap-1 text-sm font-medium ${
+                      percentageChange > 0 ? 'text-green-600' :
+                      percentageChange < 0 ? 'text-red-600' :
+                      'text-gray-500'
+                    }`}>
+                      {percentageChange > 0 ? (
+                        <TrendingUp className="h-4 w-4" />
+                      ) : percentageChange < 0 ? (
+                        <TrendingDown className="h-4 w-4" />
+                      ) : (
+                        <Minus className="h-4 w-4" />
+                      )}
+                      <span>
+                        {percentageChange > 0 ? '+' : ''}{percentageChange.toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
