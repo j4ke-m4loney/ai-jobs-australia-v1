@@ -565,7 +565,7 @@ function AdminJobsContent() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{job.job_type}</Badge>
+                        <Badge variant="outline" className="capitalize">{job.job_type}</Badge>
                       </TableCell>
                       <TableCell>{getStatusBadge(job.status)}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">

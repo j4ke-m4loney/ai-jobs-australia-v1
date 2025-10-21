@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Image from "next/image";
+import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 
 interface Company {
   id: string;
@@ -308,8 +309,9 @@ export default function CompanyProfilePage() {
                               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-1">
                                   <MapPin className="w-3 h-3" />
-                                  {job.location} • {job.location_type}
+                                  {job.location}
                                 </div>
+                                <LocationTypeBadge locationType={job.location_type} />
                                 <div className="flex items-center gap-1">
                                   <Calendar className="w-3 h-3" />
                                   {getTimeAgo(job.created_at)}

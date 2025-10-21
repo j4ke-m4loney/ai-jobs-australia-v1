@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 
 interface JobDetails {
   id: string;
@@ -349,11 +350,12 @@ export default function AdminJobReviewPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{job.location} ({job.location_type})</span>
+                <span>{job.location}</span>
+                <LocationTypeBadge locationType={job.location_type} />
               </div>
               <div className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <span>{job.job_type}</span>
+                <span className="capitalize">{job.job_type}</span>
               </div>
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -363,7 +365,7 @@ export default function AdminJobReviewPage() {
               </div>
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <span>Category: {job.category}</span>
+                <span>Category: <span className="capitalize">{job.category}</span></span>
               </div>
             </div>
 

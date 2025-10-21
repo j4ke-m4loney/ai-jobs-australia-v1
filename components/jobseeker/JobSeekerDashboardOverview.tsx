@@ -435,7 +435,7 @@ export const JobSeekerDashboardOverview = () => {
                     </h4>
                     <p className="text-sm text-muted-foreground">
                       {application.job.companies?.name || "Company"} •{" "}
-                      {application.job.location} • {application.job.job_type}
+                      {application.job.location} • <span className="capitalize">{application.job.job_type}</span>
                     </p>
                   </div>
                   <div className="text-right">

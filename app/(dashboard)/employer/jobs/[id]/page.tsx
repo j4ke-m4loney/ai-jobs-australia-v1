@@ -1525,7 +1525,7 @@ const JobManagementPage = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      {job.job_type.replace("-", " ")}
+                      <span className="capitalize">{job.job_type.replace("-", " ")}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <DollarSign className="w-4 h-4" />

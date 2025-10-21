@@ -191,8 +191,12 @@ export default function FeaturedJobs() {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4" />
                     <span>{job.location}</span>
-                    <span>•</span>
-                    <span>{formatLocationType(job.location_type)}</span>
+                    {job.location_type !== 'onsite' && (
+                      <>
+                        <span>•</span>
+                        <span>{formatLocationType(job.location_type)}</span>
+                      </>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">

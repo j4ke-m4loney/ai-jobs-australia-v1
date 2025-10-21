@@ -1532,9 +1532,11 @@ function JobsContent() {
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                                   <MapPin className="w-3 h-3" />
                                   <span>{job.location}</span>
-                                  <span className="text-xs px-2 py-0.5 bg-muted rounded">
-                                    {job.location_type}
-                                  </span>
+                                  {job.location_type !== 'onsite' && (
+                                    <span className="text-xs px-2 py-0.5 bg-muted rounded capitalize">
+                                      {job.location_type}
+                                    </span>
+                                  )}
                                 </div>
                                 {formatSalary(
                                   job.salary_min,

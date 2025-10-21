@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Heart } from "lucide-react";
 import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
+import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 
 interface Job {
   id: string;
@@ -127,9 +128,7 @@ export const JobCard: React.FC<JobCardProps> = ({
               <div className="flex items-center gap-1">
                 <span>{job.location_display || job.location}</span>
               </div>
-              <span className="capitalize px-2 py-1 bg-muted rounded text-xs">
-                {job.location_type}
-              </span>
+              <LocationTypeBadge locationType={job.location_type} />
             </div>
 
             {job.show_salary !== false &&

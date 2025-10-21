@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Heart } from "lucide-react";
 import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
+import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 
 interface Job {
   id: string;
@@ -140,8 +141,9 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-foreground mb-3">
                 <div className="flex items-center gap-1">
-                  {job.location_display || job.location} ({job.location_type})
+                  {job.location_display || job.location}
                 </div>
+                <LocationTypeBadge locationType={job.location_type} />
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   <span className="capitalize">{job.job_type}</span>

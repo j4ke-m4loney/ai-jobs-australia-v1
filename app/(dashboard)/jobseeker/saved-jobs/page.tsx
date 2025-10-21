@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
 import Image from "next/image";
+import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 
 interface SavedJob {
   id: string;
@@ -223,12 +224,12 @@ const JobSeekerSavedJobs = () => {
                         <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
                           <div className="flex items-center gap-1">
                             <MapPin className="w-3 h-3" />
-                            {savedJob.job.location} (
-                            {savedJob.job.location_type})
+                            {savedJob.job.location}
                           </div>
+                          <LocationTypeBadge locationType={savedJob.job.location_type} />
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {savedJob.job.job_type}
+                            <span className="capitalize">{savedJob.job.job_type}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <DollarSign className="w-3 h-3" />

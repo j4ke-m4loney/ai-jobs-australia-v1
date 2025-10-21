@@ -24,6 +24,7 @@ import { useSavedJobs } from "@/hooks/useSavedJobs";
 import { formatSalary } from "@/lib/salary-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 
 interface Job {
   id: string;
@@ -266,8 +267,9 @@ export default function JobDetailPage() {
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
-                        {job.location} ({job.location_type})
+                        {job.location}
                       </div>
+                      <LocationTypeBadge locationType={job.location_type} />
                       <div className="flex items-center gap-1">
                         <Briefcase className="w-4 h-4" />
                         <span className="capitalize">{job.job_type}</span>
@@ -287,11 +289,8 @@ export default function JobDetailPage() {
 
             {/* Job Description */}
             <Card>
-              <CardHeader>
-                <CardTitle>Job Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose max-w-none">
+              <CardContent className="pt-6">
+                <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
                   <div dangerouslySetInnerHTML={{ __html: job.description }} />
                 </div>
               </CardContent>
@@ -300,11 +299,8 @@ export default function JobDetailPage() {
             {/* Requirements */}
             {job.requirements && (
               <Card>
-                <CardHeader>
-                  <CardTitle>Requirements</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose max-w-none">
+                <CardContent className="pt-6">
+                  <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
                     <div dangerouslySetInnerHTML={{ __html: job.requirements }} />
                   </div>
                 </CardContent>

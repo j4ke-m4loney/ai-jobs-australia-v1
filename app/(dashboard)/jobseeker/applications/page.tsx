@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import Image from "next/image";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 
 interface Application {
   id: string;
@@ -306,12 +307,12 @@ const JobSeekerApplications = () => {
                               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
                                 <div className="flex items-center gap-1">
                                   <MapPin className="w-3 h-3" />
-                                  {application.job.location} (
-                                  {application.job.location_type})
+                                  {application.job.location}
                                 </div>
+                                <LocationTypeBadge locationType={application.job.location_type} />
                                 <div className="flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
-                                  {application.job.job_type}
+                                  <span className="capitalize">{application.job.job_type}</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <DollarSign className="w-3 h-3" />
