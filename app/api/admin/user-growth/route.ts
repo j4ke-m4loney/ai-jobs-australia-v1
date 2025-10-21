@@ -91,11 +91,10 @@ interface GrowthDataPoint {
 }
 
 function aggregateUserData(profiles: Profile[], period: string): GrowthDataPoint[] {
-  const now = getSydneyNow(); // Use Sydney's current date/time
   const dataMap = new Map<string, number>();
 
-  // Generate date range based on period
-  const dateRange = generateDateRange(now, period);
+  // Generate date range based on period (using Sydney timezone)
+  const dateRange = generateDateRange(period);
 
   // Get the first date key in our range
   const firstDateKey = dateRange[0];
@@ -149,12 +148,11 @@ function toSydneyDate(date: Date): { year: number; month: number; day: number } 
 }
 
 /**
- * Get current date/time in Sydney timezone
+ * Get current date in Sydney timezone as date components
  */
-function getSydneyNow(): Date {
+function getSydneyToday(): { year: number; month: number; day: number } {
   const now = new Date();
-  const sydneyTimeStr = now.toLocaleString('en-US', { timeZone: TIMEZONE });
-  return new Date(sydneyTimeStr);
+  return toSydneyDate(now);
 }
 
 function getDateKey(date: Date, period: string): string {
@@ -179,58 +177,62 @@ function getDateKey(date: Date, period: string): string {
   }
 }
 
-function generateDateRange(endDate: Date, period: string): string[] {
+function generateDateRange(period: string): string[] {
   const range: string[] = [];
-  let currentDate = new Date(endDate);
-
-  let count: number;
-  let incrementFn: (date: Date) => Date;
+  const today = getSydneyToday();
 
   switch (period) {
-    case 'daily':
-      count = 30; // Last 30 days
-      incrementFn = (date) => {
-        const newDate = new Date(date);
-        newDate.setDate(newDate.getDate() - 1);
-        return newDate;
-      };
+    case 'daily': {
+      // Last 30 days
+      for (let i = 29; i >= 0; i--) {
+        // Create a date i days ago
+        const date = new Date(today.year, today.month - 1, today.day - i);
+        const sydney = toSydneyDate(date);
+        const key = `${sydney.year}-${String(sydney.month).padStart(2, '0')}-${String(sydney.day).padStart(2, '0')}`;
+        range.push(key);
+      }
       break;
-    case 'weekly':
-      count = 12; // Last 12 weeks
-      incrementFn = (date) => {
-        const newDate = new Date(date);
-        newDate.setDate(newDate.getDate() - 7);
-        return newDate;
-      };
+    }
+    case 'weekly': {
+      // Last 12 weeks
+      for (let i = 11; i >= 0; i--) {
+        // Create a date i weeks ago
+        const date = new Date(today.year, today.month - 1, today.day - (i * 7));
+        const weekNum = getWeekNumber(date);
+        const sydney = toSydneyDate(date);
+        const key = `${sydney.year}-W${String(weekNum).padStart(2, '0')}`;
+        range.push(key);
+      }
       break;
-    case 'monthly':
-      count = 12; // Last 12 months
-      incrementFn = (date) => {
-        const newDate = new Date(date);
-        newDate.setMonth(newDate.getMonth() - 1);
-        return newDate;
-      };
+    }
+    case 'monthly': {
+      // Last 12 months
+      for (let i = 11; i >= 0; i--) {
+        // Create a date i months ago
+        const date = new Date(today.year, today.month - 1 - i, 1);
+        const sydney = toSydneyDate(date);
+        const key = `${sydney.year}-${String(sydney.month).padStart(2, '0')}`;
+        range.push(key);
+      }
       break;
-    case 'yearly':
-      count = 5; // Last 5 years
-      incrementFn = (date) => {
-        const newDate = new Date(date);
-        newDate.setFullYear(newDate.getFullYear() - 1);
-        return newDate;
-      };
+    }
+    case 'yearly': {
+      // Last 5 years
+      for (let i = 4; i >= 0; i--) {
+        const year = today.year - i;
+        const key = `${year}`;
+        range.push(key);
+      }
       break;
+    }
     default:
-      count = 12;
-      incrementFn = (date) => {
-        const newDate = new Date(date);
-        newDate.setMonth(newDate.getMonth() - 1);
-        return newDate;
-      };
-  }
-
-  for (let i = 0; i < count; i++) {
-    range.unshift(getDateKey(currentDate, period));
-    currentDate = incrementFn(currentDate);
+      // Default to monthly
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(today.year, today.month - 1 - i, 1);
+        const sydney = toSydneyDate(date);
+        const key = `${sydney.year}-${String(sydney.month).padStart(2, '0')}`;
+        range.push(key);
+      }
   }
 
   return range;
