@@ -378,19 +378,18 @@ export const RichTextEditor = React.forwardRef<
           return null;
         }
 
-        // Allowed tags with formatting
-        const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'p', 'br', 'div', 'span', 'a'];
+        // Strip links and all formatting inside them - return only plain text
+        if (tagName === 'a') {
+          const textContent = element.textContent || '';
+          return document.createTextNode(textContent);
+        }
+
+        // Allowed tags with formatting (no links allowed)
+        const allowedTags = ['b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'p', 'br', 'div', 'span'];
 
         if (allowedTags.includes(tagName)) {
           // Create a clean element
           const cleanElement = document.createElement(tagName);
-
-          // Preserve href for links only
-          if (tagName === 'a' && element.getAttribute('href')) {
-            cleanElement.setAttribute('href', element.getAttribute('href') || '');
-            cleanElement.setAttribute('target', '_blank');
-            cleanElement.setAttribute('rel', 'noopener noreferrer');
-          }
 
           // Recursively clean and append children
           Array.from(node.childNodes).forEach(child => {
