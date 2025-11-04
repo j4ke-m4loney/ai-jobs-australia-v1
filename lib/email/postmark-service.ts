@@ -82,6 +82,14 @@ export interface BatchedApplicationEmailData {
   dashboardUrl: string;
 }
 
+export interface ContactFormEmailData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
 export class PostmarkEmailService {
   private static instance: PostmarkEmailService;
 
@@ -262,6 +270,35 @@ export class PostmarkEmailService {
       return true;
     } catch (error) {
       console.error('❌ Failed to send test email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Send contact form submission email
+   */
+  async sendContactFormEmail(data: ContactFormEmailData): Promise<boolean> {
+    if (!isEmailServiceAvailable()) {
+      return false;
+    }
+
+    try {
+      await postmarkClient!.sendEmail({
+        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        To: 'hello@aijobsaustralia.com.au',
+        ReplyTo: data.email,
+        Subject: `Contact Form: ${data.subject}`,
+        HtmlBody: this.getContactFormHtml(data),
+        TextBody: this.getContactFormText(data),
+        Tag: 'contact-form',
+        TrackOpens: true,
+        TrackLinks: Models.LinkTrackingOptions.None,
+      });
+
+      console.log(`✅ Contact form email sent from ${data.email}`);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to send contact form email:', error);
       return false;
     }
   }
@@ -819,6 +856,64 @@ export class PostmarkEmailService {
 
       Questions? Contact our support team - we're here to help!
       You can manage your notification preferences in your account settings.
+    `;
+  }
+
+  private getContactFormHtml(data: ContactFormEmailData): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Contact Form Submission - AI Jobs Australia</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">AI Jobs Australia</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">Contact Form Submission</p>
+          </div>
+
+          <div style="background: #f9f9f9; padding: 25px; border-radius: 8px; border-left: 4px solid #667eea; margin-bottom: 20px;">
+            <h2 style="color: #333; margin-top: 0;">New Message from ${data.firstName} ${data.lastName}</h2>
+
+            <div style="background: white; padding: 20px; border-radius: 5px; margin: 15px 0;">
+              <p style="margin: 10px 0;"><strong>Name:</strong> ${data.firstName} ${data.lastName}</p>
+              <p style="margin: 10px 0;"><strong>Email:</strong> <a href="mailto:${data.email}" style="color: #667eea;">${data.email}</a></p>
+              <p style="margin: 10px 0;"><strong>Subject:</strong> ${data.subject}</p>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 5px; margin: 15px 0;">
+              <h3 style="margin-top: 0; color: #667eea;">Message:</h3>
+              <p style="white-space: pre-wrap; margin: 0;">${data.message}</p>
+            </div>
+          </div>
+
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+            <p>This message was sent via the contact form on AI Jobs Australia.</p>
+            <p>You can reply directly to this email to respond to ${data.firstName}.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private getContactFormText(data: ContactFormEmailData): string {
+    return `
+      AI Jobs Australia - Contact Form Submission
+
+      New Message from ${data.firstName} ${data.lastName}
+
+      Name: ${data.firstName} ${data.lastName}
+      Email: ${data.email}
+      Subject: ${data.subject}
+
+      Message:
+      ${data.message}
+
+      ---
+      This message was sent via the contact form on AI Jobs Australia.
+      You can reply directly to this email to respond to ${data.firstName}.
     `;
   }
 }
