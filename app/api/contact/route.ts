@@ -77,7 +77,6 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = checkRateLimit(clientIP, 3, 60 * 60 * 1000);
 
     if (!rateLimitResult.success) {
-      const resetDate = new Date(rateLimitResult.resetTime);
       const minutesUntilReset = Math.ceil((rateLimitResult.resetTime - Date.now()) / 60000);
 
       console.log(`⚠️ Rate limit exceeded for IP: ${clientIP}`);
@@ -119,7 +118,7 @@ export async function POST(request: NextRequest) {
     const validationResult = contactFormSchema.safeParse(data);
 
     if (!validationResult.success) {
-      const firstError = validationResult.error.errors[0];
+      const firstError = validationResult.error.issues[0];
       console.log(`❌ Validation error: ${firstError.message}`);
       return NextResponse.json(
         {
