@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
 import RecentJobs from "@/components/RecentJobs";
+import HomepageSocialProof from "@/components/HomepageSocialProof";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   Search,
@@ -206,6 +207,9 @@ const HomePage = () => {
                 </div>
               </div>
 
+              {/* Social Proof */}
+              <HomepageSocialProof />
+
               {/* Quick Stats */}
               {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
                 <div className="text-center">
@@ -230,7 +234,7 @@ const HomePage = () => {
         </section>
 
         {/* Top Companies */}
-        <section className="py-8 bg-muted/30">
+        <section className="pt-0 pb-6 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               {/* <h2 className="text-foreground text-3xl font-bold">

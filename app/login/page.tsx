@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import HomepageSocialProof from "@/components/HomepageSocialProof";
 
 import {
   Card,
@@ -166,7 +167,7 @@ const JobSeekerAuthContent = () => {
   return (
     <div className="min-h-screen flex flex-col bg-muted">
       <Header />
-      <div className="flex-1 flex items-center justify-center pt-32 pb-20">
+      <div className="flex-1 flex flex-col items-center justify-center pt-32 pb-20 gap-6">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -335,6 +336,9 @@ const JobSeekerAuthContent = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Social Proof */}
+      <HomepageSocialProof />
       </div>
       <Footer />
     </div>
