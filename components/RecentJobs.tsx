@@ -85,7 +85,7 @@ export default function RecentJobs() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">
-              Recent AI Jobs
+              Recently Published
             </h2>
             <Badge variant="secondary" className="text-base px-4 py-1">
               241+ AI Jobs
@@ -121,10 +121,10 @@ export default function RecentJobs() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-foreground mb-4">
-            Recent AI Jobs
+            Recently Published
           </h2>
           <Badge variant="secondary" className="text-base px-4 py-1">
-            {totalJobs > 0 ? `${totalJobs.toLocaleString()}+` : '241+'} AI Jobs
+            {totalJobs > 0 ? `${totalJobs.toLocaleString()}+` : "241+"} AI Jobs
           </Badge>
         </div>
 
@@ -142,7 +142,8 @@ export default function RecentJobs() {
             size="lg"
             className="group bg-gradient-hero hover:opacity-90 text-white"
           >
-            View All Jobs
+            View all {totalJobs > 0 ? `${totalJobs.toLocaleString()}+` : "241+"}{" "}
+            Jobs
             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>

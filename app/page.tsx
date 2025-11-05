@@ -165,7 +165,8 @@ const HomePage = () => {
               </h1>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Discover the latest opportunities in Artificial Intelligence,
-                Machine Learning, and Data Science across Australia.
+                Machine Learning, and Data Science, including roles you won’t
+                find on the major job boards.
               </p>
 
               {/* Search Form */}
@@ -232,9 +233,9 @@ const HomePage = () => {
         <section className="py-8 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-foreground text-3xl font-bold">
+              {/* <h2 className="text-foreground text-3xl font-bold">
                 Top Companies Hiring in Aus
-              </h2>
+              </h2> */}
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center max-w-5xl mx-auto">
@@ -297,9 +298,7 @@ const HomePage = () => {
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold mb-4">
-                Your AI Career Journey
-              </h2>
+              <h2 className="text-3xl font-bold mb-4">How To Get Started</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 From profile creation to your first day - we&apos;re with you
                 every step of the way
@@ -345,13 +344,13 @@ const HomePage = () => {
         <div className="absolute inset-0 bg-gradient-hero opacity-10"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
-              Ready to Shape Australia&apos;s AI Future?
+            <h2 className="pb-1 text-5xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
+              Join Now to Unlock All AI Jobs!
             </h2>
             <p className="text-xl text-foreground mb-12 leading-relaxed">
-              Join thousands of AI professionals who have already discovered
-              their dream careers. Your next breakthrough is just one click
-              away.
+              Discover AI jobs you won’t find anywhere else. We search the web
+              daily to uncover AI roles in Australia that aren’t listed on the
+              major job boards.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -363,7 +362,7 @@ const HomePage = () => {
                 }
               >
                 <Zap className="w-6 h-6 mr-3" />
-                Start Your AI Journey
+                Join To View All Jobs
               </Button>
 
               <Button
