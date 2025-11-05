@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
+import RecentJobs from "@/components/RecentJobs";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   Search,
@@ -253,6 +254,11 @@ const HomePage = () => {
             </div>
           </div>
         </section>
+
+        {/* Recent AI Jobs */}
+        <ErrorBoundary>
+          <RecentJobs />
+        </ErrorBoundary>
 
         {/* Job Categories - Commented out for now */}
         {/* <section className="py-16 bg-muted/30">
