@@ -44,7 +44,7 @@ export interface BillingUpdateData {
   current_period_start?: string;
   current_period_end?: string;
   price_per_month?: number;
-  [key: string]: any; // Allow additional properties
+  [key: string]: unknown; // Allow additional properties
 }
 
 export interface PaymentMethodUpdateData {
@@ -54,7 +54,7 @@ export interface PaymentMethodUpdateData {
   card_exp_month?: number;
   card_exp_year?: number;
   is_default?: boolean;
-  [key: string]: any; // Allow additional properties
+  [key: string]: unknown; // Allow additional properties
 }
 
 // Legacy support for existing code - gradually migrate away from these

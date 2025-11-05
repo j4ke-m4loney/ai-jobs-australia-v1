@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const resetPassword = async (email: string) => {
     const authService = getAuthService();
     if (!authService || !authService.resetPassword) {
-      return { error: new Error("Auth service not available") as any };
+      return { error: new Error("Auth service not available") as AuthError };
     }
 
     const result = await authService.resetPassword(email);
