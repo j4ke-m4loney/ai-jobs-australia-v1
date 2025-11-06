@@ -1,14 +1,17 @@
-import { ServerClient, Models } from 'postmark';
+import { ServerClient, Models } from "postmark";
 
 // Initialize Postmark client only on server-side where environment variables are available
-const postmarkClient = (typeof window === 'undefined' && process.env.POSTMARK_SERVER_TOKEN)
-  ? new ServerClient(process.env.POSTMARK_SERVER_TOKEN)
-  : null;
+const postmarkClient =
+  typeof window === "undefined" && process.env.POSTMARK_SERVER_TOKEN
+    ? new ServerClient(process.env.POSTMARK_SERVER_TOKEN)
+    : null;
 
 // Helper function to check if email service is available
 function isEmailServiceAvailable(): boolean {
   if (!postmarkClient) {
-    console.warn('Email service not available - running on client-side or missing POSTMARK_SERVER_TOKEN');
+    console.warn(
+      "Email service not available - running on client-side or missing POSTMARK_SERVER_TOKEN"
+    );
     return false;
   }
   return true;
@@ -35,7 +38,7 @@ export interface ApplicationStatusEmailData {
   applicantEmail: string;
   jobTitle: string;
   companyName: string;
-  status: 'viewed' | 'accepted' | 'rejected';
+  status: "viewed" | "accepted" | "rejected";
   statusMessage?: string;
 }
 
@@ -44,7 +47,7 @@ export interface JobStatusEmailData {
   employerEmail: string;
   jobTitle: string;
   jobId: string;
-  status: 'approved' | 'rejected';
+  status: "approved" | "rejected";
   rejectionReason?: string;
   dashboardUrl: string;
 }
@@ -105,27 +108,31 @@ export class PostmarkEmailService {
   /**
    * Send email notification to employer when someone applies to their job
    */
-  async sendJobApplicationNotification(data: JobApplicationEmailData): Promise<boolean> {
+  async sendJobApplicationNotification(
+    data: JobApplicationEmailData
+  ): Promise<boolean> {
     if (!isEmailServiceAvailable()) {
       return false;
     }
 
     try {
       await postmarkClient!.sendEmail({
-        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
         To: data.employerEmail,
         Subject: `New Application: ${data.jobTitle}`,
         HtmlBody: this.getApplicationNotificationHtml(data),
         TextBody: this.getApplicationNotificationText(data),
-        Tag: 'job-application',
+        Tag: "job-application",
         TrackOpens: true,
         TrackLinks: Models.LinkTrackingOptions.HtmlAndText,
       });
 
-      console.log(`✅ Application notification sent to ${data.employerEmail} for job: ${data.jobTitle}`);
+      console.log(
+        `✅ Application notification sent to ${data.employerEmail} for job: ${data.jobTitle}`
+      );
       return true;
     } catch (error) {
-      console.error('❌ Failed to send job application notification:', error);
+      console.error("❌ Failed to send job application notification:", error);
       return false;
     }
   }
@@ -133,7 +140,9 @@ export class PostmarkEmailService {
   /**
    * Send email notification to job seeker when application status changes
    */
-  async sendApplicationStatusUpdate(data: ApplicationStatusEmailData): Promise<boolean> {
+  async sendApplicationStatusUpdate(
+    data: ApplicationStatusEmailData
+  ): Promise<boolean> {
     if (!isEmailServiceAvailable()) {
       return false;
     }
@@ -142,20 +151,22 @@ export class PostmarkEmailService {
       const subject = this.getStatusUpdateSubject(data.status, data.jobTitle);
 
       await postmarkClient!.sendEmail({
-        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
         To: data.applicantEmail,
         Subject: subject,
         HtmlBody: this.getStatusUpdateHtml(data),
         TextBody: this.getStatusUpdateText(data),
-        Tag: 'application-status',
+        Tag: "application-status",
         TrackOpens: true,
         TrackLinks: Models.LinkTrackingOptions.HtmlAndText,
       });
 
-      console.log(`✅ Status update sent to ${data.applicantEmail} for status: ${data.status}`);
+      console.log(
+        `✅ Status update sent to ${data.applicantEmail} for status: ${data.status}`
+      );
       return true;
     } catch (error) {
-      console.error('❌ Failed to send application status update:', error);
+      console.error("❌ Failed to send application status update:", error);
       return false;
     }
   }
@@ -169,25 +180,28 @@ export class PostmarkEmailService {
     }
 
     try {
-      const subject = data.status === 'approved'
-        ? `Your job posting is now live: ${data.jobTitle}`
-        : `Job posting requires attention: ${data.jobTitle}`;
+      const subject =
+        data.status === "approved"
+          ? `Your job posting is now live: ${data.jobTitle}`
+          : `Job posting requires attention: ${data.jobTitle}`;
 
       await postmarkClient!.sendEmail({
-        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
         To: data.employerEmail,
         Subject: subject,
         HtmlBody: this.getJobStatusUpdateHtml(data),
         TextBody: this.getJobStatusUpdateText(data),
-        Tag: 'job-status',
+        Tag: "job-status",
         TrackOpens: true,
         TrackLinks: Models.LinkTrackingOptions.HtmlAndText,
       });
 
-      console.log(`✅ Job status update sent to ${data.employerEmail} for status: ${data.status}`);
+      console.log(
+        `✅ Job status update sent to ${data.employerEmail} for status: ${data.status}`
+      );
       return true;
     } catch (error) {
-      console.error('❌ Failed to send job status update:', error);
+      console.error("❌ Failed to send job status update:", error);
       return false;
     }
   }
@@ -195,27 +209,31 @@ export class PostmarkEmailService {
   /**
    * Send email confirmation to employer when job is submitted for approval
    */
-  async sendJobSubmissionConfirmation(data: JobSubmissionEmailData): Promise<boolean> {
+  async sendJobSubmissionConfirmation(
+    data: JobSubmissionEmailData
+  ): Promise<boolean> {
     if (!isEmailServiceAvailable()) {
       return false;
     }
 
     try {
       await postmarkClient!.sendEmail({
-        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
         To: data.employerEmail,
         Subject: `Job Submitted for Approval: ${data.jobTitle}`,
         HtmlBody: this.getJobSubmissionHtml(data),
         TextBody: this.getJobSubmissionText(data),
-        Tag: 'job-submission',
+        Tag: "job-submission",
         TrackOpens: true,
         TrackLinks: Models.LinkTrackingOptions.HtmlAndText,
       });
 
-      console.log(`✅ Job submission confirmation sent to ${data.employerEmail} for job: ${data.jobTitle}`);
+      console.log(
+        `✅ Job submission confirmation sent to ${data.employerEmail} for job: ${data.jobTitle}`
+      );
       return true;
     } catch (error) {
-      console.error('❌ Failed to send job submission confirmation:', error);
+      console.error("❌ Failed to send job submission confirmation:", error);
       return false;
     }
   }
@@ -223,27 +241,31 @@ export class PostmarkEmailService {
   /**
    * Send email confirmation to employer when edited job is resubmitted for approval
    */
-  async sendJobResubmissionConfirmation(data: JobResubmissionEmailData): Promise<boolean> {
+  async sendJobResubmissionConfirmation(
+    data: JobResubmissionEmailData
+  ): Promise<boolean> {
     if (!isEmailServiceAvailable()) {
       return false;
     }
 
     try {
       await postmarkClient!.sendEmail({
-        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
         To: data.employerEmail,
         Subject: `Job Changes Under Review: ${data.jobTitle}`,
         HtmlBody: this.getJobResubmissionHtml(data),
         TextBody: this.getJobResubmissionText(data),
-        Tag: 'job-resubmission',
+        Tag: "job-resubmission",
         TrackOpens: true,
         TrackLinks: Models.LinkTrackingOptions.HtmlAndText,
       });
 
-      console.log(`✅ Job resubmission confirmation sent to ${data.employerEmail} for job: ${data.jobTitle}`);
+      console.log(
+        `✅ Job resubmission confirmation sent to ${data.employerEmail} for job: ${data.jobTitle}`
+      );
       return true;
     } catch (error) {
-      console.error('❌ Failed to send job resubmission confirmation:', error);
+      console.error("❌ Failed to send job resubmission confirmation:", error);
       return false;
     }
   }
@@ -258,18 +280,20 @@ export class PostmarkEmailService {
 
     try {
       await postmarkClient!.sendEmail({
-        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
         To: to,
-        Subject: 'Test Email from AI Jobs Australia',
-        HtmlBody: '<p>This is a test email to verify Postmark integration is working correctly.</p>',
-        TextBody: 'This is a test email to verify Postmark integration is working correctly.',
-        Tag: 'test',
+        Subject: "Test Email from AI Jobs Australia",
+        HtmlBody:
+          "<p>This is a test email to verify Postmark integration is working correctly.</p>",
+        TextBody:
+          "This is a test email to verify Postmark integration is working correctly.",
+        Tag: "test",
       });
 
       console.log(`✅ Test email sent to ${to}`);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send test email:', error);
+      console.error("❌ Failed to send test email:", error);
       return false;
     }
   }
@@ -284,13 +308,13 @@ export class PostmarkEmailService {
 
     try {
       await postmarkClient!.sendEmail({
-        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
-        To: 'hello@aijobsaustralia.com.au',
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
+        To: "hello@aijobsaustralia.com.au",
         ReplyTo: data.email,
         Subject: `Contact Form: ${data.subject}`,
         HtmlBody: this.getContactFormHtml(data),
         TextBody: this.getContactFormText(data),
-        Tag: 'contact-form',
+        Tag: "contact-form",
         TrackOpens: true,
         TrackLinks: Models.LinkTrackingOptions.None,
       });
@@ -298,14 +322,16 @@ export class PostmarkEmailService {
       console.log(`✅ Contact form email sent from ${data.email}`);
       return true;
     } catch (error) {
-      console.error('❌ Failed to send contact form email:', error);
+      console.error("❌ Failed to send contact form email:", error);
       return false;
     }
   }
 
   // Private helper methods for email content
 
-  private getApplicationNotificationHtml(data: JobApplicationEmailData): string {
+  private getApplicationNotificationHtml(
+    data: JobApplicationEmailData
+  ): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -356,7 +382,9 @@ export class PostmarkEmailService {
     `;
   }
 
-  private getApplicationNotificationText(data: JobApplicationEmailData): string {
+  private getApplicationNotificationText(
+    data: JobApplicationEmailData
+  ): string {
     return `
       AI Jobs Australia - New Job Application
 
@@ -379,11 +407,11 @@ export class PostmarkEmailService {
 
   private getStatusUpdateSubject(status: string, jobTitle: string): string {
     switch (status) {
-      case 'viewed':
+      case "viewed":
         return `Application Viewed: ${jobTitle}`;
-      case 'accepted':
+      case "accepted":
         return `Congratulations! Application Accepted: ${jobTitle}`;
-      case 'rejected':
+      case "rejected":
         return `Application Update: ${jobTitle}`;
       default:
         return `Application Status Update: ${jobTitle}`;
@@ -391,8 +419,18 @@ export class PostmarkEmailService {
   }
 
   private getStatusUpdateHtml(data: ApplicationStatusEmailData): string {
-    const statusColor = data.status === 'accepted' ? '#10b981' : data.status === 'rejected' ? '#ef4444' : '#6b7280';
-    const statusIcon = data.status === 'accepted' ? '🎉' : data.status === 'rejected' ? '📄' : '👀';
+    const statusColor =
+      data.status === "accepted"
+        ? "#10b981"
+        : data.status === "rejected"
+        ? "#ef4444"
+        : "#6b7280";
+    const statusIcon =
+      data.status === "accepted"
+        ? "🎉"
+        : data.status === "rejected"
+        ? "📄"
+        : "👀";
 
     return `
       <!DOCTYPE html>
@@ -409,15 +447,23 @@ export class PostmarkEmailService {
           </div>
 
           <div style="background: #f9f9f9; padding: 25px; border-radius: 8px; border-left: 4px solid ${statusColor}; margin-bottom: 20px;">
-            <h2 style="color: #333; margin-top: 0;">${statusIcon} Application ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</h2>
+            <h2 style="color: #333; margin-top: 0;">${statusIcon} Application ${
+      data.status.charAt(0).toUpperCase() + data.status.slice(1)
+    }</h2>
             <p>Hello ${data.applicantName},</p>
             <p>Your application status has been updated:</p>
 
             <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
               <h3 style="margin-top: 0; color: #667eea;">${data.jobTitle}</h3>
               <p><strong>Company:</strong> ${data.companyName}</p>
-              <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</span></p>
-              ${data.statusMessage ? `<p><strong>Message:</strong> ${data.statusMessage}</p>` : ''}
+              <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${
+      data.status.charAt(0).toUpperCase() + data.status.slice(1)
+    }</span></p>
+              ${
+                data.statusMessage
+                  ? `<p><strong>Message:</strong> ${data.statusMessage}</p>`
+                  : ""
+              }
             </div>
           </div>
 
@@ -441,7 +487,7 @@ export class PostmarkEmailService {
       Job Title: ${data.jobTitle}
       Company: ${data.companyName}
       Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}
-      ${data.statusMessage ? `Message: ${data.statusMessage}` : ''}
+      ${data.statusMessage ? `Message: ${data.statusMessage}` : ""}
 
       You're receiving this email because you applied for a job on AI Jobs Australia.
       You can manage your notification preferences in your account settings.
@@ -449,8 +495,8 @@ export class PostmarkEmailService {
   }
 
   private getJobStatusUpdateHtml(data: JobStatusEmailData): string {
-    const statusColor = data.status === 'approved' ? '#10b981' : '#ef4444';
-    const statusIcon = data.status === 'approved' ? '✅' : '❌';
+    const statusColor = data.status === "approved" ? "#10b981" : "#ef4444";
+    const statusIcon = data.status === "approved" ? "✅" : "❌";
 
     return `
       <!DOCTYPE html>
@@ -467,19 +513,28 @@ export class PostmarkEmailService {
           </div>
 
           <div style="background: #f9f9f9; padding: 25px; border-radius: 8px; border-left: 4px solid ${statusColor}; margin-bottom: 20px;">
-            <h2 style="color: #333; margin-top: 0;">${statusIcon} Job ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</h2>
+            <h2 style="color: #333; margin-top: 0;">${statusIcon} Job ${
+      data.status.charAt(0).toUpperCase() + data.status.slice(1)
+    }</h2>
             <p>Hello ${data.employerName},</p>
             <p>Your job posting status has been updated:</p>
 
             <div style="background: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
               <h3 style="margin-top: 0; color: #667eea;">${data.jobTitle}</h3>
-              <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${data.status.charAt(0).toUpperCase() + data.status.slice(1)}</span></p>
-              ${data.rejectionReason ? `<p><strong>Reason:</strong> ${data.rejectionReason}</p>` : ''}
+              <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${
+      data.status.charAt(0).toUpperCase() + data.status.slice(1)
+    }</span></p>
+              ${
+                data.rejectionReason
+                  ? `<p><strong>Reason:</strong> ${data.rejectionReason}</p>`
+                  : ""
+              }
             </div>
 
-            ${data.status === 'approved' ?
-              '<p>🎉 Congratulations! Your job is now live and visible to job seekers.</p>' :
-              '<p>Please review the feedback and make necessary changes before resubmitting.</p>'
+            ${
+              data.status === "approved"
+                ? "<p>🎉 Congratulations! Your job is now live and visible to job seekers.</p>"
+                : "<p>Please review the feedback and make necessary changes before resubmitting.</p>"
             }
           </div>
 
@@ -516,11 +571,12 @@ export class PostmarkEmailService {
 
       Job Title: ${data.jobTitle}
       Status: ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}
-      ${data.rejectionReason ? `Reason: ${data.rejectionReason}` : ''}
+      ${data.rejectionReason ? `Reason: ${data.rejectionReason}` : ""}
 
-      ${data.status === 'approved' ?
-        'Congratulations! Your job is now live and visible to job seekers.' :
-        'Please review the feedback and make necessary changes before resubmitting.'
+      ${
+        data.status === "approved"
+          ? "Congratulations! Your job is now live and visible to job seekers."
+          : "Please review the feedback and make necessary changes before resubmitting."
       }
 
       View your job in the dashboard:
@@ -555,7 +611,10 @@ export class PostmarkEmailService {
               <h3 style="margin-top: 0; color: #667eea;">${data.jobTitle}</h3>
               <p><strong>Company:</strong> ${data.companyName}</p>
               <p><strong>Location:</strong> ${data.location}</p>
-              <p><strong>Plan:</strong> ${data.pricingTier.charAt(0).toUpperCase() + data.pricingTier.slice(1)}</p>
+              <p><strong>Plan:</strong> ${
+                data.pricingTier.charAt(0).toUpperCase() +
+                data.pricingTier.slice(1)
+              }</p>
               <p><strong>Status:</strong> <span style="color: #f59e0b; font-weight: bold;">Pending Approval</span></p>
             </div>
           </div>
@@ -606,7 +665,9 @@ export class PostmarkEmailService {
       Title: ${data.jobTitle}
       Company: ${data.companyName}
       Location: ${data.location}
-      Plan: ${data.pricingTier.charAt(0).toUpperCase() + data.pricingTier.slice(1)}
+      Plan: ${
+        data.pricingTier.charAt(0).toUpperCase() + data.pricingTier.slice(1)
+      }
       Status: Pending Approval
 
       What Happens Next?
@@ -729,36 +790,47 @@ export class PostmarkEmailService {
   /**
    * Send batched email notification to employer for multiple applications
    */
-  async sendBatchedApplicationNotification(data: BatchedApplicationEmailData): Promise<boolean> {
+  async sendBatchedApplicationNotification(
+    data: BatchedApplicationEmailData
+  ): Promise<boolean> {
     if (!isEmailServiceAvailable()) {
       return false;
     }
 
     try {
       await postmarkClient!.sendEmail({
-        From: 'AI Jobs Australia <noreply@aijobsaustralia.com.au>',
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
         To: data.employerEmail,
         Subject: `${data.applicationCount} new applications: ${data.jobTitle}`,
         HtmlBody: this.getBatchedApplicationNotificationHtml(data),
         TextBody: this.getBatchedApplicationNotificationText(data),
-        Tag: 'batch-job-application',
+        Tag: "batch-job-application",
         TrackOpens: true,
         TrackLinks: Models.LinkTrackingOptions.None,
-        MessageStream: 'outbound'
+        MessageStream: "outbound",
       });
 
-      console.log(`✅ Batched application notification sent to ${data.employerEmail} for ${data.applicationCount} applications`);
+      console.log(
+        `✅ Batched application notification sent to ${data.employerEmail} for ${data.applicationCount} applications`
+      );
       return true;
     } catch (error) {
-      console.error('Failed to send batched application notification:', error);
+      console.error("Failed to send batched application notification:", error);
       return false;
     }
   }
 
-  private getBatchedApplicationNotificationHtml(data: BatchedApplicationEmailData): string {
-    const applicantList = data.applicantNames.map((name, index) =>
-      `<li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">${index + 1}. ${name}</li>`
-    ).join('');
+  private getBatchedApplicationNotificationHtml(
+    data: BatchedApplicationEmailData
+  ): string {
+    const applicantList = data.applicantNames
+      .map(
+        (name, index) =>
+          `<li style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">${
+            index + 1
+          }. ${name}</li>`
+      )
+      .join("");
 
     return `
       <!DOCTYPE html>
@@ -830,8 +902,12 @@ export class PostmarkEmailService {
     `;
   }
 
-  private getBatchedApplicationNotificationText(data: BatchedApplicationEmailData): string {
-    const applicantList = data.applicantNames.map((name, index) => `${index + 1}. ${name}`).join('\n');
+  private getBatchedApplicationNotificationText(
+    data: BatchedApplicationEmailData
+  ): string {
+    const applicantList = data.applicantNames
+      .map((name, index) => `${index + 1}. ${name}`)
+      .join("\n");
 
     return `
       AI Jobs Australia - New Job Applications
