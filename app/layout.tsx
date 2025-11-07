@@ -16,9 +16,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.aijobsaustralia.com.au"),
   title: "AI Jobs Australia | #1 Home for AI Opportunities In Australia",
   description:
     "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
+  openGraph: {
+    siteName: "AI Jobs Australia",
+    type: "website",
+    locale: "en_AU",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
@@ -48,6 +54,20 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "AI Jobs Australia",
+              alternateName: "AI Jobs Australia",
+              url: "https://www.aijobsaustralia.com.au",
+              description:
+                "The #1 platform for AI, Machine Learning, and Data Science jobs in Australia",
+            }),
+          }}
+        />
         <Analytics />
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
