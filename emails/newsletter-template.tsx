@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import {
   Body,
   Container,
@@ -11,7 +11,7 @@ import {
   Section,
   Text,
   Hr,
-} from '@react-email/components';
+} from "@react-email/components";
 
 interface Job {
   id: string;
@@ -38,47 +38,38 @@ interface NewsletterEmailProps {
   unsubscribeToken: string;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aijobsaustralia.com.au';
+const baseUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://aijobsaustralia.com.au";
 
 export const NewsletterEmail = ({
-  recipientName = 'there',
+  recipientName = "there",
   jobsByCategory = {},
   totalJobsCount = 0,
-  unsubscribeToken = '',
+  unsubscribeToken = "",
 }: NewsletterEmailProps) => {
   const previewText = `${totalJobsCount}+ new AI jobs in Australia this week`;
 
   const formatSalary = (min: number | null, max: number | null) => {
     if (!min && !max) return null;
-    if (min && max) return `$${(min / 1000).toFixed(0)}k - $${(max / 1000).toFixed(0)}k`;
+    if (min && max)
+      return `$${(min / 1000).toFixed(0)}k - $${(max / 1000).toFixed(0)}k`;
     if (min) return `$${(min / 1000).toFixed(0)}k+`;
     if (max) return `Up to $${(max / 1000).toFixed(0)}k`;
     return null;
   };
 
   const formatLocation = (location: string, locationType: string) => {
-    if (locationType === 'remote') return 'Remote';
-    if (locationType === 'hybrid') return `${location} (Hybrid)`;
+    if (locationType === "remote") return "Remote";
+    if (locationType === "hybrid") return `${location} (Hybrid)`;
     return location;
   };
 
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffInDays === 0) return 'Today';
-    if (diffInDays === 1) return '1 day ago';
-    if (diffInDays < 7) return `${diffInDays} days ago`;
-    return '1 week ago';
-  };
-
   const categoryTitles: { [key: string]: string } = {
-    'ai': 'AI Jobs',
-    'ml': 'Machine Learning Jobs',
-    'data-science': 'Data Science Jobs',
-    'engineering': 'Engineering Jobs',
-    'research': 'Research Jobs',
+    ai: "AI Jobs",
+    ml: "Machine Learning Jobs",
+    "data-science": "Data Science Jobs",
+    engineering: "Engineering Jobs",
+    research: "Research Jobs",
   };
 
   return (
@@ -91,7 +82,7 @@ export const NewsletterEmail = ({
           <Section style={logoSection}>
             <Link href={baseUrl}>
               <Img
-                src={`${baseUrl}/logo.png`}
+                src={`${baseUrl}/aja-email-192.png`}
                 alt="AI Jobs Australia"
                 width="200"
                 style={logo}
@@ -103,12 +94,11 @@ export const NewsletterEmail = ({
           <Heading style={h1}>Latest AI Jobs in Australia 🚀</Heading>
 
           {/* Greeting */}
-          <Text style={text}>
-            Hi {recipientName},
-          </Text>
+          <Text style={text}>Hi there,</Text>
 
           <Text style={text}>
-            Here are the latest AI and ML job opportunities posted this week in Australia.
+            Here are the latest AI job opportunities posted this week in
+            Australia.
           </Text>
 
           <Hr style={hr} />
@@ -135,10 +125,7 @@ export const NewsletterEmail = ({
                           />
                         )}
                         <Text style={companyName}>
-                          {job.companies?.name || 'Company'}
-                        </Text>
-                        <Text style={postedTime}>
-                          {getTimeAgo(job.created_at)}
+                          {job.companies?.name || "Company"}
                         </Text>
                       </td>
                     </tr>
@@ -194,10 +181,13 @@ export const NewsletterEmail = ({
               AI Jobs Australia - Australia&apos;s #1 Platform for AI Jobs
             </Text>
             <Text style={footerText}>
-              <Link href={`${baseUrl}/unsubscribe?token=${unsubscribeToken}`} style={unsubscribeLink}>
+              <Link
+                href={`${baseUrl}/unsubscribe?token=${unsubscribeToken}`}
+                style={unsubscribeLink}
+              >
                 Unsubscribe
               </Link>
-              {' • '}
+              {" • "}
               <Link href={`${baseUrl}`} style={footerLink}>
                 aijobsaustralia.com.au
               </Link>
@@ -213,179 +203,180 @@ export default NewsletterEmail;
 
 // Styles
 const main = {
-  backgroundColor: '#f6f9fc',
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+  backgroundColor: "#f6f9fc",
+  fontFamily:
+    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
 const container = {
-  backgroundColor: '#ffffff',
-  margin: '0 auto',
-  padding: '20px 0 48px',
-  marginBottom: '64px',
-  maxWidth: '600px',
+  backgroundColor: "#ffffff",
+  margin: "0 auto",
+  padding: "20px 0 48px",
+  marginBottom: "64px",
+  maxWidth: "600px",
 };
 
 const logoSection = {
-  padding: '30px 20px 20px',
-  textAlign: 'center' as const,
+  padding: "30px 20px 20px",
+  textAlign: "center" as const,
 };
 
 const logo = {
-  margin: '0 auto',
+  margin: "0 auto",
 };
 
 const h1 = {
-  color: '#1a1a1a',
-  fontSize: '32px',
-  fontWeight: 'bold',
-  textAlign: 'center' as const,
-  margin: '30px 0',
-  padding: '0 20px',
+  color: "#1a1a1a",
+  fontSize: "32px",
+  fontWeight: "bold",
+  textAlign: "center" as const,
+  margin: "30px 0",
+  padding: "0 20px",
 };
 
 const h2 = {
-  color: '#1a1a1a',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  margin: '30px 0 20px 0',
-  padding: '0 20px',
+  color: "#1a1a1a",
+  fontSize: "24px",
+  fontWeight: "bold",
+  margin: "30px 0 20px 0",
+  padding: "0 20px",
 };
 
 const text = {
-  color: '#484848',
-  fontSize: '16px',
-  lineHeight: '24px',
-  padding: '0 20px',
-  margin: '16px 0',
+  color: "#484848",
+  fontSize: "16px",
+  lineHeight: "24px",
+  padding: "0 20px",
+  margin: "16px 0",
 };
 
 const hr = {
-  borderColor: '#e6ebf1',
-  margin: '40px 20px',
+  borderColor: "#e6ebf1",
+  margin: "40px 20px",
 };
 
 const categorySection = {
-  margin: '0 0 40px 0',
+  margin: "0 0 40px 0",
 };
 
 const jobCard = {
-  backgroundColor: '#f8f9fa',
-  borderRadius: '8px',
-  padding: '16px',
-  margin: '0 20px 12px 20px',
-  border: '1px solid #e6ebf1',
+  backgroundColor: "#f8f9fa",
+  borderRadius: "8px",
+  padding: "16px",
+  margin: "0 20px 12px 20px",
+  border: "1px solid #e6ebf1",
 };
 
 const jobTable = {
-  width: '100%',
+  width: "100%",
 };
 
 const jobHeader = {
-  display: 'flex',
-  alignItems: 'center',
-  marginBottom: '8px',
+  display: "flex",
+  alignItems: "center",
+  marginBottom: "8px",
 };
 
 const companyLogo = {
-  borderRadius: '50%',
-  marginRight: '8px',
-  verticalAlign: 'middle',
+  borderRadius: "50%",
+  marginRight: "8px",
+  verticalAlign: "middle",
 };
 
 const companyName = {
-  fontSize: '14px',
-  color: '#666',
-  margin: '0',
-  display: 'inline',
-  paddingLeft: '8px',
+  fontSize: "14px",
+  color: "#666",
+  margin: "0",
+  display: "inline",
+  paddingLeft: "8px",
 };
 
 const postedTime = {
-  fontSize: '14px',
-  color: '#999',
-  margin: '0',
-  float: 'right' as const,
+  fontSize: "14px",
+  color: "#999",
+  margin: "0",
+  float: "right" as const,
 };
 
 const jobTitle = {
-  fontSize: '18px',
-  fontWeight: '600',
-  color: '#1a1a1a',
-  textDecoration: 'none',
-  display: 'block',
-  margin: '8px 0',
+  fontSize: "18px",
+  fontWeight: "600",
+  color: "#1a1a1a",
+  textDecoration: "none",
+  display: "block",
+  margin: "8px 0",
 };
 
 const jobMeta = {
-  marginTop: '8px',
+  marginTop: "8px",
 };
 
 const metaBadge = {
-  display: 'inline-block',
-  padding: '4px 10px',
-  backgroundColor: '#e3f2fd',
-  borderRadius: '4px',
-  fontSize: '13px',
-  color: '#1976d2',
-  marginRight: '8px',
+  display: "inline-block",
+  padding: "4px 10px",
+  backgroundColor: "#e3f2fd",
+  borderRadius: "4px",
+  fontSize: "13px",
+  color: "#1976d2",
+  marginRight: "8px",
 };
 
 const salaryBadge = {
-  display: 'inline-block',
-  padding: '4px 10px',
-  backgroundColor: '#e8f5e9',
-  borderRadius: '4px',
-  fontSize: '13px',
-  color: '#2e7d32',
-  fontWeight: '600',
+  display: "inline-block",
+  padding: "4px 10px",
+  backgroundColor: "#e8f5e9",
+  borderRadius: "4px",
+  fontSize: "13px",
+  color: "#2e7d32",
+  fontWeight: "600",
 };
 
 const viewAllSection = {
-  padding: '10px 20px',
+  padding: "10px 20px",
 };
 
 const viewAllLink = {
-  color: '#1976d2',
-  fontSize: '14px',
-  textDecoration: 'none',
-  fontWeight: '500',
+  color: "#1976d2",
+  fontSize: "14px",
+  textDecoration: "none",
+  fontWeight: "500",
 };
 
 const buttonSection = {
-  textAlign: 'center' as const,
-  margin: '32px 0',
+  textAlign: "center" as const,
+  margin: "32px 0",
 };
 
 const button = {
-  backgroundColor: '#1976d2',
-  borderRadius: '5px',
-  color: '#fff',
-  fontSize: '16px',
-  fontWeight: 'bold',
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  display: 'inline-block',
-  padding: '12px 32px',
+  backgroundColor: "#1976d2",
+  borderRadius: "5px",
+  color: "#fff",
+  fontSize: "16px",
+  fontWeight: "bold",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  display: "inline-block",
+  padding: "12px 32px",
 };
 
 const footer = {
-  textAlign: 'center' as const,
-  margin: '32px 0 0 0',
+  textAlign: "center" as const,
+  margin: "32px 0 0 0",
 };
 
 const footerText = {
-  color: '#8898aa',
-  fontSize: '12px',
-  lineHeight: '16px',
-  margin: '8px 0',
+  color: "#8898aa",
+  fontSize: "12px",
+  lineHeight: "16px",
+  margin: "8px 0",
 };
 
 const footerLink = {
-  color: '#1976d2',
-  textDecoration: 'none',
+  color: "#1976d2",
+  textDecoration: "none",
 };
 
 const unsubscribeLink = {
-  color: '#8898aa',
-  textDecoration: 'underline',
+  color: "#8898aa",
+  textDecoration: "underline",
 };

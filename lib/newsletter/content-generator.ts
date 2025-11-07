@@ -31,10 +31,10 @@ interface RawJobData {
   salary_max: number | null;
   category: string;
   created_at: string;
-  companies: Array<{
+  companies: {
     name: string;
     logo_url: string | null;
-  }>;
+  } | null;
 }
 
 export interface JobsByCategory {
@@ -85,14 +85,12 @@ export class ContentGenerator {
         throw error;
       }
 
-      // Transform the data to match NewsletterJob interface
-      // Supabase returns companies as an array, but we need a single object
-      const transformedData: NewsletterJob[] = (data || []).map((job: RawJobData) => ({
-        ...job,
-        companies: Array.isArray(job.companies) && job.companies.length > 0
-          ? job.companies[0]
-          : null,
-      }));
+      // Debug: Log raw data from Supabase
+      console.log('[ContentGenerator] Raw data from Supabase (first job):',
+        data && data.length > 0 ? JSON.stringify(data[0], null, 2) : 'No data');
+
+      // Data from Supabase is already in the correct format (companies as single object)
+      const transformedData: NewsletterJob[] = (data || []) as unknown as NewsletterJob[];
 
       return transformedData;
     } catch (error) {
