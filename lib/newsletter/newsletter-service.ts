@@ -81,12 +81,17 @@ export class NewsletterService {
   /**
    * Send newsletter to test users
    */
-  async sendToTestUsers(): Promise<{
+  async sendToTestUsers(options?: {
+    introText?: string;
+    outroText?: string;
+  }): Promise<{
     success: boolean;
     recipientCount: number;
     jobsCount: number;
     campaignId: string | null;
   }> {
+    const { introText = "", outroText = "" } = options || {};
+
     try {
       console.log("[NewsletterService] Starting test newsletter send...");
 
@@ -152,6 +157,8 @@ export class NewsletterService {
           jobsByCategory: content.jobsByCategory,
           totalJobsCount: content.totalJobsCount,
           unsubscribeToken: recipients[0].unsubscribeToken, // Will be personalized per recipient
+          introText,
+          outroText,
         }),
       });
 
@@ -197,12 +204,17 @@ export class NewsletterService {
   /**
    * Send newsletter to all subscribed users (for future use)
    */
-  async sendToAllUsers(): Promise<{
+  async sendToAllUsers(options?: {
+    introText?: string;
+    outroText?: string;
+  }): Promise<{
     success: boolean;
     recipientCount: number;
     jobsCount: number;
     campaignId: string | null;
   }> {
+    const { introText = "", outroText = "" } = options || {};
+
     try {
       console.log(
         "[NewsletterService] Starting newsletter send to all users..."
@@ -268,6 +280,8 @@ export class NewsletterService {
           jobsByCategory: content.jobsByCategory,
           totalJobsCount: content.totalJobsCount,
           unsubscribeToken: recipients[0].unsubscribeToken,
+          introText,
+          outroText,
         }),
       });
 
@@ -310,7 +324,16 @@ export class NewsletterService {
   /**
    * Send a test newsletter to a specific email
    */
-  async sendTestEmail(email: string, firstName?: string): Promise<boolean> {
+  async sendTestEmail(
+    email: string,
+    firstName?: string,
+    options?: {
+      introText?: string;
+      outroText?: string;
+    }
+  ): Promise<boolean> {
+    const { introText = "", outroText = "" } = options || {};
+
     try {
       console.log(`[NewsletterService] Sending test newsletter to ${email}...`);
 
@@ -340,6 +363,8 @@ export class NewsletterService {
           jobsByCategory: content.jobsByCategory,
           totalJobsCount: content.totalJobsCount,
           unsubscribeToken: "test-token", // Test token
+          introText,
+          outroText,
         }),
       });
 

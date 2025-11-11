@@ -37,6 +37,8 @@ interface NewsletterEmailProps {
   jobsByCategory: JobsByCategory;
   totalJobsCount: number;
   unsubscribeToken: string;
+  introText?: string;
+  outroText?: string;
 }
 
 const baseUrl =
@@ -47,6 +49,8 @@ export const NewsletterEmail = ({
   jobsByCategory = {},
   totalJobsCount = 0,
   unsubscribeToken = "",
+  introText = "",
+  outroText = "",
 }: NewsletterEmailProps) => {
   const previewText = `${totalJobsCount}+ new AI jobs in Australia this week`;
 
@@ -102,6 +106,9 @@ export const NewsletterEmail = ({
             Australia.
           </Text>
 
+          {/* Custom Intro Text */}
+          {introText && <Text style={text}>{introText}</Text>}
+
           <Hr style={hr} />
 
           {/* Jobs by Category */}
@@ -145,11 +152,12 @@ export const NewsletterEmail = ({
                         <span style={metaBadge}>
                           {formatLocation(job.location, job.location_type)}
                         </span>
-                        {job.show_salary && formatSalary(job.salary_min, job.salary_max) && (
-                          <span style={salaryBadge}>
-                            {formatSalary(job.salary_min, job.salary_max)}
-                          </span>
-                        )}
+                        {job.show_salary &&
+                          formatSalary(job.salary_min, job.salary_max) && (
+                            <span style={salaryBadge}>
+                              {formatSalary(job.salary_min, job.salary_max)}
+                            </span>
+                          )}
                       </td>
                     </tr>
                   </table>
@@ -175,6 +183,9 @@ export const NewsletterEmail = ({
               View All Jobs
             </Link>
           </Section>
+
+          {/* Custom Outro Text */}
+          {outroText && <Text style={text}>{outroText}</Text>}
 
           {/* Footer */}
           <Section style={footer}>

@@ -31,6 +31,13 @@ export async function POST(request: NextRequest) {
 
     console.log('[Newsletter Send] Starting scheduled newsletter send...');
 
+    // ========================================
+    // EDIT THESE BEFORE EACH NEWSLETTER SEND
+    // ========================================
+    const introText = ""; // Add your intro message here (optional)
+    const outroText = ""; // Add your outro message here (optional)
+    // ========================================
+
     // Check if newsletter should be sent (enough jobs available)
     const shouldSend = await newsletterService.shouldSendNewsletter(3);
 
@@ -46,7 +53,10 @@ export async function POST(request: NextRequest) {
 
     // Send newsletter to test users
     // TODO: Change to sendToAllUsers() when ready for production
-    const result = await newsletterService.sendToTestUsers();
+    const result = await newsletterService.sendToTestUsers({
+      introText,
+      outroText,
+    });
 
     if (result.success) {
       console.log(`[Newsletter Send] Successfully sent to ${result.recipientCount} recipients`);
@@ -97,6 +107,13 @@ export async function GET(request: NextRequest) {
 
     console.log('[Newsletter Send] Manual trigger via GET...');
 
+    // ========================================
+    // EDIT THESE BEFORE EACH NEWSLETTER SEND
+    // ========================================
+    const introText = ""; // Add your intro message here (optional)
+    const outroText = ""; // Add your outro message here (optional)
+    // ========================================
+
     const shouldSend = await newsletterService.shouldSendNewsletter(3);
 
     if (!shouldSend) {
@@ -106,7 +123,10 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const result = await newsletterService.sendToTestUsers();
+    const result = await newsletterService.sendToTestUsers({
+      introText,
+      outroText,
+    });
 
     return NextResponse.json({
       success: result.success,

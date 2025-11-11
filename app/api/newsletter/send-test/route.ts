@@ -6,12 +6,12 @@ import { newsletterService } from '@/lib/newsletter/newsletter-service';
  * Useful for testing the newsletter design and content
  *
  * POST /api/newsletter/send-test
- * Body: { email: string, firstName?: string, secret: string }
+ * Body: { email: string, firstName?: string, secret: string, introText?: string, outroText?: string }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, firstName, secret } = body;
+    const { email, firstName, secret, introText, outroText } = body;
 
     // Verify secret (same as CRON_SECRET for simplicity)
     if (secret !== process.env.CRON_SECRET) {
@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Newsletter Test] Sending test newsletter to ${email}...`);
 
-    const success = await newsletterService.sendTestEmail(email, firstName);
+    const success = await newsletterService.sendTestEmail(email, firstName, {
+      introText,
+      outroText,
+    });
 
     if (success) {
       return NextResponse.json({
