@@ -38,11 +38,18 @@ export class ResendService {
    * Resend allows up to 100 emails per batch request
    */
   async sendNewsletterBatch(params: {
-    recipients: Array<{ email: string; firstName?: string }>;
+    recipients: Array<{
+      email: string;
+      firstName?: string;
+      unsubscribeToken: string;
+    }>;
     subject: string;
-    react: React.ReactElement;
+    reactTemplate: (recipientData: {
+      firstName: string;
+      unsubscribeToken: string;
+    }) => React.ReactElement;
   }) {
-    const { recipients, subject, react } = params;
+    const { recipients, subject, reactTemplate } = params;
 
     try {
       // Split into batches of 100 (Resend limit)
@@ -60,7 +67,10 @@ export class ResendService {
           from: 'Jake from AI Jobs Australia <jake@aijobsaustralia.com.au>',
           to: recipient.email,
           subject: subject,
-          react: react,
+          react: reactTemplate({
+            firstName: recipient.firstName || 'there',
+            unsubscribeToken: recipient.unsubscribeToken,
+          }),
         }));
 
         const { data, error } = await resend.batch.send(emails);

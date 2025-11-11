@@ -150,13 +150,14 @@ export class NewsletterService {
         recipients: recipients.map((r) => ({
           email: r.email,
           firstName: r.firstName,
+          unsubscribeToken: r.unsubscribeToken,
         })),
         subject,
-        react: NewsletterEmail({
-          recipientName: recipients[0].firstName, // Will be personalized per recipient
+        reactTemplate: (recipientData) => NewsletterEmail({
+          recipientName: recipientData.firstName,
           jobsByCategory: content.jobsByCategory,
           totalJobsCount: content.totalJobsCount,
-          unsubscribeToken: recipients[0].unsubscribeToken, // Will be personalized per recipient
+          unsubscribeToken: recipientData.unsubscribeToken,
           introText,
           outroText,
         }),
@@ -273,13 +274,14 @@ export class NewsletterService {
         recipients: recipients.map((r) => ({
           email: r.email,
           firstName: r.firstName,
+          unsubscribeToken: r.unsubscribeToken,
         })),
         subject,
-        react: NewsletterEmail({
-          recipientName: recipients[0].firstName,
+        reactTemplate: (recipientData) => NewsletterEmail({
+          recipientName: recipientData.firstName,
           jobsByCategory: content.jobsByCategory,
           totalJobsCount: content.totalJobsCount,
-          unsubscribeToken: recipients[0].unsubscribeToken,
+          unsubscribeToken: recipientData.unsubscribeToken,
           introText,
           outroText,
         }),

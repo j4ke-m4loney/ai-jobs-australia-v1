@@ -1,33 +1,41 @@
-'use client';
+"use client";
 
-import { Suspense, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { Suspense, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
 
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = searchParams.get("token");
 
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleUnsubscribe = async () => {
     if (!token) {
-      setStatus('error');
-      setErrorMessage('Invalid unsubscribe link');
+      setStatus("error");
+      setErrorMessage("Invalid unsubscribe link");
       return;
     }
 
-    setStatus('loading');
+    setStatus("loading");
 
     try {
-      const response = await fetch('/api/newsletter/unsubscribe', {
-        method: 'POST',
+      const response = await fetch("/api/newsletter/unsubscribe", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ token }),
       });
@@ -35,23 +43,23 @@ function UnsubscribeContent() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setStatus('success');
+        setStatus("success");
       } else {
-        setStatus('error');
-        setErrorMessage(data.error || 'Failed to unsubscribe');
+        setStatus("error");
+        setErrorMessage(data.error || "Failed to unsubscribe");
       }
     } catch (error) {
-      setStatus('error');
-      setErrorMessage('An unexpected error occurred');
-      console.error('Unsubscribe error:', error);
+      setStatus("error");
+      setErrorMessage("An unexpected error occurred");
+      console.error("Unsubscribe error:", error);
     }
   };
 
   // Check if token is present
   useEffect(() => {
     if (!token) {
-      setStatus('error');
-      setErrorMessage('Invalid unsubscribe link');
+      setStatus("error");
+      setErrorMessage("Invalid unsubscribe link");
     }
   }, [token]);
 
@@ -61,19 +69,20 @@ function UnsubscribeContent() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Newsletter Unsubscribe</CardTitle>
           <CardDescription>
-            {status === 'idle' && 'Manage your newsletter subscription'}
-            {status === 'loading' && 'Processing your request...'}
-            {status === 'success' && 'You have been unsubscribed'}
-            {status === 'error' && 'Something went wrong'}
+            {status === "idle" && "Manage your newsletter subscription"}
+            {status === "loading" && "Processing your request..."}
+            {status === "success" && "You have been unsubscribed"}
+            {status === "error" && "Something went wrong"}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {status === 'idle' && (
+          {status === "idle" && (
             <>
               <div className="text-center text-sm text-gray-600">
                 <p className="mb-4">
-                  Are you sure you want to unsubscribe from AI Jobs Australia newsletter?
+                  Are you sure you want to unsubscribe from AI Jobs Australia
+                  newsletter?
                 </p>
                 <p className="mb-2">
                   You will no longer receive updates about:
@@ -103,20 +112,14 @@ function UnsubscribeContent() {
                 >
                   Yes, Unsubscribe
                 </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Link href="/">
-                    No, Keep Me Subscribed
-                  </Link>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/">No, Keep Me Subscribed</Link>
                 </Button>
               </div>
             </>
           )}
 
-          {status === 'loading' && (
+          {status === "loading" && (
             <div className="flex flex-col items-center justify-center py-8 space-y-4">
               <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
               <p className="text-sm text-gray-500">
@@ -125,59 +128,43 @@ function UnsubscribeContent() {
             </div>
           )}
 
-          {status === 'success' && (
+          {status === "success" && (
             <div className="flex flex-col items-center justify-center py-8 space-y-4">
               <CheckCircle2 className="h-16 w-16 text-green-600" />
               <div className="text-center space-y-2">
-                <p className="font-medium text-lg">
-                  Successfully Unsubscribed
-                </p>
+                <p className="font-medium text-lg">Successfully Unsubscribed</p>
                 <p className="text-sm text-gray-600">
                   You have been removed from our newsletter mailing list.
                 </p>
                 <p className="text-sm text-gray-500">
-                  We&apos;re sorry to see you go! If you change your mind, you can always resubscribe from your account settings.
+                  We&apos;re sorry to see you go! If you change your mind, you
+                  can always resubscribe from your account settings.
                 </p>
               </div>
-              <Button
-                asChild
-                className="mt-4"
-              >
-                <Link href="/">
-                  Return to Homepage
-                </Link>
+              <Button asChild className="mt-4">
+                <Link href="/">Return to Homepage</Link>
               </Button>
             </div>
           )}
 
-          {status === 'error' && (
+          {status === "error" && (
             <div className="flex flex-col items-center justify-center py-8 space-y-4">
               <XCircle className="h-16 w-16 text-red-600" />
               <div className="text-center space-y-2">
-                <p className="font-medium text-lg">
-                  Unsubscribe Failed
-                </p>
-                <p className="text-sm text-gray-600">
-                  {errorMessage}
-                </p>
+                <p className="font-medium text-lg">Unsubscribe Failed</p>
+                <p className="text-sm text-gray-600">{errorMessage}</p>
                 <p className="text-sm text-gray-500">
-                  If this problem persists, please contact support at{' '}
+                  If this problem persists, please contact support at{" "}
                   <a
                     href="mailto:jake@aijobsaustralia.com.au"
                     className="text-blue-600 hover:underline"
                   >
-                    jake@aijobsaustralia.com.au
+                    support@aijobsaustralia.com.au
                   </a>
                 </p>
               </div>
-              <Button
-                asChild
-                variant="outline"
-                className="mt-4"
-              >
-                <Link href="/">
-                  Return to Homepage
-                </Link>
+              <Button asChild variant="outline" className="mt-4">
+                <Link href="/">Return to Homepage</Link>
               </Button>
             </div>
           )}

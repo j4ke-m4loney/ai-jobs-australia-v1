@@ -26,6 +26,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle test emails (preview only, not real subscriptions)
+    if (token === 'test-token') {
+      console.log('[Newsletter Unsubscribe] Test email unsubscribe attempt');
+      return NextResponse.json({
+        success: false,
+        error: 'This is a test email. Unsubscribe is only available for real newsletter subscriptions.',
+      }, { status: 200 });
+    }
+
     console.log(`[Newsletter Unsubscribe] Processing unsubscribe for token: ${token}`);
 
     // First, try to find in test users table (MVP)
