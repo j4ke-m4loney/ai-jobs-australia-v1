@@ -14,7 +14,7 @@ export class ResendService {
   }) {
     try {
       const { data, error } = await resend.emails.send({
-        from: 'AI Jobs Australia <newsletter@updates.aijobsaustralia.com.au>',
+        from: 'Jake from AI Jobs Australia <jake@aijobsaustralia.com.au>',
         to: params.to,
         subject: params.subject,
         react: params.react,
@@ -57,7 +57,7 @@ export class ResendService {
 
       for (const batch of batches) {
         const emails = batch.map(recipient => ({
-          from: 'AI Jobs Australia <newsletter@updates.aijobsaustralia.com.au>',
+          from: 'Jake from AI Jobs Australia <jake@aijobsaustralia.com.au>',
           to: recipient.email,
           subject: subject,
           react: react,
