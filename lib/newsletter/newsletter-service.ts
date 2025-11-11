@@ -1,7 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
-import { contentGenerator } from './content-generator';
-import { resendService } from '../email/resend-service';
-import { NewsletterEmail } from '../../emails/newsletter-template';
+import { createClient } from "@supabase/supabase-js";
+import { contentGenerator } from "./content-generator";
+import { resendService } from "../email/resend-service";
+import { NewsletterEmail } from "../../emails/newsletter-template";
 
 // Server-side Supabase client
 const supabaseAdmin = createClient(
@@ -31,18 +31,18 @@ export class NewsletterService {
   async getTestUsers(): Promise<TestUser[]> {
     try {
       const { data, error } = await supabaseAdmin
-        .from('newsletter_test_users')
-        .select('id, email, first_name, active')
-        .eq('active', true);
+        .from("newsletter_test_users")
+        .select("id, email, first_name, active")
+        .eq("active", true);
 
       if (error) {
-        console.error('[NewsletterService] Error fetching test users:', error);
+        console.error("[NewsletterService] Error fetching test users:", error);
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('[NewsletterService] Failed to get test users:', error);
+      console.error("[NewsletterService] Failed to get test users:", error);
       throw error;
     }
   }
@@ -53,19 +53,27 @@ export class NewsletterService {
   async getSubscribedUsers(): Promise<Profile[]> {
     try {
       const { data, error } = await supabaseAdmin
-        .from('profiles')
-        .select('user_id, email, first_name, newsletter_subscribed, newsletter_unsubscribe_token')
-        .eq('newsletter_subscribed', true)
-        .not('newsletter_unsubscribe_token', 'is', null);
+        .from("profiles")
+        .select(
+          "user_id, email, first_name, newsletter_subscribed, newsletter_unsubscribe_token"
+        )
+        .eq("newsletter_subscribed", true)
+        .not("newsletter_unsubscribe_token", "is", null);
 
       if (error) {
-        console.error('[NewsletterService] Error fetching subscribed users:', error);
+        console.error(
+          "[NewsletterService] Error fetching subscribed users:",
+          error
+        );
         throw error;
       }
 
       return data || [];
     } catch (error) {
-      console.error('[NewsletterService] Failed to get subscribed users:', error);
+      console.error(
+        "[NewsletterService] Failed to get subscribed users:",
+        error
+      );
       throw error;
     }
   }
@@ -80,13 +88,13 @@ export class NewsletterService {
     campaignId: string | null;
   }> {
     try {
-      console.log('[NewsletterService] Starting test newsletter send...');
+      console.log("[NewsletterService] Starting test newsletter send...");
 
       // Get test users
       const testUsers = await this.getTestUsers();
 
       if (testUsers.length === 0) {
-        console.log('[NewsletterService] No test users found');
+        console.log("[NewsletterService] No test users found");
         return {
           success: false,
           recipientCount: 0,
@@ -105,7 +113,7 @@ export class NewsletterService {
       });
 
       if (content.totalJobsCount === 0) {
-        console.log('[NewsletterService] No jobs found for newsletter');
+        console.log("[NewsletterService] No jobs found for newsletter");
         return {
           success: false,
           recipientCount: 0,
@@ -114,22 +122,27 @@ export class NewsletterService {
         };
       }
 
-      console.log(`[NewsletterService] Generated content with ${content.totalJobsCount} jobs`);
+      console.log(
+        `[NewsletterService] Generated content with ${content.totalJobsCount} jobs`
+      );
 
       // Prepare recipients with personalized data
       const recipients = testUsers.map((user) => ({
         email: user.email,
-        firstName: user.first_name || 'there',
+        firstName: user.first_name || "there",
         // For test users, we'll use their ID as the unsubscribe token
         // In production, we'll use the actual newsletter_unsubscribe_token from profiles
         unsubscribeToken: user.id,
       }));
 
       // Send emails
-      const subject = `${content.totalJobsCount}+ new AI jobs in Australia this week`;
+      const today = new Date();
+      const day = today.getDate().toString().padStart(2, "0");
+      const month = today.toLocaleString("en-US", { month: "short" });
+      const subject = `New AI Jobs in Aus (${day} ${month})`;
 
       const results = await resendService.sendNewsletterBatch({
-        recipients: recipients.map(r => ({
+        recipients: recipients.map((r) => ({
           email: r.email,
           firstName: r.firstName,
         })),
@@ -142,23 +155,28 @@ export class NewsletterService {
         }),
       });
 
-      console.log(`[NewsletterService] Sent to ${results.totalSent} recipients in ${results.batches} batches`);
+      console.log(
+        `[NewsletterService] Sent to ${results.totalSent} recipients in ${results.batches} batches`
+      );
 
       // Log campaign to database
       const { data: campaign, error: campaignError } = await supabaseAdmin
-        .from('newsletter_campaigns')
+        .from("newsletter_campaigns")
         .insert({
-          name: `Test Newsletter - ${new Date().toISOString().split('T')[0]}`,
+          name: `Test Newsletter - ${new Date().toISOString().split("T")[0]}`,
           subject,
           recipient_count: results.totalSent,
           jobs_count: content.totalJobsCount,
-          status: results.success ? 'sent' : 'failed',
+          status: results.success ? "sent" : "failed",
         })
         .select()
         .single();
 
       if (campaignError) {
-        console.error('[NewsletterService] Error logging campaign:', campaignError);
+        console.error(
+          "[NewsletterService] Error logging campaign:",
+          campaignError
+        );
       }
 
       return {
@@ -168,7 +186,10 @@ export class NewsletterService {
         campaignId: campaign?.id || null,
       };
     } catch (error) {
-      console.error('[NewsletterService] Failed to send test newsletter:', error);
+      console.error(
+        "[NewsletterService] Failed to send test newsletter:",
+        error
+      );
       throw error;
     }
   }
@@ -183,13 +204,15 @@ export class NewsletterService {
     campaignId: string | null;
   }> {
     try {
-      console.log('[NewsletterService] Starting newsletter send to all users...');
+      console.log(
+        "[NewsletterService] Starting newsletter send to all users..."
+      );
 
       // Get subscribed users
       const users = await this.getSubscribedUsers();
 
       if (users.length === 0) {
-        console.log('[NewsletterService] No subscribed users found');
+        console.log("[NewsletterService] No subscribed users found");
         return {
           success: false,
           recipientCount: 0,
@@ -208,7 +231,7 @@ export class NewsletterService {
       });
 
       if (content.totalJobsCount === 0) {
-        console.log('[NewsletterService] No jobs found for newsletter');
+        console.log("[NewsletterService] No jobs found for newsletter");
         return {
           success: false,
           recipientCount: 0,
@@ -217,20 +240,25 @@ export class NewsletterService {
         };
       }
 
-      console.log(`[NewsletterService] Generated content with ${content.totalJobsCount} jobs`);
+      console.log(
+        `[NewsletterService] Generated content with ${content.totalJobsCount} jobs`
+      );
 
       // Prepare recipients with personalized data
       const recipients = users.map((user) => ({
         email: user.email,
-        firstName: user.first_name || 'there',
+        firstName: user.first_name || "there",
         unsubscribeToken: user.newsletter_unsubscribe_token,
       }));
 
       // Send emails
-      const subject = `${content.totalJobsCount}+ new AI jobs in Australia this week`;
+      const today = new Date();
+      const day = today.getDate().toString().padStart(2, "0");
+      const month = today.toLocaleString("en-US", { month: "short" });
+      const subject = `Your AI Jobs in Aus (${day} ${month})`;
 
       const results = await resendService.sendNewsletterBatch({
-        recipients: recipients.map(r => ({
+        recipients: recipients.map((r) => ({
           email: r.email,
           firstName: r.firstName,
         })),
@@ -243,23 +271,28 @@ export class NewsletterService {
         }),
       });
 
-      console.log(`[NewsletterService] Sent to ${results.totalSent} recipients in ${results.batches} batches`);
+      console.log(
+        `[NewsletterService] Sent to ${results.totalSent} recipients in ${results.batches} batches`
+      );
 
       // Log campaign to database
       const { data: campaign, error: campaignError } = await supabaseAdmin
-        .from('newsletter_campaigns')
+        .from("newsletter_campaigns")
         .insert({
-          name: `Weekly Newsletter - ${new Date().toISOString().split('T')[0]}`,
+          name: `Weekly Newsletter - ${new Date().toISOString().split("T")[0]}`,
           subject,
           recipient_count: results.totalSent,
           jobs_count: content.totalJobsCount,
-          status: results.success ? 'sent' : 'failed',
+          status: results.success ? "sent" : "failed",
         })
         .select()
         .single();
 
       if (campaignError) {
-        console.error('[NewsletterService] Error logging campaign:', campaignError);
+        console.error(
+          "[NewsletterService] Error logging campaign:",
+          campaignError
+        );
       }
 
       return {
@@ -269,7 +302,7 @@ export class NewsletterService {
         campaignId: campaign?.id || null,
       };
     } catch (error) {
-      console.error('[NewsletterService] Failed to send newsletter:', error);
+      console.error("[NewsletterService] Failed to send newsletter:", error);
       throw error;
     }
   }
@@ -289,28 +322,31 @@ export class NewsletterService {
       });
 
       if (content.totalJobsCount === 0) {
-        console.log('[NewsletterService] No jobs found for test newsletter');
+        console.log("[NewsletterService] No jobs found for test newsletter");
         return false;
       }
 
       // Send test email
-      const subject = `[TEST] ${content.totalJobsCount}+ new AI jobs in Australia this week`;
+      const today = new Date();
+      const day = today.getDate().toString().padStart(2, "0");
+      const month = today.toLocaleString("en-US", { month: "short" });
+      const subject = `Your AI Jobs in Aus (${day} ${month})`;
 
       await resendService.sendTestNewsletter({
         to: email,
         subject,
         react: NewsletterEmail({
-          recipientName: firstName || 'there',
+          recipientName: firstName || "there",
           jobsByCategory: content.jobsByCategory,
           totalJobsCount: content.totalJobsCount,
-          unsubscribeToken: 'test-token', // Test token
+          unsubscribeToken: "test-token", // Test token
         }),
       });
 
       console.log(`[NewsletterService] Test newsletter sent to ${email}`);
       return true;
     } catch (error) {
-      console.error('[NewsletterService] Failed to send test email:', error);
+      console.error("[NewsletterService] Failed to send test email:", error);
       return false;
     }
   }
@@ -322,7 +358,10 @@ export class NewsletterService {
     try {
       return await contentGenerator.hasEnoughJobs(minimumJobs);
     } catch (error) {
-      console.error('[NewsletterService] Error checking if newsletter should be sent:', error);
+      console.error(
+        "[NewsletterService] Error checking if newsletter should be sent:",
+        error
+      );
       return false;
     }
   }

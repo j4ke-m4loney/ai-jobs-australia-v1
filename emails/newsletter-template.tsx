@@ -20,6 +20,7 @@ interface Job {
   location_type: string;
   salary_min: number | null;
   salary_max: number | null;
+  show_salary: boolean;
   created_at: string;
   companies: {
     name: string;
@@ -84,7 +85,7 @@ export const NewsletterEmail = ({
               <Img
                 src={`${baseUrl}/aja-email-192.png`}
                 alt="AI Jobs Australia"
-                width="200"
+                width="100"
                 style={logo}
               />
             </Link>
@@ -144,7 +145,7 @@ export const NewsletterEmail = ({
                         <span style={metaBadge}>
                           {formatLocation(job.location, job.location_type)}
                         </span>
-                        {formatSalary(job.salary_min, job.salary_max) && (
+                        {job.show_salary && formatSalary(job.salary_min, job.salary_max) && (
                           <span style={salaryBadge}>
                             {formatSalary(job.salary_min, job.salary_max)}
                           </span>
@@ -203,7 +204,7 @@ export default NewsletterEmail;
 
 // Styles
 const main = {
-  backgroundColor: "#f6f9fc",
+  backgroundColor: "#ffffff",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
@@ -260,7 +261,7 @@ const categorySection = {
 };
 
 const jobCard = {
-  backgroundColor: "#f8f9fa",
+  backgroundColor: "#ffffff",
   borderRadius: "8px",
   padding: "16px",
   margin: "0 20px 12px 20px",

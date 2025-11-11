@@ -13,6 +13,7 @@ export interface NewsletterJob {
   location_type: string;
   salary_min: number | null;
   salary_max: number | null;
+  show_salary: boolean;
   category: string;
   created_at: string;
   companies: {
@@ -29,6 +30,7 @@ interface RawJobData {
   location_type: string;
   salary_min: number | null;
   salary_max: number | null;
+  show_salary: boolean;
   category: string;
   created_at: string;
   companies: {
@@ -69,6 +71,7 @@ export class ContentGenerator {
           location_type,
           salary_min,
           salary_max,
+          show_salary,
           category,
           created_at,
           companies (
