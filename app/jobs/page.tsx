@@ -1322,12 +1322,31 @@ function JobsContent() {
           <div className="p-4 border-b border-border bg-white mx-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Badge
-                  variant="secondary"
-                  className="bg-primary text-white font-semibold px-2 py-1 hover:bg-primary/90 transition-colors"
-                >
-                  {totalJobs > 0 ? totalJobs.toLocaleString() : jobs.length.toLocaleString()} jobs
-                </Badge>
+                {(() => {
+                  // Check if any filters or search are active
+                  const hasActiveFilters =
+                    searchTerm ||
+                    (selectedState && selectedState !== "all") ||
+                    selectedCategories.length > 0 ||
+                    selectedLocations.length > 0 ||
+                    selectedJobTypes.length > 0 ||
+                    selectedLocationTypes.length > 0 ||
+                    selectedSalary ||
+                    dateFilter !== "any";
+
+                  return (
+                    <Badge
+                      variant="secondary"
+                      className="bg-primary text-white font-semibold px-2 py-1 hover:bg-primary/90 transition-colors"
+                    >
+                      {jobsLoading
+                        ? "Loading..."
+                        : !hasActiveFilters
+                        ? "All jobs"
+                        : `${totalJobs > 0 ? totalJobs.toLocaleString() : jobs.length.toLocaleString()} jobs`}
+                    </Badge>
+                  );
+                })()}
                 {/* <span className="text-sm text-muted-foreground">
                   New to you
                 </span>
