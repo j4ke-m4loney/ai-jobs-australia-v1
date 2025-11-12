@@ -99,7 +99,7 @@ export const NewsletterEmail = ({
           <Heading style={h1}>Latest AI Jobs in Australia 🚀</Heading>
 
           {/* Greeting */}
-          <Text style={text}>Hi there,</Text>
+          <Text style={text}>Hi {recipientName},</Text>
 
           <Text style={text}>
             Here are the latest AI job opportunities posted this week in
@@ -301,13 +301,6 @@ const companyName = {
   margin: "0",
   display: "inline",
   paddingLeft: "8px",
-};
-
-const postedTime = {
-  fontSize: "14px",
-  color: "#999",
-  margin: "0",
-  float: "right" as const,
 };
 
 const jobTitle = {

@@ -22,23 +22,6 @@ export interface NewsletterJob {
   } | null;
 }
 
-// Raw job data from Supabase (before transformation)
-interface RawJobData {
-  id: string;
-  title: string;
-  location: string;
-  location_type: string;
-  salary_min: number | null;
-  salary_max: number | null;
-  show_salary: boolean;
-  category: string;
-  created_at: string;
-  companies: {
-    name: string;
-    logo_url: string | null;
-  } | null;
-}
-
 export interface JobsByCategory {
   [category: string]: NewsletterJob[];
 }

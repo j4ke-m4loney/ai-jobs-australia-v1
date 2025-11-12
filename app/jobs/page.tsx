@@ -801,7 +801,7 @@ function JobsContent() {
     sortBy,
     currentPage,
     JOBS_PER_PAGE,
-    // selectedJob removed - it's only used for checking, not as a filter
+    selectedJob,
     user,
     fetchSuggestions,
   ]);
@@ -829,7 +829,7 @@ function JobsContent() {
     if (jobs.length > 0 && !selectedJob) {
       setSelectedJob(jobs[0]);
     }
-  }, [jobs]); // Only depends on jobs, not selectedJob to prevent re-renders on selection
+  }, [jobs, selectedJob]);
 
   // Consolidated initialization and authentication effect
   useEffect(() => {
@@ -1002,7 +1002,7 @@ function JobsContent() {
         setSelectedJob(job);
       }
     }
-  }, [jobs]); // Only depends on jobs loading, not searchParams
+  }, [jobs, selectedJob]);
 
   const handleApply = () => {
     if (!user) {

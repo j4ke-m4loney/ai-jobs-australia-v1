@@ -55,12 +55,13 @@ const applicationMethods = [
   { value: "indeed", label: "AI Jobs Australia applications", icon: Settings },
 ];
 
-const hiringTimelines = [
-  { value: "immediately", label: "Immediately" },
-  { value: "within-1-week", label: "Within 1 week" },
-  { value: "within-1-month", label: "Within 1 month" },
-  { value: "flexible", label: "Flexible" },
-];
+// Commented out - can be restored when hiring timeline feature is re-enabled
+// const hiringTimelines = [
+//   { value: "immediately", label: "Immediately" },
+//   { value: "within-1-week", label: "Within 1 week" },
+//   { value: "within-1-month", label: "Within 1 month" },
+//   { value: "flexible", label: "Flexible" },
+// ];
 
 export default function ApplicationSettingsStep({
   formData,

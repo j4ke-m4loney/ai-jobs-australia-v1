@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { StateSelector } from "@/components/ui/state-selector";
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card"; // Commented out - only used in commented section
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
@@ -106,12 +106,13 @@ const HomePage = () => {
     router.push(`/jobs?${params.toString()}`);
   };
 
-  const categories = [
-    { name: "Machine Learning", count: 45, icon: TrendingUp },
-    { name: "Data Science", count: 32, icon: Users },
-    { name: "AI Research", count: 18, icon: Star },
-    { name: "Computer Vision", count: 24, icon: Building },
-  ];
+  // Commented out - only used in commented "Browse by Category" section
+  // const categories = [
+  //   { name: "Machine Learning", count: 45, icon: TrendingUp },
+  //   { name: "Data Science", count: 32, icon: Users },
+  //   { name: "AI Research", count: 18, icon: Star },
+  //   { name: "Computer Vision", count: 24, icon: Building },
+  // ];
 
   const howItWorksSteps = [
     {
