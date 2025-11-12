@@ -13,10 +13,7 @@ import HomepageSocialProof from "@/components/HomepageSocialProof";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   Search,
-  Building,
-  TrendingUp,
   Users,
-  Star,
   CheckCircle,
   Zap,
 } from "lucide-react";
