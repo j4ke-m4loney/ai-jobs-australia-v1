@@ -40,16 +40,16 @@ export default function HomepageSocialProof() {
   ];
 
   return (
-    <div className="flex items-center justify-center gap-4 py-4">
+    <div className="flex items-center justify-center gap-2 md:gap-4 py-2 md:py-4">
       {/* Overlapping Avatars */}
       <div
-        className="flex -space-x-3 select-none"
+        className="flex -space-x-2 md:-space-x-3 select-none"
         onContextMenu={handleContextMenu}
       >
         {avatars.map((avatar, index) => (
           <Avatar
             key={index}
-            className="w-10 h-10 border-1 border-background ring-2 ring-background"
+            className="w-8 h-8 md:w-10 md:h-10 border-1 border-background ring-2 ring-background"
           >
             <AvatarImage
               src={avatar.src}
@@ -70,11 +70,11 @@ export default function HomepageSocialProof() {
           {[...Array(5)].map((_, index) => (
             <Star
               key={index}
-              className="w-3 h-3 fill-yellow-400 text-yellow-400"
+              className="w-2.5 h-2.5 md:w-3 md:h-3 fill-yellow-400 text-yellow-400"
             />
           ))}
         </div>
-        <p className="text-sm text-foreground font-medium">
+        <p className="text-xs md:text-sm text-foreground font-medium">
           Loved by 500+ AI job seekers
         </p>
       </div>
