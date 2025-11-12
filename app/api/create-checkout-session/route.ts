@@ -4,14 +4,14 @@ import { stripe, PRICING_CONFIG, isValidPricingTier, PricingTier } from '@/lib/s
 import { createClient } from '@supabase/supabase-js';
 import { getSiteUrl } from '@/lib/utils/get-site-url';
 
-// Server-side Supabase client with service role for database operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: NextRequest) {
   try {
+    // Create Supabase client inside route handler to avoid build-time initialization
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const {
       pricingTier,
       jobFormData,
@@ -156,6 +156,12 @@ async function createSubscriptionCheckout(
   // a Stripe Product and Price for the annual plan
 
   try {
+    // Create Supabase client inside function to avoid build-time initialization
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Create or retrieve Stripe customer
     let customer;
     const customers = await stripe.customers.list({

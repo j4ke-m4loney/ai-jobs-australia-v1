@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Server-side Supabase client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Helper function to create Supabase admin client (avoids build-time initialization)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 /**
  * Unsubscribe a user from the newsletter
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
     console.log(`[Newsletter Unsubscribe] Processing unsubscribe for token: ${token}`);
 
     // First, try to find in test users table (MVP)
-    const { data: testUser, error: testUserError } = await supabaseAdmin
+    const { data: testUser, error: testUserError } = await getSupabaseAdmin()
       .from('newsletter_test_users')
       .select('id, email')
       .eq('id', token)
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     if (testUser && !testUserError) {
       // Update test user to inactive
-      const { error: updateError } = await supabaseAdmin
+      const { error: updateError } = await getSupabaseAdmin()
         .from('newsletter_test_users')
         .update({ active: false })
         .eq('id', token);
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If not a test user, try to find in profiles table
-    const { data: profile, error: profileError } = await supabaseAdmin
+    const { data: profile, error: profileError } = await getSupabaseAdmin()
       .from('profiles')
       .select('user_id, email')
       .eq('newsletter_unsubscribe_token', token)
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update profile to unsubscribe
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await getSupabaseAdmin()
       .from('profiles')
       .update({ newsletter_subscribed: false })
       .eq('newsletter_unsubscribe_token', token);

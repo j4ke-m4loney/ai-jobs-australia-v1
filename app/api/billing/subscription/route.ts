@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { stripe } from '@/lib/stripe';
 
-// Server-side Supabase client with service role for database operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function GET(request: NextRequest) {
   try {
+    // Create Supabase client inside route handler to avoid build-time initialization
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -86,6 +86,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Create Supabase client inside route handler to avoid build-time initialization
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const { userId, planType } = await request.json();
 
     if (!userId || !planType) {
@@ -127,6 +133,12 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Create Supabase client inside route handler to avoid build-time initialization
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const { userId } = await request.json();
 
     if (!userId) {

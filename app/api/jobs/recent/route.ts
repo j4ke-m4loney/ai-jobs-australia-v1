@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Server-side Supabase client with service role for database operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function GET(request: NextRequest) {
   try {
+    // Create Supabase client inside route handler to avoid build-time initialization
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '9');
 

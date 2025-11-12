@@ -1,10 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Server-side Supabase client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Helper function to create Supabase admin client (avoids build-time initialization)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export interface NewsletterJob {
   id: string;
@@ -45,7 +47,7 @@ export class ContentGenerator {
       const dateThreshold = new Date();
       dateThreshold.setDate(dateThreshold.getDate() - daysAgo);
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from('jobs')
         .select(`
           id,

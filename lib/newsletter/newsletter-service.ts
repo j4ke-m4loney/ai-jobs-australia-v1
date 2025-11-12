@@ -3,11 +3,13 @@ import { contentGenerator } from "./content-generator";
 import { resendService } from "../email/resend-service";
 import { NewsletterEmail } from "../../emails/newsletter-template";
 
-// Server-side Supabase client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Helper function to create Supabase admin client (avoids build-time initialization)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 interface TestUser {
   id: string;
@@ -30,7 +32,7 @@ export class NewsletterService {
    */
   async getTestUsers(): Promise<TestUser[]> {
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from("newsletter_test_users")
         .select("id, email, first_name, active")
         .eq("active", true);
@@ -52,7 +54,7 @@ export class NewsletterService {
    */
   async getSubscribedUsers(): Promise<Profile[]> {
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from("profiles")
         .select(
           "user_id, email, first_name, newsletter_subscribed, newsletter_unsubscribe_token"
@@ -168,7 +170,7 @@ export class NewsletterService {
       );
 
       // Log campaign to database
-      const { data: campaign, error: campaignError } = await supabaseAdmin
+      const { data: campaign, error: campaignError } = await getSupabaseAdmin()
         .from("newsletter_campaigns")
         .insert({
           name: `Test Newsletter - ${new Date().toISOString().split("T")[0]}`,
@@ -292,7 +294,7 @@ export class NewsletterService {
       );
 
       // Log campaign to database
-      const { data: campaign, error: campaignError } = await supabaseAdmin
+      const { data: campaign, error: campaignError } = await getSupabaseAdmin()
         .from("newsletter_campaigns")
         .insert({
           name: `Weekly Newsletter - ${new Date().toISOString().split("T")[0]}`,

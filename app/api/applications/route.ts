@@ -3,11 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 import { emailService } from '@/lib/email/postmark-service';
 import { getSiteUrl } from '@/lib/utils/get-site-url';
 
-// Server-side Supabase client with service role for database operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Helper function to create Supabase admin client (avoids build-time initialization)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // Volume-based batching configuration
 const BATCH_THRESHOLD = 5; // Send batch email after 5 applications
@@ -29,7 +31,7 @@ interface EmailBatchingParams {
 async function processOverdueBatches(): Promise<void> {
   try {
     // Find all unprocessed queue entries that are overdue (scheduled_for <= now)
-    const { data: overdueQueues } = await supabaseAdmin
+    const { data: overdueQueues } = await getSupabaseAdmin()
       .from('email_notification_queue')
       .select(`
         id,
@@ -52,7 +54,7 @@ async function processOverdueBatches(): Promise<void> {
 
     // Fetch job titles separately to avoid TypeScript foreign key issues
     const jobIds = [...new Set(overdueQueues.map(q => q.job_id))];
-    const { data: jobs } = await supabaseAdmin
+    const { data: jobs } = await getSupabaseAdmin()
       .from('jobs')
       .select('id, title')
       .in('id', jobIds);
@@ -67,14 +69,14 @@ async function processOverdueBatches(): Promise<void> {
     for (const queue of overdueQueues) {
       try {
         // Get employer details
-        const { data: employerUserData } = await supabaseAdmin
+        const { data: employerUserData } = await getSupabaseAdmin()
           .auth.admin.getUserById(queue.employer_id);
 
         const employerEmail = employerUserData?.user?.email;
         if (!employerEmail) continue;
 
         // Get employer profile for name
-        const { data: employerProfile } = await supabaseAdmin
+        const { data: employerProfile } = await getSupabaseAdmin()
           .from('profiles')
           .select('first_name, last_name')
           .eq('user_id', queue.employer_id)
@@ -103,13 +105,13 @@ async function processOverdueBatches(): Promise<void> {
 
         if (emailSent) {
           // Mark queue as processed
-          await supabaseAdmin
+          await getSupabaseAdmin()
             .from('email_notification_queue')
             .update({ processed: true })
             .eq('id', queue.id);
 
           // Update email tracking
-          await supabaseAdmin
+          await getSupabaseAdmin()
             .from('job_email_tracking')
             .upsert({
               job_id: queue.job_id,
@@ -145,7 +147,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
   } = params;
 
   // Check current email tracking for this job
-  const { data: emailTracking } = await supabaseAdmin
+  const { data: emailTracking } = await getSupabaseAdmin()
     .from('job_email_tracking')
     .select('*')
     .eq('job_id', jobId)
@@ -173,7 +175,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
     });
 
     // Update tracking table
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('job_email_tracking')
       .upsert({
         job_id: jobId,
@@ -189,7 +191,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
   const currentCount = emailTracking.application_count_since_last + 1;
 
   // Check if we have an existing unprocessed queue entry for this job
-  const { data: existingQueue } = await supabaseAdmin
+  const { data: existingQueue } = await getSupabaseAdmin()
     .from('email_notification_queue')
     .select('*')
     .eq('job_id', jobId)
@@ -201,7 +203,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
     const updatedApplicationIds = [...existingQueue.application_ids, applicationId];
     const updatedApplicantNames = [...existingQueue.applicant_names, applicantName];
 
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('email_notification_queue')
       .update({
         application_ids: updatedApplicationIds,
@@ -225,7 +227,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
     }
   } else {
     // Create new queue entry
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('email_notification_queue')
       .insert({
         job_id: jobId,
@@ -239,7 +241,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
   }
 
   // Update application count
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from('job_email_tracking')
     .update({
       application_count_since_last: currentCount
@@ -282,13 +284,13 @@ async function sendBatchEmail(params: {
   });
 
   // Mark queue as processed
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from('email_notification_queue')
     .update({ processed: true })
     .eq('id', queueId);
 
   // Update email tracking
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from('job_email_tracking')
     .update({
       last_email_sent: new Date().toISOString(),
@@ -323,7 +325,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get job and employer details for email notification
-    const { data: jobData, error: jobError } = await supabaseAdmin
+    const { data: jobData, error: jobError } = await getSupabaseAdmin()
       .from('jobs')
       .select(`
         id,
@@ -343,7 +345,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get applicant details from profiles and auth.users
-    const { data: applicantData, error: applicantError } = await supabaseAdmin
+    const { data: applicantData, error: applicantError } = await getSupabaseAdmin()
       .from('profiles')
       .select('first_name, last_name')
       .eq('user_id', applicantId)
@@ -360,7 +362,7 @@ export async function POST(request: NextRequest) {
     // Note: We no longer fetch applicant email for privacy reasons
 
     // Check if application already exists
-    const { data: existingApplication } = await supabaseAdmin
+    const { data: existingApplication } = await getSupabaseAdmin()
       .from('job_applications')
       .select('id')
       .eq('job_id', jobId)
@@ -375,7 +377,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the application
-    const { data: application, error: applicationError } = await supabaseAdmin
+    const { data: application, error: applicationError } = await getSupabaseAdmin()
       .from('job_applications')
       .insert({
         job_id: jobId,
@@ -398,13 +400,13 @@ export async function POST(request: NextRequest) {
     console.log('✅ Application created successfully:', application.id);
 
     // Get employer's email from auth.users table
-    const { data: employerUserData, error: employerUserError } = await supabaseAdmin
+    const { data: employerUserData, error: employerUserError } = await getSupabaseAdmin()
       .auth.admin.getUserById(jobData.employer_id);
 
     const employerEmail = employerUserData?.user?.email;
 
     // Check employer's notification preferences
-    const { data: employerPrefs, error: prefsError } = await supabaseAdmin
+    const { data: employerPrefs, error: prefsError } = await getSupabaseAdmin()
       .from('user_notification_preferences')
       .select('email_applications')
       .eq('user_id', jobData.employer_id)
@@ -431,7 +433,7 @@ export async function POST(request: NextRequest) {
     if (shouldSendEmail && !employerUserError && employerEmail) {
       try {
         // Get employer profile information
-        const { data: employerProfile } = await supabaseAdmin
+        const { data: employerProfile } = await getSupabaseAdmin()
           .from('profiles')
           .select('first_name, last_name')
           .eq('user_id', jobData.employer_id)
@@ -506,7 +508,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let query = supabaseAdmin.from('job_applications').select(`
+    let query = getSupabaseAdmin().from('job_applications').select(`
       id,
       status,
       created_at,

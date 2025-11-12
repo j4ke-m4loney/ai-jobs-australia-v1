@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Server-side Supabase client with service role for database operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Helper function to create Supabase admin client (avoids build-time initialization)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's notification preferences
-    const { data: preferences, error } = await supabaseAdmin
+    const { data: preferences, error } = await getSupabaseAdmin()
       .from('user_notification_preferences')
       .select('*')
       .eq('user_id', userId)
@@ -83,7 +85,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Upsert user notification preferences
-    const { data: preferences, error } = await supabaseAdmin
+    const { data: preferences, error } = await getSupabaseAdmin()
       .from('user_notification_preferences')
       .upsert({
         user_id: userId,

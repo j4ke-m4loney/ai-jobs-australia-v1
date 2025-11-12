@@ -25,11 +25,13 @@ interface PaymentSession {
   job_form_data: JobFormData2;
 }
 
-// Server-side Supabase client with service role for database operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Helper function to create Supabase admin client (avoids build-time initialization)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -97,7 +99,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   console.log('Processing checkout session completed:', session.id);
 
   // Get payment session from database
-  const { data: paymentSession, error: sessionError } = await supabaseAdmin
+  const { data: paymentSession, error: sessionError } = await getSupabaseAdmin()
     .from('payment_sessions')
     .select('*')
     .eq('stripe_session_id', session.id)
@@ -109,7 +111,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   // Update payment session status
-  const { error: updateError } = await supabaseAdmin
+  const { error: updateError } = await getSupabaseAdmin()
     .from('payment_sessions')
     .update({ status: 'completed' })
     .eq('id', paymentSession.id);
@@ -120,7 +122,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   // Create payment record
-  const { data: payment, error: paymentError } = await supabaseAdmin
+  const { data: payment, error: paymentError } = await getSupabaseAdmin()
     .from('payments')
     .insert({
       user_id: paymentSession.user_id,
@@ -157,7 +159,7 @@ async function handleCheckoutSessionExpired(session: Stripe.Checkout.Session) {
   console.log('Processing checkout session expired:', session.id);
 
   // Update payment session status
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('payment_sessions')
     .update({ status: 'expired' })
     .eq('stripe_session_id', session.id);
@@ -171,7 +173,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
   console.log('Processing payment intent succeeded:', paymentIntent.id);
 
   // Update payment record
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('payments')
     .update({
       status: 'succeeded',
@@ -190,7 +192,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   console.log('Processing payment intent failed:', paymentIntent.id);
 
   // Update payment record
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('payments')
     .update({ status: 'failed' })
     .eq('stripe_payment_intent_id', paymentIntent.id);
@@ -207,7 +209,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
   // Handle company creation/linking first
   let companyId = null;
   if (jobFormData.companyName && jobFormData.companyName.trim()) {
-    const { data: existingCompany } = await supabaseAdmin
+    const { data: existingCompany } = await getSupabaseAdmin()
       .from('companies')
       .select('id')
       .eq('name', jobFormData.companyName.trim())
@@ -216,7 +218,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     if (existingCompany) {
       companyId = existingCompany.id;
     } else {
-      const { data: companyData, error: companyError } = await supabaseAdmin
+      const { data: companyData, error: companyError } = await getSupabaseAdmin()
         .from('companies')
         .insert({
           name: jobFormData.companyName.trim(),
@@ -262,7 +264,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
   };
 
   // Insert the job into the database
-  const { data: job, error: jobError } = await supabaseAdmin
+  const { data: job, error: jobError } = await getSupabaseAdmin()
     .from('jobs')
     .insert(jobRecord)
     .select()
@@ -282,7 +284,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
 
   try {
     // Get employer's email from auth.users table (where emails are actually stored)
-    const { data: userData, error: userError } = await supabaseAdmin
+    const { data: userData, error: userError } = await getSupabaseAdmin()
       .auth.admin.getUserById(payment.user_id);
 
     console.log('📧 User data lookup:', {
@@ -292,7 +294,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     });
 
     // Get employer's profile for the name
-    const { data: employerProfile, error: profileError } = await supabaseAdmin
+    const { data: employerProfile, error: profileError } = await getSupabaseAdmin()
       .from('profiles')
       .select('first_name, last_name')
       .eq('id', payment.user_id)
@@ -360,7 +362,7 @@ async function handleAnnualSubscription(session: Stripe.Checkout.Session, paymen
   const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
 
   // Create or update subscription record
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .upsert({
       user_id: paymentSession.user_id,
@@ -398,7 +400,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   console.log('Processing subscription updated:', subscription.id);
 
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .update({
       status: subscription.status === 'active' ? 'active' as const : subscription.status === 'canceled' ? 'cancelled' as const : subscription.status === 'past_due' ? 'past_due' as const : 'trialing' as const,
@@ -417,7 +419,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log('Processing subscription deleted:', subscription.id);
 
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .update({ status: 'cancelled' })
     .eq('stripe_subscription_id', subscription.id);

@@ -1,13 +1,15 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 const BASE_URL = 'https://www.aijobsaustralia.com.au'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Create Supabase client inside function to avoid build-time initialization
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   // Fetch all approved jobs
   const { data: jobs, error: jobsError } = await supabase
     .from('jobs')

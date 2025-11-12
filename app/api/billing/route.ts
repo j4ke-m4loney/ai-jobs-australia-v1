@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { BillingUpdateData, PaymentMethodUpdateData } from '@/types/billing';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-// Use service key for admin operations
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Helper function to create Supabase admin client (avoids build-time initialization)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // GET /api/billing - Get user's subscription and payment methods
 export async function GET(request: NextRequest) {
@@ -19,14 +21,14 @@ export async function GET(request: NextRequest) {
 
     // Get user from JWT token
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token);
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
     // Get user's subscription
-    const { data: subscription, error: subError } = await supabase
+    const { data: subscription, error: subError } = await getSupabase()
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's payment methods
-    const { data: paymentMethods, error: pmError } = await supabase
+    const { data: paymentMethods, error: pmError } = await getSupabase()
       .from('payment_methods')
       .select('*')
       .eq('user_id', user.id)
@@ -70,7 +72,7 @@ export async function PUT(request: NextRequest) {
 
     // Get user from JWT token
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token);
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
@@ -80,7 +82,7 @@ export async function PUT(request: NextRequest) {
       // Update subscription
       const updateData: BillingUpdateData = data;
       
-      const { data: updatedSubscription, error } = await supabase
+      const { data: updatedSubscription, error } = await getSupabase()
         .from('subscriptions')
         .upsert({
           user_id: user.id,
@@ -105,7 +107,7 @@ export async function PUT(request: NextRequest) {
       
       if (updateData.id) {
         // Update existing payment method
-        const { data: updatedPaymentMethod, error } = await supabase
+        const { data: updatedPaymentMethod, error } = await getSupabase()
           .from('payment_methods')
           .update({
             ...updateData,
@@ -124,7 +126,7 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ paymentMethod: updatedPaymentMethod });
       } else {
         // Create new payment method
-        const { data: newPaymentMethod, error } = await supabase
+        const { data: newPaymentMethod, error } = await getSupabase()
           .from('payment_methods')
           .insert({
             user_id: user.id,
@@ -163,7 +165,7 @@ export async function POST(request: NextRequest) {
 
     // Get user from JWT token
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token);
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
@@ -177,7 +179,7 @@ export async function POST(request: NextRequest) {
         enterprise: 29900,
       };
 
-      const { data: updatedSubscription, error } = await supabase
+      const { data: updatedSubscription, error } = await getSupabase()
         .from('subscriptions')
         .upsert({
           user_id: user.id,

@@ -10,11 +10,13 @@ interface PayConfig {
   payPeriod?: 'hourly' | 'weekly' | 'monthly' | 'yearly';
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-// Use anon key for now - we'll pass the user token in the request
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Helper function to create Supabase client (avoids build-time initialization)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     // Get user from JWT token
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await getSupabase().auth.getUser(token);
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Insert the job into the database
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('jobs')
       .insert(jobRecord)
       .select()
@@ -85,7 +87,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch jobs for the employer
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('jobs')
       .select(`
         *,
