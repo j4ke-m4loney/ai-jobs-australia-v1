@@ -1,23 +1,45 @@
 // Server-side Stripe client
 import StripeServer from 'stripe';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+// Lazy initialization to avoid build-time environment variable access
+let stripeInstance: StripeServer | null = null;
 
-if (!stripeSecretKey) {
-  console.error('❌ STRIPE_SECRET_KEY is not set in environment variables');
-  console.error('Available env vars:', Object.keys(process.env).filter(key => key.includes('STRIPE')));
-  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+function getStripe(): StripeServer {
+  if (stripeInstance) {
+    return stripeInstance;
+  }
+
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!stripeSecretKey) {
+    console.error('❌ STRIPE_SECRET_KEY is not set in environment variables');
+    console.error('Available env vars:', Object.keys(process.env).filter(key => key.includes('STRIPE')));
+    throw new Error('STRIPE_SECRET_KEY environment variable is required');
+  }
+
+  console.log('✅ Stripe secret key found:', stripeSecretKey.substring(0, 12) + '...');
+
+  stripeInstance = new StripeServer(
+    stripeSecretKey,
+    {
+      apiVersion: '2025-08-27.basil',
+      typescript: true,
+    }
+  );
+
+  return stripeInstance;
 }
 
-console.log('✅ Stripe secret key found:', stripeSecretKey.substring(0, 12) + '...');
-
-export const stripe = new StripeServer(
-  stripeSecretKey,
-  {
-    apiVersion: '2025-08-27.basil',
-    typescript: true,
+export const stripe = new Proxy({} as StripeServer, {
+  get: (target, prop) => {
+    const stripeClient = getStripe();
+    const value = stripeClient[prop as keyof StripeServer];
+    if (typeof value === 'function') {
+      return value.bind(stripeClient);
+    }
+    return value;
   }
-);
+});
 
 // Re-export client-safe items for server-side use
 export { PRICING_CONFIG, isValidPricingTier, getPricingInfo, formatPrice } from './stripe-client';
