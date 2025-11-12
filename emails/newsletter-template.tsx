@@ -101,11 +101,6 @@ export const NewsletterEmail = ({
           {/* Greeting */}
           <Text style={text}>Hi {recipientName},</Text>
 
-          <Text style={text}>
-            Here are the latest AI job opportunities posted this week in
-            Australia.
-          </Text>
-
           {/* Custom Intro Text */}
           {introText && <Text style={text}>{introText}</Text>}
 
