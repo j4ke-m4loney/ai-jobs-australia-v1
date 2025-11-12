@@ -111,20 +111,47 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    // For manual testing, we'll add a simple query param authentication
+    // Accept authentication via query param OR Vercel infrastructure
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get("secret");
+    const cronSecret = process.env.CRON_SECRET;
 
-    if (secret !== process.env.CRON_SECRET) {
+    if (!cronSecret) {
+      console.error("[Newsletter Send GET] CRON_SECRET not configured");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    // Check authentication via multiple methods (same as POST)
+    const isValidAuth =
+      secret === cronSecret ||
+      (process.env.VERCEL_ENV === 'production' && request.headers.get('user-agent')?.includes('vercel'));
+
+    if (!isValidAuth) {
+      console.error("[Newsletter Send GET] Unauthorized request", {
+        hasSecret: !!secret,
+        userAgent: request.headers.get('user-agent'),
+      });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("[Newsletter Send] Manual trigger via GET...");
+    // Detect if this is from Vercel cron (send to all) or manual testing (send to test users)
+    const isVercelCron = request.headers.get('user-agent')?.includes('vercel');
+
+    if (isVercelCron) {
+      console.log("[Newsletter Send] Triggered by Vercel cron via GET...");
+    } else {
+      console.log("[Newsletter Send] Manual trigger via GET...");
+    }
 
     // ========================================
     // Newsletter intro/outro text
     // ========================================
-    const introText = "Here are this week's latest AI jobs in Australia...";
+    const introText = isVercelCron
+      ? "Here are the latest AI job opportunities posted this week in Australia."
+      : "Here are this week's latest AI jobs in Australia...";
     const outroText = "Good luck with your applications! - Jake";
     // ========================================
 
@@ -137,10 +164,10 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const result = await newsletterService.sendToTestUsers({
-      introText,
-      outroText,
-    });
+    // If triggered by Vercel cron, send to all users; otherwise send to test users
+    const result = isVercelCron
+      ? await newsletterService.sendToAllUsers({ introText, outroText })
+      : await newsletterService.sendToTestUsers({ introText, outroText });
 
     return NextResponse.json({
       success: result.success,
