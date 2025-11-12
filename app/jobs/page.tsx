@@ -240,6 +240,7 @@ function JobsContent() {
   const [dateFilter, setDateFilter] = useState("any");
   const [showFilters, setShowFilters] = useState(false);
   const [showOptions, setShowOptions] = useState(true);
+  const [activePill, setActivePill] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("relevance");
   const [dateSort, setDateSort] = useState("newest"); // newest or oldest
 
@@ -973,6 +974,22 @@ function JobsContent() {
     }
   }, [currentPage]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!activePill) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Check if click is outside all filter dropdowns
+      if (!target.closest('.relative')) {
+        setActivePill(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [activePill]);
+
   // Application status check effect
   useEffect(() => {
     if (selectedJob && user) {
@@ -1196,6 +1213,7 @@ function JobsContent() {
             {showOptions && (
               <div className="flex justify-end mt-2">
                 <button
+                  type="button"
                   onClick={() => {
                     setShowOptions(false);
                     setShowFilters(true);
@@ -1210,86 +1228,272 @@ function JobsContent() {
 
             {/* Filter Pills */}
             {showFilters && (
-              <div className="flex flex-wrap items-center gap-2 mt-2 animate-fade-in">
-                <select
-                  value={
-                    selectedJobTypes.length > 0 ? selectedJobTypes[0] : "all"
-                  }
-                  onChange={(e) => {
-                    if (e.target.value === "all") {
-                      setSelectedJobTypes([]);
-                    } else {
-                      setSelectedJobTypes([e.target.value]);
-                    }
-                  }}
-                  className="h-10 pl-3 pr-2 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center] min-w-0 flex-shrink-0"
-                >
-                  <option value="all" className="text-black">
-                    Any job type
-                  </option>
-                  <option value="full-time" className="text-black">
-                    Full time
-                  </option>
-                  <option value="part-time" className="text-black">
-                    Part time
-                  </option>
-                  <option value="contract" className="text-black">
-                    Contract
-                  </option>
-                  <option value="internship" className="text-black">
-                    Casual/Temporary
-                  </option>
-                  <option value="permanent" className="text-black">
-                    Permanent
-                  </option>
-                </select>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-2 animate-fade-in">
+                {/* Job Type Filter */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActivePill(activePill === 'jobType' ? null : 'jobType')}
+                    className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
+                      activePill === 'jobType'
+                        ? 'bg-white text-gray-900 border-gray-200'
+                        : 'bg-white/10 text-white border-white/20 backdrop-blur-sm'
+                    } ${activePill && activePill !== 'jobType' ? 'opacity-60' : 'opacity-100'}`}
+                  >
+                    {selectedJobTypes.length > 0
+                      ? selectedJobTypes[0] === 'full-time'
+                        ? 'Full time'
+                        : selectedJobTypes[0] === 'part-time'
+                        ? 'Part time'
+                        : selectedJobTypes[0] === 'contract'
+                        ? 'Contract'
+                        : selectedJobTypes[0] === 'internship'
+                        ? 'Casual/Temporary'
+                        : 'Any job type'
+                      : 'Any job type'}
+                    <svg
+                      className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 md:w-3 md:h-3"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                    >
+                      <path
+                        d="M3 4.5L6 7.5L9 4.5"
+                        stroke={activePill === 'jobType' ? '#111827' : 'white'}
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  {activePill === 'jobType' && (
+                    <div className="absolute top-full left-0 mt-1 min-w-full bg-white border border-gray-200 rounded-sm overflow-hidden z-50 shadow-lg">
+                      {selectedJobTypes.length > 0 && (
+                        <button
+                          onClick={() => {
+                            setSelectedJobTypes([]);
+                            setActivePill(null);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
+                        >
+                          Any job type
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedJobTypes(['full-time']);
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
+                      >
+                        Full time
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedJobTypes(['part-time']);
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
+                      >
+                        Part time
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedJobTypes(['contract']);
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
+                      >
+                        Contract
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedJobTypes(['internship']);
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
+                      >
+                        Casual/Temporary
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                <select
-                  value={selectedSalary}
-                  onChange={(e) => setSelectedSalary(e.target.value)}
-                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center] min-w-0 flex-shrink-0"
-                >
-                  <option value="" className="text-black">
-                    Any Salary
-                  </option>
-                  <option value="30000" className="text-black">
-                    $30,000+
-                  </option>
-                  <option value="50000" className="text-black">
-                    $50,000+
-                  </option>
-                  <option value="70000" className="text-black">
-                    $70,000+
-                  </option>
-                  <option value="90000" className="text-black">
-                    $90,000+
-                  </option>
-                  <option value="110000" className="text-black">
-                    $110,000+
-                  </option>
-                  <option value="140000" className="text-black">
-                    $140,000+
-                  </option>
-                </select>
+                {/* Salary Filter */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActivePill(activePill === 'salary' ? null : 'salary')}
+                    className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
+                      activePill === 'salary'
+                        ? 'bg-white text-gray-900 border-gray-200'
+                        : 'bg-white/10 text-white border-white/20 backdrop-blur-sm'
+                    } ${activePill && activePill !== 'salary' ? 'opacity-60' : 'opacity-100'}`}
+                  >
+                    {selectedSalary
+                      ? `$${parseInt(selectedSalary).toLocaleString()}+`
+                      : 'Any Salary'}
+                    <svg
+                      className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 md:w-3 md:h-3"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                    >
+                      <path
+                        d="M3 4.5L6 7.5L9 4.5"
+                        stroke={activePill === 'salary' ? '#111827' : 'white'}
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  {activePill === 'salary' && (
+                    <div className="absolute top-full left-0 mt-1 min-w-full bg-white border border-gray-200 rounded-sm overflow-hidden z-50 shadow-lg">
+                      {selectedSalary && (
+                        <button
+                          onClick={() => {
+                            setSelectedSalary('');
+                            setActivePill(null);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                        >
+                          Any Salary
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedSalary('30000');
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        $30,000+
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedSalary('50000');
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        $50,000+
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedSalary('70000');
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        $70,000+
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedSalary('90000');
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        $90,000+
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedSalary('110000');
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        $110,000+
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedSalary('140000');
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        $140,000+
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                <select
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                  className="h-10 pl-3 pr-8 py-2 text-sm border border-white/20 rounded-sm bg-white/10 text-white backdrop-blur-sm appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgNC41TDYgNy41TDkgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=')] bg-no-repeat bg-[length:12px_12px] bg-[calc(100%-8px)_center] min-w-0 flex-shrink-0"
-                >
-                  <option value="any" className="text-black">
-                    Listed any time
-                  </option>
-                  <option value="24h" className="text-black">
-                    Last 24 hours
-                  </option>
-                  <option value="7d" className="text-black">
-                    Last 7 days
-                  </option>
-                  <option value="30d" className="text-black">
-                    Last 30 days
-                  </option>
-                </select>
+                {/* Date Filter */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActivePill(activePill === 'date' ? null : 'date')}
+                    className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
+                      activePill === 'date'
+                        ? 'bg-white text-gray-900 border-gray-200'
+                        : 'bg-white/10 text-white border-white/20 backdrop-blur-sm'
+                    } ${activePill && activePill !== 'date' ? 'opacity-60' : 'opacity-100'}`}
+                  >
+                    {dateFilter === 'any'
+                      ? 'Listed any time'
+                      : dateFilter === '24h'
+                      ? 'Last 24 hours'
+                      : dateFilter === '7d'
+                      ? 'Last 7 days'
+                      : dateFilter === '30d'
+                      ? 'Last 30 days'
+                      : 'Listed any time'}
+                    <svg
+                      className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 md:w-3 md:h-3"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                    >
+                      <path
+                        d="M3 4.5L6 7.5L9 4.5"
+                        stroke={activePill === 'date' ? '#111827' : 'white'}
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  {activePill === 'date' && (
+                    <div className="absolute top-full left-0 mt-1 min-w-full bg-white border border-gray-200 rounded-sm overflow-hidden z-50 shadow-lg">
+                      {dateFilter !== 'any' && (
+                        <button
+                          onClick={() => {
+                            setDateFilter('any');
+                            setActivePill(null);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                        >
+                          Listed any time
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setDateFilter('24h');
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        Last 24 hours
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDateFilter('7d');
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        Last 7 days
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDateFilter('30d');
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                      >
+                        Last 30 days
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {/* Reset All Filters Link */}
                 {(searchTerm ||
