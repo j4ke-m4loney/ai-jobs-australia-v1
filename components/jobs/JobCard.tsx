@@ -98,7 +98,7 @@ export const JobCard: React.FC<JobCardProps> = ({
       } ${job.is_featured ? "border-l-4 border-l-primary" : ""}`}
       onClick={() => onClick(job)}
     >
-      <CardContent className="p-5">
+      <CardContent className="px-3 py-5 md:px-5">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             {job.is_featured && (
@@ -146,9 +146,9 @@ export const JobCard: React.FC<JobCardProps> = ({
                     .filter((highlight) => highlight.trim().length > 0)
                     .slice(0, 3)
                     .map((highlight, index) => (
-                      <li key={index} className="flex items-start gap-2">
+                      <li key={index} className="flex items-start gap-1.5 md:gap-2">
                         <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 shrink-0"></span>
-                        <span className="leading-relaxed">{highlight}</span>
+                        <span className="leading-relaxed flex-1 break-words">{highlight}</span>
                       </li>
                     ))}
                 </ul>
@@ -160,16 +160,16 @@ export const JobCard: React.FC<JobCardProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-col items-center gap-3 ml-4">
+          <div className="flex flex-col items-center gap-3 ml-1.5 md:ml-3">
             {/* Company Logo - only show if exists */}
             {job.companies?.logo_url && (
-              <div className="w-12 h-12">
+              <div className="hidden md:block w-10 h-10 md:w-12 md:h-12">
                 <Image
                   src={job.companies.logo_url}
                   alt={job.companies.name || "Company logo"}
                   width={48}
                   height={48}
-                  className="w-12 h-12 rounded object-contain"
+                  className="w-10 h-10 md:w-12 md:h-12 rounded object-contain"
                 />
               </div>
             )}
@@ -177,14 +177,14 @@ export const JobCard: React.FC<JobCardProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="p-2"
+              className="p-1.5 md:p-2"
               onClick={(e) => {
                 e.stopPropagation();
                 onSaveClick(job.id);
               }}
             >
               <Heart
-                className={`w-5 h-5 ${
+                className={`w-4 h-4 md:w-5 md:h-5 ${
                   isJobSaved
                     ? "fill-red-500 text-red-500"
                     : "text-muted-foreground hover:text-red-400"
