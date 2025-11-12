@@ -9,8 +9,10 @@ import { newsletterService } from "@/lib/newsletter/newsletter-service";
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret
+    // Verify cron secret - accept via Authorization header OR query parameter
     const authHeader = request.headers.get("authorization");
+    const { searchParams } = new URL(request.url);
+    const secretParam = searchParams.get("secret");
     const cronSecret = process.env.CRON_SECRET;
 
     if (!cronSecret) {
@@ -21,8 +23,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      console.error("[Newsletter Send] Unauthorized request");
+    // Check authentication via multiple methods:
+    // 1. Authorization header (for curl/API requests)
+    // 2. Query parameter (for Vercel cron/manual triggers)
+    // 3. Vercel cron header (automatic from Vercel infrastructure)
+    const isValidAuth =
+      authHeader === `Bearer ${cronSecret}` ||
+      secretParam === cronSecret ||
+      (process.env.VERCEL_ENV === 'production' && request.headers.get('user-agent')?.includes('vercel'));
+
+    if (!isValidAuth) {
+      console.error("[Newsletter Send] Unauthorized request", {
+        hasAuthHeader: !!authHeader,
+        hasSecretParam: !!secretParam,
+        userAgent: request.headers.get('user-agent'),
+      });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
