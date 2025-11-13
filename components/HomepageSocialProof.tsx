@@ -75,7 +75,7 @@ export default function HomepageSocialProof() {
           ))}
         </div>
         <p className="text-xs md:text-sm text-foreground font-medium">
-          Loved by 500+ AI job seekers
+          Join 500+ job seekers getting weekly alerts
         </p>
       </div>
     </div>
