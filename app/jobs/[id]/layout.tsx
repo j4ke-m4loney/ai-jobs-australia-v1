@@ -7,12 +7,13 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   children: React.ReactNode;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
+    const { id } = await params;
     const { data: job } = await supabase
       .from("jobs")
       .select(`
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           website
         )
       `)
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("status", "approved")
       .single();
 
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       openGraph: {
         title: jobTitle,
         description: cleanDescription,
-        url: `https://www.aijobsaustralia.com.au/jobs/${params.id}`,
+        url: `https://www.aijobsaustralia.com.au/jobs/${id}`,
         siteName: "AI Jobs Australia",
         type: "article",
         locale: "en_AU",
