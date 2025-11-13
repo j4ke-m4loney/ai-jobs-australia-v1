@@ -40,10 +40,12 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@AIJobsAustralia",
+    creator: "@AIJobsAustralia",
     title: "AI Jobs Australia | #1 Home for AI Opportunities In Australia",
     description:
       "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
-    images: ["https://www.aijobsaustralia.com.au/og-image-temp.png"],
+    images: ["https://www.aijobsaustralia.com.au/twitter-card.png"],
   },
   icons: {
     icon: [

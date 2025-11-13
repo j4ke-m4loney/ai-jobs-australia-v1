@@ -46,7 +46,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       .substring(0, 160);
 
     // Use company logo if available, otherwise fall back to site OG image
-    const imageUrl = job.companies.logo_url || "https://www.aijobsaustralia.com.au/og-image-temp.png";
+    const ogImageUrl = job.companies.logo_url || "https://www.aijobsaustralia.com.au/og-image-temp.png";
+    const twitterImageUrl = job.companies.logo_url || "https://www.aijobsaustralia.com.au/twitter-card.png";
 
     return {
       title: `${jobTitle} | AI Jobs Australia`,
@@ -60,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         locale: "en_AU",
         images: [
           {
-            url: imageUrl,
+            url: ogImageUrl,
             width: 1200,
             height: 630,
             alt: `${jobTitle} - AI Jobs Australia`,
@@ -69,9 +70,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
       twitter: {
         card: "summary_large_image",
+        site: "@AIJobsAustralia",
+        creator: "@AIJobsAustralia",
         title: jobTitle,
         description: cleanDescription,
-        images: [imageUrl],
+        images: [twitterImageUrl],
       },
     };
   } catch (error) {
