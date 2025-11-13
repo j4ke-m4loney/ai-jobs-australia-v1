@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -290,11 +290,16 @@ const JobManagementPage = () => {
 
   useEffect(() => {
     if (user && jobId) {
-      fetchJobDetails();
-      // TODO: Re-enable when application management is ready
-      // fetchApplicationStats();
+      // Only fetch if we don't have the job loaded yet
+      // This prevents re-fetching and losing unsaved changes when component re-mounts
+      if (!job) {
+        fetchJobDetails();
+        // TODO: Re-enable when application management is ready
+        // fetchApplicationStats();
+      }
     }
-  }, [user, jobId, fetchJobDetails]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, jobId]);
 
   // TODO: Applications Stats - Implement when application management is ready
   // const fetchApplicationStats = async () => {
@@ -1729,4 +1734,20 @@ const JobManagementPage = () => {
   );
 };
 
-export default JobManagementPage;
+// Wrapper component with Suspense to prevent re-mounts on tab switch
+// Required for Next.js 15 when using useSearchParams()
+export default function JobManagementPageWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <EmployerLayout title="Job Management">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </EmployerLayout>
+      }
+    >
+      <JobManagementPage />
+    </Suspense>
+  );
+}
