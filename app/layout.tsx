@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     url: "https://www.aijobsaustralia.com.au",
     images: [
       {
-        url: "/og-image-temp.png",
+        url: "https://www.aijobsaustralia.com.au/og-image-temp.png",
         width: 512,
         height: 512,
         alt: "AI Jobs Australia - Find Your Dream AI Career",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     title: "AI Jobs Australia | #1 Home for AI Opportunities In Australia",
     description:
       "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
-    images: ["/og-image-temp.png"],
+    images: ["https://www.aijobsaustralia.com.au/og-image-temp.png"],
   },
   icons: {
     icon: [

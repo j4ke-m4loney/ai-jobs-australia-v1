@@ -250,6 +250,7 @@ const HomePage = () => {
                     src={company.logo}
                     alt={`${company.name} logo`}
                     fill
+                    loading="lazy"
                     className="object-contain"
                   />
                 </div>

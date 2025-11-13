@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       .substring(0, 160);
 
     // Use company logo if available, otherwise fall back to site OG image
-    const imageUrl = job.companies.logo_url || "/og-image-temp.png";
+    const imageUrl = job.companies.logo_url || "https://www.aijobsaustralia.com.au/og-image-temp.png";
 
     return {
       title: `${jobTitle} | AI Jobs Australia`,
