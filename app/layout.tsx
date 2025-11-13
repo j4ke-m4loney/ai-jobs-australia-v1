@@ -24,6 +24,26 @@ export const metadata: Metadata = {
     siteName: "AI Jobs Australia",
     type: "website",
     locale: "en_AU",
+    title: "AI Jobs Australia | #1 Home for AI Opportunities In Australia",
+    description:
+      "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
+    url: "https://www.aijobsaustralia.com.au",
+    images: [
+      {
+        url: "/og-image-temp.png",
+        width: 512,
+        height: 512,
+        alt: "AI Jobs Australia - Find Your Dream AI Career",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Jobs Australia | #1 Home for AI Opportunities In Australia",
+    description:
+      "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
+    images: ["/og-image-temp.png"],
   },
   icons: {
     icon: [
