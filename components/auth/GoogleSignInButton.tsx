@@ -20,7 +20,26 @@ export function GoogleSignInButton({
     try {
       setIsLoading(true);
 
-      console.log('🔵 GoogleSignInButton: Starting OAuth flow for user type:', userType);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔵 [BUTTON] Starting OAuth flow');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('👤 [BUTTON] User Type:', userType);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      // Store userType in BOTH sessionStorage AND cookie
+      // Cookie can be read by server-side callback route
+      try {
+        sessionStorage.setItem('oauth_user_type', userType);
+        console.log('💾 [BUTTON] Stored user_type in sessionStorage:', userType);
+
+        // Set cookie that expires in 10 minutes (enough for OAuth flow)
+        const expires = new Date();
+        expires.setMinutes(expires.getMinutes() + 10);
+        document.cookie = `oauth_user_type=${userType}; path=/; expires=${expires.toUTCString()}; SameSite=Lax`;
+        console.log('🍪 [BUTTON] Stored user_type in cookie:', userType);
+      } catch (storageError) {
+        console.warn('⚠️  [BUTTON] Failed to store user_type:', storageError);
+      }
 
       // Dynamic import to avoid SSR issues
       const { getAuthService } = await import("@/lib/auth");
@@ -31,7 +50,7 @@ export function GoogleSignInButton({
         throw new Error("OAuth authentication is not supported");
       }
 
-      console.log('🔐 Calling signInWithOAuth (full-page redirect)');
+      console.log('🔐 [BUTTON] Calling signInWithOAuth (full-page redirect)');
 
       // Simple OAuth flow - works for all devices
       // This will redirect the current page to Google OAuth

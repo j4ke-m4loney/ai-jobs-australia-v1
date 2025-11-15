@@ -227,27 +227,34 @@ export class SupabaseAuthAdapter implements AuthService {
     provider: string,
     opts?: { options?: { skipBrowserRedirect?: boolean; redirectTo?: string; userType?: "job_seeker" | "employer" } }
   ): Promise<AuthResult & { url?: string }> {
-    // Simple redirect to /auth/callback
-    // No popup parameter - callback will handle normal redirect
-    const baseRedirectUrl = opts?.options?.redirectTo || `${getSiteUrl()}/auth/callback`;
-
-    // Encode userType in the redirect URL so we can retrieve it after OAuth
     const userType = opts?.options?.userType;
-    const redirectUrl = userType
-      ? `${baseRedirectUrl}${baseRedirectUrl.includes('?') ? '&' : '?'}user_type=${userType}`
-      : baseRedirectUrl;
 
-    console.log('🔐 OAuth sign-in:', {
-      provider,
-      userType,
-      redirectUrl,
-    });
+    // Encode user_type directly in the redirect URL path
+    // This survives the OAuth redirect chain!
+    const redirectPath = userType ? `/auth/callback/${userType}` : '/auth/callback';
+    const redirectUrl = `${getSiteUrl()}${redirectPath}`;
+
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔐 [ADAPTER] OAuth Sign-In Request');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📊 Provider:', provider);
+    console.log('👤 User Type (from options):', userType);
+    console.log('🌐 Redirect URL:', redirectUrl);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider as 'github' | 'google' | 'linkedin_oidc',
       options: {
         redirectTo: redirectUrl,
       },
+    });
+
+    console.log('📤 [ADAPTER] Supabase OAuth Response:', {
+      hasData: !!data,
+      hasUrl: !!data?.url,
+      url: data?.url,
+      hasError: !!error,
+      error: error?.message,
     });
 
     // OAuth redirect flow - page will redirect to provider
