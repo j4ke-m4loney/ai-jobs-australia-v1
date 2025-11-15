@@ -106,7 +106,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return { error: new Error("OAuth sign-in not supported") as AuthError };
     }
 
-    const result = await authService.signInWithOAuth("google");
+    const result = await authService.signInWithOAuth("google", {
+      options: {
+        userType, // Pass userType to be encoded in redirect URL
+      },
+    });
 
     // Note: OAuth redirect flow means we don't get immediate user/session
     // User will be redirected to Google and back to /auth/callback

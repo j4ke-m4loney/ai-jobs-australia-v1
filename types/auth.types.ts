@@ -90,7 +90,7 @@ export interface AuthService {
   // Provider-specific features (optional)
   signInWithOAuth?(
     provider: string,
-    options?: { options?: { skipBrowserRedirect?: boolean; redirectTo?: string } }
+    options?: { options?: { skipBrowserRedirect?: boolean; redirectTo?: string; userType?: "job_seeker" | "employer" } }
   ): Promise<AuthResult & { url?: string }>;
   signInWithMagicLink?(email: string): Promise<{ error?: AuthError | null }>;
   

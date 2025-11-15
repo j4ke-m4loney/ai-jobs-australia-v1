@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const tokenHash = requestUrl.searchParams.get('token_hash');
   const code = requestUrl.searchParams.get('code');
   const popup = requestUrl.searchParams.get('popup'); // 'true' or null
+  const userTypeFromUrl = requestUrl.searchParams.get('user_type'); // 'job_seeker' or 'employer'
 
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('🔄 [CALLBACK] Handler started');
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
     tokenHash: tokenHash ? `${tokenHash.substring(0, 10)}...` : null,
     code: code ? `${code.substring(0, 10)}...` : null,
     popup,
+    userType: userTypeFromUrl,
     allParams: Object.fromEntries(requestUrl.searchParams.entries())
   });
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -183,14 +185,50 @@ export async function GET(request: NextRequest) {
       });
 
       if (data.session?.user) {
-        const userType = data.session.user.user_metadata?.user_type || 'job_seeker';
+        // Check if we need to set user_type from URL parameter
+        const existingUserType = data.session.user.user_metadata?.user_type;
+        const userType = userTypeFromUrl || existingUserType || 'job_seeker';
 
         console.log('👤 User data analysis', {
           userId: data.session.user.id,
           email: data.session.user.email,
           userMetadata: data.session.user.user_metadata,
-          detectedUserType: userType
+          userTypeFromUrl,
+          existingUserType,
+          finalUserType: userType
         });
+
+        // If user_type came from URL and it's not already set, update user metadata and profile
+        if (userTypeFromUrl && !existingUserType) {
+          console.log('🔧 Setting user_type from URL parameter:', userTypeFromUrl);
+
+          try {
+            // Update user metadata
+            const { error: updateError } = await supabase.auth.updateUser({
+              data: { user_type: userTypeFromUrl }
+            });
+
+            if (updateError) {
+              console.error('❌ Failed to update user metadata:', updateError);
+            } else {
+              console.log('✅ User metadata updated successfully with user_type:', userTypeFromUrl);
+            }
+
+            // Also update the profiles table directly in case trigger already ran with default
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .update({ user_type: userTypeFromUrl })
+              .eq('user_id', data.session.user.id);
+
+            if (profileError) {
+              console.error('❌ Failed to update profile user_type:', profileError);
+            } else {
+              console.log('✅ Profile user_type updated successfully');
+            }
+          } catch (err) {
+            console.error('❌ Error updating user metadata and profile:', err);
+          }
+        }
 
         // Determine redirect URL based on user type
         const redirectPath = userType === 'employer' ? '/employer' : '/jobseeker';

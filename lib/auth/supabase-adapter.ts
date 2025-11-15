@@ -225,14 +225,21 @@ export class SupabaseAuthAdapter implements AuthService {
 
   async signInWithOAuth(
     provider: string,
-    opts?: { options?: { skipBrowserRedirect?: boolean; redirectTo?: string } }
+    opts?: { options?: { skipBrowserRedirect?: boolean; redirectTo?: string; userType?: "job_seeker" | "employer" } }
   ): Promise<AuthResult & { url?: string }> {
     // Simple redirect to /auth/callback
     // No popup parameter - callback will handle normal redirect
-    const redirectUrl = opts?.options?.redirectTo || `${getSiteUrl()}/auth/callback`;
+    const baseRedirectUrl = opts?.options?.redirectTo || `${getSiteUrl()}/auth/callback`;
+
+    // Encode userType in the redirect URL so we can retrieve it after OAuth
+    const userType = opts?.options?.userType;
+    const redirectUrl = userType
+      ? `${baseRedirectUrl}${baseRedirectUrl.includes('?') ? '&' : '?'}user_type=${userType}`
+      : baseRedirectUrl;
 
     console.log('🔐 OAuth sign-in:', {
       provider,
+      userType,
       redirectUrl,
     });
 

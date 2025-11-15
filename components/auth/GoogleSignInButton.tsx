@@ -10,7 +10,7 @@ interface GoogleSignInButtonProps {
 }
 
 export function GoogleSignInButton({
-  userType: _userType,
+  userType,
   onError,
   className,
 }: GoogleSignInButtonProps) {
@@ -20,7 +20,7 @@ export function GoogleSignInButton({
     try {
       setIsLoading(true);
 
-      console.log('🔵 GoogleSignInButton: Starting OAuth flow');
+      console.log('🔵 GoogleSignInButton: Starting OAuth flow for user type:', userType);
 
       // Dynamic import to avoid SSR issues
       const { getAuthService } = await import("@/lib/auth");
@@ -37,7 +37,11 @@ export function GoogleSignInButton({
       // This will redirect the current page to Google OAuth
       // After authentication, Google redirects to /auth/callback
       // Callback route will redirect user to appropriate dashboard
-      const result = await authService.signInWithOAuth("google");
+      const result = await authService.signInWithOAuth("google", {
+        options: {
+          userType, // Pass userType so it can be encoded in redirect URL
+        },
+      });
 
       if (result.error) {
         console.error('❌ OAuth error:', result.error);
