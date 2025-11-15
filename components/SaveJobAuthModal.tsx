@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Heart, CheckCircle } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 interface SaveJobAuthModalProps {
   isOpen: boolean;
@@ -143,6 +144,23 @@ export const SaveJobAuthModal = ({
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In & Save Job"}
                 </Button>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                <GoogleSignInButton
+                  userType="job_seeker"
+                  onError={(error) => setError(error)}
+                  className="w-full"
+                />
               </form>
             </TabsContent>
 
@@ -201,6 +219,23 @@ export const SaveJobAuthModal = ({
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Creating account..." : "Sign Up & Save Job"}
                   </Button>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  <GoogleSignInButton
+                    userType="job_seeker"
+                    onError={(error) => setError(error)}
+                    className="w-full"
+                  />
                 </form>
               )}
             </TabsContent>

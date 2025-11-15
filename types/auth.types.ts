@@ -88,7 +88,10 @@ export interface AuthService {
   updateUser?(updates: { data?: { user_metadata?: Record<string, string | number | boolean | undefined>; email?: string } }): Promise<{ data?: { user: AuthUser } | null; error?: AuthError | null }>;
   
   // Provider-specific features (optional)
-  signInWithOAuth?(provider: string): Promise<AuthResult>;
+  signInWithOAuth?(
+    provider: string,
+    options?: { options?: { skipBrowserRedirect?: boolean; redirectTo?: string } }
+  ): Promise<AuthResult & { url?: string }>;
   signInWithMagicLink?(email: string): Promise<{ error?: AuthError | null }>;
   
   // Get the raw provider client (escape hatch for provider-specific features)

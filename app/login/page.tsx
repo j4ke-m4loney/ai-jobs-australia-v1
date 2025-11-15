@@ -23,6 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 // Loading component for Suspense fallback
 function LoginLoading() {
@@ -224,10 +225,28 @@ const JobSeekerAuthContent = () => {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  className="w-full" 
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                <GoogleSignInButton
+                  userType="job_seeker"
+                  onError={(error) => setSignInError(error)}
+                  className="w-full"
+                />
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
                   onClick={() => router.push(getGuestUrl())}
                 >
                   Maybe Later
@@ -313,10 +332,28 @@ const JobSeekerAuthContent = () => {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Creating account..." : "Sign Up"}
                   </Button>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    className="w-full" 
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  <GoogleSignInButton
+                    userType="job_seeker"
+                    onError={(error) => setSignUpError(error)}
+                    className="w-full"
+                  />
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full"
                     onClick={() => router.push(getGuestUrl())}
                   >
                     Maybe Later

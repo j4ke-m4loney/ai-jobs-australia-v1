@@ -15,6 +15,7 @@ interface AuthContextType {
     userType?: "job_seeker" | "employer"
   ) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signInWithGoogle: (userType: "job_seeker" | "employer") => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   updateUserMetadata: (metadata: Record<string, string | number | boolean | undefined>) => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
@@ -95,7 +96,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       email,
       password,
     });
-    
+
+    return { error: result.error ?? null };
+  };
+
+  const signInWithGoogle = async (userType: "job_seeker" | "employer") => {
+    const authService = getAuthService();
+    if (!authService || !authService.signInWithOAuth) {
+      return { error: new Error("OAuth sign-in not supported") as AuthError };
+    }
+
+    const result = await authService.signInWithOAuth("google");
+
+    // Note: OAuth redirect flow means we don't get immediate user/session
+    // User will be redirected to Google and back to /auth/callback
     return { error: result.error ?? null };
   };
 
@@ -149,6 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     updateUserMetadata,
     resetPassword,

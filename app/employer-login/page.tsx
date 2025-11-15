@@ -21,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Briefcase, CheckCircle } from "lucide-react";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 // Loading component for Suspense fallback
 function EmployerLoginLoading() {
@@ -211,6 +212,24 @@ const EmployerAuthContent = () => {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Signing in..." : "Sign In"}
                   </Button>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">
+                        Or continue with
+                      </span>
+                    </div>
+                  </div>
+
+                  <GoogleSignInButton
+                    userType="employer"
+                    onError={(error) => setSignInError(error)}
+                    className="w-full"
+                  />
+
                   <p className="text-center text-sm text-muted-foreground">
                     Looking for a job?{" "}
                     <Link
@@ -290,6 +309,24 @@ const EmployerAuthContent = () => {
                     <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? "Creating account..." : "Sign Up"}
                     </Button>
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                          Or continue with
+                        </span>
+                      </div>
+                    </div>
+
+                    <GoogleSignInButton
+                      userType="employer"
+                      onError={(error) => setSignUpError(error)}
+                      className="w-full"
+                    />
+
                     <p className="text-center text-sm text-muted-foreground">
                       Looking for a job?{" "}
                       <Link

@@ -223,16 +223,27 @@ export class SupabaseAuthAdapter implements AuthService {
     };
   }
 
-  async signInWithOAuth(provider: string): Promise<AuthResult> {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { data: _unusedData, error } = await supabase.auth.signInWithOAuth({
+  async signInWithOAuth(
+    provider: string,
+    opts?: { options?: { skipBrowserRedirect?: boolean; redirectTo?: string } }
+  ): Promise<AuthResult & { url?: string }> {
+    // Simple redirect to /auth/callback
+    // No popup parameter - callback will handle normal redirect
+    const redirectUrl = opts?.options?.redirectTo || `${getSiteUrl()}/auth/callback`;
+
+    console.log('🔐 OAuth sign-in:', {
+      provider,
+      redirectUrl,
+    });
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: provider as 'github' | 'google' | 'linkedin_oidc',
       options: {
-        redirectTo: `${getSiteUrl()}/auth/callback`,
+        redirectTo: redirectUrl,
       },
     });
 
-    // OAuth doesn't immediately return user/session (redirect flow)
+    // OAuth redirect flow - page will redirect to provider
     return {
       user: null,
       session: null,
