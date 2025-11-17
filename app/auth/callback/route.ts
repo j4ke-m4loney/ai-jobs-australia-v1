@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { emailService } from '@/lib/email/postmark-service';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -10,11 +11,10 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code');
   const popup = requestUrl.searchParams.get('popup'); // 'true' or null
 
-  // Extract userType from URL path (e.g., /auth/callback/employer)
-  const pathParts = requestUrl.pathname.split('/');
-  const userTypeFromPath = pathParts[pathParts.length - 1];
-  const userTypeFromUrl = (userTypeFromPath === 'employer' || userTypeFromPath === 'job_seeker')
-    ? userTypeFromPath as 'employer' | 'job_seeker'
+  // Extract userType from query parameter (e.g., ?user_type=job_seeker)
+  const userTypeParam = requestUrl.searchParams.get('user_type');
+  const userTypeFromQuery = (userTypeParam === 'employer' || userTypeParam === 'job_seeker')
+    ? userTypeParam as 'employer' | 'job_seeker'
     : null;
 
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -22,20 +22,20 @@ export async function GET(request: NextRequest) {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('📍 [CALLBACK] Full URL:', requestUrl.toString());
   console.log('🛤️  [CALLBACK] URL Pathname:', requestUrl.pathname);
-  console.log('🎯 [CALLBACK] User Type from PATH:', userTypeFromUrl);
+  console.log('🎯 [CALLBACK] User Type from QUERY:', userTypeFromQuery);
   console.log('🔍 [CALLBACK] Parameters:', {
     token: token ? `${token.substring(0, 10)}...` : null,
     type,
     tokenHash: tokenHash ? `${tokenHash.substring(0, 10)}...` : null,
     code: code ? `${code.substring(0, 10)}...` : null,
     popup,
-    userTypeFromPath: userTypeFromUrl,
+    userTypeFromQuery: userTypeFromQuery,
     allParams: Object.fromEntries(requestUrl.searchParams.entries())
   });
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   // SECURITY: Block employer OAuth attempts (OAuth only allowed for job seekers)
-  if (code && userTypeFromUrl === 'employer') {
+  if (code && userTypeFromQuery === 'employer') {
     console.log('🚫 [CALLBACK] REJECTED: Employer OAuth attempt blocked');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     return NextResponse.redirect(
@@ -125,8 +125,8 @@ export async function GET(request: NextRequest) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📦 [CALLBACK] OAuth Code:', code.substring(0, 10) + '...');
     console.log('🎭 [CALLBACK] Popup Mode:', popup);
-    console.log('👤 [CALLBACK] user_type from PATH:', userTypeFromUrl);
-    console.log('🔍 [CALLBACK] CRITICAL: Did user_type survive redirect?', !!userTypeFromUrl);
+    console.log('👤 [CALLBACK] user_type from QUERY:', userTypeFromQuery);
+    console.log('🔍 [CALLBACK] CRITICAL: Did user_type survive redirect?', !!userTypeFromQuery);
     console.log('📋 [CALLBACK] All URL Parameters:',
       Array.from(requestUrl.searchParams.entries()).map(([key, value]) => ({
         key,
@@ -218,32 +218,32 @@ export async function GET(request: NextRequest) {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       if (data.session?.user) {
-        // Check if we need to set user_type from URL path
+        // Check if we need to set user_type from query parameter
         const existingUserType = data.session.user.user_metadata?.user_type;
-        const userType = userTypeFromUrl || existingUserType || 'job_seeker';
+        const userType = userTypeFromQuery || existingUserType || 'job_seeker';
 
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('🔍 [CALLBACK] User Type Analysis');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('👤 User ID:', data.session.user.id);
         console.log('📧 Email:', data.session.user.email);
-        console.log('🎯 user_type from URL PATH:', userTypeFromUrl || 'NOT PRESENT');
+        console.log('🎯 user_type from QUERY:', userTypeFromQuery || 'NOT PRESENT');
         console.log('💾 user_type in metadata:', existingUserType || 'NOT PRESENT');
         console.log('✅ Final user_type to use:', userType);
-        console.log('🔧 Will update?:', userTypeFromUrl && !existingUserType);
+        console.log('🔧 Will update?:', userTypeFromQuery && !existingUserType);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-        // If user_type came from URL path and it's not already set, update user metadata and profile
-        if (userTypeFromUrl && !existingUserType) {
+        // If user_type came from query parameter and it's not already set, update user metadata and profile
+        if (userTypeFromQuery && !existingUserType) {
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('🔧 [CALLBACK] Updating user_type to:', userTypeFromUrl);
+          console.log('🔧 [CALLBACK] Updating user_type to:', userTypeFromQuery);
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
           try {
             // Update user metadata
             console.log('📝 [CALLBACK] Step 1: Updating user metadata...');
             const { data: updateData, error: updateError } = await supabase.auth.updateUser({
-              data: { user_type: userTypeFromUrl }
+              data: { user_type: userTypeFromQuery }
             });
 
             if (updateError) {
@@ -261,7 +261,7 @@ export async function GET(request: NextRequest) {
             console.log('📝 [CALLBACK] Step 2: Updating profiles table...');
             const { data: profileData, error: profileError } = await supabase
               .from('profiles')
-              .update({ user_type: userTypeFromUrl })
+              .update({ user_type: userTypeFromQuery })
               .eq('user_id', data.session.user.id)
               .select();
 
@@ -294,8 +294,8 @@ export async function GET(request: NextRequest) {
               console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
               console.log('👤 User ID:', verifyProfile?.user_id);
               console.log('📝 Profile user_type:', verifyProfile?.user_type);
-              console.log('✅ Expected user_type:', userTypeFromUrl);
-              console.log('✔️  Match?:', verifyProfile?.user_type === userTypeFromUrl);
+              console.log('✅ Expected user_type:', userTypeFromQuery);
+              console.log('✔️  Match?:', verifyProfile?.user_type === userTypeFromQuery);
               console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             }
           } catch (err) {
@@ -303,10 +303,75 @@ export async function GET(request: NextRequest) {
           }
         } else {
           console.log('ℹ️  [CALLBACK] Skipping update:', {
-            reason: !userTypeFromUrl ? 'No user_type from URL path' : 'user_type already exists in metadata',
-            userTypeFromUrl,
+            reason: !userTypeFromQuery ? 'No user_type from query parameter' : 'user_type already exists in metadata',
+            userTypeFromQuery,
             existingUserType
           });
+        }
+
+        // DEBUG: Check welcome email conditions
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🔍 [CALLBACK] Welcome Email Condition Check');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📊 [CALLBACK] userTypeFromQuery:', userTypeFromQuery);
+        console.log('📊 [CALLBACK] existingUserType:', existingUserType);
+        console.log('📊 [CALLBACK] Is job_seeker?:', userTypeFromQuery === 'job_seeker');
+        console.log('📊 [CALLBACK] Is new user?:', !existingUserType);
+        console.log('✅ [CALLBACK] Condition met (will send email)?:', userTypeFromQuery === 'job_seeker' && !existingUserType);
+        console.log('📧 [CALLBACK] User email:', data.session.user.email);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        // Send welcome email to NEW job seekers (not employers, not returning users)
+        if (userTypeFromQuery === 'job_seeker' && !existingUserType) {
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('📧 [CALLBACK] Sending welcome email to new job seeker');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+          try {
+            const firstName = data.session.user.user_metadata?.first_name || 'there';
+            const userEmail = data.session.user.email;
+
+            console.log('📧 [CALLBACK] Email data prepared:', {
+              recipientEmail: userEmail,
+              recipientName: firstName,
+              hasEmail: !!userEmail,
+            });
+
+            // DEBUG: Check email service availability
+            console.log('🔧 [CALLBACK] Checking email service availability...');
+            console.log('🔧 [CALLBACK] POSTMARK_SERVER_TOKEN exists:', !!process.env.POSTMARK_SERVER_TOKEN);
+            console.log('🔧 [CALLBACK] POSTMARK_SERVER_TOKEN value:',
+              process.env.POSTMARK_SERVER_TOKEN
+                ? `${process.env.POSTMARK_SERVER_TOKEN.substring(0, 10)}...`
+                : 'MISSING'
+            );
+
+            if (userEmail) {
+              console.log('📤 [CALLBACK] Attempting to send welcome email...');
+
+              const emailResult = await emailService.sendJobSeekerWelcomeEmail({
+                recipientEmail: userEmail,
+                recipientName: firstName,
+                profileUrl: `${requestUrl.origin}/jobseeker/profile`,
+                dashboardUrl: `${requestUrl.origin}/jobseeker`,
+              });
+
+              console.log('📬 [CALLBACK] Email send result:', emailResult);
+
+              if (emailResult) {
+                console.log('✅ [CALLBACK] Welcome email sent successfully');
+              } else {
+                console.error('❌ [CALLBACK] Welcome email send returned FALSE (silent failure - check Postmark service)');
+              }
+            } else {
+              console.warn('⚠️  [CALLBACK] No email address found for user');
+            }
+          } catch (emailError) {
+            console.error('❌ [CALLBACK] Failed to send welcome email:', emailError);
+            // Don't block the authentication flow if email fails
+          }
+
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         }
 
         // Determine redirect URL based on user type
@@ -420,6 +485,194 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       console.error('❌ OAuth callback error during processing:', error);
+      return NextResponse.redirect(`${requestUrl.origin}/auth/error?message=${encodeURIComponent('Authentication failed')}`);
+    }
+  } else if (userTypeFromQuery) {
+    // Session-based OAuth completion path
+    // This handles the case where Supabase has already consumed the OAuth code
+    // and redirects back to our callback with just the user_type parameter
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔐 [CALLBACK] Taking SESSION-BASED OAUTH path');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('👤 [CALLBACK] user_type from QUERY:', userTypeFromQuery);
+    console.log('ℹ️  [CALLBACK] No code parameter - checking for existing session in cookies');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    const cookieStore = await cookies();
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: Record<string, unknown>) {
+            cookieStore.set({ name, value, ...options });
+          },
+          remove(name: string, options: Record<string, unknown>) {
+            cookieStore.delete({ name, ...options });
+          },
+        },
+      }
+    );
+
+    try {
+      // Get the current session from cookies
+      console.log('🔍 [CALLBACK] Checking for session in cookies...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('❌ [CALLBACK] Error getting session:', sessionError);
+        return NextResponse.redirect(`${requestUrl.origin}/auth/error?message=${encodeURIComponent('Session error')}`);
+      }
+
+      if (!session || !session.user) {
+        console.log('❌ [CALLBACK] No session found in cookies - redirecting to home');
+        return NextResponse.redirect(`${requestUrl.origin}/`);
+      }
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ [CALLBACK] Session Found in Cookies!');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🆔 User ID:', session.user.id);
+      console.log('📧 Email:', session.user.email);
+      console.log('📋 User Metadata:', JSON.stringify(session.user.user_metadata, null, 2));
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      // Check if this is a new user (no existing user_type in metadata)
+      const existingUserType = session.user.user_metadata?.user_type;
+      const userType = userTypeFromQuery || existingUserType || 'job_seeker';
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔍 [CALLBACK] User Type Analysis');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🎯 user_type from QUERY:', userTypeFromQuery);
+      console.log('💾 user_type in metadata:', existingUserType || 'NOT PRESENT');
+      console.log('✅ Final user_type to use:', userType);
+      console.log('🆕 Is new user?:', !existingUserType);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      // If user_type came from query parameter and it's not already set, update user metadata and profile
+      if (userTypeFromQuery && !existingUserType) {
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🔧 [CALLBACK] Updating user_type to:', userTypeFromQuery);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        try {
+          // Update user metadata
+          console.log('📝 [CALLBACK] Step 1: Updating user metadata...');
+          const { data: updateData, error: updateError } = await supabase.auth.updateUser({
+            data: { user_type: userTypeFromQuery }
+          });
+
+          if (updateError) {
+            console.error('❌ [CALLBACK] Metadata update FAILED:', updateError);
+          } else {
+            console.log('✅ [CALLBACK] Metadata update SUCCESS');
+            console.log('📋 [CALLBACK] Updated user metadata:', JSON.stringify(updateData?.user?.user_metadata, null, 2));
+          }
+
+          // Also update the profiles table
+          console.log('📝 [CALLBACK] Step 2: Updating profiles table...');
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .update({ user_type: userTypeFromQuery })
+            .eq('user_id', session.user.id)
+            .select();
+
+          if (profileError) {
+            console.error('❌ [CALLBACK] Profile update FAILED:', profileError);
+          } else {
+            console.log('✅ [CALLBACK] Profile update SUCCESS');
+            console.log('📊 [CALLBACK] Updated profile data:', profileData);
+          }
+
+          // Verification step: Read back the profile to confirm
+          console.log('🔍 [CALLBACK] Step 3: Verifying profile update...');
+          const { data: verifyProfile, error: verifyError } = await supabase
+            .from('profiles')
+            .select('user_id, user_type, first_name')
+            .eq('user_id', session.user.id)
+            .single();
+
+          if (verifyError) {
+            console.error('❌ [CALLBACK] Verification FAILED:', verifyError);
+          } else {
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('🎯 [CALLBACK] VERIFICATION RESULTS');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('👤 User ID:', verifyProfile?.user_id);
+            console.log('📝 Profile user_type:', verifyProfile?.user_type);
+            console.log('✅ Expected user_type:', userTypeFromQuery);
+            console.log('✔️  Match?:', verifyProfile?.user_type === userTypeFromQuery);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          }
+        } catch (err) {
+          console.error('❌ [CALLBACK] CRITICAL ERROR during update:', err);
+        }
+      }
+
+      // Send welcome email to NEW job seekers
+      if (userTypeFromQuery === 'job_seeker' && !existingUserType) {
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📧 [CALLBACK] Sending welcome email to new job seeker');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        try {
+          const firstName = session.user.user_metadata?.first_name || 'there';
+          const userEmail = session.user.email;
+
+          console.log('📧 [CALLBACK] Email data prepared:', {
+            recipientEmail: userEmail,
+            recipientName: firstName,
+            hasEmail: !!userEmail,
+          });
+
+          if (userEmail) {
+            console.log('📤 [CALLBACK] Attempting to send welcome email...');
+
+            const emailResult = await emailService.sendJobSeekerWelcomeEmail({
+              recipientEmail: userEmail,
+              recipientName: firstName,
+              profileUrl: `${requestUrl.origin}/jobseeker/profile`,
+              dashboardUrl: `${requestUrl.origin}/jobseeker`,
+            });
+
+            console.log('📬 [CALLBACK] Email send result:', emailResult);
+
+            if (emailResult) {
+              console.log('✅ [CALLBACK] Welcome email sent successfully to', userEmail);
+            } else {
+              console.error('❌ [CALLBACK] Welcome email send returned FALSE');
+            }
+          } else {
+            console.warn('⚠️  [CALLBACK] No email address found for user');
+          }
+        } catch (emailError) {
+          console.error('❌ [CALLBACK] Failed to send welcome email:', emailError);
+          // Don't block the authentication flow if email fails
+        }
+
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      } else {
+        console.log('ℹ️  [CALLBACK] Skipping welcome email:', {
+          reason: !existingUserType ? 'Not a job seeker' : 'Returning user (user_type already exists)',
+          userTypeFromQuery,
+          existingUserType
+        });
+      }
+
+      // Redirect to appropriate dashboard
+      const redirectPath = userType === 'employer' ? '/employer' : '/jobseeker';
+      console.log('🎯 [CALLBACK] Redirecting to:', redirectPath);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      return NextResponse.redirect(`${requestUrl.origin}${redirectPath}`);
+
+    } catch (error) {
+      console.error('❌ [CALLBACK] Session-based OAuth error:', error);
       return NextResponse.redirect(`${requestUrl.origin}/auth/error?message=${encodeURIComponent('Authentication failed')}`);
     }
   } else {

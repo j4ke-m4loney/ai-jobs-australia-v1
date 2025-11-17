@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -59,6 +59,7 @@ const JobSeekerProfile = () => {
   const { user, updateUserMetadata } = useAuth();
   const { profile, updateProfile, loading } = useProfile();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
@@ -68,6 +69,9 @@ const JobSeekerProfile = () => {
     newEmail: string;
     formData: ProfileFormData;
   } | null>(null);
+
+  // Ref to prevent multiple welcome email sends
+  const welcomeEmailSentRef = useRef(false);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -105,6 +109,78 @@ const JobSeekerProfile = () => {
       setSkills(profile.skills || []);
     }
   }, [profile, user?.email, form]);
+
+  // Send welcome email to new OAuth users
+  useEffect(() => {
+    const sendWelcomeEmail = async () => {
+      // Check if this is a new OAuth user (verified=true parameter)
+      const isVerified = searchParams.get('verified') === 'true';
+
+      if (!isVerified || !user || !user.email) {
+        return;
+      }
+
+      // Prevent multiple simultaneous calls (React StrictMode, re-renders, etc.)
+      if (welcomeEmailSentRef.current) {
+        console.log('⏭️  [PROFILE PAGE] Welcome email already initiated, skipping duplicate call');
+        return;
+      }
+
+      // Mark as sent immediately to prevent race conditions
+      welcomeEmailSentRef.current = true;
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📧 [PROFILE PAGE] New OAuth user detected');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('👤 User ID:', user.id);
+      console.log('📧 User Email:', user.email);
+      console.log('🎯 User Type:', user.metadata?.user_type);
+      console.log('📬 Welcome email sent?:', user.metadata?.welcome_email_sent);
+      console.log('⏳ [PROFILE PAGE] Waiting 1.5 seconds for session to establish...');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      // Wait for session to be fully established (Supabase PKCE flow needs time)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      try {
+        // Get current session to retrieve access token
+        console.log('🔑 [PROFILE PAGE] Getting session token...');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError || !session?.access_token) {
+          console.error('❌ [PROFILE PAGE] No session or access token found:', sessionError);
+          return;
+        }
+
+        console.log('✅ [PROFILE PAGE] Access token retrieved');
+        console.log('📤 [PROFILE PAGE] Calling welcome email API with token...');
+
+        const response = await fetch('/api/send-welcome-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            accessToken: session.access_token
+          }),
+        });
+
+        const data = await response.json();
+        console.log('📬 [PROFILE PAGE] API Response:', data);
+
+        if (response.ok && data.sent) {
+          console.log('✅ [PROFILE PAGE] Welcome email sent successfully!');
+        } else {
+          console.log('ℹ️  [PROFILE PAGE] Welcome email not sent:', data.message);
+        }
+      } catch (error) {
+        console.error('❌ [PROFILE PAGE] Failed to send welcome email:', error);
+        // Silently fail - don't interrupt user experience
+      }
+    };
+
+    sendWelcomeEmail();
+  }, [searchParams, user]);
 
   // Profile data is now handled by ProfileContext
 

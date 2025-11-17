@@ -6,14 +6,34 @@ const postmarkClient =
     ? new ServerClient(process.env.POSTMARK_SERVER_TOKEN)
     : null;
 
+// DEBUG: Diagnostic logging for email service initialization
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log('🔧 [EMAIL SERVICE] Initializing Postmark service...');
+console.log('🔧 [EMAIL SERVICE] Running on server-side:', typeof window === "undefined");
+console.log('🔧 [EMAIL SERVICE] POSTMARK_SERVER_TOKEN exists:', !!process.env.POSTMARK_SERVER_TOKEN);
+console.log('🔧 [EMAIL SERVICE] POSTMARK_SERVER_TOKEN value:',
+  process.env.POSTMARK_SERVER_TOKEN
+    ? `${process.env.POSTMARK_SERVER_TOKEN.substring(0, 10)}...`
+    : 'MISSING'
+);
+console.log('🔧 [EMAIL SERVICE] Postmark client created:', !!postmarkClient);
+console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
 // Helper function to check if email service is available
 function isEmailServiceAvailable(): boolean {
+  console.log('🔍 [EMAIL SERVICE] Checking availability...');
+  console.log('🔍 [EMAIL SERVICE] postmarkClient exists:', !!postmarkClient);
+  console.log('🔍 [EMAIL SERVICE] Running on server:', typeof window === "undefined");
+  console.log('🔍 [EMAIL SERVICE] Token available:', !!process.env.POSTMARK_SERVER_TOKEN);
+
   if (!postmarkClient) {
     console.warn(
-      "Email service not available - running on client-side or missing POSTMARK_SERVER_TOKEN"
+      "⚠️  [EMAIL SERVICE] Email service NOT AVAILABLE - running on client-side or missing POSTMARK_SERVER_TOKEN"
     );
     return false;
   }
+
+  console.log('✅ [EMAIL SERVICE] Email service IS AVAILABLE!');
   return true;
 }
 
@@ -91,6 +111,13 @@ export interface ContactFormEmailData {
   email: string;
   subject: string;
   message: string;
+}
+
+export interface JobSeekerWelcomeEmailData {
+  recipientEmail: string;
+  recipientName: string;
+  profileUrl: string;
+  dashboardUrl: string;
 }
 
 export class PostmarkEmailService {
@@ -323,6 +350,38 @@ export class PostmarkEmailService {
       return true;
     } catch (error) {
       console.error("❌ Failed to send contact form email:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Send welcome email to new job seekers after Google OAuth sign-in
+   */
+  async sendJobSeekerWelcomeEmail(
+    data: JobSeekerWelcomeEmailData
+  ): Promise<boolean> {
+    if (!isEmailServiceAvailable()) {
+      return false;
+    }
+
+    try {
+      await postmarkClient!.sendEmail({
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
+        To: data.recipientEmail,
+        Subject: "Welcome to AI Jobs Australia - Complete Your Profile",
+        HtmlBody: this.getJobSeekerWelcomeEmailHtml(data),
+        TextBody: this.getJobSeekerWelcomeEmailText(data),
+        Tag: "welcome-job-seeker",
+        TrackOpens: true,
+        TrackLinks: Models.LinkTrackingOptions.HtmlAndText,
+      });
+
+      console.log(
+        `✅ Welcome email sent to new job seeker: ${data.recipientEmail}`
+      );
+      return true;
+    } catch (error) {
+      console.error("❌ Failed to send welcome email:", error);
       return false;
     }
   }
@@ -990,6 +1049,141 @@ export class PostmarkEmailService {
       ---
       This message was sent via the contact form on AI Jobs Australia.
       You can reply directly to this email to respond to ${data.firstName}.
+    `;
+  }
+
+  private getJobSeekerWelcomeEmailHtml(
+    data: JobSeekerWelcomeEmailData
+  ): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Welcome to AI Jobs Australia</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to AI Jobs Australia! 👋</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">Your AI career journey starts here</p>
+          </div>
+
+          <div style="background: #f9f9f9; padding: 25px; border-radius: 8px; border-left: 4px solid #10b981; margin-bottom: 20px;">
+            <h2 style="color: #333; margin-top: 0;">Hi ${data.recipientName}! 🎉</h2>
+            <p>Thank you for joining AI Jobs Australia! We're excited to help you find your next opportunity in Australia's thriving AI industry.</p>
+            <p>Your account is ready, but there's one more step to get the most out of your experience...</p>
+          </div>
+
+          <div style="background: #fff; padding: 25px; border-radius: 8px; border: 2px solid #667eea; margin-bottom: 20px;">
+            <h3 style="color: #667eea; margin-top: 0;">📝 Complete Your Profile</h3>
+            <p>Take a few minutes to complete your profile so employers can find you and you can apply for jobs with one click.</p>
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+              <h4 style="color: #495057; margin-top: 0; margin-bottom: 10px;">Profile Checklist:</h4>
+              <ul style="color: #495057; margin: 0; padding-left: 20px;">
+                <li style="margin-bottom: 8px;">✅ Add your full name</li>
+                <li style="margin-bottom: 8px;">✅ Set your location (where you want to work)</li>
+                <li style="margin-bottom: 8px;">✅ List your AI skills (Python, TensorFlow, etc.)</li>
+                <li style="margin-bottom: 8px;">✅ Add a bio about your experience</li>
+                <li style="margin-bottom: 8px;">✅ Upload your resume (optional but recommended)</li>
+              </ul>
+            </div>
+
+            <div style="text-align: center; margin: 20px 0;">
+              <a href="${data.profileUrl}"
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 15px 30px;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        font-weight: bold;
+                        display: inline-block;
+                        font-size: 16px;">
+                Complete Your Profile Now
+              </a>
+            </div>
+          </div>
+
+          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; border-left: 4px solid #2196f3; margin-bottom: 20px;">
+            <h3 style="color: #1565c0; margin-top: 0;">💡 Why Complete Your Profile?</h3>
+            <ul style="color: #1565c0; margin: 0; padding-left: 20px;">
+              <li style="margin-bottom: 8px;"><strong>Get discovered</strong> by top AI companies</li>
+              <li style="margin-bottom: 8px;"><strong>Apply faster</strong> with one-click applications</li>
+              <li style="margin-bottom: 8px;"><strong>Better job matches</strong> based on your skills</li>
+              <li style="margin-bottom: 8px;"><strong>Stand out</strong> from other candidates</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin: 30px 0;">
+            <p style="color: #666; margin-bottom: 15px;">Ready to explore AI jobs in Australia?</p>
+            <a href="${data.dashboardUrl}"
+               style="color: #667eea;
+                      text-decoration: none;
+                      font-weight: bold;
+                      border: 2px solid #667eea;
+                      padding: 12px 25px;
+                      border-radius: 5px;
+                      display: inline-block;">
+              Browse Job Opportunities →
+            </a>
+          </div>
+
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center;">
+            <p>Need help? We're here for you!</p>
+            <p>Questions? Contact us or visit our help center.</p>
+            <p style="margin-top: 15px;">
+              <strong>AI Jobs Australia</strong><br>
+              Your gateway to AI careers in Australia
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private getJobSeekerWelcomeEmailText(
+    data: JobSeekerWelcomeEmailData
+  ): string {
+    return `
+      Welcome to AI Jobs Australia! 👋
+
+      Hi ${data.recipientName}!
+
+      Thank you for joining AI Jobs Australia! We're excited to help you find your next opportunity in Australia's thriving AI industry.
+
+      Your account is ready, but there's one more step to get the most out of your experience...
+
+      📝 COMPLETE YOUR PROFILE
+
+      Take a few minutes to complete your profile so employers can find you and you can apply for jobs with one click.
+
+      Profile Checklist:
+      ✅ Add your full name
+      ✅ Set your location (where you want to work)
+      ✅ List your AI skills (Python, TensorFlow, etc.)
+      ✅ Add a bio about your experience
+      ✅ Upload your resume (optional but recommended)
+
+      Complete your profile: ${data.profileUrl}
+
+      💡 WHY COMPLETE YOUR PROFILE?
+
+      • Get discovered by top AI companies
+      • Apply faster with one-click applications
+      • Better job matches based on your skills
+      • Stand out from other candidates
+
+      Ready to explore AI jobs in Australia?
+      Browse jobs: ${data.dashboardUrl}
+
+      ---
+
+      Need help? We're here for you!
+      Questions? Contact us or visit our help center.
+
+      AI Jobs Australia
+      Your gateway to AI careers in Australia
     `;
   }
 }

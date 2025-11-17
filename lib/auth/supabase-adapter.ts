@@ -229,10 +229,10 @@ export class SupabaseAuthAdapter implements AuthService {
   ): Promise<AuthResult & { url?: string }> {
     const userType = opts?.options?.userType;
 
-    // Encode user_type directly in the redirect URL path
+    // Encode user_type as query parameter in the redirect URL
     // This survives the OAuth redirect chain!
-    const redirectPath = userType ? `/auth/callback/${userType}` : '/auth/callback';
-    const redirectUrl = `${getSiteUrl()}${redirectPath}`;
+    const baseUrl = `${getSiteUrl()}/auth/callback`;
+    const redirectUrl = userType ? `${baseUrl}?user_type=${userType}` : baseUrl;
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🔐 [ADAPTER] OAuth Sign-In Request');
