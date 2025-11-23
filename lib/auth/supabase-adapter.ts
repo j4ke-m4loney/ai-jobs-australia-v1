@@ -137,7 +137,10 @@ export class SupabaseAuthAdapter implements AuthService {
   }
 
   async signOut(): Promise<{ error?: AuthError | null }> {
-    const { error } = await supabase.auth.signOut();
+    // Use scope: 'local' to only sign out from this browser session
+    // This prevents 403 errors when the session is expired/invalid
+    // 'global' would try to invalidate all sessions but requires valid auth
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     return { error: this.mapError(error) };
   }
 

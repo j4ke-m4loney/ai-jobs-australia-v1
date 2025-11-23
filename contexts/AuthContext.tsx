@@ -50,12 +50,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (!mounted) return;
-    
+
+    console.log('🔐 [AuthContext] Initializing auth...');
+
     // Get the auth service instance only on client
     const authService = getAuthService();
 
     // Set up auth state listener
     const unsubscribe = authService.onAuthStateChange((event, session) => {
+      console.log('🔐 [AuthContext] Auth state changed:', {
+        event,
+        hasSession: !!session,
+        userId: session?.user?.id,
+        userEmail: session?.user?.email,
+      });
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -63,6 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Check for existing session
     authService.getSession().then((session) => {
+      console.log('🔐 [AuthContext] Initial session check:', {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        userEmail: session?.user?.email,
+      });
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);

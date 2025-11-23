@@ -1,5 +1,7 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { getAllJobCategories } from '@/lib/categories/generator'
+import { getAllJobLocations } from '@/lib/locations/generator'
 
 const BASE_URL = 'https://www.aijobsaustralia.com.au'
 
@@ -87,5 +89,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   })) || []
 
-  return [...staticPages, ...jobPages, ...companyPages]
+  // Category pages
+  const categories = await getAllJobCategories()
+  const categoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
+    url: `${BASE_URL}/jobs/category/${category.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.85, // High priority for SEO
+  }))
+
+  // Location pages
+  const locations = await getAllJobLocations()
+  const locationPages: MetadataRoute.Sitemap = locations.map((location) => ({
+    url: `${BASE_URL}/jobs/location/${location.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.85, // High priority for local SEO
+  }))
+
+  return [...staticPages, ...categoryPages, ...locationPages, ...jobPages, ...companyPages]
 }

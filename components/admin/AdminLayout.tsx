@@ -99,7 +99,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }, [checkAdminAccess, fetchPendingCount]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     router.push("/");
   };
 

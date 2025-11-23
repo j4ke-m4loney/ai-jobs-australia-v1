@@ -86,7 +86,7 @@ export const RecentJobCard: React.FC<RecentJobCardProps> = ({ job }) => {
 
   return (
     <Card
-      className={`transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border ${
+      className={`h-full transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border ${
         job.is_featured ? "border-l-4 border-l-primary" : ""
       }`}
     >

@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Main Footer Content */}
-          <div className="grid lg:grid-cols-4 gap-8 mb-12">
+          <div className="grid lg:grid-cols-6 gap-8 mb-12">
             {/* Brand */}
             <div className="lg:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
@@ -25,8 +25,8 @@ const Footer = () => {
                 </span>
               </div>
               <p className="text-background/80 mb-6 max-w-md">
-                Australia&apos;s #1 platform for careers in AI, ML and Data Science.
-                Connecting local talent with local opportunities.
+                Australia&apos;s #1 platform for careers in AI, ML and Data
+                Science. Connecting local talent with local opportunities.
               </p>
               {/* Newsletter Signup */}
               {/* <div className="max-w-md">
@@ -46,6 +46,116 @@ const Footer = () => {
                   </Button>
                 </div>
               </div> */}
+            </div>
+
+            {/* Job Categories */}
+            <div>
+              <h4 className="font-semibold mb-4">AI Job Categories</h4>
+              <ul className="space-y-2 text-background/80">
+                <li>
+                  <Link
+                    href="/jobs/category/ai-engineer"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Engineer Jobs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/category/machine-learning-engineer"
+                    className="hover:text-background transition-smooth"
+                  >
+                    ML Engineer Jobs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/category/data-scientist"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Data Scientist Jobs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/category/data-analyst"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Data Analyst Jobs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/category/ml-engineer"
+                    className="hover:text-background transition-smooth"
+                  >
+                    ML Engineer Jobs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/category/software-engineer"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Software Engineer Jobs
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Locations */}
+            <div>
+              <h4 className="font-semibold mb-4">Browse by Location</h4>
+              <ul className="space-y-2 text-background/80">
+                <li>
+                  <Link
+                    href="/jobs/location/sydney"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in Sydney
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/melbourne"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in Melbourne
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/brisbane"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in Brisbane
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/perth"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in Perth
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/canberra"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in Canberra
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/remote"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Remote AI Jobs
+                  </Link>
+                </li>
+              </ul>
             </div>
 
             {/* Quick Links */}

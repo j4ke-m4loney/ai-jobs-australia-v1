@@ -121,7 +121,7 @@ const JobSeekerAuthContent = () => {
         if (profile?.user_type === 'employer') {
           // User is an employer trying to sign in as job seeker
           setPreventRedirect(true); // Prevent redirect
-          await supabase.auth.signOut(); // Sign them out
+          await supabase.auth.signOut({ scope: 'local' }); // Sign them out locally
           setSignInError(
             <>
               This email is registered as an employer account. Please use the{' '}
