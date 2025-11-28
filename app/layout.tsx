@@ -76,17 +76,78 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+        {/* WebSite Schema */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
+              "@id": "https://www.aijobsaustralia.com.au/#website",
               name: "AI Jobs Australia",
               alternateName: "AI Jobs Australia",
               url: "https://www.aijobsaustralia.com.au",
               description:
                 "The #1 platform for AI, Machine Learning, and Data Science jobs in Australia",
+              publisher: {
+                "@id": "https://www.aijobsaustralia.com.au/#organization",
+              },
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate:
+                    "https://www.aijobsaustralia.com.au/jobs?search={search_term_string}",
+                },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
+
+        {/* Organization Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "@id": "https://www.aijobsaustralia.com.au/#organization",
+              name: "AI Jobs Australia",
+              alternateName: "AIJobsAustralia.com.au",
+              url: "https://www.aijobsaustralia.com.au",
+              logo: {
+                "@type": "ImageObject",
+                "@id": "https://www.aijobsaustralia.com.au/#logo",
+                url: "https://www.aijobsaustralia.com.au/aja-favicon-512.png",
+                contentUrl:
+                  "https://www.aijobsaustralia.com.au/aja-favicon-512.png",
+                width: 512,
+                height: 512,
+                caption: "AI Jobs Australia Logo",
+              },
+              description:
+                "Australia's #1 platform for AI, Machine Learning, and Data Science jobs. Connecting local talent with local opportunities.",
+              email: "hello@aijobsaustralia.com.au",
+              contactPoint: {
+                "@type": "ContactPoint",
+                contactType: "customer service",
+                email: "hello@aijobsaustralia.com.au",
+                availableLanguage: ["English"],
+                areaServed: "AU",
+              },
+              sameAs: [
+                "https://x.com/aijobsaustralia",
+                "https://www.linkedin.com/company/ai-jobs-australia/",
+                "https://www.aijobsaustralia.com.au",
+              ],
+              address: {
+                "@type": "PostalAddress",
+                addressCountry: "AU",
+                addressRegion: "Australia",
+              },
+              foundingDate: "2024",
+              slogan: "#1 Home for AI Opportunities In Australia",
             }),
           }}
         />
