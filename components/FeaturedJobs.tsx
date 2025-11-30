@@ -34,6 +34,7 @@ interface FeaturedJob {
   salary_min?: number;
   salary_max?: number;
   salary_period?: string;
+  show_salary?: boolean;
   is_featured: boolean;
   featured_until: string;
   highlights: string[];
@@ -206,10 +207,13 @@ export default function FeaturedJobs() {
                     <span>{formatTimeAgo(job.created_at)}</span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <DollarSign className="w-4 h-4" />
-                    <span>{formatSalary(job.salary_min ?? null, job.salary_max ?? null, job.salary_period)}</span>
-                  </div>
+                  {job.show_salary !== false &&
+                    formatSalary(job.salary_min ?? null, job.salary_max ?? null, job.salary_period) && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <DollarSign className="w-4 h-4" />
+                        <span>{formatSalary(job.salary_min ?? null, job.salary_max ?? null, job.salary_period)}</span>
+                      </div>
+                    )}
                 </div>
 
                 {job.highlights && job.highlights.length > 0 && (

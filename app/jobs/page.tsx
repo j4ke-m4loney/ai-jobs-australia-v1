@@ -1,11 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  Suspense,
+} from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { StateSelector } from "@/components/ui/state-selector";
@@ -43,6 +47,8 @@ interface Job {
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;
+  salary_period?: string;
+  show_salary?: boolean;
   is_featured: boolean;
   created_at: string;
   expires_at: string;
@@ -71,8 +77,8 @@ function hasExactWordMatch(title: string, searchTerm: string): boolean {
   const titleWords = title.toLowerCase().split(/[\s\-]+/); // Split on spaces and hyphens
   const searchWords = searchTerm.toLowerCase().split(/[\s\-]+/);
 
-  return searchWords.every(searchWord =>
-    titleWords.some(titleWord => titleWord === searchWord)
+  return searchWords.every((searchWord) =>
+    titleWords.some((titleWord) => titleWord === searchWord)
   );
 }
 
@@ -81,84 +87,85 @@ function hasWordStartMatch(title: string, searchTerm: string): boolean {
   const titleWords = title.toLowerCase().split(/[\s\-]+/);
   const searchWords = searchTerm.toLowerCase().split(/[\s\-]+/);
 
-  return searchWords.every(searchWord =>
-    titleWords.some(titleWord => titleWord.startsWith(searchWord))
+  return searchWords.every((searchWord) =>
+    titleWords.some((titleWord) => titleWord.startsWith(searchWord))
   );
 }
 
 function calculateSearchRelevance(job: Job, searchTerm: string): number {
   // Safety check for null/undefined job or missing title
   if (!job || !job.title) {
-    console.warn('⚠️ calculateSearchRelevance called with invalid job:', job);
+    console.warn("⚠️ calculateSearchRelevance called with invalid job:", job);
     return 0;
   }
 
   // Use original search term, just lowercase and trim it
   const search = searchTerm.toLowerCase().trim();
   const title = job.title.toLowerCase();
-  const companyName = job.companies?.name?.toLowerCase() || '';
+  const companyName = job.companies?.name?.toLowerCase() || "";
 
   let score = 0;
-  let matchType = '';
+  let matchType = "";
 
   // TITLE SCORING - Check exact matches first with highest priority
 
   // Perfect exact match of entire title
   if (title === search) {
     score = 10000; // Absolute highest priority
-    matchType = 'EXACT-TITLE';
+    matchType = "EXACT-TITLE";
   }
   // All search words appear as exact words in title (e.g., "software" matches "Junior Software Engineer")
   else if (hasExactWordMatch(title, search)) {
     score = 5000; // Very high priority for exact word matches
-    matchType = 'EXACT-WORDS';
+    matchType = "EXACT-WORDS";
   }
   // Title starts with the exact search term
-  else if (title.startsWith(search + ' ') || title.startsWith(search + '-')) {
+  else if (title.startsWith(search + " ") || title.startsWith(search + "-")) {
     score = 3000;
-    matchType = 'TITLE-STARTS-EXACT';
+    matchType = "TITLE-STARTS-EXACT";
   }
   // All search words appear as word prefixes (e.g., "soft" matches "software")
   else if (hasWordStartMatch(title, search)) {
     score = 1000;
-    matchType = 'WORD-PREFIX';
+    matchType = "WORD-PREFIX";
   }
   // Search term appears as a complete word (with boundaries)
   else if (
-    title.includes(' ' + search + ' ') ||
-    title.startsWith(search + ' ') ||
-    title.endsWith(' ' + search) ||
-    title.includes('-' + search + '-') ||
-    title.includes('-' + search + ' ') ||
-    title.includes(' ' + search + '-')
+    title.includes(" " + search + " ") ||
+    title.startsWith(search + " ") ||
+    title.endsWith(" " + search) ||
+    title.includes("-" + search + "-") ||
+    title.includes("-" + search + " ") ||
+    title.includes(" " + search + "-")
   ) {
     score = 500;
-    matchType = 'WORD-BOUNDARY';
+    matchType = "WORD-BOUNDARY";
   }
   // General substring match (lowest priority for titles)
   else if (title.includes(search)) {
     score = 100;
-    matchType = 'SUBSTRING';
+    matchType = "SUBSTRING";
   }
 
   // COMPANY NAME SCORING (much lower priority, only as tiebreaker)
   if (companyName === search) {
     score += 20;
-    matchType += '+company-exact';
-  }
-  else if (companyName.includes(search)) {
+    matchType += "+company-exact";
+  } else if (companyName.includes(search)) {
     score += 5;
-    matchType += '+company-contains';
+    matchType += "+company-contains";
   }
 
   // MINIMAL FEATURED BONUS (should never override relevance)
   if (job.is_featured) {
     score += 0.5; // Tiny bonus, only matters for identical scores
-    matchType += '+feat';
+    matchType += "+feat";
   }
 
   // Enhanced debug logging
-  console.log(`🔍 Search: "${search}" | Job: "${job.title}" | Score: ${score} | Type: ${matchType}`);
+  console.log(
+    `🔍 Search: "${search}" | Job: "${job.title}" | Score: ${score} | Type: ${matchType}`
+  );
 
   return score;
 }
@@ -166,16 +173,23 @@ function calculateSearchRelevance(job: Job, searchTerm: string): number {
 // Convert state codes to appropriate search terms for database filtering
 function getLocationSearchTerms(stateCode: string): string[] {
   const stateMapping: Record<string, string[]> = {
-    "all": [], // Return empty array for "all" - no filtering needed
-    "nsw": ["NSW", "New South Wales", "Sydney", "Newcastle", "Wollongong"],
-    "vic": ["VIC", "Victoria", "Melbourne", "Geelong", "Ballarat"],
-    "qld": ["QLD", "Queensland", "Brisbane", "Gold Coast", "Cairns", "Townsville"],
-    "wa": ["WA", "Western Australia", "Perth", "Fremantle"],
-    "sa": ["SA", "South Australia", "Adelaide"],
-    "tas": ["TAS", "Tasmania", "Hobart", "Launceston"],
-    "act": ["ACT", "Australian Capital Territory", "Canberra"],
-    "nt": ["NT", "Northern Territory", "Darwin", "Alice Springs"],
-    "remote": ["Remote", "Work from home", "WFH", "Anywhere"]
+    all: [], // Return empty array for "all" - no filtering needed
+    nsw: ["NSW", "New South Wales", "Sydney", "Newcastle", "Wollongong"],
+    vic: ["VIC", "Victoria", "Melbourne", "Geelong", "Ballarat"],
+    qld: [
+      "QLD",
+      "Queensland",
+      "Brisbane",
+      "Gold Coast",
+      "Cairns",
+      "Townsville",
+    ],
+    wa: ["WA", "Western Australia", "Perth", "Fremantle"],
+    sa: ["SA", "South Australia", "Adelaide"],
+    tas: ["TAS", "Tasmania", "Hobart", "Launceston"],
+    act: ["ACT", "Australian Capital Territory", "Canberra"],
+    nt: ["NT", "Northern Territory", "Darwin", "Alice Springs"],
+    remote: ["Remote", "Work from home", "WFH", "Anywhere"],
   };
 
   return stateMapping[stateCode] || [];
@@ -224,7 +238,7 @@ function JobsContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
 
   // DEBUG: Track component renders
-  console.log('🔄 JOBS PAGE RENDER:', new Date().getTime());
+  console.log("🔄 JOBS PAGE RENDER:", new Date().getTime());
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobsLoading, setJobsLoading] = useState(true);
   // Initialize with server-safe defaults to prevent hydration mismatch
@@ -315,7 +329,6 @@ function JobsContent() {
     [user]
   );
 
-
   const fetchSuggestions = useCallback(async () => {
     setIsLoadingSuggestions(true);
     try {
@@ -334,6 +347,8 @@ function JobsContent() {
           category,
           salary_min,
           salary_max,
+          salary_period,
+          show_salary,
           is_featured,
           created_at,
           expires_at,
@@ -367,22 +382,31 @@ function JobsContent() {
     }
   }, []);
 
-  const fetchJobs = useCallback(async (overrideSearch?: string, overrideLocation?: string) => {
-    console.log('🗄️ FETCH JOBS CALLED:', new Date().getTime(), new Error().stack);
-    try {
-      setJobsLoading(true);
+  const fetchJobs = useCallback(
+    async (overrideSearch?: string, overrideLocation?: string) => {
+      console.log(
+        "🗄️ FETCH JOBS CALLED:",
+        new Date().getTime(),
+        new Error().stack
+      );
+      try {
+        setJobsLoading(true);
 
-      // Use override parameters if provided, otherwise use state values
-      const effectiveSearchTerm = overrideSearch !== undefined ? overrideSearch : searchTerm;
-      const effectiveLocationTerm = overrideLocation !== undefined ? overrideLocation : selectedState;
+        // Use override parameters if provided, otherwise use state values
+        const effectiveSearchTerm =
+          overrideSearch !== undefined ? overrideSearch : searchTerm;
+        const effectiveLocationTerm =
+          overrideLocation !== undefined ? overrideLocation : selectedState;
 
-      console.log("🔍 fetchJobs called with:", {
-        effectiveSearchTerm,
-        effectiveLocationTerm,
-        fromOverride: overrideSearch !== undefined || overrideLocation !== undefined
-      });
+        console.log("🔍 fetchJobs called with:", {
+          effectiveSearchTerm,
+          effectiveLocationTerm,
+          fromOverride:
+            overrideSearch !== undefined || overrideLocation !== undefined,
+        });
 
-      let query = supabase.from("jobs").select(`
+        let query = supabase.from("jobs").select(
+          `
           *,
           highlights,
           companies (
@@ -392,152 +416,160 @@ function JobsContent() {
             website,
             logo_url
           )
-        `, { count: 'exact' });
-      // Only show approved jobs in public listing
-      query = query.eq("status", "approved");
+        `,
+          { count: "exact" }
+        );
+        // Only show approved jobs in public listing
+        query = query.eq("status", "approved");
 
-      console.log("Fetching jobs - user:", user?.id || "guest");
+        console.log("Fetching jobs - user:", user?.id || "guest");
 
-      // Apply filters with title search (working solution)
-      if (effectiveSearchTerm) {
-        query = query.ilike("title", `%${effectiveSearchTerm}%`);
-      }
-      if (effectiveLocationTerm && effectiveLocationTerm !== "all") {
-        if (effectiveLocationTerm === "remote") {
-          // Handle remote jobs by filtering location_type
-          query = query.eq("location_type", "remote");
-        } else {
-          // Handle state-based filtering using OR conditions
-          const searchTerms = getLocationSearchTerms(effectiveLocationTerm);
-          if (searchTerms.length > 0) {
-            const locationConditions = searchTerms
-              .map(term => `location.ilike.%${term}%`)
-              .join(",");
-            query = query.or(locationConditions);
+        // Apply filters with title search (working solution)
+        if (effectiveSearchTerm) {
+          query = query.ilike("title", `%${effectiveSearchTerm}%`);
+        }
+        if (effectiveLocationTerm && effectiveLocationTerm !== "all") {
+          if (effectiveLocationTerm === "remote") {
+            // Handle remote jobs by filtering location_type
+            query = query.eq("location_type", "remote");
           } else {
-            // Fallback: treat as direct location search (for backward compatibility)
-            query = query.ilike("location", `%${effectiveLocationTerm}%`);
+            // Handle state-based filtering using OR conditions
+            const searchTerms = getLocationSearchTerms(effectiveLocationTerm);
+            if (searchTerms.length > 0) {
+              const locationConditions = searchTerms
+                .map((term) => `location.ilike.%${term}%`)
+                .join(",");
+              query = query.or(locationConditions);
+            } else {
+              // Fallback: treat as direct location search (for backward compatibility)
+              query = query.ilike("location", `%${effectiveLocationTerm}%`);
+            }
           }
         }
-      }
-      if (selectedCategories.length > 0) {
-        query = query.in("category", selectedCategories);
-      }
-      if (selectedJobTypes.length > 0) {
-        query = query.in("job_type", selectedJobTypes);
-      }
-      if (selectedLocationTypes.length > 0) {
-        query = query.in("location_type", selectedLocationTypes);
-      }
-      if (selectedLocations.length > 0) {
-        const locationConditions = selectedLocations
-          .map((loc) =>
-            loc === "remote"
-              ? "location_type.eq.remote"
-              : `location.ilike.%${loc}%`
-          )
-          .join(",");
-        query = query.or(locationConditions);
-      }
-      if (selectedSalary) {
-        query = query.gte("salary_min", parseInt(selectedSalary));
-      }
+        if (selectedCategories.length > 0) {
+          query = query.in("category", selectedCategories);
+        }
+        if (selectedJobTypes.length > 0) {
+          query = query.in("job_type", selectedJobTypes);
+        }
+        if (selectedLocationTypes.length > 0) {
+          query = query.in("location_type", selectedLocationTypes);
+        }
+        if (selectedLocations.length > 0) {
+          const locationConditions = selectedLocations
+            .map((loc) =>
+              loc === "remote"
+                ? "location_type.eq.remote"
+                : `location.ilike.%${loc}%`
+            )
+            .join(",");
+          query = query.or(locationConditions);
+        }
+        if (selectedSalary) {
+          query = query.gte("salary_min", parseInt(selectedSalary));
+        }
 
-      // Sorting
-      switch (sortBy) {
-        case "date":
-          query = query.order("created_at", {
-            ascending: dateSort === "oldest",
-          });
-          break;
-        case "salary":
-          query = query.order("salary_max", {
-            ascending: false,
-            nullsFirst: false,
-          });
-          break;
-        case "featured":
-          query = query
-            .order("is_featured", { ascending: false })
-            .order("created_at", { ascending: false });
-          break;
-        default:
-          query = query
-            .order("is_featured", { ascending: false })
-            .order("created_at", { ascending: false });
-      }
+        // Sorting
+        switch (sortBy) {
+          case "date":
+            query = query.order("created_at", {
+              ascending: dateSort === "oldest",
+            });
+            break;
+          case "salary":
+            query = query.order("salary_max", {
+              ascending: false,
+              nullsFirst: false,
+            });
+            break;
+          case "featured":
+            query = query
+              .order("is_featured", { ascending: false })
+              .order("created_at", { ascending: false });
+            break;
+          default:
+            query = query
+              .order("is_featured", { ascending: false })
+              .order("created_at", { ascending: false });
+        }
 
-      console.log("🎯 EXECUTING SUPABASE QUERY NOW with filters:", {
-        searchTerm: effectiveSearchTerm,
-        location: effectiveLocationTerm,
-        user: user?.id || "guest",
-        page: currentPage
-      });
+        console.log("🎯 EXECUTING SUPABASE QUERY NOW with filters:", {
+          searchTerm: effectiveSearchTerm,
+          location: effectiveLocationTerm,
+          user: user?.id || "guest",
+          page: currentPage,
+        });
 
-      // Apply pagination - calculate offset
-      const offset = (currentPage - 1) * JOBS_PER_PAGE;
-      const { data, error, count: totalCount } = await query.range(offset, offset + JOBS_PER_PAGE - 1);
+        // Apply pagination - calculate offset
+        const offset = (currentPage - 1) * JOBS_PER_PAGE;
+        const {
+          data,
+          error,
+          count: totalCount,
+        } = await query.range(offset, offset + JOBS_PER_PAGE - 1);
 
-      // Set total count for pagination
-      if (totalCount !== null) {
-        setTotalJobs(totalCount);
-      }
+        // Set total count for pagination
+        if (totalCount !== null) {
+          setTotalJobs(totalCount);
+        }
 
-      console.log("🎯 SUPABASE QUERY COMPLETED:", {
-        resultCount: data?.length || 0,
-        totalCount,
-        page: currentPage,
-        error: error?.message,
-        hasData: !!data,
-        firstJobTitle: data?.[0]?.title
-      });
+        console.log("🎯 SUPABASE QUERY COMPLETED:", {
+          resultCount: data?.length || 0,
+          totalCount,
+          page: currentPage,
+          error: error?.message,
+          hasData: !!data,
+          firstJobTitle: data?.[0]?.title,
+        });
 
-      console.log("🔍 Checking for errors after query...");
+        console.log("🔍 Checking for errors after query...");
 
-      if (error) {
-        console.error("Error fetching jobs:", error);
-        console.error("Error details:", error.message, error.details);
-        toast.error("Failed to load jobs");
-        return;
-      }
-
-      let jobsData = (data as Job[]) || [];
-
-      // Filter out any null/invalid jobs from the initial query
-      jobsData = jobsData.filter(job => job && job.title && job.id);
-
-      console.log("🔍 Initial jobsData from main query:", {
-        length: jobsData.length,
-        hasData: !!jobsData,
-        effectiveSearchTerm
-      });
-
-      // TESTING: Company search with comprehensive logging and safeguards
-      // TODO: Monitor for hanging issues
-      if (true && effectiveSearchTerm && effectiveSearchTerm.trim()) {
-        console.log("🔍 Entering company search block...");
-        console.log("🔍 Company search - search term:", effectiveSearchTerm);
-
-        // Safeguard: Prevent duplicate simultaneous company searches
-        if (companySearchInProgress.current) {
-          console.log("🚨 Company search already in progress, skipping duplicate");
+        if (error) {
+          console.error("Error fetching jobs:", error);
+          console.error("Error details:", error.message, error.details);
+          toast.error("Failed to load jobs");
           return;
         }
 
-        companySearchInProgress.current = true;
-        console.log("🔍 Company search lock acquired");
+        let jobsData = (data as Job[]) || [];
 
-        // Safeguard: Set timeout to prevent hanging
-        const companySearchTimeout = setTimeout(() => {
-          console.error("🚨 Company search timeout after 10 seconds");
-          companySearchInProgress.current = false;
-        }, 10000);
-        companySearchTimeouts.current.add(companySearchTimeout);
+        // Filter out any null/invalid jobs from the initial query
+        jobsData = jobsData.filter((job) => job && job.title && job.id);
 
-        try {
-          console.log("🔍 Step 1: Building company jobs query...");
-          // Search for jobs by company name using a separate query
-          let companyQuery = supabase.from("jobs").select(`
+        console.log("🔍 Initial jobsData from main query:", {
+          length: jobsData.length,
+          hasData: !!jobsData,
+          effectiveSearchTerm,
+        });
+
+        // TESTING: Company search with comprehensive logging and safeguards
+        // TODO: Monitor for hanging issues
+        if (true && effectiveSearchTerm && effectiveSearchTerm.trim()) {
+          console.log("🔍 Entering company search block...");
+          console.log("🔍 Company search - search term:", effectiveSearchTerm);
+
+          // Safeguard: Prevent duplicate simultaneous company searches
+          if (companySearchInProgress.current) {
+            console.log(
+              "🚨 Company search already in progress, skipping duplicate"
+            );
+            return;
+          }
+
+          companySearchInProgress.current = true;
+          console.log("🔍 Company search lock acquired");
+
+          // Safeguard: Set timeout to prevent hanging
+          const companySearchTimeout = setTimeout(() => {
+            console.error("🚨 Company search timeout after 10 seconds");
+            companySearchInProgress.current = false;
+          }, 10000);
+          companySearchTimeouts.current.add(companySearchTimeout);
+
+          try {
+            console.log("🔍 Step 1: Building company jobs query...");
+            // Search for jobs by company name using a separate query
+            let companyQuery = supabase.from("jobs").select(`
             *,
             highlights,
             companies (
@@ -548,264 +580,314 @@ function JobsContent() {
               logo_url
             )
           `);
-          console.log("🔍 Step 1 complete: Base query created");
+            console.log("🔍 Step 1 complete: Base query created");
 
-          // Apply same status filter as main query
-          companyQuery = companyQuery.eq("status", "approved");
+            // Apply same status filter as main query
+            companyQuery = companyQuery.eq("status", "approved");
 
-          // Apply all the same filters except title search
-          if (effectiveLocationTerm && effectiveLocationTerm !== "all") {
-            if (effectiveLocationTerm === "remote") {
-              // Handle remote jobs by filtering location_type
-              companyQuery = companyQuery.eq("location_type", "remote");
-            } else {
-              // Handle state-based filtering using OR conditions
-              const searchTerms = getLocationSearchTerms(effectiveLocationTerm);
-              if (searchTerms.length > 0) {
-                const locationConditions = searchTerms
-                  .map(term => `location.ilike.%${term}%`)
-                  .join(",");
-                companyQuery = companyQuery.or(locationConditions);
+            // Apply all the same filters except title search
+            if (effectiveLocationTerm && effectiveLocationTerm !== "all") {
+              if (effectiveLocationTerm === "remote") {
+                // Handle remote jobs by filtering location_type
+                companyQuery = companyQuery.eq("location_type", "remote");
               } else {
-                // Fallback: treat as direct location search (for backward compatibility)
-                companyQuery = companyQuery.ilike("location", `%${effectiveLocationTerm}%`);
+                // Handle state-based filtering using OR conditions
+                const searchTerms = getLocationSearchTerms(
+                  effectiveLocationTerm
+                );
+                if (searchTerms.length > 0) {
+                  const locationConditions = searchTerms
+                    .map((term) => `location.ilike.%${term}%`)
+                    .join(",");
+                  companyQuery = companyQuery.or(locationConditions);
+                } else {
+                  // Fallback: treat as direct location search (for backward compatibility)
+                  companyQuery = companyQuery.ilike(
+                    "location",
+                    `%${effectiveLocationTerm}%`
+                  );
+                }
               }
             }
-          }
-          if (selectedCategories.length > 0) {
-            companyQuery = companyQuery.in("category", selectedCategories);
-          }
-          if (selectedJobTypes.length > 0) {
-            companyQuery = companyQuery.in("job_type", selectedJobTypes);
-          }
-          if (selectedLocationTypes.length > 0) {
-            companyQuery = companyQuery.in("location_type", selectedLocationTypes);
-          }
-          if (selectedLocations.length > 0) {
-            const locationConditions = selectedLocations
-              .map((loc) =>
-                loc === "remote"
-                  ? "location_type.eq.remote"
-                  : `location.ilike.%${loc}%`
-              )
-              .join(",");
-            companyQuery = companyQuery.or(locationConditions);
-          }
-          if (selectedSalary) {
-            companyQuery = companyQuery.gte("salary_min", parseInt(selectedSalary));
-          }
+            if (selectedCategories.length > 0) {
+              companyQuery = companyQuery.in("category", selectedCategories);
+            }
+            if (selectedJobTypes.length > 0) {
+              companyQuery = companyQuery.in("job_type", selectedJobTypes);
+            }
+            if (selectedLocationTypes.length > 0) {
+              companyQuery = companyQuery.in(
+                "location_type",
+                selectedLocationTypes
+              );
+            }
+            if (selectedLocations.length > 0) {
+              const locationConditions = selectedLocations
+                .map((loc) =>
+                  loc === "remote"
+                    ? "location_type.eq.remote"
+                    : `location.ilike.%${loc}%`
+                )
+                .join(",");
+              companyQuery = companyQuery.or(locationConditions);
+            }
+            if (selectedSalary) {
+              companyQuery = companyQuery.gte(
+                "salary_min",
+                parseInt(selectedSalary)
+              );
+            }
 
-          console.log("🔍 Step 2: Applying filters to company jobs query...");
-          // Apply all filters here first
-          console.log("🔍 Step 2 complete: Filters applied");
+            console.log("🔍 Step 2: Applying filters to company jobs query...");
+            // Apply all filters here first
+            console.log("🔍 Step 2 complete: Filters applied");
 
-          console.log("🔍 Step 3: Searching for companies matching term...");
-          // First, find companies that match the search term
-          const { data: matchingCompanies } = await supabase
-            .from("companies")
-            .select("id")
-            .ilike("name", `%${effectiveSearchTerm}%`);
-          console.log("🔍 Step 3 complete: Company search finished", {
-            foundCompanies: matchingCompanies?.length || 0,
-            hasData: !!matchingCompanies
-          });
-
-          if (matchingCompanies && matchingCompanies.length > 0) {
-            console.log("🔍 Step 4: Processing company IDs...");
-            const companyIds = matchingCompanies.map(c => c.id);
-            console.log("🔍 Company IDs extracted:", companyIds);
-            companyQuery = companyQuery.in("company_id", companyIds);
-            console.log("🔍 Step 4 complete: Company filter applied to jobs query");
-
-            console.log("🔍 Step 5: Executing company jobs query...");
-            const { data: companyJobs, error: companyError } = await companyQuery;
-            console.log("🔍 Step 5 complete: Company jobs query finished", {
-              jobCount: companyJobs?.length || 0,
-              hasError: !!companyError,
-              errorMessage: companyError?.message
+            console.log("🔍 Step 3: Searching for companies matching term...");
+            // First, find companies that match the search term
+            const { data: matchingCompanies } = await supabase
+              .from("companies")
+              .select("id")
+              .ilike("name", `%${effectiveSearchTerm}%`);
+            console.log("🔍 Step 3 complete: Company search finished", {
+              foundCompanies: matchingCompanies?.length || 0,
+              hasData: !!matchingCompanies,
             });
 
-            if (!companyError && companyJobs) {
-              console.log("🔍 Step 6: Processing and merging company jobs...");
-              const companyJobsData = companyJobs as Job[];
-              console.log(`🔍 Found ${companyJobsData.length} jobs by company search`);
+            if (matchingCompanies && matchingCompanies.length > 0) {
+              console.log("🔍 Step 4: Processing company IDs...");
+              const companyIds = matchingCompanies.map((c) => c.id);
+              console.log("🔍 Company IDs extracted:", companyIds);
+              companyQuery = companyQuery.in("company_id", companyIds);
+              console.log(
+                "🔍 Step 4 complete: Company filter applied to jobs query"
+              );
 
-              console.log("🔍 Creating existing job IDs set...");
-              // Merge results and remove duplicates by job ID
-              const existingJobIds = new Set(jobsData.map(job => job.id));
-              console.log("🔍 Existing job IDs count:", existingJobIds.size);
+              console.log("🔍 Step 5: Executing company jobs query...");
+              const { data: companyJobs, error: companyError } =
+                await companyQuery;
+              console.log("🔍 Step 5 complete: Company jobs query finished", {
+                jobCount: companyJobs?.length || 0,
+                hasError: !!companyError,
+                errorMessage: companyError?.message,
+              });
 
-              console.log("🔍 Filtering new jobs...");
-              const newJobs = companyJobsData
-                .filter(job => job && job.title && job.id && !existingJobIds.has(job.id));
-              console.log("🔍 New jobs to add:", newJobs.length);
+              if (!companyError && companyJobs) {
+                console.log(
+                  "🔍 Step 6: Processing and merging company jobs..."
+                );
+                const companyJobsData = companyJobs as Job[];
+                console.log(
+                  `🔍 Found ${companyJobsData.length} jobs by company search`
+                );
 
-              console.log("🔍 Merging job arrays...");
-              jobsData = [...jobsData, ...newJobs];
-              console.log(`🔍 Step 6 complete: Total jobs after merging: ${jobsData.length}`);
-            } else if (companyError) {
-              console.error("🚨 Company jobs query error:", companyError);
+                console.log("🔍 Creating existing job IDs set...");
+                // Merge results and remove duplicates by job ID
+                const existingJobIds = new Set(jobsData.map((job) => job.id));
+                console.log("🔍 Existing job IDs count:", existingJobIds.size);
+
+                console.log("🔍 Filtering new jobs...");
+                const newJobs = companyJobsData.filter(
+                  (job) =>
+                    job && job.title && job.id && !existingJobIds.has(job.id)
+                );
+                console.log("🔍 New jobs to add:", newJobs.length);
+
+                console.log("🔍 Merging job arrays...");
+                jobsData = [...jobsData, ...newJobs];
+                console.log(
+                  `🔍 Step 6 complete: Total jobs after merging: ${jobsData.length}`
+                );
+              } else if (companyError) {
+                console.error("🚨 Company jobs query error:", companyError);
+              } else {
+                console.log("🔍 No company jobs data returned");
+              }
             } else {
-              console.log("🔍 No company jobs data returned");
+              console.log(
+                "🔍 Step 4-6: No matching companies found, skipping company jobs query"
+              );
+              console.log("🔍 Continuing with title search results only");
             }
-          } else {
-            console.log("🔍 Step 4-6: No matching companies found, skipping company jobs query");
-            console.log("🔍 Continuing with title search results only");
+
+            // Cleanup: Clear timeout and release lock
+            companySearchTimeouts.current.forEach((timeout) =>
+              clearTimeout(timeout)
+            );
+            companySearchTimeouts.current.clear();
+            companySearchInProgress.current = false;
+            console.log("🔍 Company search lock released (success)");
+          } catch (companySearchError) {
+            console.error("🚨 Company search failed:", companySearchError);
+
+            // Cleanup: Clear timeout and release lock on error
+            companySearchTimeouts.current.forEach((timeout) =>
+              clearTimeout(timeout)
+            );
+            companySearchTimeouts.current.clear();
+            companySearchInProgress.current = false;
+            console.log("🔍 Company search lock released (error)");
+
+            // Continue with title search results only
           }
-
-          // Cleanup: Clear timeout and release lock
-          companySearchTimeouts.current.forEach(timeout => clearTimeout(timeout));
-          companySearchTimeouts.current.clear();
-          companySearchInProgress.current = false;
-          console.log("🔍 Company search lock released (success)");
-
-        } catch (companySearchError) {
-          console.error("🚨 Company search failed:", companySearchError);
-
-          // Cleanup: Clear timeout and release lock on error
-          companySearchTimeouts.current.forEach(timeout => clearTimeout(timeout));
-          companySearchTimeouts.current.clear();
-          companySearchInProgress.current = false;
-          console.log("🔍 Company search lock released (error)");
-
-          // Continue with title search results only
+          console.log("🔍 Completed company search block");
+        } else {
+          console.log("🔍 Skipping company search - no search term");
         }
-        console.log("🔍 Completed company search block");
-      } else {
-        console.log("🔍 Skipping company search - no search term");
-      }
 
-      // Add relevance scoring when search term exists
-      console.log("🔍 Checking if relevance scoring should apply...", {
-        hasSearchTerm: !!effectiveSearchTerm?.trim(),
-        jobCount: jobsData.length
-      });
+        // Add relevance scoring when search term exists
+        console.log("🔍 Checking if relevance scoring should apply...", {
+          hasSearchTerm: !!effectiveSearchTerm?.trim(),
+          jobCount: jobsData.length,
+        });
 
-      if (effectiveSearchTerm && effectiveSearchTerm.trim() && jobsData.length > 0) {
-        // Filter out any null/invalid jobs before processing
-        jobsData = jobsData
-          .filter(job => job && job.title)
-          .map(job => ({
-            ...job,
-            _relevanceScore: calculateSearchRelevance(job, effectiveSearchTerm.trim())
-          }));
-      }
-
-      // Apply sorting to merged results
-      if (jobsData.length > 0) {
-        switch (sortBy) {
-          case "date":
-            jobsData.sort((a, b) => {
-              // If search exists, prioritize relevance first
-              if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-                const relevanceA = (a as JobWithRelevance)._relevanceScore || 0;
-                const relevanceB = (b as JobWithRelevance)._relevanceScore || 0;
-                if (relevanceA !== relevanceB) {
-                  return relevanceB - relevanceA;
-                }
-              }
-              const dateA = new Date(a.created_at).getTime();
-              const dateB = new Date(b.created_at).getTime();
-              return dateSort === "oldest" ? dateA - dateB : dateB - dateA;
-            });
-            break;
-          case "salary":
-            jobsData.sort((a, b) => {
-              // If search exists, prioritize relevance first
-              if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-                const relevanceA = (a as JobWithRelevance)._relevanceScore || 0;
-                const relevanceB = (b as JobWithRelevance)._relevanceScore || 0;
-                if (relevanceA !== relevanceB) {
-                  return relevanceB - relevanceA;
-                }
-              }
-              const salaryA = a.salary_max || 0;
-              const salaryB = b.salary_max || 0;
-              return salaryB - salaryA;
-            });
-            break;
-          case "featured":
-            jobsData.sort((a, b) => {
-              // If search exists, prioritize relevance first
-              if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-                const relevanceA = (a as JobWithRelevance)._relevanceScore || 0;
-                const relevanceB = (b as JobWithRelevance)._relevanceScore || 0;
-                if (relevanceA !== relevanceB) {
-                  return relevanceB - relevanceA;
-                }
-              }
-              if (a.is_featured && !b.is_featured) return -1;
-              if (!a.is_featured && b.is_featured) return 1;
-              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            });
-            break;
-          default:
-            jobsData.sort((a, b) => {
-              // If search exists, prioritize relevance first
-              if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-                const relevanceA = (a as JobWithRelevance)._relevanceScore || 0;
-                const relevanceB = (b as JobWithRelevance)._relevanceScore || 0;
-                if (relevanceA !== relevanceB) {
-                  return relevanceB - relevanceA;
-                }
-              }
-              if (a.is_featured && !b.is_featured) return -1;
-              if (!a.is_featured && b.is_featured) return 1;
-              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            });
+        if (
+          effectiveSearchTerm &&
+          effectiveSearchTerm.trim() &&
+          jobsData.length > 0
+        ) {
+          // Filter out any null/invalid jobs before processing
+          jobsData = jobsData
+            .filter((job) => job && job.title)
+            .map((job) => ({
+              ...job,
+              _relevanceScore: calculateSearchRelevance(
+                job,
+                effectiveSearchTerm.trim()
+              ),
+            }));
         }
+
+        // Apply sorting to merged results
+        if (jobsData.length > 0) {
+          switch (sortBy) {
+            case "date":
+              jobsData.sort((a, b) => {
+                // If search exists, prioritize relevance first
+                if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+                  const relevanceA =
+                    (a as JobWithRelevance)._relevanceScore || 0;
+                  const relevanceB =
+                    (b as JobWithRelevance)._relevanceScore || 0;
+                  if (relevanceA !== relevanceB) {
+                    return relevanceB - relevanceA;
+                  }
+                }
+                const dateA = new Date(a.created_at).getTime();
+                const dateB = new Date(b.created_at).getTime();
+                return dateSort === "oldest" ? dateA - dateB : dateB - dateA;
+              });
+              break;
+            case "salary":
+              jobsData.sort((a, b) => {
+                // If search exists, prioritize relevance first
+                if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+                  const relevanceA =
+                    (a as JobWithRelevance)._relevanceScore || 0;
+                  const relevanceB =
+                    (b as JobWithRelevance)._relevanceScore || 0;
+                  if (relevanceA !== relevanceB) {
+                    return relevanceB - relevanceA;
+                  }
+                }
+                const salaryA = a.salary_max || 0;
+                const salaryB = b.salary_max || 0;
+                return salaryB - salaryA;
+              });
+              break;
+            case "featured":
+              jobsData.sort((a, b) => {
+                // If search exists, prioritize relevance first
+                if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+                  const relevanceA =
+                    (a as JobWithRelevance)._relevanceScore || 0;
+                  const relevanceB =
+                    (b as JobWithRelevance)._relevanceScore || 0;
+                  if (relevanceA !== relevanceB) {
+                    return relevanceB - relevanceA;
+                  }
+                }
+                if (a.is_featured && !b.is_featured) return -1;
+                if (!a.is_featured && b.is_featured) return 1;
+                return (
+                  new Date(b.created_at).getTime() -
+                  new Date(a.created_at).getTime()
+                );
+              });
+              break;
+            default:
+              jobsData.sort((a, b) => {
+                // If search exists, prioritize relevance first
+                if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+                  const relevanceA =
+                    (a as JobWithRelevance)._relevanceScore || 0;
+                  const relevanceB =
+                    (b as JobWithRelevance)._relevanceScore || 0;
+                  if (relevanceA !== relevanceB) {
+                    return relevanceB - relevanceA;
+                  }
+                }
+                if (a.is_featured && !b.is_featured) return -1;
+                if (!a.is_featured && b.is_featured) return 1;
+                return (
+                  new Date(b.created_at).getTime() -
+                  new Date(a.created_at).getTime()
+                );
+              });
+          }
+        }
+
+        console.log("🔍 About to log job count...");
+        console.log(`🎯 FINAL RESULT: Found ${jobsData.length} jobs`);
+
+        // Update total jobs count after merging company search results
+        // Only override the database count when we have a search term (company search adds extra results)
+        if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
+          setTotalJobs(jobsData.length);
+        }
+
+        if (jobsData.length > 0) {
+          console.log("First job:", jobsData[0]);
+
+          // Company data is now included in the query, no need to enrich separately
+          setJobs(jobsData);
+        } else {
+          setJobs([]);
+        }
+
+        // Auto-select first job if none selected (this will be handled after enrichment)
+        if (jobsData.length > 0 && !selectedJob) {
+          // The selection will be handled after enrichment in the useEffect
+        }
+
+        // Fetch suggestions if no jobs found
+        if (jobsData.length === 0) {
+          console.log("No jobs found, fetching suggestions...");
+          await fetchSuggestions();
+        }
+      } catch (error) {
+        console.error("Error in fetchJobs:", error);
+        toast.error("Failed to load jobs");
+      } finally {
+        setJobsLoading(false);
       }
-
-      console.log("🔍 About to log job count...");
-      console.log(`🎯 FINAL RESULT: Found ${jobsData.length} jobs`);
-
-      // Update total jobs count after merging company search results
-      // Only override the database count when we have a search term (company search adds extra results)
-      if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-        setTotalJobs(jobsData.length);
-      }
-
-      if (jobsData.length > 0) {
-        console.log("First job:", jobsData[0]);
-
-        // Company data is now included in the query, no need to enrich separately
-        setJobs(jobsData);
-      } else {
-        setJobs([]);
-      }
-
-      // Auto-select first job if none selected (this will be handled after enrichment)
-      if (jobsData.length > 0 && !selectedJob) {
-        // The selection will be handled after enrichment in the useEffect
-      }
-
-      // Fetch suggestions if no jobs found
-      if (jobsData.length === 0) {
-        console.log("No jobs found, fetching suggestions...");
-        await fetchSuggestions();
-      }
-    } catch (error) {
-      console.error("Error in fetchJobs:", error);
-      toast.error("Failed to load jobs");
-    } finally {
-      setJobsLoading(false);
-    }
-  }, [
-    searchTerm,
-    selectedState,
-    selectedCategories,
-    selectedLocations,
-    selectedJobTypes,
-    selectedLocationTypes,
-    selectedSalary,
-    dateSort,
-    sortBy,
-    currentPage,
-    JOBS_PER_PAGE,
-    selectedJob,
-    user,
-    fetchSuggestions,
-  ]);
+    },
+    [
+      searchTerm,
+      selectedState,
+      selectedCategories,
+      selectedLocations,
+      selectedJobTypes,
+      selectedLocationTypes,
+      selectedSalary,
+      dateSort,
+      sortBy,
+      currentPage,
+      JOBS_PER_PAGE,
+      selectedJob,
+      user,
+      fetchSuggestions,
+    ]
+  );
 
   // Sync URL parameters with state after hydration (prevents hydration mismatch)
   useEffect(() => {
@@ -826,7 +908,10 @@ function JobsContent() {
 
   // Auto-select first job when jobs are loaded
   useEffect(() => {
-    console.log('🎯 AUTO-SELECT EFFECT:', { jobsLength: jobs.length, hasSelected: !!selectedJob });
+    console.log("🎯 AUTO-SELECT EFFECT:", {
+      jobsLength: jobs.length,
+      hasSelected: !!selectedJob,
+    });
     if (jobs.length > 0 && !selectedJob) {
       setSelectedJob(jobs[0]);
     }
@@ -903,14 +988,15 @@ function JobsContent() {
     const currentFilterParams = currentParams.toString();
 
     // Only reset if filter params changed, not just jobId
-    const filterParamsChanged = previousSearchParamsRef.current !== "" &&
-                                previousSearchParamsRef.current !== currentFilterParams;
+    const filterParamsChanged =
+      previousSearchParamsRef.current !== "" &&
+      previousSearchParamsRef.current !== currentFilterParams;
 
     console.log("🔍 searchParams effect:", {
       previous: previousSearchParamsRef.current,
       current: currentFilterParams,
       filterParamsChanged,
-      initialized: initialized.current
+      initialized: initialized.current,
     });
 
     // Update the ref for next comparison
@@ -930,7 +1016,9 @@ function JobsContent() {
   // Initial job fetching effect - now handled in initialization effect above
   // This ensures jobs are fetched AFTER URL params are synced
   useEffect(() => {
-    console.log("🎯 Component mounted - waiting for initialization to fetch jobs");
+    console.log(
+      "🎯 Component mounted - waiting for initialization to fetch jobs"
+    );
     // fetchJobs is now called in the initialization effect after URL params are synced
   }, []);
 
@@ -965,12 +1053,22 @@ function JobsContent() {
     if (initialized.current) {
       setCurrentPage(1);
     }
-  }, [searchTerm, selectedState, selectedCategories, selectedLocations, selectedJobTypes, selectedLocationTypes, selectedSalary, dateSort, sortBy]);
+  }, [
+    searchTerm,
+    selectedState,
+    selectedCategories,
+    selectedLocations,
+    selectedJobTypes,
+    selectedLocationTypes,
+    selectedSalary,
+    dateSort,
+    sortBy,
+  ]);
 
   // Scroll to top when page changes
   useEffect(() => {
     if (currentPage > 1) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [currentPage]);
 
@@ -981,13 +1079,13 @@ function JobsContent() {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       // Check if click is outside all filter dropdowns
-      if (!target.closest('.relative')) {
+      if (!target.closest(".relative")) {
         setActivePill(null);
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, [activePill]);
 
   // Application status check effect
@@ -1011,10 +1109,14 @@ function JobsContent() {
   // Handle direct links on initial page load only (one-time check)
   useEffect(() => {
     // Only run once when jobs are loaded and we have a jobId in URL
-    const jobIdParam = new URLSearchParams(window.location.search).get('jobId');
-    console.log('🔗 URL PARAM EFFECT:', { jobIdParam, jobsLength: jobs.length, hasSelected: !!selectedJob });
+    const jobIdParam = new URLSearchParams(window.location.search).get("jobId");
+    console.log("🔗 URL PARAM EFFECT:", {
+      jobIdParam,
+      jobsLength: jobs.length,
+      hasSelected: !!selectedJob,
+    });
     if (jobIdParam && jobs.length > 0 && !selectedJob) {
-      const job = jobs.find(j => j.id === jobIdParam);
+      const job = jobs.find((j) => j.id === jobIdParam);
       if (job) {
         setSelectedJob(job);
       }
@@ -1031,13 +1133,19 @@ function JobsContent() {
     if (!selectedJob) return;
 
     // If external application, open link
-    if (selectedJob.application_method === "external" && selectedJob.application_url) {
+    if (
+      selectedJob.application_method === "external" &&
+      selectedJob.application_url
+    ) {
       window.open(selectedJob.application_url, "_blank");
       return;
     }
 
     // If email application, open email client
-    if (selectedJob.application_method === "email" && selectedJob.application_email) {
+    if (
+      selectedJob.application_method === "email" &&
+      selectedJob.application_email
+    ) {
       window.location.href = `mailto:${selectedJob.application_email}?subject=Application for ${selectedJob.title}`;
       return;
     }
@@ -1070,21 +1178,21 @@ function JobsContent() {
   const jobDetailsScrollRef = useRef<HTMLDivElement>(null);
 
   const handleJobClick = (job: Job) => {
-    console.log('👆 CLICK JOB:', job.id, new Date().getTime());
+    console.log("👆 CLICK JOB:", job.id, new Date().getTime());
     if (isMobile) {
       // On mobile, navigate to apply page
       router.push(`/apply/${job.id}`);
     } else {
       // On desktop, update URL without triggering router change (prevents refetch)
       const params = new URLSearchParams(window.location.search);
-      params.set('jobId', job.id);
-      window.history.pushState(null, '', `/jobs?${params.toString()}`);
+      params.set("jobId", job.id);
+      window.history.pushState(null, "", `/jobs?${params.toString()}`);
 
       // Update state to show job details in right panel
       if (jobDetailsScrollRef.current) {
         jobDetailsScrollRef.current.scrollTop = 0;
       }
-      console.log('👆 SETTING SELECTED JOB:', job.id);
+      console.log("👆 SETTING SELECTED JOB:", job.id);
       setSelectedJob(job);
     }
   };
@@ -1108,7 +1216,6 @@ function JobsContent() {
     return categories[category as keyof typeof categories] || category;
   };
 
-
   const clearAllFilters = () => {
     setSelectedCategories([]);
     setSelectedLocations([]);
@@ -1126,10 +1233,9 @@ function JobsContent() {
       searchTerm,
       length: searchTerm.length,
       userAuthenticated: !!user,
-      userId: user?.id || 'guest'
+      userId: user?.id || "guest",
     });
   }, [searchTerm, user]);
-
 
   if (loading) {
     return (
@@ -1173,10 +1279,13 @@ function JobsContent() {
                       newValue: e.target.value,
                       currentSearchTerm: searchTerm,
                       userAuthenticated: !!user,
-                      userId: user?.id || 'guest'
+                      userId: user?.id || "guest",
                     });
                     setSearchTerm(e.target.value);
-                    console.log("🔍 DEBUG: setSearchTerm called with:", e.target.value);
+                    console.log(
+                      "🔍 DEBUG: setSearchTerm called with:",
+                      e.target.value
+                    );
                   }}
                   onClear={() => {
                     console.log("🧹 DEBUG: SearchInput onClear fired");
@@ -1233,24 +1342,26 @@ function JobsContent() {
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setActivePill(activePill === 'jobType' ? null : 'jobType')}
+                    onClick={() =>
+                      setActivePill(activePill === "jobType" ? null : "jobType")
+                    }
                     className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
-                      activePill === 'jobType'
-                        ? 'bg-white text-gray-900 border-gray-200'
-                        : 'bg-white/10 text-white border-white/20 backdrop-blur-sm'
-                    } ${activePill && activePill !== 'jobType' ? 'opacity-60' : 'opacity-100'}`}
+                      activePill === "jobType"
+                        ? "bg-white text-gray-900 border-gray-200"
+                        : "bg-white/10 text-white border-white/20 backdrop-blur-sm"
+                    } ${activePill && activePill !== "jobType" ? "opacity-60" : "opacity-100"}`}
                   >
                     {selectedJobTypes.length > 0
-                      ? selectedJobTypes[0] === 'full-time'
-                        ? 'Full time'
-                        : selectedJobTypes[0] === 'part-time'
-                        ? 'Part time'
-                        : selectedJobTypes[0] === 'contract'
-                        ? 'Contract'
-                        : selectedJobTypes[0] === 'internship'
-                        ? 'Casual/Temporary'
-                        : 'Any job type'
-                      : 'Any job type'}
+                      ? selectedJobTypes[0] === "full-time"
+                        ? "Full time"
+                        : selectedJobTypes[0] === "part-time"
+                          ? "Part time"
+                          : selectedJobTypes[0] === "contract"
+                            ? "Contract"
+                            : selectedJobTypes[0] === "internship"
+                              ? "Casual/Temporary"
+                              : "Any job type"
+                      : "Any job type"}
                     <svg
                       className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 md:w-3 md:h-3"
                       viewBox="0 0 12 12"
@@ -1258,14 +1369,14 @@ function JobsContent() {
                     >
                       <path
                         d="M3 4.5L6 7.5L9 4.5"
-                        stroke={activePill === 'jobType' ? '#111827' : 'white'}
+                        stroke={activePill === "jobType" ? "#111827" : "white"}
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </button>
-                  {activePill === 'jobType' && (
+                  {activePill === "jobType" && (
                     <div className="absolute top-full left-0 mt-1 min-w-full bg-white border border-gray-200 rounded-sm overflow-hidden z-50 shadow-lg">
                       {selectedJobTypes.length > 0 && (
                         <button
@@ -1280,7 +1391,7 @@ function JobsContent() {
                       )}
                       <button
                         onClick={() => {
-                          setSelectedJobTypes(['full-time']);
+                          setSelectedJobTypes(["full-time"]);
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
@@ -1289,7 +1400,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedJobTypes(['part-time']);
+                          setSelectedJobTypes(["part-time"]);
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
@@ -1298,7 +1409,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedJobTypes(['contract']);
+                          setSelectedJobTypes(["contract"]);
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
@@ -1307,7 +1418,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedJobTypes(['internship']);
+                          setSelectedJobTypes(["internship"]);
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
@@ -1322,16 +1433,18 @@ function JobsContent() {
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setActivePill(activePill === 'salary' ? null : 'salary')}
+                    onClick={() =>
+                      setActivePill(activePill === "salary" ? null : "salary")
+                    }
                     className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
-                      activePill === 'salary'
-                        ? 'bg-white text-gray-900 border-gray-200'
-                        : 'bg-white/10 text-white border-white/20 backdrop-blur-sm'
-                    } ${activePill && activePill !== 'salary' ? 'opacity-60' : 'opacity-100'}`}
+                      activePill === "salary"
+                        ? "bg-white text-gray-900 border-gray-200"
+                        : "bg-white/10 text-white border-white/20 backdrop-blur-sm"
+                    } ${activePill && activePill !== "salary" ? "opacity-60" : "opacity-100"}`}
                   >
                     {selectedSalary
                       ? `$${parseInt(selectedSalary).toLocaleString()}+`
-                      : 'Any Salary'}
+                      : "Any Salary"}
                     <svg
                       className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 md:w-3 md:h-3"
                       viewBox="0 0 12 12"
@@ -1339,19 +1452,19 @@ function JobsContent() {
                     >
                       <path
                         d="M3 4.5L6 7.5L9 4.5"
-                        stroke={activePill === 'salary' ? '#111827' : 'white'}
+                        stroke={activePill === "salary" ? "#111827" : "white"}
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </button>
-                  {activePill === 'salary' && (
+                  {activePill === "salary" && (
                     <div className="absolute top-full left-0 mt-1 min-w-full bg-white border border-gray-200 rounded-sm overflow-hidden z-50 shadow-lg">
                       {selectedSalary && (
                         <button
                           onClick={() => {
-                            setSelectedSalary('');
+                            setSelectedSalary("");
                             setActivePill(null);
                           }}
                           className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1361,7 +1474,7 @@ function JobsContent() {
                       )}
                       <button
                         onClick={() => {
-                          setSelectedSalary('30000');
+                          setSelectedSalary("30000");
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1370,7 +1483,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedSalary('50000');
+                          setSelectedSalary("50000");
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1379,7 +1492,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedSalary('70000');
+                          setSelectedSalary("70000");
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1388,7 +1501,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedSalary('90000');
+                          setSelectedSalary("90000");
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1397,7 +1510,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedSalary('110000');
+                          setSelectedSalary("110000");
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1406,7 +1519,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setSelectedSalary('140000');
+                          setSelectedSalary("140000");
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1421,22 +1534,24 @@ function JobsContent() {
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setActivePill(activePill === 'date' ? null : 'date')}
+                    onClick={() =>
+                      setActivePill(activePill === "date" ? null : "date")
+                    }
                     className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
-                      activePill === 'date'
-                        ? 'bg-white text-gray-900 border-gray-200'
-                        : 'bg-white/10 text-white border-white/20 backdrop-blur-sm'
-                    } ${activePill && activePill !== 'date' ? 'opacity-60' : 'opacity-100'}`}
+                      activePill === "date"
+                        ? "bg-white text-gray-900 border-gray-200"
+                        : "bg-white/10 text-white border-white/20 backdrop-blur-sm"
+                    } ${activePill && activePill !== "date" ? "opacity-60" : "opacity-100"}`}
                   >
-                    {dateFilter === 'any'
-                      ? 'Listed any time'
-                      : dateFilter === '24h'
-                      ? 'Last 24 hours'
-                      : dateFilter === '7d'
-                      ? 'Last 7 days'
-                      : dateFilter === '30d'
-                      ? 'Last 30 days'
-                      : 'Listed any time'}
+                    {dateFilter === "any"
+                      ? "Listed any time"
+                      : dateFilter === "24h"
+                        ? "Last 24 hours"
+                        : dateFilter === "7d"
+                          ? "Last 7 days"
+                          : dateFilter === "30d"
+                            ? "Last 30 days"
+                            : "Listed any time"}
                     <svg
                       className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 md:w-3 md:h-3"
                       viewBox="0 0 12 12"
@@ -1444,19 +1559,19 @@ function JobsContent() {
                     >
                       <path
                         d="M3 4.5L6 7.5L9 4.5"
-                        stroke={activePill === 'date' ? '#111827' : 'white'}
+                        stroke={activePill === "date" ? "#111827" : "white"}
                         strokeWidth="1.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </button>
-                  {activePill === 'date' && (
+                  {activePill === "date" && (
                     <div className="absolute top-full left-0 mt-1 min-w-full bg-white border border-gray-200 rounded-sm overflow-hidden z-50 shadow-lg">
-                      {dateFilter !== 'any' && (
+                      {dateFilter !== "any" && (
                         <button
                           onClick={() => {
-                            setDateFilter('any');
+                            setDateFilter("any");
                             setActivePill(null);
                           }}
                           className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1466,7 +1581,7 @@ function JobsContent() {
                       )}
                       <button
                         onClick={() => {
-                          setDateFilter('24h');
+                          setDateFilter("24h");
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1475,7 +1590,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setDateFilter('7d');
+                          setDateFilter("7d");
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1484,7 +1599,7 @@ function JobsContent() {
                       </button>
                       <button
                         onClick={() => {
-                          setDateFilter('30d');
+                          setDateFilter("30d");
                           setActivePill(null);
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
@@ -1546,8 +1661,8 @@ function JobsContent() {
                       {jobsLoading
                         ? "Loading..."
                         : !hasActiveFilters
-                        ? "All jobs"
-                        : `${totalJobs > 0 ? totalJobs.toLocaleString() : jobs.length.toLocaleString()} jobs`}
+                          ? "All jobs"
+                          : `${totalJobs > 0 ? totalJobs.toLocaleString() : jobs.length.toLocaleString()} jobs`}
                     </Badge>
                   );
                 })()}
@@ -1639,8 +1754,8 @@ function JobsContent() {
                     No exact matches found
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    We couldn&apos;t find jobs matching your criteria, but here are
-                    some suggestions
+                    We couldn&apos;t find jobs matching your criteria, but here
+                    are some suggestions
                   </p>
 
                   {/* Quick actions */}
@@ -1755,23 +1870,24 @@ function JobsContent() {
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                                   <MapPin className="w-3 h-3" />
                                   <span>{job.location}</span>
-                                  {job.location_type !== 'onsite' && (
+                                  {job.location_type !== "onsite" && (
                                     <span className="text-xs px-2 py-0.5 bg-muted rounded capitalize">
                                       {job.location_type}
                                     </span>
                                   )}
                                 </div>
-                                {formatSalary(
-                                  job.salary_min,
-                                  job.salary_max
-                                ) && (
-                                  <div className="text-sm font-semibold text-green-600">
-                                    {formatSalary(
-                                      job.salary_min,
-                                      job.salary_max
-                                    )}
-                                  </div>
-                                )}
+                                {job.show_salary !== false &&
+                                  formatSalary(
+                                    job.salary_min,
+                                    job.salary_max
+                                  ) && (
+                                    <div className="text-sm font-semibold text-green-600">
+                                      {formatSalary(
+                                        job.salary_min,
+                                        job.salary_max
+                                      )}
+                                    </div>
+                                  )}
                               </div>
                               <Button
                                 variant="ghost"
@@ -1805,9 +1921,9 @@ function JobsContent() {
                     <div className="flex flex-wrap gap-2">
                       {[
                         "Python Developer",
-                        "Data Analyst",
+                        "Data Scientist",
                         "AI Engineer",
-                        "ML Researcher",
+                        "ML Engineer",
                       ].map((term) => (
                         <Button
                           key={term}
@@ -1850,53 +1966,82 @@ function JobsContent() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   className="h-10 w-10"
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
                   </svg>
                 </Button>
 
                 {/* Page Numbers */}
-                {Array.from({ length: Math.min(5, Math.ceil(totalJobs / JOBS_PER_PAGE)) }, (_, i) => {
-                  const totalPages = Math.ceil(totalJobs / JOBS_PER_PAGE);
-                  let pageNum;
+                {Array.from(
+                  { length: Math.min(5, Math.ceil(totalJobs / JOBS_PER_PAGE)) },
+                  (_, i) => {
+                    const totalPages = Math.ceil(totalJobs / JOBS_PER_PAGE);
+                    let pageNum;
 
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={
+                          currentPage === pageNum ? "default" : "outline"
+                        }
+                        size="icon"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="h-10 w-10"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
                   }
-
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
-                      size="icon"
-                      onClick={() => setCurrentPage(pageNum)}
-                      className="h-10 w-10"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
+                )}
 
                 {/* Next Button */}
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalJobs / JOBS_PER_PAGE), p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) =>
+                      Math.min(Math.ceil(totalJobs / JOBS_PER_PAGE), p + 1)
+                    )
+                  }
                   disabled={currentPage >= Math.ceil(totalJobs / JOBS_PER_PAGE)}
                   className="h-10 w-10"
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </Button>
               </div>
@@ -1905,7 +2050,8 @@ function JobsContent() {
             {/* Footer spacer to ensure scrolling works */}
             <div className="h-20 p-4">
               <div className="text-center text-sm text-muted-foreground">
-                {totalJobs > 0 && `Showing ${Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, totalJobs)} - ${Math.min(currentPage * JOBS_PER_PAGE, totalJobs)} of ${totalJobs} jobs`}
+                {totalJobs > 0 &&
+                  `Showing ${Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, totalJobs)} - ${Math.min(currentPage * JOBS_PER_PAGE, totalJobs)} of ${totalJobs} jobs`}
               </div>
             </div>
           </div>

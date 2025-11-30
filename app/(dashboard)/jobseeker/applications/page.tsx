@@ -34,6 +34,8 @@ interface Application {
     job_type: string;
     salary_min: number | null;
     salary_max: number | null;
+    salary_period?: string;
+    show_salary?: boolean;
     category: string;
     companies?: {
       id: string;
@@ -67,6 +69,8 @@ const JobSeekerApplications = () => {
             job_type,
             salary_min,
             salary_max,
+            salary_period,
+            show_salary,
             category,
             companies (
               id,
@@ -314,13 +318,15 @@ const JobSeekerApplications = () => {
                                   <Clock className="w-3 h-3" />
                                   <span className="capitalize">{application.job.job_type}</span>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  <DollarSign className="w-3 h-3" />
-                                  {formatSalary(
-                                    application.job.salary_min,
-                                    application.job.salary_max
-                                  )}
-                                </div>
+                                {application.job.show_salary !== false && (
+                                  <div className="flex items-center gap-1">
+                                    <DollarSign className="w-3 h-3" />
+                                    {formatSalary(
+                                      application.job.salary_min,
+                                      application.job.salary_max
+                                    )}
+                                  </div>
+                                )}
                               </div>
 
                               <div className="flex items-center gap-3">

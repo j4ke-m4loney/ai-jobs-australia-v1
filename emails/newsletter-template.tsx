@@ -147,7 +147,7 @@ export const NewsletterEmail = ({
                         <span style={metaBadge}>
                           {formatLocation(job.location, job.location_type)}
                         </span>
-                        {job.show_salary &&
+                        {job.show_salary !== false &&
                           formatSalary(job.salary_min, job.salary_max) && (
                             <span style={salaryBadge}>
                               {formatSalary(job.salary_min, job.salary_max)}

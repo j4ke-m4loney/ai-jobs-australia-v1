@@ -24,6 +24,8 @@ export async function GET(request: NextRequest) {
         job_type,
         salary_min,
         salary_max,
+        salary_period,
+        show_salary,
         is_featured,
         featured_until,
         featured_order,

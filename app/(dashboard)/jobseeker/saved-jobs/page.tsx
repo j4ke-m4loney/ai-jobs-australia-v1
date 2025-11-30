@@ -32,6 +32,8 @@ interface SavedJob {
     job_type: string;
     salary_min: number | null;
     salary_max: number | null;
+    salary_period?: string;
+    show_salary?: boolean;
     created_at: string;
     category: string;
     companies?: {
@@ -231,13 +233,15 @@ const JobSeekerSavedJobs = () => {
                             <Clock className="w-3 h-3" />
                             <span className="capitalize">{savedJob.job.job_type}</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="w-3 h-3" />
-                            {formatSalary(
-                              savedJob.job.salary_min,
-                              savedJob.job.salary_max
-                            )}
-                          </div>
+                          {savedJob.job.show_salary !== false && (
+                            <div className="flex items-center gap-1">
+                              <DollarSign className="w-3 h-3" />
+                              {formatSalary(
+                                savedJob.job.salary_min,
+                                savedJob.job.salary_max
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-2">
