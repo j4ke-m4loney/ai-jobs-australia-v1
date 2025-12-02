@@ -4,19 +4,15 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { StateSelector } from "@/components/ui/state-selector";
-// import { Card, CardContent } from "@/components/ui/card"; // Commented out - only used in commented section
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
 import RecentJobs from "@/components/RecentJobs";
 import HomepageSocialProof from "@/components/HomepageSocialProof";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import {
-  Search,
-  Users,
-  CheckCircle,
-  Zap,
-} from "lucide-react";
+import { Search, Users, CheckCircle, Zap, X, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
@@ -148,6 +144,42 @@ const HomePage = () => {
     { name: "Deloitte", logo: "/companies/deloitte.png" },
     { name: "Oracle", logo: "/companies/Oracle.png" },
     { name: "Sportsbet", logo: "/companies/sportsbet.svg" },
+  ];
+
+  const negativePoints = [
+    {
+      id: 1,
+      title: "Limited AI job coverage",
+      desc: "Miss jobs posted directly on company sites",
+    },
+    {
+      id: 2,
+      title: "Generic, unfocused listings",
+      desc: "Mixed with non-AI roles, wasting your time",
+    },
+    {
+      id: 3,
+      title: "Automated aggregation",
+      desc: "No quality control or verification",
+    },
+  ];
+
+  const positivePoints = [
+    {
+      id: 1,
+      title: "More AI jobs",
+      desc: "We research thousands of company sites to find hidden opportunities",
+    },
+    {
+      id: 2,
+      title: "Better AI jobs",
+      desc: "Ruthlessly curated for relevance and quality. No fake listings!",
+    },
+    {
+      id: 3,
+      title: "Human-verified",
+      desc: "Every job is reviewed by an actual human, not a bot",
+    },
   ];
 
   return (
@@ -296,6 +328,159 @@ const HomePage = () => {
         <ErrorBoundary>
           <FeaturedJobs />
         </ErrorBoundary>
+
+        {/* Value Proposition Comparison Section */}
+        <section className="py-20 bg-gradient-to-br from-background via-muted/30 to-primary-light/20">
+          <div className="container mx-auto px-4">
+            {/* Header */}
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                A Wider <span className="text-primary">AND</span> Higher-Quality
+                Pool of AI Jobs
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                AI Jobs Australia gives you the most reliable, comprehensive,
+                and human-curated job board you can use.
+              </p>
+            </div>
+
+            {/* Comparison Grid */}
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
+              {/* Left: Other Boards */}
+              <Card className="border-2 border-muted-foreground/20 bg-muted/30 relative">
+                <CardContent className="pt-8 pb-8 px-8">
+                  <h3 className="font-semibold text-xl mb-6 text-center">
+                    Generic Job Boards
+                  </h3>
+                  <div className="space-y-4">
+                    {negativePoints.map((point) => (
+                      <div className="flex items-start gap-3" key={point.id}>
+                        <X className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {point.title}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {point.desc}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right: AI Jobs Australia */}
+              <Card className="border-2 border-primary shadow-lg bg-card relative">
+                <CardContent className="pt-8 pb-8 px-8">
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                    <Image
+                      src="/aja-300x300-blue-logo.svg"
+                      alt="AI Jobs Australia"
+                      width={48}
+                      height={48}
+                      className="w-12 h-12"
+                    />
+                    <h3 className="font-semibold text-xl">AI Jobs Australia</h3>
+                  </div>
+                  <div className="space-y-4">
+                    {positivePoints.map((point) => (
+                      <div className="flex items-start gap-3" key={point.id}>
+                        <CheckCircle className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {point.title}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {point.desc}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* CTA */}
+            <div className="text-center">
+              <Button
+                size="lg"
+                className="bg-gradient-hero hover:opacity-90 text-white"
+                onClick={() => router.push("/jobs")}
+              >
+                Start Browsing
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* Only Real AI Roles Section */}
+        <section className="py-20 bg-background">
+          <div className="container mx-auto px-4">
+            <div className="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+              {/* Left: Content */}
+              <div className="text-center md:text-left">
+                <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                  Only Real AI Roles
+                </h2>
+
+                <p className="text-lg text-foreground mb-6">
+                  We don&apos;t publish jobs unless they genuinely:
+                </p>
+
+                <div className="space-y-4 mb-8 flex flex-col items-center md:items-start">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                    <p className="text-lg text-foreground font-medium">
+                      Build with AI
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                    <p className="text-lg text-foreground font-medium">
+                      Use AI Tools
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+                    <p className="text-lg text-foreground font-medium">
+                      Or Work Closely Alongside AI Teams
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-lg text-muted-foreground mb-8">
+                  This means what you see here is the highest-quality collection
+                  of genuine AI work in the country.
+                </p>
+
+                <Button
+                  size="lg"
+                  className="bg-gradient-hero hover:opacity-90 text-white mx-auto md:mx-0"
+                  onClick={() => router.push("/jobs")}
+                >
+                  View AI Jobs
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Right: Image */}
+              <div className="relative mx-auto max-w-md md:max-w-none">
+                <div className="aspect-square rounded-2xl overflow-hidden border-4 border-border shadow-sm">
+                  <Image
+                    src="/images/real-ai-roles.png"
+                    alt="Professional working on AI projects"
+                    width={600}
+                    height={600}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* How It Works */}
         <section className="py-20">
