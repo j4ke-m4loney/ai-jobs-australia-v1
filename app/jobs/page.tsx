@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import React, {
   useState,
   useEffect,
   useRef,
@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
 import { SaveJobAuthModal } from "@/components/SaveJobAuthModal";
 import { JobCard } from "@/components/jobs/JobCard";
+import { AdCard } from "@/components/jobs/AdCard";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -1945,15 +1946,25 @@ function JobsContent() {
             ) : (
               <ErrorBoundary>
                 <div className="space-y-4 p-4 max-w-lg mx-auto">
-                  {jobs.map((job) => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      isSelected={selectedJob?.id === job.id}
-                      onClick={handleJobClick}
-                      onSaveClick={handleToggleSaveJob}
-                      isJobSaved={isJobSaved(job.id)}
-                    />
+                  {jobs.map((job, index) => (
+                    <React.Fragment key={`job-${job.id}`}>
+                      <JobCard
+                        key={job.id}
+                        job={job}
+                        isSelected={selectedJob?.id === job.id}
+                        onClick={handleJobClick}
+                        onSaveClick={handleToggleSaveJob}
+                        isJobSaved={isJobSaved(job.id)}
+                      />
+                      {index === 0 && (
+                        <AdCard
+                          companyName="NeuronForge"
+                          companyLogo="/ad-example-logo.svg"
+                          tagline="Build smarter, faster, safer. NeuronForge helps teams design, test, and deploy custom AI workflows without the complexity. Create AI that actually works for your business."
+                          targetUrl="#"
+                        />
+                      )}
+                    </React.Fragment>
                   ))}
                 </div>
               </ErrorBoundary>

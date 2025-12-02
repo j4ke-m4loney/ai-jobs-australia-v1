@@ -1,0 +1,15 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="100" fill="#F5F5F5"/>
+
+  <!-- Top green angular shape -->
+  <path d="M 60 50 L 120 50 L 100 85 L 70 85 Z" fill="#2DD4BF" />
+  <path d="M 70 85 L 100 85 L 95 95 L 75 95 Z" fill="#14B8A6" />
+
+  <!-- Bottom blue angular shape -->
+  <path d="M 80 95 L 110 95 L 130 150 L 70 150 Z" fill="#3B82F6" />
+  <path d="M 110 95 L 130 95 L 140 120 L 130 150 Z" fill="#2563EB" />
+
+  <!-- Accent shape -->
+  <path d="M 120 50 L 140 50 L 140 85 L 100 85 Z" fill="#10B981" opacity="0.8"/>
+</svg>
