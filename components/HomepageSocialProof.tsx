@@ -40,16 +40,16 @@ export default function HomepageSocialProof() {
   ];
 
   return (
-    <div className="flex items-center justify-center gap-2 md:gap-4 py-2 md:py-4">
+    <div className="flex items-center justify-center gap-1.5 md:gap-4 py-2 md:py-4 px-2">
       {/* Overlapping Avatars */}
       <div
-        className="flex -space-x-2 md:-space-x-3 select-none"
+        className="flex -space-x-1.5 md:-space-x-3 select-none flex-shrink-0"
         onContextMenu={handleContextMenu}
       >
         {avatars.map((avatar, index) => (
           <Avatar
             key={index}
-            className="w-8 h-8 md:w-10 md:h-10 border-1 border-background ring-2 ring-background"
+            className="w-7 h-7 md:w-10 md:h-10 border-1 border-background ring-2 ring-background"
           >
             <AvatarImage
               src={avatar.src}
@@ -65,8 +65,8 @@ export default function HomepageSocialProof() {
       </div>
 
       {/* Stars and Text */}
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-center gap-0.5">
           {[...Array(5)].map((_, index) => (
             <Star
               key={index}
@@ -74,7 +74,7 @@ export default function HomepageSocialProof() {
             />
           ))}
         </div>
-        <p className="text-xs md:text-sm text-foreground font-medium">
+        <p className="text-[11px] leading-tight md:text-sm text-foreground font-medium">
           Join 500+ job seekers getting weekly alerts
         </p>
       </div>
