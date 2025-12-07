@@ -15,7 +15,7 @@
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",
     "@hookform/resolvers": "^5.2.1",
-    "@next/third-parties": "^15.5.4",
+    "@next/third-parties": "^16.0.7",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -57,7 +57,7 @@
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.542.0",
-    "next": "15.5.2",
+    "next": "^15.5.7",
     "postmark": "^4.0.5",
     "react": "19.1.0",
     "react-day-picker": "^9.9.0",
