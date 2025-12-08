@@ -16,6 +16,7 @@
     "@googlemaps/js-api-loader": "^1.16.10",
     "@hookform/resolvers": "^5.2.1",
     "@next/third-parties": "^16.0.7",
+    "cheerio": "^1.0.0-rc.12",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -74,6 +75,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/cheerio": "^0.22.35",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^20",
     "@types/react": "^19",
