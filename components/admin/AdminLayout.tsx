@@ -39,6 +39,12 @@ const navigation = [
     badge: "pending",
   },
   {
+    name: "Needs Review",
+    href: "/admin/jobs/review",
+    icon: AlertTriangle,
+    badge: "review",
+  },
+  {
     name: "Post Job",
     href: "/admin/jobs/new",
     icon: Plus,
@@ -65,6 +71,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -92,11 +99,25 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, []);
 
+  const fetchReviewCount = useCallback(async () => {
+    try {
+      const { count } = await supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "needs_review");
+
+      setReviewCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching review count:", error);
+    }
+  }, []);
+
   // Effect to check admin access and fetch pending count
   useEffect(() => {
     checkAdminAccess();
     fetchPendingCount();
-  }, [checkAdminAccess, fetchPendingCount]);
+    fetchReviewCount();
+  }, [checkAdminAccess, fetchPendingCount, fetchReviewCount]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut({ scope: 'local' });
@@ -174,6 +195,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   {item.badge === "pending" && pendingCount > 0 && (
                     <span className="inline-flex items-center rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
                       {pendingCount}
+                    </span>
+                  )}
+                  {item.badge === "review" && reviewCount > 0 && (
+                    <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600">
+                      {reviewCount}
                     </span>
                   )}
                 </Link>
