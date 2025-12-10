@@ -172,6 +172,14 @@ const Footer = () => {
                 </li>
                 <li>
                   <Link
+                    href="/blog"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/hire"
                     className="hover:text-background transition-smooth"
                   >

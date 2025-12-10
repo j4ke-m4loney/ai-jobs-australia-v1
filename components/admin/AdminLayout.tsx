@@ -17,6 +17,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Plus,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +64,11 @@ const navigation = [
     name: "Settings",
     href: "/admin/settings",
     icon: Settings,
+  },
+  {
+    name: "Blog",
+    href: "/admin/blog",
+    icon: FileText,
   },
 ];
 
