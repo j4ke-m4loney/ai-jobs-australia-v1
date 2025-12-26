@@ -12,9 +12,17 @@ interface ImageUploadProps {
   value: string;
   onChange: (url: string) => void;
   label?: string;
+  bucket?: string;
+  folder?: string;
 }
 
-export function ImageUpload({ value, onChange, label = "Image" }: ImageUploadProps) {
+export function ImageUpload({
+  value,
+  onChange,
+  label = "Image",
+  bucket = "blog-images",
+  folder = ""
+}: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,14 +44,14 @@ export function ImageUpload({ value, onChange, label = "Image" }: ImageUploadPro
 
       setUploading(true);
 
-      // Create unique filename
+      // Create unique filename with optional folder prefix
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const filePath = folder ? `${folder}/${fileName}` : fileName;
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('blog-images')
+        .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
@@ -53,7 +61,7 @@ export function ImageUpload({ value, onChange, label = "Image" }: ImageUploadPro
 
       // Get public URL
       const { data } = supabase.storage
-        .from('blog-images')
+        .from(bucket)
         .getPublicUrl(filePath);
 
       onChange(data.publicUrl);

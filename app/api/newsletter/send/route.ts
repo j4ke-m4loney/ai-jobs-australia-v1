@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { newsletterService } from "@/lib/newsletter/newsletter-service";
 
 /**
- * Send newsletter to test users (or all users in production)
- * Protected by CRON_SECRET to ensure only Vercel Cron can trigger
+ * Create DRAFT newsletter broadcast in Resend (does not send automatically)
+ * Changed from automated sends to manual review workflow
+ *
+ * Protected by CRON_SECRET for security
+ * After creation, review draft in Resend GUI and send manually
  *
  * POST /api/newsletter/send
  */
@@ -43,12 +46,32 @@ export async function POST(request: NextRequest) {
 
     console.log("[Newsletter Send] Starting scheduled newsletter send...");
 
+    // Parse request body for optional parameters
+    let body: { introText?: string; outroText?: string; sponsorId?: string | null } = {};
+    try {
+      const text = await request.text();
+      if (text) {
+        body = JSON.parse(text);
+      }
+    } catch {
+      // Ignore parse errors, use defaults
+    }
+
     // ========================================
     // Newsletter intro/outro text
     // ========================================
-    const introText =
+    const introText = body.introText ||
       "Here are the latest AI job opportunities posted this week in Australia.";
-    const outroText = "Good luck with your applications! - Jake";
+    const outroText = body.outroText || "Good luck with your applications! - Jake";
+    // ========================================
+
+    // ========================================
+    // Sponsor configuration (optional)
+    // If sponsorId is provided, use that sponsor
+    // Otherwise, default sponsor will be used (if configured)
+    // With multi-placement design, sponsor appears in 3 locations automatically
+    // ========================================
+    const sponsorId = body.sponsorId || null;
     // ========================================
 
     // Check if newsletter should be sent (enough jobs available)
@@ -68,6 +91,7 @@ export async function POST(request: NextRequest) {
     const result = await newsletterService.sendToAllUsers({
       introText,
       outroText,
+      sponsorId,
     });
 
     if (result.success) {
@@ -106,8 +130,9 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET endpoint for manual testing (admin only)
- * Can be used to manually trigger newsletter send from browser
+ * GET endpoint for manual draft creation (admin only)
+ * Creates newsletter DRAFT in Resend - review in GUI before sending
+ * Can be triggered from browser for manual draft creation
  */
 export async function GET(request: NextRequest) {
   try {
@@ -155,6 +180,13 @@ export async function GET(request: NextRequest) {
     const outroText = "Good luck with your applications! - Jake";
     // ========================================
 
+    // ========================================
+    // Sponsor configuration (optional from query params)
+    // With multi-placement design, sponsor appears in 3 locations automatically
+    // ========================================
+    const sponsorId = searchParams.get("sponsorId") || null;
+    // ========================================
+
     const shouldSend = await newsletterService.shouldSendNewsletter(3);
 
     if (!shouldSend) {
@@ -166,8 +198,8 @@ export async function GET(request: NextRequest) {
 
     // If triggered by Vercel cron, send to all users; otherwise send to test users
     const result = isVercelCron
-      ? await newsletterService.sendToAllUsers({ introText, outroText })
-      : await newsletterService.sendToTestUsers({ introText, outroText });
+      ? await newsletterService.sendToAllUsers({ introText, outroText, sponsorId })
+      : await newsletterService.sendToTestUsers({ introText, outroText, sponsorId });
 
     return NextResponse.json({
       success: result.success,

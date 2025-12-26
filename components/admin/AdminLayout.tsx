@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Plus,
   FileText,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +70,11 @@ const navigation = [
     name: "Blog",
     href: "/admin/blog",
     icon: FileText,
+  },
+  {
+    name: "Sponsors",
+    href: "/admin/sponsors",
+    icon: DollarSign,
   },
 ];
 

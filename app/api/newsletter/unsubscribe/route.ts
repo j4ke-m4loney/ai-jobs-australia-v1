@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { removeContactFromAudience } from '@/lib/resend/audience-service';
 
 // Helper function to create Supabase admin client (avoids build-time initialization)
 function getSupabaseAdmin() {
@@ -95,6 +96,17 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to unsubscribe' },
         { status: 500 }
       );
+    }
+
+    // Sync unsubscribe to Resend audience (if configured)
+    if (process.env.RESEND_AUDIENCE_ID) {
+      try {
+        await removeContactFromAudience(process.env.RESEND_AUDIENCE_ID, profile.email);
+        console.log(`[Newsletter Unsubscribe] Synced unsubscribe to Resend: ${profile.email}`);
+      } catch (resendError) {
+        // Log error but don't fail the request - local DB is source of truth
+        console.error('[Newsletter Unsubscribe] Failed to sync to Resend:', resendError);
+      }
     }
 
     console.log(`[Newsletter Unsubscribe] User unsubscribed: ${profile.email}`);

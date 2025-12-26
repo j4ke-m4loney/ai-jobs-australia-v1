@@ -32,25 +32,105 @@ interface JobsByCategory {
   [category: string]: Job[];
 }
 
+interface Sponsor {
+  id: string;
+  name: string;
+  logo_url: string;
+  destination_url: string;
+  tagline?: string | null;
+  hero_image_url?: string | null;
+  headline?: string | null;
+  description?: string | null;
+  cta_text: string;
+  cta_color: string;
+}
+
 interface NewsletterEmailProps {
-  recipientName?: string;
   jobsByCategory: JobsByCategory;
   totalJobsCount: number;
   unsubscribeToken: string;
   introText?: string;
   outroText?: string;
+  sponsor?: Sponsor | null;
 }
 
 const baseUrl =
   process.env.NEXT_PUBLIC_SITE_URL || "https://aijobsaustralia.com.au";
 
+// Sponsor Header Component - "Supported by..." with logo
+const SponsorHeader = ({ sponsor }: { sponsor: Sponsor }) => (
+  <Section style={sponsorHeaderSection}>
+    <Text style={supportedByText}>Supported by...</Text>
+    <Link href={sponsor.destination_url}>
+      <Img
+        src={sponsor.logo_url}
+        alt={sponsor.name}
+        width="180"
+        style={sponsorHeaderLogo}
+      />
+    </Link>
+  </Section>
+);
+
+// Sponsor Main Card Component - Featured sponsor showcase
+const SponsorMainCard = ({ sponsor }: { sponsor: Sponsor }) => (
+  <Section style={sponsorCardSection}>
+    <Text style={sponsorLabel}>Today&apos;s newsletter is supported by {sponsor.name}</Text>
+    {sponsor.hero_image_url && (
+      <Link href={sponsor.destination_url}>
+        <Img
+          src={sponsor.hero_image_url}
+          alt={sponsor.name}
+          style={sponsorHeroImage}
+        />
+      </Link>
+    )}
+    {sponsor.headline && (
+      <Heading style={sponsorHeadline}>{sponsor.headline}</Heading>
+    )}
+    {sponsor.description && (
+      <Text style={sponsorDescription}>{sponsor.description}</Text>
+    )}
+    <Link
+      href={sponsor.destination_url}
+      style={{
+        ...sponsorCtaButton,
+        backgroundColor: sponsor.cta_color,
+      }}
+    >
+      {sponsor.cta_text}
+    </Link>
+  </Section>
+);
+
+// Sponsor Footer Component - Secondary mention
+const SponsorFooter = ({ sponsor }: { sponsor: Sponsor }) => (
+  <Section style={sponsorFooterSection}>
+    <Text style={footerSponsorText}>
+      AI Jobs Australia is supported by {sponsor.name}
+    </Text>
+    {sponsor.description && (
+      <Text style={sponsorDescription}>{sponsor.description}</Text>
+    )}
+    <Link
+      href={sponsor.destination_url}
+      style={{
+        ...sponsorCtaButton,
+        backgroundColor: sponsor.cta_color,
+      }}
+    >
+      {sponsor.cta_text}
+    </Link>
+  </Section>
+);
+
 export const NewsletterEmail = ({
-  recipientName = "there",
   jobsByCategory = {},
   totalJobsCount = 0,
   unsubscribeToken = "",
   introText = "",
   outroText = "",
+  sponsor = null,
 }: NewsletterEmailProps) => {
   const previewText = `${totalJobsCount}+ new AI jobs in Australia this week`;
 
@@ -95,16 +175,27 @@ export const NewsletterEmail = ({
             </Link>
           </Section>
 
+          {/* SPONSOR HEADER - "Supported by..." */}
+          {sponsor && <SponsorHeader sponsor={sponsor} />}
+
           {/* Title */}
           <Heading style={h1}>Latest AI Jobs in Australia 🚀</Heading>
 
           {/* Greeting */}
-          <Text style={text}>Hi {recipientName},</Text>
+          <Text style={text}>Hi there,</Text>
 
           {/* Custom Intro Text */}
           {introText && <Text style={text}>{introText}</Text>}
 
           <Hr style={hr} />
+
+          {/* SPONSOR MAIN CARD - Featured placement */}
+          {sponsor && (
+            <>
+              <SponsorMainCard sponsor={sponsor} />
+              <Hr style={hr} />
+            </>
+          )}
 
           {/* Jobs by Category */}
           {Object.entries(jobsByCategory).map(([category, jobs]) => (
@@ -178,6 +269,14 @@ export const NewsletterEmail = ({
               View All Jobs
             </Link>
           </Section>
+
+          {/* SPONSOR FOOTER - Secondary mention */}
+          {sponsor && (
+            <>
+              <Hr style={hr} />
+              <SponsorFooter sponsor={sponsor} />
+            </>
+          )}
 
           {/* Custom Outro Text */}
           {outroText && <Text style={text}>{outroText}</Text>}
@@ -379,4 +478,91 @@ const footerLink = {
 const unsubscribeLink = {
   color: "#8898aa",
   textDecoration: "underline",
+};
+
+// Sponsor Header Styles
+const sponsorHeaderSection = {
+  textAlign: "center" as const,
+  margin: "24px 0",
+  padding: "0 20px",
+};
+
+const supportedByText = {
+  fontSize: "11px",
+  fontWeight: "500",
+  color: "#8898aa",
+  letterSpacing: "0.5px",
+  marginBottom: "12px",
+  textTransform: "uppercase" as const,
+};
+
+const sponsorHeaderLogo = {
+  margin: "0 auto",
+  display: "block",
+};
+
+// Sponsor Main Card Styles
+const sponsorCardSection = {
+  margin: "32px 0",
+};
+
+const sponsorLabel = {
+  fontSize: "10px",
+  fontWeight: "600",
+  color: "#8898aa",
+  letterSpacing: "1px",
+  marginBottom: "16px",
+  padding: "0 20px",
+  textAlign: "center" as const,
+};
+
+const sponsorHeroImage = {
+  width: "100%",
+  maxWidth: "600px",
+  borderRadius: "8px",
+  margin: "0 auto 20px",
+  display: "block",
+};
+
+const sponsorHeadline = {
+  fontSize: "22px",
+  fontWeight: "700",
+  color: "#1a1a1a",
+  margin: "16px 20px",
+  lineHeight: "1.4",
+};
+
+const sponsorDescription = {
+  fontSize: "15px",
+  color: "#484848",
+  margin: "16px 20px",
+  lineHeight: "1.75",
+  whiteSpace: "pre-wrap" as const,
+};
+
+const sponsorCtaButton = {
+  backgroundColor: "#009306",
+  borderRadius: "5px",
+  color: "#fff",
+  fontSize: "15px",
+  fontWeight: "600",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  display: "inline-block",
+  padding: "12px 28px",
+  margin: "16px 20px",
+};
+
+// Sponsor Footer Styles
+const sponsorFooterSection = {
+  margin: "32px 0",
+  padding: "0 20px",
+  textAlign: "center" as const,
+};
+
+const footerSponsorText = {
+  fontSize: "14px",
+  fontWeight: "500",
+  color: "#666",
+  margin: "12px 0",
 };
