@@ -286,7 +286,7 @@ export const NewsletterEmail = ({
             </Text>
             <Text style={footerText}>
               <Link
-                href="{{unsubscribe_url}}"
+                href="{{{RESEND_UNSUBSCRIBE_URL}}}"
                 style={unsubscribeLink}
               >
                 Unsubscribe
