@@ -232,7 +232,6 @@ export class NewsletterService {
         NewsletterEmail({
           jobsByCategory: content.jobsByCategory,
           totalJobsCount: content.totalJobsCount,
-          unsubscribeToken: "{{unsubscribe_url}}", // Resend provides this automatically
           introText:
             introText || "Here are this week's latest AI jobs in Australia",
           outroText: outroText || "Good luck with your applications!",
@@ -408,9 +407,6 @@ export class NewsletterService {
       const recipients = testUsers.map((user) => ({
         email: user.email,
         firstName: user.first_name || "there",
-        // For test users, we'll use their ID as the unsubscribe token
-        // In production, we'll use the actual newsletter_unsubscribe_token from profiles
-        unsubscribeToken: user.id,
       }));
 
       // Send emails
@@ -423,14 +419,12 @@ export class NewsletterService {
         recipients: recipients.map((r) => ({
           email: r.email,
           firstName: r.firstName,
-          unsubscribeToken: r.unsubscribeToken,
         })),
         subject,
         reactTemplate: (recipientData) =>
           NewsletterEmail({
             jobsByCategory: content.jobsByCategory,
             totalJobsCount: content.totalJobsCount,
-            unsubscribeToken: recipientData.unsubscribeToken,
             introText,
             outroText,
             sponsor: sponsor,
@@ -556,7 +550,6 @@ export class NewsletterService {
         NewsletterEmail({
           jobsByCategory: content.jobsByCategory,
           totalJobsCount: content.totalJobsCount,
-          unsubscribeToken: "{{unsubscribe_url}}", // Resend provides this automatically
           introText,
           outroText,
           sponsor: sponsor,
@@ -801,7 +794,6 @@ export class NewsletterService {
         react: NewsletterEmail({
           jobsByCategory: content.jobsByCategory,
           totalJobsCount: content.totalJobsCount,
-          unsubscribeToken: "test-token", // Test token
           introText,
           outroText,
           sponsor: sponsor,

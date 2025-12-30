@@ -36,6 +36,10 @@ export async function createBroadcast(params: CreateBroadcastParams): Promise<{ 
       html: string;
       segment_id?: string;
       audience_id?: string;
+      headers?: {
+        'List-Unsubscribe': string;
+        'List-Unsubscribe-Post': string;
+      };
     };
 
     let broadcastPayload: BroadcastPayload;
@@ -47,6 +51,10 @@ export async function createBroadcast(params: CreateBroadcastParams): Promise<{ 
         reply_to: params.reply_to,
         html: params.html,
         segment_id: params.segmentId,
+        headers: {
+          'List-Unsubscribe': '<{{unsubscribe_url}}>',
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       };
     } else if (params.audienceId) {
       broadcastPayload = {
@@ -55,6 +63,10 @@ export async function createBroadcast(params: CreateBroadcastParams): Promise<{ 
         reply_to: params.reply_to,
         html: params.html,
         audience_id: params.audienceId,
+        headers: {
+          'List-Unsubscribe': '<{{unsubscribe_url}}>',
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        },
       };
     } else {
       throw new Error('Either audienceId or segmentId must be provided');

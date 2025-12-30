@@ -41,12 +41,10 @@ export class ResendService {
     recipients: Array<{
       email: string;
       firstName?: string;
-      unsubscribeToken: string;
     }>;
     subject: string;
     reactTemplate: (recipientData: {
       firstName: string;
-      unsubscribeToken: string;
     }) => React.ReactElement;
   }) {
     const { recipients, subject, reactTemplate } = params;
@@ -69,7 +67,6 @@ export class ResendService {
           subject: subject,
           react: reactTemplate({
             firstName: recipient.firstName || 'there',
-            unsubscribeToken: recipient.unsubscribeToken,
           }),
         }));
 

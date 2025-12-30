@@ -48,7 +48,6 @@ interface Sponsor {
 interface NewsletterEmailProps {
   jobsByCategory: JobsByCategory;
   totalJobsCount: number;
-  unsubscribeToken: string;
   introText?: string;
   outroText?: string;
   sponsor?: Sponsor | null;
@@ -127,7 +126,6 @@ const SponsorFooter = ({ sponsor }: { sponsor: Sponsor }) => (
 export const NewsletterEmail = ({
   jobsByCategory = {},
   totalJobsCount = 0,
-  unsubscribeToken = "",
   introText = "",
   outroText = "",
   sponsor = null,
@@ -288,7 +286,7 @@ export const NewsletterEmail = ({
             </Text>
             <Text style={footerText}>
               <Link
-                href={`${baseUrl}/unsubscribe?token=${unsubscribeToken}`}
+                href="{{unsubscribe_url}}"
                 style={unsubscribeLink}
               >
                 Unsubscribe
