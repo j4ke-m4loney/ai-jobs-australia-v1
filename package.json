@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "validate": "npm run type-check && npm run lint && npm run build",
     "prepare": "husky",
-    "sync-resend-audience": "tsx --env-file=.env.local scripts/sync-resend-audience.ts"
+    "sync-resend-audience": "tsx --env-file=.env.local scripts/sync-resend-audience.ts",
+    "send-new-year-broadcast": "tsx --env-file=.env.local scripts/send-new-year-broadcast.ts"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",
