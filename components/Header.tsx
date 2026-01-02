@@ -7,7 +7,7 @@ import { useProfile } from "@/contexts/ProfileContext";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LogOut, User, Briefcase, Menu, X, Search, FileText, LogIn, Building } from "lucide-react";
+import { LogOut, User, Briefcase, Menu, X, Search, FileText, LogIn, Building, Wrench } from "lucide-react";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -76,6 +76,12 @@ const Header = () => {
             className="text-muted-foreground hover:text-foreground transition-all font-medium"
           >
             Blog
+          </Link>
+          <Link
+            href="/tools"
+            className="text-muted-foreground hover:text-foreground transition-all font-medium"
+          >
+            Free Tools
           </Link>
         </nav>
 
@@ -168,6 +174,14 @@ const Header = () => {
             >
               <FileText className="w-5 h-5 flex-shrink-0" />
               Blog
+            </Link>
+            <Link
+              href="/tools"
+              onClick={closeMobileMenu}
+              className="flex items-center gap-3 py-3 px-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium"
+            >
+              <Wrench className="w-5 h-5 flex-shrink-0" />
+              Free Tools
             </Link>
 
             {/* Mobile Actions */}
