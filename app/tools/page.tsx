@@ -10,16 +10,18 @@ import {
   Wrench,
   Sparkles,
   TrendingUp,
+  Calculator,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title:
-    "Free AI Job Search Tools | Resume Analyser & More | AI Jobs Australia",
+    "Free AI Job Search Tools | Resume Analyser & Salary Calculator | AI Jobs Australia",
   description:
-    "Free tools to help you land your dream AI job in Australia. Resume keyword analyser, ATS checker, and more career tools for AI, ML, and data science professionals.",
+    "Free tools to help you land your dream AI job in Australia. Resume keyword analyser, salary calculator, ATS checker, and more career tools for AI, ML, and data science professionals.",
   keywords: [
     "AI job tools",
     "resume tools",
+    "salary calculator",
     "ATS checker",
     "AI jobs Australia",
     "career tools",
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Free AI Job Search Tools | AI Jobs Australia",
     description:
-      "Free tools to optimise your job search. Resume analyser, ATS checker, and more for AI and ML professionals.",
+      "Free tools to optimise your job search. Resume analyser, salary calculator, and more for AI and ML professionals.",
     type: "website",
   },
 };
@@ -49,7 +51,20 @@ const tools = [
       "100% private",
     ],
   },
-  // Add more tools here as they are built
+  {
+    title: "AI/ML Salary Calculator",
+    description:
+      "Estimate salary ranges for AI and ML roles across Australia. Compare cities and see how your skills impact compensation.",
+    icon: Calculator,
+    href: "/tools/ai-ml-salary-calculator",
+    badge: "New",
+    features: [
+      "Location-based estimates",
+      "Skill impact analysis",
+      "City comparison",
+      "100% private",
+    ],
+  },
 ];
 
 export default function ToolsPage() {
@@ -137,20 +152,6 @@ export default function ToolsPage() {
                 </Card>
               );
             })}
-          </div>
-
-          {/* Coming Soon Teaser */}
-          <div className="mt-12 text-center">
-            <div className="inline-block p-8 rounded-lg bg-muted/50 border-2 border-dashed">
-              <Wrench className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">
-                More Tools Coming Soon
-              </h3>
-              <p className="text-muted-foreground">
-                We&apos;re building more tools to help you succeed in your AI career.
-                Stay tuned!
-              </p>
-            </div>
           </div>
         </div>
       </section>
