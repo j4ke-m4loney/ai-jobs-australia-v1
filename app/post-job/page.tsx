@@ -17,6 +17,7 @@ import { JobFormData2 } from "@/types/job2";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import SlimFooter from "@/components/SlimFooter";
+import { supabase } from "@/integrations/supabase/client";
 
 // Step Components
 import JobBasicsStep from "@/components/post-job2/JobBasicsStep";
@@ -117,6 +118,26 @@ export default function PostJob2() {
   const [showPreview, setShowPreview] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState<JobFormData2>(defaultFormData);
+  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Fetch companies on mount
+  useEffect(() => {
+    async function fetchCompanies() {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .order('name');
+
+      if (data) {
+        setCompanies(data);
+      }
+      if (error) {
+        console.error('Error fetching companies:', error);
+      }
+    }
+
+    fetchCompanies();
+  }, []);
 
   // Auth redirect useEffect
   useEffect(() => {
@@ -234,6 +255,7 @@ export default function PostJob2() {
             onNext={nextStep}
             onPrev={prevStep}
             onShowPreview={() => setShowPreview(true)}
+            companies={companies}
           />
         );
       case 3:

@@ -19,6 +19,7 @@ import {
   Plus,
   FileText,
   DollarSign,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +76,11 @@ const navigation = [
     name: "Sponsors",
     href: "/admin/sponsors",
     icon: DollarSign,
+  },
+  {
+    name: "Newsletter",
+    href: "/admin/newsletter",
+    icon: Mail,
   },
 ];
 

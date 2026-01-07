@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -182,6 +182,28 @@ export default function AdminNewJobPage() {
     postOnBehalfOf: "",
   });
 
+  // Companies list for dropdown
+  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Fetch companies on mount
+  useEffect(() => {
+    async function fetchCompanies() {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .order('name');
+
+      if (data) {
+        setCompanies(data);
+      }
+      if (error) {
+        console.error('Error fetching companies:', error);
+      }
+    }
+
+    fetchCompanies();
+  }, []);
+
   const updateFormData = (updates: Partial<JobFormData2>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   };
@@ -340,6 +362,7 @@ export default function AdminNewJobPage() {
             onNext={handleNext}
             onPrev={() => setCurrentStep(currentStep - 1)}
             onShowPreview={() => {}}
+            companies={companies}
           />
         );
       case 3:

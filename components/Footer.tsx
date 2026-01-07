@@ -172,6 +172,14 @@ const Footer = () => {
                 </li>
                 <li>
                   <Link
+                    href="/companies"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Companies
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/blog"
                     className="hover:text-background transition-smooth"
                   >
@@ -249,7 +257,7 @@ const Footer = () => {
           <div className="border-t border-background/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="text-background/60 text-sm mb-4 md:mb-0">
-                © 2025 AIJobsAustralia.com.au. All rights reserved.
+                © 2026 AIJobsAustralia.com.au. All rights reserved.
               </div>
 
               {/* Social Links */}

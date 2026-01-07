@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { CompanyCombobox } from "@/components/admin/CompanyCombobox";
 
 const schema = z.object({
   jobDescription: z
@@ -46,6 +47,7 @@ interface Props {
   onNext: () => void;
   onPrev: () => void;
   onShowPreview: () => void;
+  companies: Array<{ id: string; name: string }>;
 }
 
 export default function DescribeJobStep({
@@ -54,6 +56,7 @@ export default function DescribeJobStep({
   onNext,
   onPrev,
   onShowPreview,
+  companies,
 }: Props) {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -172,10 +175,10 @@ export default function DescribeJobStep({
                       Company Name *
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="e.g. TechCorp Australia"
-                        {...field}
-                        className="text-base h-12 border-primary"
+                      <CompanyCombobox
+                        value={field.value}
+                        onChange={field.onChange}
+                        companies={companies}
                       />
                     </FormControl>
                     <FormMessage />

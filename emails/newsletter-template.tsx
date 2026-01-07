@@ -183,7 +183,18 @@ export const NewsletterEmail = ({
           <Text style={text}>Hi there,</Text>
 
           {/* Custom Intro Text */}
-          {introText && <Text style={text}>{introText}</Text>}
+          {introText && (
+            <Section style={{ padding: "0 20px", margin: "16px 0" }}>
+              <div
+                style={{
+                  color: "#484848",
+                  fontSize: "16px",
+                  lineHeight: "24px",
+                }}
+                dangerouslySetInnerHTML={{ __html: introText }}
+              />
+            </Section>
+          )}
 
           <Hr style={hr} />
 
@@ -277,7 +288,18 @@ export const NewsletterEmail = ({
           )}
 
           {/* Custom Outro Text */}
-          {outroText && <Text style={text}>{outroText}</Text>}
+          {outroText && (
+            <Section style={{ padding: "0 20px", margin: "16px 0" }}>
+              <div
+                style={{
+                  color: "#484848",
+                  fontSize: "16px",
+                  lineHeight: "24px",
+                }}
+                dangerouslySetInnerHTML={{ __html: outroText }}
+              />
+            </Section>
+          )}
 
           {/* Footer */}
           <Section style={footer}>
