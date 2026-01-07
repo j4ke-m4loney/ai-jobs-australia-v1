@@ -258,15 +258,6 @@ export const NewsletterEmail = ({
                   </table>
                 </Section>
               ))}
-
-              <Section style={viewAllSection}>
-                <Link
-                  href={`${baseUrl}/jobs?category=${category}`}
-                  style={viewAllLink}
-                >
-                  View all {categoryTitles[category] || category} →
-                </Link>
-              </Section>
             </Section>
           ))}
 
@@ -312,6 +303,10 @@ export const NewsletterEmail = ({
                 style={unsubscribeLink}
               >
                 Unsubscribe
+              </Link>
+              {" • "}
+              <Link href={`${baseUrl}/advertise`} style={footerLink}>
+                Advertise
               </Link>
               {" • "}
               <Link href={`${baseUrl}`} style={footerLink}>
@@ -386,11 +381,8 @@ const categorySection = {
 };
 
 const jobCard = {
-  backgroundColor: "#ffffff",
-  borderRadius: "8px",
-  padding: "16px",
-  margin: "0 20px 12px 20px",
-  border: "1px solid #e6ebf1",
+  padding: "12px 20px",
+  margin: "0 0 16px 0",
 };
 
 const jobTable = {
@@ -448,17 +440,6 @@ const salaryBadge = {
   fontSize: "13px",
   color: "#2e7d32",
   fontWeight: "600",
-};
-
-const viewAllSection = {
-  padding: "10px 20px",
-};
-
-const viewAllLink = {
-  color: "#1976d2",
-  fontSize: "14px",
-  textDecoration: "none",
-  fontWeight: "500",
 };
 
 const buttonSection = {

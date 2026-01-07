@@ -209,7 +209,7 @@ export class NewsletterService {
       // Generate newsletter content
       const content = await contentGenerator.generateNewsletterContent({
         daysAgo: 7,
-        maxPerCategory: 5,
+        maxPerCategory: 10,
         maxTotalJobs: 20,
       });
 
@@ -385,7 +385,7 @@ export class NewsletterService {
       // Generate newsletter content
       const content = await contentGenerator.generateNewsletterContent({
         daysAgo: 7,
-        maxPerCategory: 5,
+        maxPerCategory: 10,
         maxTotalJobs: 20,
       });
 
@@ -421,7 +421,7 @@ export class NewsletterService {
           firstName: r.firstName,
         })),
         subject,
-        reactTemplate: (recipientData) =>
+        reactTemplate: (_recipientData) =>
           NewsletterEmail({
             jobsByCategory: content.jobsByCategory,
             totalJobsCount: content.totalJobsCount,
@@ -527,7 +527,7 @@ export class NewsletterService {
       // Generate newsletter content
       const content = await contentGenerator.generateNewsletterContent({
         daysAgo: 7,
-        maxPerCategory: 5,
+        maxPerCategory: 10,
         maxTotalJobs: 20,
       });
 
@@ -773,7 +773,7 @@ export class NewsletterService {
       // Generate newsletter content
       const content = await contentGenerator.generateNewsletterContent({
         daysAgo: 7,
-        maxPerCategory: 5,
+        maxPerCategory: 10,
         maxTotalJobs: 20,
       });
 
