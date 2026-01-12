@@ -68,7 +68,7 @@ export default function FeaturedJobs() {
 
   const handleJobClick = (jobId: string) => {
     if (!user) {
-      router.push("/auth");
+      router.push("/login");
       return;
     }
     router.push(`/jobs/${jobId}`);
@@ -106,9 +106,6 @@ export default function FeaturedJobs() {
                 Featured Jobs
               </h2>
             </div>
-            <p className="text-muted-foreground text-lg">
-              Premium AI Jobs Opportunities from top AI companies
-            </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
