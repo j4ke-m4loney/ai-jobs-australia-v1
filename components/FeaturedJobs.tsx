@@ -1,21 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { formatSalary } from '@/lib/salary-utils';
-import {
-  MapPin,
-  Building,
-  Clock,
-  DollarSign,
-  Star,
-  Sparkles,
-  ArrowRight,
-} from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { formatSalary } from "@/lib/salary-utils";
+import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
+import { Sparkles } from "lucide-react";
 
 interface Company {
   id: string;
@@ -55,17 +48,19 @@ export default function FeaturedJobs() {
 
   const fetchFeaturedJobs = async () => {
     try {
-      const response = await fetch('/api/jobs/featured?limit=6');
+      const response = await fetch("/api/jobs/featured?limit=6");
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch featured jobs');
+        throw new Error(data.error || "Failed to fetch featured jobs");
       }
 
       setJobs(data.jobs || []);
     } catch (err: unknown) {
-      console.error('Error fetching featured jobs:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch featured jobs');
+      console.error("Error fetching featured jobs:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch featured jobs"
+      );
     } finally {
       setLoading(false);
     }
@@ -79,21 +74,11 @@ export default function FeaturedJobs() {
     router.push(`/jobs/${jobId}`);
   };
 
-
   const formatJobType = (jobType: string) => {
     return jobType
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  const formatLocationType = (locationType: string) => {
-    const mapping: { [key: string]: string } = {
-      'remote': 'Remote',
-      'onsite': 'On-site',
-      'hybrid': 'Hybrid',
-    };
-    return mapping[locationType] || locationType;
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -102,11 +87,12 @@ export default function FeaturedJobs() {
     const diffInMs = now.getTime() - date.getTime();
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-    if (diffInDays === 0) return 'Today';
-    if (diffInDays === 1) return '1 day ago';
+    if (diffInDays === 0) return "Today";
+    if (diffInDays === 1) return "1 day ago";
     if (diffInDays < 7) return `${diffInDays} days ago`;
-    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} week${Math.floor(diffInDays / 7) > 1 ? 's' : ''} ago`;
-    return `${Math.floor(diffInDays / 30)} month${Math.floor(diffInDays / 30) > 1 ? 's' : ''} ago`;
+    if (diffInDays < 30)
+      return `${Math.floor(diffInDays / 7)} week${Math.floor(diffInDays / 7) > 1 ? "s" : ""} ago`;
+    return `${Math.floor(diffInDays / 30)} month${Math.floor(diffInDays / 30) > 1 ? "s" : ""} ago`;
   };
 
   if (loading) {
@@ -116,21 +102,21 @@ export default function FeaturedJobs() {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Sparkles className="w-6 h-6 text-primary" />
-              <h2 className="text-3xl font-bold text-foreground">Featured Jobs</h2>
+              <h2 className="text-3xl font-bold text-foreground">
+                Featured Jobs
+              </h2>
             </div>
             <p className="text-muted-foreground text-lg">
-              Premium opportunities from top AI companies
+              Premium AI Jobs Opportunities from top AI companies
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
+                <CardContent className="p-5">
+                  <div className="space-y-3">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
                     <div className="h-3 bg-muted rounded"></div>
                     <div className="h-3 bg-muted rounded w-2/3"></div>
                   </div>
@@ -153,108 +139,99 @@ export default function FeaturedJobs() {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Sparkles className="w-6 h-6 text-primary" />
-            <h2 className="text-3xl font-bold text-foreground">Featured Jobs</h2>
+            <h2 className="text-3xl font-bold text-foreground">
+              Featured Jobs
+            </h2>
           </div>
-          <p className="text-muted-foreground text-lg">
-            Premium opportunities from top AI companies
-          </p>
+          {/* <p className="text-muted-foreground text-lg">
+            Premuim opportunities from top AI companies
+          </p> */}
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {jobs.filter(job => job && job.title && job.id).map((job) => (
-            <Card
-              key={job.id}
-              className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 border-primary/20 relative overflow-hidden"
-              onClick={() => handleJobClick(job.id)}
-            >
-              {/* Featured badge */}
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-primary text-primary-foreground flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-current" />
-                  Featured
-                </Badge>
-              </div>
+        <div className="flex flex-wrap justify-center gap-6 mb-8">
+          {jobs
+            .filter((job) => job && job.title && job.id)
+            .map((job) => (
+              <Card
+                key={job.id}
+                className="w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] h-full transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border border-l-4 border-l-primary cursor-pointer"
+                onClick={() => handleJobClick(job.id)}
+              >
+                <CardContent className="p-5 flex flex-col h-full">
+                  {/* Job Title */}
+                  <h3 className="font-semibold text-lg line-clamp-2 text-foreground mb-1">
+                    {job.title}
+                  </h3>
 
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-foreground pr-20">
-                  {job.title}
-                </CardTitle>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Building className="w-4 h-4" />
-                  <span className="text-sm">
-                    {job.companies?.name || 'Company Name'}
-                  </span>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
-                    <span>{job.location}</span>
-                    {job.location_type !== 'onsite' && (
-                      <>
-                        <span>•</span>
-                        <span>{formatLocationType(job.location_type)}</span>
-                      </>
-                    )}
+                  {/* Company Name */}
+                  <div className="flex items-center gap-1 text-base text-foreground mb-3">
+                    <span className="font-medium">
+                      {job.companies?.name || "Company"}
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatJobType(job.job_type)}</span>
-                    <span>•</span>
-                    <span>{formatTimeAgo(job.created_at)}</span>
+                  {/* Location + Location Type Badge */}
+                  <div className="flex items-center gap-4 text-sm text-foreground mb-3">
+                    <div className="flex items-center gap-1">
+                      <span>{job.location}</span>
+                    </div>
+                    <LocationTypeBadge locationType={job.location_type} />
                   </div>
 
+                  {/* Job Type */}
+                  <div className="text-sm text-foreground mb-3">
+                    {formatJobType(job.job_type)}
+                  </div>
+
+                  {/* Salary */}
                   {job.show_salary !== false &&
-                    formatSalary(job.salary_min ?? null, job.salary_max ?? null, job.salary_period) && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <DollarSign className="w-4 h-4" />
-                        <span>{formatSalary(job.salary_min ?? null, job.salary_max ?? null, job.salary_period)}</span>
+                    formatSalary(
+                      job.salary_min ?? null,
+                      job.salary_max ?? null,
+                      job.salary_period
+                    ) && (
+                      <div className="text-sm font-semibold text-green-600 mb-3">
+                        {formatSalary(
+                          job.salary_min ?? null,
+                          job.salary_max ?? null,
+                          job.salary_period
+                        )}
                       </div>
                     )}
-                </div>
 
-                {job.highlights && job.highlights.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {job.highlights.slice(0, 3).map((highlight, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="text-xs"
-                      >
-                        {highlight}
-                      </Badge>
-                    ))}
-                    {job.highlights.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{job.highlights.length - 3} more
-                      </Badge>
-                    )}
+                  {/* Job Highlights - Bullet Points */}
+                  {job.highlights && job.highlights.length > 0 && (
+                    <div className="mb-3">
+                      <ul className="space-y-1 text-sm text-foreground">
+                        {job.highlights
+                          .filter((highlight) => highlight.trim().length > 0)
+                          .slice(0, 3)
+                          .map((highlight, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 shrink-0"></span>
+                              <span className="leading-relaxed">
+                                {highlight}
+                              </span>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Timestamp */}
+                  <div className="text-xs text-muted-foreground mb-3">
+                    Posted {formatTimeAgo(job.created_at)}
                   </div>
-                )}
 
-                <div className="pt-2">
-                  <Button variant="outline" className="w-full group">
-                    View Details
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="text-center">
-          <Button
-            onClick={() => router.push('/jobs?featured=true')}
-            size="lg"
-            className="group"
-          >
-            View All Featured Jobs
-            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
+                  {/* View Job Button - at the bottom */}
+                  <div className="mt-auto pt-3">
+                    <Button variant="default" className="w-full">
+                      View Job
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
         </div>
       </div>
     </section>

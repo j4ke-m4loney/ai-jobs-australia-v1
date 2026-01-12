@@ -291,6 +291,11 @@ const HomePage = () => {
           </div>
         </section>
 
+        {/* Featured Jobs */}
+        <ErrorBoundary>
+          <FeaturedJobs />
+        </ErrorBoundary>
+
         {/* Recent AI Jobs */}
         <ErrorBoundary>
           <RecentJobs />
@@ -323,11 +328,6 @@ const HomePage = () => {
             </div>
           </div>
         </section> */}
-
-        {/* Featured Jobs */}
-        <ErrorBoundary>
-          <FeaturedJobs />
-        </ErrorBoundary>
 
         {/* Value Proposition Comparison Section */}
         <section className="py-20 bg-gradient-to-br from-background via-muted/30 to-primary-light/20">

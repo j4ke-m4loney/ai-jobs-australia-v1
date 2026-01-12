@@ -469,6 +469,31 @@ function JobsContent() {
           query = query.gte("salary_min", parseInt(selectedSalary));
         }
 
+        // Apply date filter
+        if (dateFilter !== "any") {
+          const now = new Date();
+          let cutoffDate;
+
+          switch (dateFilter) {
+            case "24h":
+              cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+              break;
+            case "7d":
+              cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              break;
+            case "30d":
+              cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+              break;
+          }
+
+          if (cutoffDate) {
+            console.log("📅 Applying date filter:", dateFilter, "cutoff:", cutoffDate.toISOString());
+            query = query.gte("created_at", cutoffDate.toISOString());
+          }
+        } else {
+          console.log("📅 No date filter applied (dateFilter is 'any')");
+        }
+
         // Sorting
         switch (sortBy) {
           case "date":
@@ -496,6 +521,7 @@ function JobsContent() {
         console.log("🎯 EXECUTING SUPABASE QUERY NOW with filters:", {
           searchTerm: effectiveSearchTerm,
           location: effectiveLocationTerm,
+          dateFilter: dateFilter,
           user: user?.id || "guest",
           page: currentPage,
         });
@@ -762,16 +788,6 @@ function JobsContent() {
           switch (sortBy) {
             case "date":
               jobsData.sort((a, b) => {
-                // If search exists, prioritize relevance first
-                if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-                  const relevanceA =
-                    (a as JobWithRelevance)._relevanceScore || 0;
-                  const relevanceB =
-                    (b as JobWithRelevance)._relevanceScore || 0;
-                  if (relevanceA !== relevanceB) {
-                    return relevanceB - relevanceA;
-                  }
-                }
                 const dateA = new Date(a.created_at).getTime();
                 const dateB = new Date(b.created_at).getTime();
                 return dateSort === "oldest" ? dateA - dateB : dateB - dateA;
@@ -879,6 +895,7 @@ function JobsContent() {
       selectedJobTypes,
       selectedLocationTypes,
       selectedSalary,
+      dateFilter,
       dateSort,
       sortBy,
       currentPage,
@@ -2051,7 +2068,7 @@ function JobsContent() {
             <div className="h-20 p-4">
               <div className="text-center text-sm text-muted-foreground">
                 {totalJobs > 0 &&
-                  `Showing ${Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, totalJobs)} - ${Math.min(currentPage * JOBS_PER_PAGE, totalJobs)} of ${totalJobs} jobs`}
+                  `Showing ${Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, totalJobs)} - ${Math.min(currentPage * JOBS_PER_PAGE, totalJobs)}`}
               </div>
             </div>
           </div>
