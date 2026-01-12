@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { Toaster } from "@/components/ui/sonner";
@@ -15,7 +16,9 @@ function PostHogIdentifyWrapper({ children }: { children: React.ReactNode }) {
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
     <PostHogProvider>
-      <PostHogPageView />
+      <Suspense fallback={null}>
+        <PostHogPageView />
+      </Suspense>
       <AuthProvider>
         <ProfileProvider>
           <PostHogIdentifyWrapper>
