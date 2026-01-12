@@ -6,6 +6,7 @@ import { Clock, Heart } from "lucide-react";
 import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
+import { trackEvent } from "@/lib/analytics";
 
 interface Job {
   id: string;
@@ -92,6 +93,25 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
   hasApplied,
   scrollContainerRef,
 }) => {
+  const handleApplyClick = () => {
+    // Track Apply button click
+    trackEvent("apply_button_clicked", {
+      job_id: job.id,
+      job_title: job.title,
+      company: job.companies?.name || "Unknown",
+      location: job.location,
+      is_featured: job.is_featured,
+      location_type: job.location_type,
+      job_type: job.job_type,
+      category: job.category,
+      salary_min: job.salary_min,
+      salary_max: job.salary_max,
+    });
+
+    // Call the original onApply handler
+    onApply();
+  };
+
   return (
     <div
       ref={scrollContainerRef}
@@ -207,7 +227,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                     View
                   </Link>
                   <Button
-                    onClick={onApply}
+                    onClick={handleApplyClick}
                     className="bg-primary hover:bg-primary/90 text-white px-6"
                   >
                     Apply
@@ -278,7 +298,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
               {!hasApplied && (
                 <Button
-                  onClick={onApply}
+                  onClick={handleApplyClick}
                   size="lg"
                   className="bg-primary hover:bg-primary/90 text-white px-8"
                 >

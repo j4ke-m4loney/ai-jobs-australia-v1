@@ -29,6 +29,7 @@ import {
 import { formatSalary } from "@/lib/salary-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { trackApplicationStarted, trackApplicationSubmitted } from "@/lib/analytics";
 
 interface Job {
   id: string;
@@ -129,6 +130,13 @@ export default function ApplyPage() {
       router.push("/jobs");
     } else {
       setJob(data as Job);
+
+      // Track application started
+      trackApplicationStarted({
+        job_id: data.id,
+        job_title: data.title,
+        company: data.companies?.name || "Unknown",
+      });
     }
     setJobLoading(false);
   }, [jobId, router]);
@@ -326,6 +334,15 @@ export default function ApplyPage() {
       if (!response.ok) {
         throw new Error(data.error || "Failed to submit application");
       }
+
+      // Track successful application submission
+      trackApplicationSubmitted({
+        job_id: job.id,
+        job_title: job.title,
+        company: job.companies?.name || "Unknown",
+        has_resume: !!selectedResume,
+        has_cover_letter: !!selectedCoverLetter,
+      });
 
       toast.success("Application submitted successfully!");
       setHasApplied(true); // Update local state to prevent duplicate submissions

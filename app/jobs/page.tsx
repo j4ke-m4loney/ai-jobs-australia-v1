@@ -32,6 +32,7 @@ import { SaveJobAuthModal } from "@/components/SaveJobAuthModal";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { trackJobSearch } from "@/lib/analytics";
 
 interface Job {
   id: string;
@@ -860,6 +861,15 @@ function JobsContent() {
         if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
           setTotalJobs(jobsData.length);
         }
+
+        // Track search event with PostHog
+        trackJobSearch({
+          search_query: effectiveSearchTerm || undefined,
+          location_filter: effectiveLocationTerm !== "all" ? effectiveLocationTerm : undefined,
+          category_filter: selectedCategories.length > 0 ? selectedCategories.join(",") : undefined,
+          salary_filter: selectedSalary || undefined,
+          results_count: jobsData.length,
+        });
 
         if (jobsData.length > 0) {
           console.log("First job:", jobsData[0]);
