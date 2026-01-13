@@ -215,11 +215,6 @@ export default function FeaturedJobs() {
                     </div>
                   )}
 
-                  {/* Timestamp */}
-                  <div className="text-xs text-muted-foreground mb-3">
-                    Posted {formatTimeAgo(job.created_at)}
-                  </div>
-
                   {/* View Job Button - at the bottom */}
                   <div className="mt-auto pt-3">
                     <Button variant="default" className="w-full">
