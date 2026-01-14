@@ -63,20 +63,42 @@ export function useAnalytics() {
         };
 
         if (jobIds.length > 0) {
-          // Fetch applications for employer's jobs
-          const { data: applications, error: appsError } = await supabase
-            .from('job_applications')
-            .select(`
-              id,
-              status,
-              created_at,
-              job_id,
-              applicant_id
-            `)
-            .in('job_id', jobIds)
-            .order('created_at', { ascending: false });
+          // Fetch applications for employer's jobs in batches to avoid URL length limits
+          const BATCH_SIZE = 50;
+          const allApplications: Array<{
+            id: string;
+            status: string | null;
+            created_at: string;
+            job_id: string;
+            applicant_id: string;
+          }> = [];
 
-          if (appsError) throw appsError;
+          for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
+            const batchIds = jobIds.slice(i, i + BATCH_SIZE);
+            const { data: batchData, error: batchError } = await supabase
+              .from('job_applications')
+              .select(`
+                id,
+                status,
+                created_at,
+                job_id,
+                applicant_id
+              `)
+              .in('job_id', batchIds);
+
+            if (batchError) {
+              console.error('Error fetching applications batch:', batchError);
+            } else if (batchData) {
+              allApplications.push(...batchData);
+            }
+          }
+
+          // Sort all applications by created_at descending (client-side)
+          allApplications.sort((a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+
+          const applications = allApplications;
 
           // Get applicant profiles for recent applications
           const recentApps = applications?.slice(0, 5) || [];

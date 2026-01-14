@@ -88,28 +88,43 @@ const EmployerJobs = () => {
 
       const fetchedJobs = jobsData || [];
 
-      // Get application counts for each job
-      const jobsWithApplicationCounts = await Promise.all(
-        fetchedJobs.map(async (job) => {
-          const { count, error: countError } = await supabase
+      // Get application counts for all jobs in batched queries to avoid URL length limits
+      const jobIds = fetchedJobs.map((job) => job.id);
+      let countsByJobId: Record<string, number> = {};
+
+      if (jobIds.length > 0) {
+        // Process in batches of 50 to avoid URL length limits
+        const BATCH_SIZE = 50;
+        const allApplicationData: { job_id: string }[] = [];
+
+        for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
+          const batchIds = jobIds.slice(i, i + BATCH_SIZE);
+          const { data: batchData, error: batchError } = await supabase
             .from("job_applications")
-            .select("*", { count: "exact", head: true })
-            .eq("job_id", job.id);
+            .select("job_id")
+            .in("job_id", batchIds);
 
-          if (countError) {
-            console.error(
-              "Error counting applications for job:",
-              job.id,
-              countError
-            );
+          if (batchError) {
+            console.error("Error fetching application counts batch:", batchError);
+          } else if (batchData) {
+            allApplicationData.push(...batchData);
           }
+        }
 
-          return {
-            ...job,
-            applicationCount: count || 0,
-          };
-        })
-      );
+        // Count applications per job client-side
+        countsByJobId = allApplicationData.reduce(
+          (acc, app) => {
+            acc[app.job_id] = (acc[app.job_id] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+      }
+
+      const jobsWithApplicationCounts = fetchedJobs.map((job) => ({
+        ...job,
+        applicationCount: countsByJobId[job.id] || 0,
+      }));
 
       // Calculate statistics
       const totalJobs = jobsWithApplicationCounts.length;

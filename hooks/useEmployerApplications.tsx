@@ -64,26 +64,47 @@ export const useEmployerApplications = (selectedJobId?: string) => {
         return;
       }
 
-      // Get application counts for each job
-      const jobsWithCounts = await Promise.all(
-        (jobsData || []).map(async (job) => {
-          const { count, error: countError } = await supabase
+      const fetchedJobs = jobsData || [];
+
+      // Get application counts for all jobs in batched queries to avoid URL length limits
+      const jobIds = fetchedJobs.map((job) => job.id);
+      let countsByJobId: Record<string, number> = {};
+
+      if (jobIds.length > 0) {
+        // Process in batches of 50 to avoid URL length limits
+        const BATCH_SIZE = 50;
+        const allApplicationData: { job_id: string }[] = [];
+
+        for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
+          const batchIds = jobIds.slice(i, i + BATCH_SIZE);
+          const { data: batchData, error: batchError } = await supabase
             .from("job_applications")
-            .select("*", { count: "exact", head: true })
-            .eq("job_id", job.id);
+            .select("job_id")
+            .in("job_id", batchIds);
 
-          if (countError) {
-            console.error("Error counting applications for job:", job.id, countError);
+          if (batchError) {
+            console.error("Error fetching application counts batch:", batchError);
+          } else if (batchData) {
+            allApplicationData.push(...batchData);
           }
+        }
 
-          return {
-            id: job.id,
-            title: job.title,
-            status: job.status,
-            application_count: count || 0,
-          };
-        })
-      );
+        // Count applications per job client-side
+        countsByJobId = allApplicationData.reduce(
+          (acc, app) => {
+            acc[app.job_id] = (acc[app.job_id] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        );
+      }
+
+      const jobsWithCounts = fetchedJobs.map((job) => ({
+        id: job.id,
+        title: job.title,
+        status: job.status,
+        application_count: countsByJobId[job.id] || 0,
+      }));
 
       setJobs(jobsWithCounts);
     } catch (error) {
@@ -119,38 +140,75 @@ export const useEmployerApplications = (selectedJobId?: string) => {
         return;
       }
 
-      // First get basic applications data
-      let applicationsQuery = supabase
-        .from("job_applications")
-        .select(`
-          id,
-          job_id,
-          applicant_id,
-          status,
-          created_at,
-          resume_url,
-          cover_letter_url
-        `)
-        .in("job_id", jobIds)
-        .order("created_at", { ascending: false });
+      // First get basic applications data - batch to avoid URL length limits
+      type RawAppData = {
+        id: string;
+        job_id: string;
+        applicant_id: string;
+        status: string | null;
+        created_at: string;
+        resume_url: string | null;
+        cover_letter_url: string | null;
+      };
+      let applicationsData: RawAppData[] = [];
 
-      // Filter by selected job if one is selected
+      // If a specific job is selected, query just that job (no batching needed)
       if (selectedJobId) {
-        applicationsQuery = applicationsQuery.eq("job_id", selectedJobId);
-      }
+        const { data, error: applicationsError } = await supabase
+          .from("job_applications")
+          .select(`
+            id,
+            job_id,
+            applicant_id,
+            status,
+            created_at,
+            resume_url,
+            cover_letter_url
+          `)
+          .eq("job_id", selectedJobId)
+          .order("created_at", { ascending: false });
 
-      const { data: applicationsData, error: applicationsError } = await applicationsQuery;
+        if (applicationsError) {
+          console.error("Error fetching applications:", applicationsError);
+          console.error("Error details:", {
+            message: applicationsError.message,
+            details: applicationsError.details,
+            hint: applicationsError.hint,
+            code: applicationsError.code
+          });
+          setError(`Failed to load applications: ${applicationsError.message}`);
+          return;
+        }
+        applicationsData = data || [];
+      } else {
+        // Batch queries in chunks of 50 to avoid URL length limits
+        const BATCH_SIZE = 50;
+        for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
+          const batchIds = jobIds.slice(i, i + BATCH_SIZE);
+          const { data: batchData, error: batchError } = await supabase
+            .from("job_applications")
+            .select(`
+              id,
+              job_id,
+              applicant_id,
+              status,
+              created_at,
+              resume_url,
+              cover_letter_url
+            `)
+            .in("job_id", batchIds);
 
-      if (applicationsError) {
-        console.error("Error fetching applications:", applicationsError);
-        console.error("Error details:", {
-          message: applicationsError.message,
-          details: applicationsError.details,
-          hint: applicationsError.hint,
-          code: applicationsError.code
-        });
-        setError(`Failed to load applications: ${applicationsError.message}`);
-        return;
+          if (batchError) {
+            console.error("Error fetching applications batch:", batchError);
+          } else if (batchData) {
+            applicationsData.push(...batchData);
+          }
+        }
+
+        // Sort all applications by created_at descending (client-side)
+        applicationsData.sort((a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       }
 
       // Debug: Log resume URLs to understand the format
@@ -213,16 +271,7 @@ export const useEmployerApplications = (selectedJobId?: string) => {
       });
 
       // Transform the data to match the expected interface
-      type RawApplicationData = {
-        id: string;
-        job_id: string;
-        applicant_id: string;
-        status: string | null;
-        created_at: string;
-        resume_url: string | null;
-        cover_letter_url: string | null;
-      };
-      const transformedApplications: JobApplication[] = applicationsData.map((app: RawApplicationData) => ({
+      const transformedApplications: JobApplication[] = applicationsData.map((app) => ({
         id: app.id,
         job_id: app.job_id,
         applicant_id: app.applicant_id,
