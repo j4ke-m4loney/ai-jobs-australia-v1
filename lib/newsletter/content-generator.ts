@@ -18,6 +18,7 @@ export interface NewsletterJob {
   show_salary: boolean;
   category: string;
   created_at: string;
+  highlights: string[] | null;
   companies: {
     name: string;
     logo_url: string | null;
@@ -176,6 +177,45 @@ export class ContentGenerator {
     } catch (error) {
       console.error('[ContentGenerator] Error checking job count:', error);
       return false;
+    }
+  }
+
+  /**
+   * Get a single job by ID for featuring in the newsletter
+   */
+  async getFeaturedJob(jobId: string): Promise<NewsletterJob | null> {
+    try {
+      const { data, error } = await getSupabaseAdmin()
+        .from('jobs')
+        .select(`
+          id,
+          title,
+          location,
+          location_type,
+          salary_min,
+          salary_max,
+          show_salary,
+          category,
+          created_at,
+          highlights,
+          companies (
+            name,
+            logo_url
+          )
+        `)
+        .eq('id', jobId)
+        .eq('status', 'approved')
+        .single();
+
+      if (error) {
+        console.error('[ContentGenerator] Error fetching featured job:', error);
+        return null;
+      }
+
+      return data as unknown as NewsletterJob;
+    } catch (error) {
+      console.error('[ContentGenerator] Failed to get featured job:', error);
+      return null;
     }
   }
 }

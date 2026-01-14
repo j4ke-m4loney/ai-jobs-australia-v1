@@ -45,12 +45,29 @@ interface Sponsor {
   cta_color: string;
 }
 
+interface FeaturedJob {
+  id: string;
+  title: string;
+  location: string;
+  location_type: string;
+  salary_min: number | null;
+  salary_max: number | null;
+  show_salary: boolean;
+  highlights: string[] | null;
+  companies: {
+    name: string;
+    logo_url: string | null;
+  } | null;
+}
+
 interface NewsletterEmailProps {
   jobsByCategory: JobsByCategory;
   totalJobsCount: number;
   introText?: string;
   outroText?: string;
   sponsor?: Sponsor | null;
+  featuredJob?: FeaturedJob | null;
+  showFeaturedHighlights?: boolean;
 }
 
 const baseUrl =
@@ -123,12 +140,96 @@ const SponsorFooter = ({ sponsor }: { sponsor: Sponsor }) => (
   </Section>
 );
 
+// Featured Job Card Component - Highlighted job placement
+const FeaturedJobCard = ({
+  job,
+  baseUrl,
+  formatSalary,
+  formatLocation,
+  showHighlights = true,
+}: {
+  job: FeaturedJob;
+  baseUrl: string;
+  formatSalary: (min: number | null, max: number | null) => string | null;
+  formatLocation: (location: string, locationType: string) => string;
+  showHighlights?: boolean;
+}) => (
+  <Section style={featuredJobSection}>
+    <Text style={featuredJobLabel}>Featured Opportunity</Text>
+    <Section style={featuredJobCard}>
+      <table style={featuredJobTable}>
+        <tr>
+          <td style={featuredJobHeader}>
+            {job.companies?.logo_url && (
+              <Img
+                src={job.companies.logo_url}
+                alt={job.companies.name}
+                width="40"
+                height="40"
+                style={featuredCompanyLogo}
+              />
+            )}
+            <Text style={featuredCompanyName}>
+              {job.companies?.name || "Company"}
+            </Text>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <Link
+              href={`${baseUrl}/jobs/${job.id}`}
+              style={featuredJobTitle}
+            >
+              {job.title}
+            </Link>
+          </td>
+        </tr>
+        <tr>
+          <td style={featuredJobMeta}>
+            <span style={featuredMetaBadge}>
+              {formatLocation(job.location, job.location_type)}
+            </span>
+            {job.show_salary !== false &&
+              formatSalary(job.salary_min, job.salary_max) && (
+                <span style={featuredSalaryBadge}>
+                  {formatSalary(job.salary_min, job.salary_max)}
+                </span>
+              )}
+          </td>
+        </tr>
+        {showHighlights && job.highlights && job.highlights.filter(h => h).length > 0 && (
+          <tr>
+            <td style={featuredHighlightsCell}>
+              <ul style={featuredHighlightsList}>
+                {job.highlights.filter(h => h).slice(0, 3).map((highlight, index) => (
+                  <li key={index} style={featuredHighlightItem}>
+                    {highlight}
+                  </li>
+                ))}
+              </ul>
+            </td>
+          </tr>
+        )}
+        <tr>
+          <td style={featuredJobButtonCell}>
+            <Link href={`${baseUrl}/jobs/${job.id}`} style={featuredJobButton}>
+              View Job
+            </Link>
+          </td>
+        </tr>
+      </table>
+    </Section>
+  </Section>
+);
+
 export const NewsletterEmail = ({
   jobsByCategory = {},
   totalJobsCount = 0,
   introText = "",
   outroText = "",
   sponsor = null,
+  featuredJob = null,
+  showFeaturedHighlights = true,
 }: NewsletterEmailProps) => {
   const previewText = `${totalJobsCount}+ new AI jobs in Australia this week`;
 
@@ -194,6 +295,20 @@ export const NewsletterEmail = ({
                 dangerouslySetInnerHTML={{ __html: introText }}
               />
             </Section>
+          )}
+
+          {/* FEATURED JOB - Highlighted job placement */}
+          {featuredJob && (
+            <>
+              <Hr style={hr} />
+              <FeaturedJobCard
+                job={featuredJob}
+                baseUrl={baseUrl}
+                formatSalary={formatSalary}
+                formatLocation={formatLocation}
+                showHighlights={showFeaturedHighlights}
+              />
+            </>
           )}
 
           <Hr style={hr} />
@@ -566,4 +681,118 @@ const footerSponsorText = {
   fontWeight: "500",
   color: "#666",
   margin: "12px 0",
+};
+
+// Featured Job Styles
+const featuredJobSection = {
+  margin: "32px 0",
+  padding: "0 20px",
+};
+
+const featuredJobLabel = {
+  fontSize: "12px",
+  fontWeight: "600",
+  color: "#1976d2",
+  letterSpacing: "0.5px",
+  marginBottom: "16px",
+  textTransform: "uppercase" as const,
+};
+
+const featuredJobCard = {
+  backgroundColor: "#f8fafc",
+  borderLeft: "4px solid #1976d2",
+  borderRadius: "8px",
+  padding: "20px",
+};
+
+const featuredJobTable = {
+  width: "100%",
+};
+
+const featuredJobHeader = {
+  display: "flex",
+  alignItems: "center",
+  marginBottom: "12px",
+};
+
+const featuredCompanyLogo = {
+  borderRadius: "8px",
+  marginRight: "12px",
+  verticalAlign: "middle",
+};
+
+const featuredCompanyName = {
+  fontSize: "15px",
+  fontWeight: "500",
+  color: "#666",
+  margin: "0",
+  display: "inline",
+  paddingLeft: "12px",
+};
+
+const featuredJobTitle = {
+  fontSize: "20px",
+  fontWeight: "700",
+  color: "#1a1a1a",
+  textDecoration: "none",
+  display: "block",
+  margin: "12px 0",
+  lineHeight: "1.3",
+};
+
+const featuredJobMeta = {
+  marginTop: "12px",
+};
+
+const featuredMetaBadge = {
+  display: "inline-block",
+  padding: "6px 12px",
+  backgroundColor: "#e3f2fd",
+  borderRadius: "4px",
+  fontSize: "13px",
+  color: "#1976d2",
+  marginRight: "8px",
+};
+
+const featuredSalaryBadge = {
+  display: "inline-block",
+  padding: "6px 12px",
+  backgroundColor: "#e8f5e9",
+  borderRadius: "4px",
+  fontSize: "13px",
+  color: "#2e7d32",
+  fontWeight: "600",
+};
+
+const featuredJobButtonCell = {
+  paddingTop: "16px",
+};
+
+const featuredJobButton = {
+  backgroundColor: "#1976d2",
+  borderRadius: "5px",
+  color: "#fff",
+  fontSize: "14px",
+  fontWeight: "600",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  display: "inline-block",
+  padding: "10px 24px",
+};
+
+const featuredHighlightsCell = {
+  paddingTop: "16px",
+};
+
+const featuredHighlightsList = {
+  margin: "0",
+  paddingLeft: "20px",
+  listStyleType: "disc" as const,
+};
+
+const featuredHighlightItem = {
+  fontSize: "14px",
+  color: "#484848",
+  lineHeight: "1.6",
+  marginBottom: "4px",
 };

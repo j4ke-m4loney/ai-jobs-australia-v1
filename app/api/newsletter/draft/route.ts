@@ -10,13 +10,15 @@ import { newsletterService } from "@/lib/newsletter/newsletter-service";
  *   type: 'test' | 'production',
  *   introText?: string,
  *   outroText?: string,
- *   sponsorId?: string
+ *   sponsorId?: string,
+ *   featuredJobId?: string,
+ *   showFeaturedHighlights?: boolean
  * }
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { secret, type, introText, outroText, sponsorId } = body;
+    const { secret, type, introText, outroText, sponsorId, featuredJobId, showFeaturedHighlights } = body;
 
     // Verify secret
     if (secret !== process.env.CRON_SECRET) {
@@ -48,12 +50,16 @@ export async function POST(request: NextRequest) {
           introText,
           outroText,
           sponsorId,
+          featuredJobId,
+          showFeaturedHighlights,
           sendImmediately: false,  // Create as draft
         })
       : await newsletterService.sendToAllUsers({
           introText,
           outroText,
           sponsorId,
+          featuredJobId,
+          showFeaturedHighlights,
           sendImmediately: false,  // Create as draft
         });
 

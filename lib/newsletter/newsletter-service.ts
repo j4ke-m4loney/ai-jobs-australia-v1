@@ -47,6 +47,8 @@ interface SendOptions {
   outroText?: string;
   sponsorId?: string | null;
   sendImmediately?: boolean; // Default true - set false to create draft broadcast
+  featuredJobId?: string | null; // Optional job ID to feature prominently in the email
+  showFeaturedHighlights?: boolean; // Whether to show bullet highlights in featured job card (default true)
 }
 
 export class NewsletterService {
@@ -166,6 +168,8 @@ export class NewsletterService {
       outroText = "",
       sponsorId = null,
       sendImmediately = false, // Default false: Create drafts for manual review in Resend GUI
+      featuredJobId = null,
+      showFeaturedHighlights = true,
     } = options || {};
 
     try {
@@ -184,6 +188,16 @@ export class NewsletterService {
 
       // Get sponsor
       const sponsor = await this.getSponsor(sponsorId);
+
+      // Get featured job if ID provided
+      const featuredJob = featuredJobId
+        ? await contentGenerator.getFeaturedJob(featuredJobId)
+        : null;
+      if (featuredJobId && featuredJob) {
+        console.log(`[NewsletterService] Using featured job: ${featuredJob.title}`);
+      } else if (featuredJobId && !featuredJob) {
+        console.log(`[NewsletterService] Featured job not found: ${featuredJobId}`);
+      }
       if (sponsor) {
         console.log(`[NewsletterService] Using sponsor: ${sponsor.name}`);
       }
@@ -236,6 +250,8 @@ export class NewsletterService {
             introText || "Here are this week's latest AI jobs in Australia",
           outroText: outroText || "Good luck with your applications!",
           sponsor: sponsor,
+          featuredJob: featuredJob,
+          showFeaturedHighlights: showFeaturedHighlights,
         }),
         { pretty: false }
       );
@@ -487,6 +503,8 @@ export class NewsletterService {
       outroText = "",
       sponsorId = null,
       sendImmediately = false, // Default false: Create drafts for manual review in Resend GUI
+      featuredJobId = null,
+      showFeaturedHighlights = true,
     } = options || {};
 
     try {
@@ -505,6 +523,16 @@ export class NewsletterService {
       const sponsor = await this.getSponsor(sponsorId);
       if (sponsor) {
         console.log(`[NewsletterService] Using sponsor: ${sponsor.name}`);
+      }
+
+      // Get featured job if ID provided
+      const featuredJob = featuredJobId
+        ? await contentGenerator.getFeaturedJob(featuredJobId)
+        : null;
+      if (featuredJobId && featuredJob) {
+        console.log(`[NewsletterService] Using featured job: ${featuredJob.title}`);
+      } else if (featuredJobId && !featuredJob) {
+        console.log(`[NewsletterService] Featured job not found: ${featuredJobId}`);
       }
 
       // Get subscriber count from local database
@@ -553,6 +581,8 @@ export class NewsletterService {
           introText,
           outroText,
           sponsor: sponsor,
+          featuredJob: featuredJob,
+          showFeaturedHighlights: showFeaturedHighlights,
         }),
         { pretty: false }
       );
@@ -759,7 +789,7 @@ export class NewsletterService {
     firstName?: string,
     options?: SendOptions
   ): Promise<boolean> {
-    const { introText = "", outroText = "", sponsorId = null } = options || {};
+    const { introText = "", outroText = "", sponsorId = null, featuredJobId = null, showFeaturedHighlights = true } = options || {};
 
     try {
       console.log(`[NewsletterService] Sending test newsletter to ${email}...`);
@@ -768,6 +798,16 @@ export class NewsletterService {
       const sponsor = await this.getSponsor(sponsorId);
       if (sponsor) {
         console.log(`[NewsletterService] Using sponsor: ${sponsor.name}`);
+      }
+
+      // Get featured job if ID provided
+      const featuredJob = featuredJobId
+        ? await contentGenerator.getFeaturedJob(featuredJobId)
+        : null;
+      if (featuredJobId && featuredJob) {
+        console.log(`[NewsletterService] Using featured job: ${featuredJob.title}`);
+      } else if (featuredJobId && !featuredJob) {
+        console.log(`[NewsletterService] Featured job not found: ${featuredJobId}`);
       }
 
       // Generate newsletter content
@@ -797,6 +837,8 @@ export class NewsletterService {
           introText,
           outroText,
           sponsor: sponsor,
+          featuredJob: featuredJob,
+          showFeaturedHighlights: showFeaturedHighlights,
         }),
       });
 

@@ -66,6 +66,8 @@ export default function AdminNewsletterPage() {
   const [selectedSponsorId, setSelectedSponsorId] = useState<string | null>(
     null
   );
+  const [featuredJobId, setFeaturedJobId] = useState<string>("");
+  const [showFeaturedHighlights, setShowFeaturedHighlights] = useState<boolean>(true);
   const [newsletterType, setNewsletterType] = useState<"test" | "production">(
     "test"
   );
@@ -167,6 +169,8 @@ export default function AdminNewsletterPage() {
           introText: introText || undefined,
           outroText: outroText || undefined,
           sponsorId: selectedSponsorId || undefined,
+          featuredJobId: featuredJobId || undefined,
+          showFeaturedHighlights: featuredJobId ? showFeaturedHighlights : undefined,
         }),
       });
 
@@ -237,6 +241,8 @@ export default function AdminNewsletterPage() {
           introText: introText || undefined,
           outroText: outroText || undefined,
           sponsorId: selectedSponsorId || undefined,
+          featuredJobId: featuredJobId || undefined,
+          showFeaturedHighlights: featuredJobId ? showFeaturedHighlights : undefined,
         }),
       });
 
@@ -466,6 +472,35 @@ export default function AdminNewsletterPage() {
               {selectedSponsorId && (
                 <div className="text-sm text-muted-foreground">
                   Selected sponsor will appear in header, main card, and footer
+                </div>
+              )}
+            </div>
+
+            {/* Featured Job ID */}
+            <div className="space-y-2">
+              <Label htmlFor="featured-job-id">Featured Job ID (Optional)</Label>
+              <Input
+                id="featured-job-id"
+                placeholder="Enter job ID to highlight (e.g., abc123-def456-...)"
+                value={featuredJobId}
+                onChange={(e) => setFeaturedJobId(e.target.value)}
+              />
+              <div className="text-sm text-muted-foreground">
+                This job will appear in a highlighted &quot;Featured Opportunity&quot; section after the intro text
+              </div>
+              {featuredJobId && (
+                <div className="flex items-center gap-2 pt-2">
+                  <Switch
+                    id="show-highlights"
+                    checked={showFeaturedHighlights}
+                    onCheckedChange={setShowFeaturedHighlights}
+                  />
+                  <Label
+                    htmlFor="show-highlights"
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    Show bullet highlights in featured job card
+                  </Label>
                 </div>
               )}
             </div>

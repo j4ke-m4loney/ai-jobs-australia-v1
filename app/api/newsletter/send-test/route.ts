@@ -6,13 +6,13 @@ import { newsletterService } from '@/lib/newsletter/newsletter-service';
  * Useful for testing the newsletter design and content
  *
  * POST /api/newsletter/send-test
- * Body: { email: string, firstName?: string, secret: string, introText?: string, outroText?: string, sponsorId?: string }
+ * Body: { email: string, firstName?: string, secret: string, introText?: string, outroText?: string, sponsorId?: string, featuredJobId?: string, showFeaturedHighlights?: boolean }
  * Note: With multi-placement design, sponsor appears in 3 locations automatically (header, main card, footer)
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, firstName, secret, introText, outroText, sponsorId } = body;
+    const { email, firstName, secret, introText, outroText, sponsorId, featuredJobId, showFeaturedHighlights } = body;
 
     // Verify secret (same as CRON_SECRET for simplicity)
     if (secret !== process.env.CRON_SECRET) {
@@ -45,6 +45,8 @@ export async function POST(request: NextRequest) {
       introText,
       outroText,
       sponsorId,
+      featuredJobId,
+      showFeaturedHighlights,
     });
 
     if (success) {
