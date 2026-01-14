@@ -101,12 +101,6 @@ export const JobCard: React.FC<JobCardProps> = ({
       <CardContent className="px-3 py-5 md:px-5">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            {job.is_featured && (
-              <Badge className="bg-gradient-hero text-white text-xs mb-2">
-                Featured
-              </Badge>
-            )}
-
             <div className="flex items-start justify-between gap-2 mb-1">
               <h3 className="font-semibold text-lg line-clamp-2 text-foreground">
                 {job.title}
@@ -156,7 +150,7 @@ export const JobCard: React.FC<JobCardProps> = ({
             )}
 
             <div className="text-xs text-muted-foreground">
-              Posted {getTimeAgo(job.created_at)}
+              {job.is_featured ? "Featured" : `Posted ${getTimeAgo(job.created_at)}`}
             </div>
           </div>
 
