@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { StateSelector } from "@/components/ui/state-selector";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
@@ -536,9 +535,9 @@ const HomePage = () => {
               Join Now to Unlock All AI Jobs!
             </h2>
             <p className="text-xl text-foreground mb-12 leading-relaxed">
-              Discover AI jobs you won’t find anywhere else. We search the web
-              daily to uncover AI roles in Australia that aren’t listed on the
-              major job boards.
+              Discover a carefully curated selection of high-quality AI roles in
+              Australia. <br />
+              Beyond what you&apos;ll find on the major job boards.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -567,8 +566,7 @@ const HomePage = () => {
             </div>
 
             <p className="text-sm text-muted-foreground mt-8">
-              Join our community of <strong>1,000+</strong> AI professionals and{" "}
-              <strong>150+</strong> innovative companies
+              Join our community of AI professionals and innovative companies
             </p>
           </div>
         </div>
