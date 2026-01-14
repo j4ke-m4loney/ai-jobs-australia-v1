@@ -138,14 +138,6 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 </div>
               )}
 
-              <div className="flex items-center gap-2 mb-2">
-                {job.is_featured && (
-                  <Badge className="bg-gradient-hero text-white">
-                    Featured
-                  </Badge>
-                )}
-              </div>
-
               <h1 className="text-2xl font-bold text-foreground mb-1">
                 {job.title}
               </h1>

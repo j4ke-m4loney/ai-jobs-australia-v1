@@ -390,6 +390,9 @@ function JobsContent() {
         new Date().getTime(),
         new Error().stack
       );
+      const startTime = Date.now();
+      const MINIMUM_LOADING_TIME = 400; // Minimum ms to show loading state for smoother UX
+
       try {
         setJobsLoading(true);
 
@@ -894,6 +897,12 @@ function JobsContent() {
         console.error("Error in fetchJobs:", error);
         toast.error("Failed to load jobs");
       } finally {
+        // Ensure minimum loading time for smoother UX
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = MINIMUM_LOADING_TIME - elapsedTime;
+        if (remainingTime > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remainingTime));
+        }
         setJobsLoading(false);
       }
     },
