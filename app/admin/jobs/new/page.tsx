@@ -28,6 +28,7 @@ import { toast } from "sonner";
 
 // Reuse existing step components
 import JobBasicsStep from "@/components/post-job2/JobBasicsStep";
+import { CategoryCombobox } from "@/components/admin/CategoryCombobox";
 import DescribeJobStep from "@/components/post-job2/DescribeJobStep";
 import ApplicationSettingsStep from "@/components/post-job2/ApplicationSettingsStep";
 import JobPreviewModal from "@/components/post-job2/JobPreviewModal";
@@ -65,6 +66,7 @@ interface AdminOptions {
   featuredDays: number;
   adminNotes: string;
   postOnBehalfOf: string;
+  category: string;
 }
 
 // Helper functions to calculate salary from payConfig
@@ -180,12 +182,16 @@ export default function AdminNewJobPage() {
     featuredDays: 30,
     adminNotes: "",
     postOnBehalfOf: "",
+    category: "ai",
   });
 
   // Companies list for dropdown
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
 
-  // Fetch companies on mount
+  // Categories list for dropdown
+  const [categories, setCategories] = useState<Array<{ value: string; label: string }>>([]);
+
+  // Fetch companies and categories on mount
   useEffect(() => {
     async function fetchCompanies() {
       const { data, error } = await supabase
@@ -201,7 +207,31 @@ export default function AdminNewJobPage() {
       }
     }
 
+    async function fetchCategories() {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('category')
+        .not('category', 'is', null);
+
+      if (data) {
+        // Get unique categories and format them
+        const uniqueCategories = [...new Set(data.map(job => job.category).filter(Boolean))];
+        const formattedCategories = uniqueCategories.map(cat => ({
+          value: cat,
+          label: cat.split('-').map((word: string) =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' '),
+        })).sort((a, b) => a.label.localeCompare(b.label));
+
+        setCategories(formattedCategories);
+      }
+      if (error) {
+        console.error('Error fetching categories:', error);
+      }
+    }
+
     fetchCompanies();
+    fetchCategories();
   }, []);
 
   const updateFormData = (updates: Partial<JobFormData2>) => {
@@ -279,7 +309,7 @@ export default function AdminNewJobPage() {
         requirements: formData.requirements || null,
         location_type: locationTypeMap[formData.locationType] || "onsite",
         job_type: formData.jobType,
-        category: "ai", // Default category
+        category: adminOptions.category,
         salary_min: getSalaryMin(formData.payConfig),
         salary_max: getSalaryMax(formData.payConfig),
         show_salary: formData.payConfig.showPay,
@@ -429,6 +459,16 @@ export default function AdminNewJobPage() {
                 </div>
               )}
 
+              <div className="space-y-2">
+                <Label>Job Category</Label>
+                <CategoryCombobox
+                  value={adminOptions.category}
+                  onChange={(value) =>
+                    setAdminOptions((prev) => ({ ...prev, category: value }))
+                  }
+                  categories={categories}
+                />
+              </div>
 
               <div className="space-y-2">
                 <Label>Company Information</Label>
