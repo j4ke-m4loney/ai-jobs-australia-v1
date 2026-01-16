@@ -33,6 +33,7 @@ import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { trackJobSearch } from "@/lib/analytics";
+import { categorySlugToName } from "@/lib/categories/generator";
 
 interface Job {
   id: string;
@@ -1249,7 +1250,7 @@ function JobsContent() {
       engineering: "Engineering",
       research: "Research",
     };
-    return categories[category as keyof typeof categories] || category;
+    return categories[category as keyof typeof categories] || categorySlugToName(category);
   };
 
   const clearAllFilters = () => {

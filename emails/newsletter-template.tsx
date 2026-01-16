@@ -12,6 +12,7 @@ import {
   Text,
   Hr,
 } from "@react-email/components";
+import { categorySlugToName } from "@/lib/categories/generator";
 
 interface Job {
   id: string;
@@ -248,6 +249,18 @@ export const NewsletterEmail = ({
     return location;
   };
 
+  const formatPostedTime = (createdAt: string) => {
+    const now = new Date();
+    const posted = new Date(createdAt);
+    const diffInMs = now.getTime() - posted.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInDays === 0) return "New";
+    if (diffInDays === 1) return "1d";
+    if (diffInDays <= 7) return `${diffInDays}d`;
+    return `${Math.floor(diffInDays / 7)}w`;
+  };
+
   const categoryTitles: { [key: string]: string } = {
     ai: "AI Jobs",
     ml: "Machine Learning Jobs",
@@ -262,15 +275,25 @@ export const NewsletterEmail = ({
       <Preview>{previewText}</Preview>
       <Body style={main}>
         <Container style={container}>
-          {/* Logo */}
+          {/* Logo with Text */}
           <Section style={logoSection}>
-            <Link href={baseUrl}>
-              <Img
-                src={`${baseUrl}/aja-email-192.png`}
-                alt="AI Jobs Australia"
-                width="100"
-                style={logo}
-              />
+            <Link href={baseUrl} style={logoLink}>
+              <table style={logoTable}>
+                <tr>
+                  <td style={logoIconCell}>
+                    <Img
+                      src={`${baseUrl}/aja-email-192.png`}
+                      alt="AI Jobs Australia"
+                      width="44"
+                      height="44"
+                      style={logoIcon}
+                    />
+                  </td>
+                  <td style={logoTextCell}>
+                    <span style={logoText}>AI Jobs Australia</span>
+                  </td>
+                </tr>
+              </table>
             </Link>
           </Section>
 
@@ -278,7 +301,7 @@ export const NewsletterEmail = ({
           {sponsor && <SponsorHeader sponsor={sponsor} />}
 
           {/* Title */}
-          <Heading style={h1}>Latest AI Jobs in Australia 🚀</Heading>
+          <Heading style={h1}>Latest AI Jobs 🚀</Heading>
 
           {/* Greeting */}
           <Text style={text}>Hi there,</Text>
@@ -317,15 +340,22 @@ export const NewsletterEmail = ({
           {sponsor && (
             <>
               <SponsorMainCard sponsor={sponsor} />
-              <Hr style={hr} />
             </>
           )}
+
+          {/* Decorative Divider */}
+          <Section style={dotDividerSection}>
+            <Text style={dotDivider}>•  •  •</Text>
+          </Section>
+
+          {/* Recent Jobs Heading */}
+          <Heading as="h2" style={recentJobsHeading}>Recent AI Jobs</Heading>
 
           {/* Jobs by Category */}
           {Object.entries(jobsByCategory).map(([category, jobs]) => (
             <Section key={category} style={categorySection}>
               <Heading as="h2" style={h2}>
-                {categoryTitles[category] || category}
+                {categoryTitles[category] || `${categorySlugToName(category)} Jobs`}
               </Heading>
 
               {jobs.map((job) => (
@@ -345,6 +375,11 @@ export const NewsletterEmail = ({
                         <Text style={companyName}>
                           {job.companies?.name || "Company"}
                         </Text>
+                      </td>
+                      <td style={postedTimeCell}>
+                        <span style={postedTimeBadge}>
+                          {formatPostedTime(job.created_at)}
+                        </span>
                       </td>
                     </tr>
                     <tr>
@@ -385,6 +420,11 @@ export const NewsletterEmail = ({
             </Link>
           </Section>
 
+          {/* Decorative Divider */}
+          <Section style={dotDividerSection}>
+            <Text style={dotDivider}>•  •  •</Text>
+          </Section>
+
           {/* SPONSOR FOOTER - Secondary mention */}
           {sponsor && (
             <>
@@ -401,6 +441,7 @@ export const NewsletterEmail = ({
                   color: "#484848",
                   fontSize: "16px",
                   lineHeight: "24px",
+                  textAlign: "center",
                 }}
                 dangerouslySetInnerHTML={{ __html: outroText }}
               />
@@ -457,8 +498,31 @@ const logoSection = {
   textAlign: "center" as const,
 };
 
-const logo = {
+const logoLink = {
+  textDecoration: "none",
+};
+
+const logoTable = {
   margin: "0 auto",
+};
+
+const logoIconCell = {
+  verticalAlign: "middle",
+  paddingRight: "6px",
+};
+
+const logoIcon = {
+  display: "block",
+};
+
+const logoTextCell = {
+  verticalAlign: "middle",
+};
+
+const logoText = {
+  fontSize: "24px",
+  fontWeight: "bold",
+  color: "#1976d2",
 };
 
 const h1 = {
@@ -476,6 +540,24 @@ const h2 = {
   fontWeight: "bold",
   margin: "30px 0 20px 0",
   padding: "0 20px",
+};
+
+const recentJobsHeading = {
+  color: "#1a1a1a",
+  fontSize: "28px",
+  fontWeight: "bold",
+  textAlign: "center" as const,
+  margin: "0 0 24px 0",
+  padding: "0 20px",
+};
+
+const _closingText = {
+  color: "#484848",
+  fontSize: "16px",
+  lineHeight: "24px",
+  textAlign: "center" as const,
+  padding: "0 20px",
+  margin: "24px 0",
 };
 
 const text = {
@@ -524,6 +606,21 @@ const companyName = {
   paddingLeft: "8px",
 };
 
+const postedTimeCell = {
+  textAlign: "right" as const,
+  verticalAlign: "middle" as const,
+};
+
+const postedTimeBadge = {
+  display: "inline-block",
+  padding: "4px 8px",
+  backgroundColor: "#f1f5f9",
+  borderRadius: "4px",
+  fontSize: "12px",
+  fontWeight: "500",
+  color: "#64748b",
+};
+
 const jobTitle = {
   fontSize: "18px",
   fontWeight: "600",
@@ -560,6 +657,18 @@ const salaryBadge = {
 const buttonSection = {
   textAlign: "center" as const,
   margin: "32px 0",
+};
+
+const dotDividerSection = {
+  textAlign: "center" as const,
+  margin: "32px 0",
+};
+
+const dotDivider = {
+  color: "#cbd5e1",
+  fontSize: "18px",
+  letterSpacing: "8px",
+  margin: "0",
 };
 
 const button = {
