@@ -13,7 +13,8 @@ import { createClient } from '@supabase/supabase-js';
 export function extractLocationSlug(
   location: string,
   suburb?: string | null,
-  _state?: string | null // Prefixed with _ since it's not used yet
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _state?: string | null // Reserved for future use
 ): string {
   // Prefer structured suburb data if available
   if (suburb && suburb.trim()) {

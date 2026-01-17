@@ -2,16 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
-  Search,
   Calendar,
   Clock,
-  User,
   ArrowRight,
   TrendingUp,
 } from "lucide-react";
@@ -32,7 +29,7 @@ interface BlogPost {
 }
 
 export default function BlogPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -135,6 +132,7 @@ export default function BlogPage() {
                   <Card className="hover:shadow-lg transition-all cursor-pointer group overflow-hidden h-full">
                     {post.featured_image_url ? (
                       <div className="h-48 overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={post.featured_image_url}
                           alt={post.title}
@@ -212,6 +210,7 @@ export default function BlogPage() {
                         <div className="flex flex-col md:flex-row">
                           {post.featured_image_url ? (
                             <div className="md:w-48 h-48 overflow-hidden">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={post.featured_image_url}
                                 alt={post.title}

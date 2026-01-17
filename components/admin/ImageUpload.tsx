@@ -85,6 +85,7 @@ export function ImageUpload({
       {value ? (
         <div className="space-y-3">
           <div className="relative rounded-lg overflow-hidden border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={value}
               alt="Uploaded image"

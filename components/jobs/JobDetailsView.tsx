@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Clock, Heart } from "lucide-react";
 import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";

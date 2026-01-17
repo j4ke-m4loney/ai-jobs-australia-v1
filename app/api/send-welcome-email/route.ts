@@ -3,9 +3,6 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { emailService } from '@/lib/email/postmark-service';
 
-// Helper function to wait/delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export async function POST(request: NextRequest) {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('📧 [WELCOME EMAIL API] Request received');

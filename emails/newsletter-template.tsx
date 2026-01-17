@@ -551,15 +551,6 @@ const recentJobsHeading = {
   padding: "0 20px",
 };
 
-const _closingText = {
-  color: "#484848",
-  fontSize: "16px",
-  lineHeight: "24px",
-  textAlign: "center" as const,
-  padding: "0 20px",
-  margin: "24px 0",
-};
-
 const text = {
   color: "#484848",
   fontSize: "16px",

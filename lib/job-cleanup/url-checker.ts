@@ -32,7 +32,7 @@ export async function checkJobUrl(
         },
       });
       clearTimeout(timeoutId);
-    } catch (headError) {
+    } catch {
       // Some servers don't support HEAD, try GET
       const getTimeoutId = setTimeout(() => controller.abort(), 15000);
       response = await fetch(url, {

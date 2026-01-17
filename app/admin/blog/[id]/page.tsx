@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { use } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,21 +51,7 @@ export default function EditBlogPostPage({
     status: 'draft',
   });
 
-  useEffect(() => {
-    fetchCategories();
-    fetchPost();
-  }, [id]);
-
-  async function fetchCategories() {
-    const { data } = await supabase
-      .from('blog_categories')
-      .select('*')
-      .order('name');
-
-    if (data) setCategories(data);
-  }
-
-  async function fetchPost() {
+  const fetchPost = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('blog_posts')
@@ -95,6 +81,20 @@ export default function EditBlogPostPage({
     } finally {
       setFetchLoading(false);
     }
+  }, [id]);
+
+  useEffect(() => {
+    fetchCategories();
+    fetchPost();
+  }, [id, fetchPost]);
+
+  async function fetchCategories() {
+    const { data } = await supabase
+      .from('blog_categories')
+      .select('*')
+      .order('name');
+
+    if (data) setCategories(data);
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -373,6 +373,7 @@ export default function EditBlogPostPage({
                   </div>
                   {formData.featured_image_url && (
                     <div className="mt-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={formData.featured_image_url}
                         alt="Preview"

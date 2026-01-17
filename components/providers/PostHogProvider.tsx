@@ -27,7 +27,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           session_recording: {
             recordCrossOriginIframes: false,
           },
-          loaded: (posthog) => {
+          loaded: () => {
             if (process.env.NODE_ENV === "development") {
               console.log("PostHog loaded");
             }

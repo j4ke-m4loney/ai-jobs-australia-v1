@@ -437,7 +437,7 @@ export class NewsletterService {
           firstName: r.firstName,
         })),
         subject,
-        reactTemplate: (_recipientData) =>
+        reactTemplate: () =>
           NewsletterEmail({
             jobsByCategory: content.jobsByCategory,
             totalJobsCount: content.totalJobsCount,

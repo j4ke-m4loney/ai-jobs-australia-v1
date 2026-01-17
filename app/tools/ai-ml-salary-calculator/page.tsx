@@ -15,7 +15,6 @@ import {
   ArrowRight,
   Calculator,
   MapPin,
-  TrendingUp,
   Shield,
   Award,
 } from "lucide-react";

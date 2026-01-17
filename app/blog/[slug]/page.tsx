@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { use } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -45,11 +45,7 @@ export default function BlogArticlePage({
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchPost();
-  }, [slug]);
-
-  async function fetchPost() {
+  const fetchPost = useCallback(async () => {
     try {
       // Fetch main post
       const { data: postData, error: postError } = await supabase
@@ -90,7 +86,11 @@ export default function BlogArticlePage({
     } finally {
       setLoading(false);
     }
-  }
+  }, [slug]);
+
+  useEffect(() => {
+    fetchPost();
+  }, [fetchPost]);
 
   if (loading) {
     return (
@@ -162,6 +162,7 @@ export default function BlogArticlePage({
               {/* Featured Image */}
               {post.featured_image_url && (
                 <div className="mb-8">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={post.featured_image_url}
                     alt={post.title}

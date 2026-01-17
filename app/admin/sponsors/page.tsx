@@ -182,6 +182,7 @@ export default function AdminSponsorsPage() {
                     {sponsors.map((sponsor) => (
                       <TableRow key={sponsor.id}>
                         <TableCell>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={sponsor.logo_url}
                             alt={sponsor.name}

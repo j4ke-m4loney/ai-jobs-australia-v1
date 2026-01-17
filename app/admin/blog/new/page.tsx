@@ -95,7 +95,7 @@ export default function NewBlogPostPage() {
         published_at: formData.status === 'published' ? new Date().toISOString() : null,
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('blog_posts')
         .insert([postData])
         .select()
@@ -316,6 +316,7 @@ export default function NewBlogPostPage() {
                   </div>
                   {formData.featured_image_url && (
                     <div className="mt-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={formData.featured_image_url}
                         alt="Preview"
