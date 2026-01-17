@@ -17,14 +17,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.aijobsaustralia.com.au"),
-  title: "AI Jobs Australia | #1 Home for AI Opportunities In Australia",
+  title: "#1 Home for all AI Opportunities In Australia",
   description:
     "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
   openGraph: {
     siteName: "AI Jobs Australia",
     type: "website",
     locale: "en_AU",
-    title: "AI Jobs Australia | #1 Home for AI Opportunities In Australia",
+    title: "#1 Home for all AI Opportunities In Australia",
     description:
       "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
     url: "https://www.aijobsaustralia.com.au",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@AIJobsAustralia",
     creator: "@AIJobsAustralia",
-    title: "AI Jobs Australia | #1 Home for AI Opportunities In Australia",
+    title: "#1 Home for all AI Opportunities In Australia",
     description:
       "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
     images: ["https://www.aijobsaustralia.com.au/twitter-card.png"],
@@ -56,9 +56,7 @@ export const metadata: Metadata = {
       { url: "/aja-favicon-512.png", sizes: "512x512", type: "image/png" },
       { url: "/favicon.svg", type: "image/svg+xml" },
     ],
-    shortcut: [
-      { url: "/favicon.ico" },
-    ],
+    shortcut: [{ url: "/favicon.ico" }],
     apple: [
       { url: "/aja-favicon-192.png", sizes: "192x192", type: "image/png" },
     ],
@@ -88,7 +86,7 @@ export default function RootLayout({
               alternateName: "AI Jobs Australia",
               url: "https://www.aijobsaustralia.com.au",
               description:
-                "The #1 platform for AI, Machine Learning, and Data Science jobs in Australia",
+                "The #1 platform for AI related roles in Australia (AI, Machine Learning, Data Science, AI Analyst, AI Marketing etc.)",
               publisher: {
                 "@id": "https://www.aijobsaustralia.com.au/#organization",
               },
