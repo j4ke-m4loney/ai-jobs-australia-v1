@@ -48,9 +48,15 @@ export function categorySlugToName(slug: string): string {
  * Fetches all unique job categories from the database
  */
 export async function getAllJobCategories(): Promise<Array<{ slug: string; name: string; count: number }>> {
+  // Check for required env vars - return empty array if missing (allows build to proceed)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('[getAllJobCategories] Missing Supabase env vars, returning empty array');
+    return [];
+  }
+
   const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
   // Get all approved job titles

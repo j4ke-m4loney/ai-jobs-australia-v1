@@ -76,9 +76,15 @@ function getRelatedCategories(categorySlug: string): string[] {
 }
 
 async function getCategoryJobs(categorySlug: string, targetCount: number = 9): Promise<Job[]> {
+  // Check for required env vars - return empty array if missing (allows build to proceed)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('[getCategoryJobs] Missing Supabase env vars, returning empty array');
+    return [];
+  }
+
   const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
   // Get all approved jobs - using same pattern as /jobs page
