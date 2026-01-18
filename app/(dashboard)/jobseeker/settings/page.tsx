@@ -21,7 +21,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { Settings, Mail, Bell } from "lucide-react";
+import { Mail, Bell } from "lucide-react";
 
 const settingsSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -170,14 +170,11 @@ const JobSeekerSettings = () => {
   return (
     <JobSeekerLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Settings className="w-6 h-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Settings</h1>
-            <p className="text-muted-foreground">
-              Manage your account and notification preferences
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold">Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your account and notification preferences
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

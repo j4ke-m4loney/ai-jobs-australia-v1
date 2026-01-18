@@ -7,12 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { JobSeekerLayout } from "@/components/jobseeker/JobSeekerLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Heart,
   MapPin,
-  Building2,
-  DollarSign,
   Clock,
   Search,
 } from "lucide-react";
@@ -35,6 +32,8 @@ interface SavedJob {
     salary_period?: string;
     show_salary?: boolean;
     created_at: string;
+    expires_at: string;
+    status?: string;
     category: string;
     companies?: {
       id: string;
@@ -45,6 +44,14 @@ interface SavedJob {
     } | null;
   };
 }
+
+const isJobExpired = (job: SavedJob["job"]) => {
+  if (job.status === "expired") return true;
+  if (job.expires_at) {
+    return new Date(job.expires_at) < new Date();
+  }
+  return false;
+};
 
 const JobSeekerSavedJobs = () => {
   const { user } = useAuth();
@@ -159,12 +166,9 @@ const JobSeekerSavedJobs = () => {
   return (
     <JobSeekerLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Heart className="w-6 h-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Saved Jobs</h1>
-            <p className="text-muted-foreground">Jobs you&apos;ve saved for later</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold">Saved Jobs</h1>
+          <p className="text-muted-foreground">Jobs you&apos;ve saved for later</p>
         </div>
 
         {savedJobs.length === 0 ? (
@@ -184,95 +188,110 @@ const JobSeekerSavedJobs = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {savedJobs.map((savedJob) => (
               <Card
                 key={savedJob.id}
                 className="hover:shadow-md transition-shadow"
               >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex gap-4 flex-1">
-                      {/* Company Logo */}
-                      <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                        {savedJob.job.companies?.logo_url ? (
-                          <Image
-                            src={savedJob.job.companies.logo_url}
-                            alt={savedJob.job.companies.name || "Company"}
-                            width={32}
-                            height={32}
-                            className="w-8 h-8 rounded"
-                          />
-                        ) : (
-                          <Building2 className="w-6 h-6 text-muted-foreground" />
-                        )}
+                <CardContent className="p-3 md:p-5">
+                  {/* Main content row */}
+                  <div className="flex items-start gap-3">
+                    {/* Company Logo - only if exists */}
+                    {savedJob.job.companies?.logo_url && (
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <Image
+                          src={savedJob.job.companies.logo_url}
+                          alt={savedJob.job.companies.name || "Company"}
+                          width={48}
+                          height={48}
+                          className="w-10 h-10 md:w-12 md:h-12 rounded-lg object-contain"
+                        />
                       </div>
+                    )}
 
-                      {/* Job Details */}
-                      <div className="flex-1 min-w-0">
+                    {/* Job Details */}
+                    <div className={`flex-1 min-w-0 ${isJobExpired(savedJob.job) ? "opacity-60" : ""}`}>
+                      <div className="flex items-start gap-2">
                         <h3
-                          className="text-lg font-semibold text-foreground mb-1 hover:text-primary cursor-pointer"
+                          className="text-sm md:text-base font-semibold text-foreground leading-tight hover:text-primary cursor-pointer line-clamp-2 flex-1"
                           onClick={() =>
                             router.push(`/jobseeker/saved-job/${savedJob.job.id}`)
                           }
                         >
                           {savedJob.job.title}
                         </h3>
-
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {savedJob.job.companies?.name || "Company"}
-                        </p>
-
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {savedJob.job.location}
-                          </div>
-                          <LocationTypeBadge locationType={savedJob.job.location_type} />
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            <span className="capitalize">{savedJob.job.job_type}</span>
-                          </div>
-                          {savedJob.job.show_salary !== false && (
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="w-3 h-3" />
-                              {formatSalary(
-                                savedJob.job.salary_min,
-                                savedJob.job.salary_max
-                              )}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="capitalize">
-                            {savedJob.job.category}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            Posted {getTimeAgo(savedJob.job.created_at)}
+                        {isJobExpired(savedJob.job) && (
+                          <span className="text-[10px] bg-red-100 text-red-700 border border-red-200 rounded px-1.5 py-0.5 font-medium flex-shrink-0">
+                            Expired
                           </span>
-                        </div>
+                        )}
                       </div>
+
+                      <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                        {savedJob.job.companies?.name || "Company"}
+                      </p>
+
+                      {/* Location row */}
+                      <div className="flex items-center gap-1 text-[11px] md:text-xs text-muted-foreground mt-1.5">
+                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                        <span>{savedJob.job.location}</span>
+                      </div>
+
+                      {/* Badges row */}
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        <LocationTypeBadge locationType={savedJob.job.location_type} />
+                        <span className="text-[11px] md:text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span className="capitalize">{savedJob.job.job_type}</span>
+                        </span>
+                      </div>
+
+                      {/* Posted time */}
+                      <span className="text-[11px] md:text-xs text-muted-foreground mt-2 block">
+                        Posted {getTimeAgo(savedJob.job.created_at)}
+                      </span>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2">
+                    {/* Desktop buttons - inline */}
+                    <div className="hidden md:flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleUnsaveJob(savedJob.job.id)}
-                        className="gap-2"
+                        className="gap-1.5 text-xs h-8"
                       >
-                        <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+                        <Heart className="w-3.5 h-3.5 fill-red-500 text-red-500" />
                         Unsave
                       </Button>
                       <Button
                         size="sm"
                         onClick={() => router.push(`/jobseeker/saved-job/${savedJob.job.id}`)}
+                        className="text-xs h-8"
                       >
                         View Job
                       </Button>
                     </div>
+                  </div>
+
+                  {/* Mobile actions row */}
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-border/50 md:hidden">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUnsaveJob(savedJob.job.id)}
+                      className="gap-1.5 text-xs h-8 flex-1"
+                    >
+                      <Heart className="w-3.5 h-3.5 fill-red-500 text-red-500" />
+                      Unsave
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => router.push(`/jobseeker/saved-job/${savedJob.job.id}`)}
+                      className="text-xs h-8 flex-1"
+                    >
+                      View Job
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

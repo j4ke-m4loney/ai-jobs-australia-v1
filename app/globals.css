@@ -171,4 +171,9 @@
   .prose a {
     @apply text-primary hover:underline;
   }
+
+  /* Prevent layout shift when drawer opens */
+  html {
+    overflow-x: hidden;
+  }
 }

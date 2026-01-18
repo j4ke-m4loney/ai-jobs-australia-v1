@@ -292,14 +292,11 @@ const JobSeekerProfile = () => {
   return (
     <JobSeekerLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <User className="w-6 h-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Profile Settings</h1>
-            <p className="text-muted-foreground">
-              Manage your personal and professional information
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold">Profile Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your personal and professional information
+          </p>
         </div>
 
         <Form {...form}>

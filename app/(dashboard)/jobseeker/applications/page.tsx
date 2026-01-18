@@ -170,14 +170,11 @@ const JobSeekerApplications = () => {
   return (
     <JobSeekerLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <FileText className="w-6 h-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">My Applications</h1>
-            <p className="text-muted-foreground">
-              Track your job applications
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold">My Applications</h1>
+          <p className="text-muted-foreground">
+            Track applications submitted through AI Jobs Australia. External applications are not tracked.
+          </p>
         </div>
 
               {/* Stats Cards */}

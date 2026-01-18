@@ -34,6 +34,7 @@ import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { trackJobSearch } from "@/lib/analytics";
 import { categorySlugToName } from "@/lib/categories/generator";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 
 interface Job {
   id: string;
@@ -107,29 +108,24 @@ function calculateSearchRelevance(job: Job, searchTerm: string): number {
   const companyName = job.companies?.name?.toLowerCase() || "";
 
   let score = 0;
-  let matchType = "";
 
   // TITLE SCORING - Check exact matches first with highest priority
 
   // Perfect exact match of entire title
   if (title === search) {
-    score = 10000; // Absolute highest priority
-    matchType = "EXACT-TITLE";
+    score = 10000;
   }
   // All search words appear as exact words in title (e.g., "software" matches "Junior Software Engineer")
   else if (hasExactWordMatch(title, search)) {
-    score = 5000; // Very high priority for exact word matches
-    matchType = "EXACT-WORDS";
+    score = 5000;
   }
   // Title starts with the exact search term
   else if (title.startsWith(search + " ") || title.startsWith(search + "-")) {
     score = 3000;
-    matchType = "TITLE-STARTS-EXACT";
   }
   // All search words appear as word prefixes (e.g., "soft" matches "software")
   else if (hasWordStartMatch(title, search)) {
     score = 1000;
-    matchType = "WORD-PREFIX";
   }
   // Search term appears as a complete word (with boundaries)
   else if (
@@ -141,33 +137,23 @@ function calculateSearchRelevance(job: Job, searchTerm: string): number {
     title.includes(" " + search + "-")
   ) {
     score = 500;
-    matchType = "WORD-BOUNDARY";
   }
   // General substring match (lowest priority for titles)
   else if (title.includes(search)) {
     score = 100;
-    matchType = "SUBSTRING";
   }
 
   // COMPANY NAME SCORING (much lower priority, only as tiebreaker)
   if (companyName === search) {
     score += 20;
-    matchType += "+company-exact";
   } else if (companyName.includes(search)) {
     score += 5;
-    matchType += "+company-contains";
   }
 
   // MINIMAL FEATURED BONUS (should never override relevance)
   if (job.is_featured) {
-    score += 0.5; // Tiny bonus, only matters for identical scores
-    matchType += "+feat";
+    score += 0.5;
   }
-
-  // Enhanced debug logging
-  console.log(
-    `🔍 Search: "${search}" | Job: "${job.title}" | Score: ${score} | Type: ${matchType}`
-  );
 
   return score;
 }
@@ -229,18 +215,12 @@ function JobsLoading() {
 
 // Main component that uses useSearchParams
 function JobsContent() {
-  console.log("Jobs component rendering...");
   const { user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toggleSaveJob, isJobSaved } = useSavedJobs();
-  console.log("useSavedJobs hook values:", { toggleSaveJob, isJobSaved });
-  console.log("🔍 Auth state:", { user: user?.id, loading });
 
   const [jobs, setJobs] = useState<Job[]>([]);
-
-  // DEBUG: Track component renders
-  console.log("🔄 JOBS PAGE RENDER:", new Date().getTime());
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobsLoading, setJobsLoading] = useState(true);
   // Initialize with server-safe defaults to prevent hydration mismatch
@@ -270,6 +250,9 @@ function JobsContent() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [pendingJobId, setPendingJobId] = useState<string | null>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [isDrawerClosing, setIsDrawerClosing] = useState(false);
+  const [isDesktopTransitioning, setIsDesktopTransitioning] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -280,6 +263,10 @@ function JobsContent() {
   const shouldSyncFromUrl = useRef(true);
   const initialized = useRef(false);
   const previousSearchParamsRef = useRef<string>("");
+
+  // Refs for stable filter effect - prevents unnecessary re-fetches
+  const previousFilterDepsRef = useRef<string>("");
+  const fetchJobsRef = useRef<(() => Promise<void>) | null>(null);
 
   // Memoized filter dependencies to prevent unnecessary re-renders
   const filterDeps = useMemo(
@@ -294,6 +281,7 @@ function JobsContent() {
       dateFilter,
       dateSort,
       sortBy,
+      currentPage,
     }),
     [
       searchTerm,
@@ -306,6 +294,7 @@ function JobsContent() {
       dateFilter,
       dateSort,
       sortBy,
+      currentPage,
     ]
   );
 
@@ -386,11 +375,6 @@ function JobsContent() {
 
   const fetchJobs = useCallback(
     async (overrideSearch?: string, overrideLocation?: string) => {
-      console.log(
-        "🗄️ FETCH JOBS CALLED:",
-        new Date().getTime(),
-        new Error().stack
-      );
       const startTime = Date.now();
       const MINIMUM_LOADING_TIME = 400; // Minimum ms to show loading state for smoother UX
 
@@ -402,13 +386,6 @@ function JobsContent() {
           overrideSearch !== undefined ? overrideSearch : searchTerm;
         const effectiveLocationTerm =
           overrideLocation !== undefined ? overrideLocation : selectedState;
-
-        console.log("🔍 fetchJobs called with:", {
-          effectiveSearchTerm,
-          effectiveLocationTerm,
-          fromOverride:
-            overrideSearch !== undefined || overrideLocation !== undefined,
-        });
 
         let query = supabase.from("jobs").select(
           `
@@ -426,8 +403,6 @@ function JobsContent() {
         );
         // Only show approved jobs in public listing
         query = query.eq("status", "approved");
-
-        console.log("Fetching jobs - user:", user?.id || "guest");
 
         // Apply filters with title search (working solution)
         if (effectiveSearchTerm) {
@@ -492,11 +467,8 @@ function JobsContent() {
           }
 
           if (cutoffDate) {
-            console.log("📅 Applying date filter:", dateFilter, "cutoff:", cutoffDate.toISOString());
             query = query.gte("created_at", cutoffDate.toISOString());
           }
-        } else {
-          console.log("📅 No date filter applied (dateFilter is 'any')");
         }
 
         // Sorting
@@ -523,14 +495,6 @@ function JobsContent() {
               .order("created_at", { ascending: false });
         }
 
-        console.log("🎯 EXECUTING SUPABASE QUERY NOW with filters:", {
-          searchTerm: effectiveSearchTerm,
-          location: effectiveLocationTerm,
-          dateFilter: dateFilter,
-          user: user?.id || "guest",
-          page: currentPage,
-        });
-
         // Apply pagination - calculate offset
         const offset = (currentPage - 1) * JOBS_PER_PAGE;
         const {
@@ -544,20 +508,7 @@ function JobsContent() {
           setTotalJobs(totalCount);
         }
 
-        console.log("🎯 SUPABASE QUERY COMPLETED:", {
-          resultCount: data?.length || 0,
-          totalCount,
-          page: currentPage,
-          error: error?.message,
-          hasData: !!data,
-          firstJobTitle: data?.[0]?.title,
-        });
-
-        console.log("🔍 Checking for errors after query...");
-
         if (error) {
-          console.error("Error fetching jobs:", error);
-          console.error("Error details:", error.message, error.details);
           toast.error("Failed to load jobs");
           return;
         }
@@ -567,38 +518,22 @@ function JobsContent() {
         // Filter out any null/invalid jobs from the initial query
         jobsData = jobsData.filter((job) => job && job.title && job.id);
 
-        console.log("🔍 Initial jobsData from main query:", {
-          length: jobsData.length,
-          hasData: !!jobsData,
-          effectiveSearchTerm,
-        });
-
-        // TESTING: Company search with comprehensive logging and safeguards
-        // TODO: Monitor for hanging issues
-        if (true && effectiveSearchTerm && effectiveSearchTerm.trim()) {
-          console.log("🔍 Entering company search block...");
-          console.log("🔍 Company search - search term:", effectiveSearchTerm);
-
+        // Company name search - search for jobs by company name
+        if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
           // Safeguard: Prevent duplicate simultaneous company searches
           if (companySearchInProgress.current) {
-            console.log(
-              "🚨 Company search already in progress, skipping duplicate"
-            );
             return;
           }
 
           companySearchInProgress.current = true;
-          console.log("🔍 Company search lock acquired");
 
           // Safeguard: Set timeout to prevent hanging
           const companySearchTimeout = setTimeout(() => {
-            console.error("🚨 Company search timeout after 10 seconds");
             companySearchInProgress.current = false;
           }, 10000);
           companySearchTimeouts.current.add(companySearchTimeout);
 
           try {
-            console.log("🔍 Step 1: Building company jobs query...");
             // Search for jobs by company name using a separate query
             let companyQuery = supabase.from("jobs").select(`
             *,
@@ -611,7 +546,6 @@ function JobsContent() {
               logo_url
             )
           `);
-            console.log("🔍 Step 1 complete: Base query created");
 
             // Apply same status filter as main query
             companyQuery = companyQuery.eq("status", "approved");
@@ -669,75 +603,30 @@ function JobsContent() {
               );
             }
 
-            console.log("🔍 Step 2: Applying filters to company jobs query...");
-            // Apply all filters here first
-            console.log("🔍 Step 2 complete: Filters applied");
-
-            console.log("🔍 Step 3: Searching for companies matching term...");
-            // First, find companies that match the search term
+            // Find companies that match the search term
             const { data: matchingCompanies } = await supabase
               .from("companies")
               .select("id")
               .ilike("name", `%${effectiveSearchTerm}%`);
-            console.log("🔍 Step 3 complete: Company search finished", {
-              foundCompanies: matchingCompanies?.length || 0,
-              hasData: !!matchingCompanies,
-            });
 
             if (matchingCompanies && matchingCompanies.length > 0) {
-              console.log("🔍 Step 4: Processing company IDs...");
               const companyIds = matchingCompanies.map((c) => c.id);
-              console.log("🔍 Company IDs extracted:", companyIds);
               companyQuery = companyQuery.in("company_id", companyIds);
-              console.log(
-                "🔍 Step 4 complete: Company filter applied to jobs query"
-              );
 
-              console.log("🔍 Step 5: Executing company jobs query...");
               const { data: companyJobs, error: companyError } =
                 await companyQuery;
-              console.log("🔍 Step 5 complete: Company jobs query finished", {
-                jobCount: companyJobs?.length || 0,
-                hasError: !!companyError,
-                errorMessage: companyError?.message,
-              });
 
               if (!companyError && companyJobs) {
-                console.log(
-                  "🔍 Step 6: Processing and merging company jobs..."
-                );
                 const companyJobsData = companyJobs as Job[];
-                console.log(
-                  `🔍 Found ${companyJobsData.length} jobs by company search`
-                );
 
-                console.log("🔍 Creating existing job IDs set...");
                 // Merge results and remove duplicates by job ID
                 const existingJobIds = new Set(jobsData.map((job) => job.id));
-                console.log("🔍 Existing job IDs count:", existingJobIds.size);
-
-                console.log("🔍 Filtering new jobs...");
                 const newJobs = companyJobsData.filter(
                   (job) =>
                     job && job.title && job.id && !existingJobIds.has(job.id)
                 );
-                console.log("🔍 New jobs to add:", newJobs.length);
-
-                console.log("🔍 Merging job arrays...");
                 jobsData = [...jobsData, ...newJobs];
-                console.log(
-                  `🔍 Step 6 complete: Total jobs after merging: ${jobsData.length}`
-                );
-              } else if (companyError) {
-                console.error("🚨 Company jobs query error:", companyError);
-              } else {
-                console.log("🔍 No company jobs data returned");
               }
-            } else {
-              console.log(
-                "🔍 Step 4-6: No matching companies found, skipping company jobs query"
-              );
-              console.log("🔍 Continuing with title search results only");
             }
 
             // Cleanup: Clear timeout and release lock
@@ -746,31 +635,18 @@ function JobsContent() {
             );
             companySearchTimeouts.current.clear();
             companySearchInProgress.current = false;
-            console.log("🔍 Company search lock released (success)");
-          } catch (companySearchError) {
-            console.error("🚨 Company search failed:", companySearchError);
-
+          } catch {
             // Cleanup: Clear timeout and release lock on error
             companySearchTimeouts.current.forEach((timeout) =>
               clearTimeout(timeout)
             );
             companySearchTimeouts.current.clear();
             companySearchInProgress.current = false;
-            console.log("🔍 Company search lock released (error)");
-
             // Continue with title search results only
           }
-          console.log("🔍 Completed company search block");
-        } else {
-          console.log("🔍 Skipping company search - no search term");
         }
 
         // Add relevance scoring when search term exists
-        console.log("🔍 Checking if relevance scoring should apply...", {
-          hasSearchTerm: !!effectiveSearchTerm?.trim(),
-          jobCount: jobsData.length,
-        });
-
         if (
           effectiveSearchTerm &&
           effectiveSearchTerm.trim() &&
@@ -857,9 +733,6 @@ function JobsContent() {
           }
         }
 
-        console.log("🔍 About to log job count...");
-        console.log(`🎯 FINAL RESULT: Found ${jobsData.length} jobs`);
-
         // Update total jobs count after merging company search results
         // Only override the database count when we have a search term (company search adds extra results)
         if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
@@ -869,33 +742,24 @@ function JobsContent() {
         // Track search event with PostHog
         trackJobSearch({
           search_query: effectiveSearchTerm || undefined,
-          location_filter: effectiveLocationTerm !== "all" ? effectiveLocationTerm : undefined,
-          category_filter: selectedCategories.length > 0 ? selectedCategories.join(",") : undefined,
+          location_filter:
+            effectiveLocationTerm !== "all" ? effectiveLocationTerm : undefined,
+          category_filter:
+            selectedCategories.length > 0
+              ? selectedCategories.join(",")
+              : undefined,
           salary_filter: selectedSalary || undefined,
           results_count: jobsData.length,
         });
 
         if (jobsData.length > 0) {
-          console.log("First job:", jobsData[0]);
-
-          // Company data is now included in the query, no need to enrich separately
           setJobs(jobsData);
         } else {
           setJobs([]);
-        }
-
-        // Auto-select first job if none selected (this will be handled after enrichment)
-        if (jobsData.length > 0 && !selectedJob) {
-          // The selection will be handled after enrichment in the useEffect
-        }
-
-        // Fetch suggestions if no jobs found
-        if (jobsData.length === 0) {
-          console.log("No jobs found, fetching suggestions...");
+          // Fetch suggestions if no jobs found
           await fetchSuggestions();
         }
-      } catch (error) {
-        console.error("Error in fetchJobs:", error);
+      } catch {
         toast.error("Failed to load jobs");
       } finally {
         // Ensure minimum loading time for smoother UX
@@ -926,45 +790,36 @@ function JobsContent() {
     ]
   );
 
+  // Keep fetchJobsRef in sync with the latest fetchJobs callback
+  useEffect(() => {
+    fetchJobsRef.current = fetchJobs;
+  }, [fetchJobs]);
+
   // Sync URL parameters with state after hydration (prevents hydration mismatch)
   useEffect(() => {
     const urlSearch = searchParams.get("search");
     const urlLocation = searchParams.get("location");
 
     if (urlSearch && urlSearch !== searchTerm) {
-      console.log("🔗 Syncing search term from URL:", urlSearch);
       setSearchTerm(urlSearch);
     }
 
     if (urlLocation && urlLocation !== selectedState) {
-      console.log("🔗 Syncing location from URL:", urlLocation);
       setSelectedState(urlLocation);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once after initial mount to prevent hydration mismatch
 
-  // Auto-select first job when jobs are loaded
+  // Auto-select first job when jobs are loaded (desktop only)
   useEffect(() => {
-    console.log("🎯 AUTO-SELECT EFFECT:", {
-      jobsLength: jobs.length,
-      hasSelected: !!selectedJob,
-    });
-    if (jobs.length > 0 && !selectedJob) {
+    if (jobs.length > 0 && !selectedJob && !isMobile) {
       setSelectedJob(jobs[0]);
     }
-  }, [jobs, selectedJob]);
+  }, [jobs, selectedJob, isMobile]);
 
   // Consolidated initialization and authentication effect
   useEffect(() => {
-    console.log("🔄 Initialization effect triggered", {
-      loading,
-      user: user?.id || "guest",
-      initialized: initialized.current,
-      shouldSync: shouldSyncFromUrl.current,
-    });
-
     if (loading) {
-      console.log("⏳ Still loading, skipping initialization");
       return;
     }
 
@@ -972,15 +827,12 @@ function JobsContent() {
     // Allow guest access with guest=true parameter
     if (!user) {
       const isGuest = searchParams.get("guest") === "true";
-      console.log("👤 No user, guest mode:", isGuest);
       if (!isGuest) {
         // Redirect to login, preserving the current URL for "Maybe Later"
         const currentUrl = `${window.location.pathname}${window.location.search}`;
-        console.log("🔐 Redirecting to login with next:", currentUrl);
         router.push(`/login?next=${encodeURIComponent(currentUrl)}`);
         return;
       }
-      console.log("👤 Continuing as guest");
     }
 
     // Sync URL parameters on initial load only
@@ -988,28 +840,21 @@ function JobsContent() {
       const urlSearch = searchParams.get("search") || "";
       const urlLocation = searchParams.get("location") || "all";
 
-      console.log("🔧 Syncing URL params", { urlSearch, urlLocation });
       setSearchTerm(urlSearch);
       setSelectedState(urlLocation);
 
       shouldSyncFromUrl.current = false;
       initialized.current = true;
-      console.log("✅ Initialization complete");
 
-      // Force filter effect to re-evaluate by triggering a state update
-      console.log("✅ URL sync complete - triggering filter effect");
       // Use a micro-task to ensure initialization is complete before filter effect runs
       setTimeout(() => {
-        console.log("🔄 Forcing filter effect re-evaluation");
         fetchJobs();
       }, 0);
     } else if (!initialized.current && !loading) {
       // No URL params to sync, just mark as initialized
       initialized.current = true;
-      console.log("📋 No URL params to sync - triggering job fetch");
       // Use a micro-task to ensure initialization is complete before job fetching
       setTimeout(() => {
-        console.log("🔄 Forcing job fetch for no-params case");
         fetchJobs();
       }, 0);
     }
@@ -1029,13 +874,6 @@ function JobsContent() {
       previousSearchParamsRef.current !== "" &&
       previousSearchParamsRef.current !== currentFilterParams;
 
-    console.log("🔍 searchParams effect:", {
-      previous: previousSearchParamsRef.current,
-      current: currentFilterParams,
-      filterParamsChanged,
-      initialized: initialized.current,
-    });
-
     // Update the ref for next comparison
     if (previousSearchParamsRef.current === "") {
       previousSearchParamsRef.current = currentFilterParams;
@@ -1043,47 +881,29 @@ function JobsContent() {
 
     // Don't reset during initial guest mode setup or if only jobId changed
     if (initialized.current && !isGuest && filterParamsChanged) {
-      console.log("🔄 Filter params changed, resetting initialization");
       shouldSyncFromUrl.current = true;
       initialized.current = false;
       previousSearchParamsRef.current = currentFilterParams;
     }
   }, [searchParams, loading]);
-
-  // Initial job fetching effect - now handled in initialization effect above
-  // This ensures jobs are fetched AFTER URL params are synced
-  useEffect(() => {
-    console.log(
-      "🎯 Component mounted - waiting for initialization to fetch jobs"
-    );
-    // fetchJobs is now called in the initialization effect after URL params are synced
-  }, []);
-
   // Job fetching effect - triggers on filter changes
+  // Uses refs to prevent re-fetches when only fetchJobs reference changes (e.g., on auth state changes)
   useEffect(() => {
     // Simplified condition: fetch jobs when initialized, regardless of auth loading
-    // This ensures both guest and authenticated users get search results immediately
     const shouldProceed = initialized.current;
 
-    console.log("🔍 Filter change effect triggered", {
-      filterDeps,
-      initialized: initialized.current,
-      loading,
-      hasUser: !!user,
-      condition: shouldProceed,
-    });
+    // Serialize current filter values to compare with previous
+    const currentFilterString = JSON.stringify(filterDeps);
+    const filtersActuallyChanged = previousFilterDepsRef.current !== currentFilterString;
 
-    if (shouldProceed) {
-      console.log("🚀 Refetching jobs due to filter change");
-      fetchJobs();
-    } else {
-      console.log("❌ Filter effect conditions not met", {
-        loading,
-        initialized: initialized.current,
-        hasUser: !!user,
-      });
+    // Only refetch if filters actually changed, not just because fetchJobs reference changed
+    if (shouldProceed && filtersActuallyChanged) {
+      previousFilterDepsRef.current = currentFilterString;
+      if (fetchJobsRef.current) {
+        fetchJobsRef.current();
+      }
     }
-  }, [filterDeps, user, loading, fetchJobs]); // Removed searchParams - handled in separate effect
+  }, [filterDeps, user, loading]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -1132,26 +952,28 @@ function JobsContent() {
     }
   }, [selectedJob, user, checkApplicationStatus]);
 
-  // Handle screen size detection
+  // Handle screen size detection and prevent scroll restoration
   useEffect(() => {
+    // Prevent browser scroll restoration globally
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 1024);
     };
 
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
-    return () => window.removeEventListener("resize", checkScreenSize);
+
+    return () => {
+      window.removeEventListener("resize", checkScreenSize);
+    };
   }, []);
 
   // Handle direct links on initial page load only (one-time check)
   useEffect(() => {
-    // Only run once when jobs are loaded and we have a jobId in URL
     const jobIdParam = new URLSearchParams(window.location.search).get("jobId");
-    console.log("🔗 URL PARAM EFFECT:", {
-      jobIdParam,
-      jobsLength: jobs.length,
-      hasSelected: !!selectedJob,
-    });
     if (jobIdParam && jobs.length > 0 && !selectedJob) {
       const job = jobs.find((j) => j.id === jobIdParam);
       if (job) {
@@ -1159,6 +981,85 @@ function JobsContent() {
       }
     }
   }, [jobs, selectedJob]);
+
+  // Lock scroll to target position during drawer close animation
+  useEffect(() => {
+    if (!isDrawerClosing || !isMobile) {
+      return;
+    }
+
+    const handleScroll = () => {
+      if (window.scrollY !== scrollPosition) {
+        window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+      }
+    };
+
+    // Lock scroll immediately
+    window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+
+    // Add scroll listener to prevent scroll drift
+    window.addEventListener('scroll', handleScroll, { passive: false });
+
+    // Release lock after drawer animation completes (~300ms + buffer)
+    const timeout = setTimeout(() => {
+      window.removeEventListener('scroll', handleScroll);
+      setIsDrawerClosing(false);
+
+      // Final scroll restoration
+      window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+
+      // Check again after paint
+      requestAnimationFrame(() => {
+        if (window.scrollY !== scrollPosition) {
+          window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+        }
+      });
+    }, 400);
+
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isDrawerClosing, isMobile, scrollPosition]);
+
+  // Lock scroll during desktop job selection transition
+  // Prevents scroll flash caused by layout recalculation when job details panel updates
+  useEffect(() => {
+    if (!isDesktopTransitioning || isMobile || scrollPosition === 0) {
+      return;
+    }
+
+    // Aggressively restore scroll position during desktop job selection
+    const handleScroll = () => {
+      if (window.scrollY !== scrollPosition) {
+        window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: false });
+
+    // Force restore at multiple intervals to counter layout shifts from job panel re-render
+    const intervals = [0, 10, 30, 50, 100, 150, 200];
+    const timeouts = intervals.map(ms =>
+      setTimeout(() => {
+        if (window.scrollY !== scrollPosition) {
+          window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+        }
+      }, ms)
+    );
+
+    // Release lock after job details panel has rendered
+    const releaseTimeout = setTimeout(() => {
+      window.removeEventListener('scroll', handleScroll);
+      setIsDesktopTransitioning(false);
+    }, 300);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      timeouts.forEach(t => clearTimeout(t));
+      clearTimeout(releaseTimeout);
+    };
+  }, [isDesktopTransitioning, isMobile, scrollPosition]);
 
   const handleApply = () => {
     if (!user) {
@@ -1212,26 +1113,46 @@ function JobsContent() {
     setPendingJobId(null);
   };
 
+  const handleCloseJobDetails = () => {
+    // On mobile, immediately restore scroll and activate scroll lock before closing
+    if (isMobile) {
+      window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+      setIsDrawerClosing(true);
+    }
+
+    // Close the drawer
+    setSelectedJob(null);
+
+    // Remove jobId from URL
+    const params = new URLSearchParams(window.location.search);
+    params.delete("jobId");
+    const newUrl = params.toString() ? `/jobs?${params.toString()}` : "/jobs";
+    window.history.pushState(null, "", newUrl);
+  };
+
   const jobDetailsScrollRef = useRef<HTMLDivElement>(null);
 
-  const handleJobClick = (job: Job) => {
-    console.log("👆 CLICK JOB:", job.id, new Date().getTime());
-    if (isMobile) {
-      // On mobile, navigate to apply page
-      router.push(`/apply/${job.id}`);
-    } else {
-      // On desktop, update URL without triggering router change (prevents refetch)
-      const params = new URLSearchParams(window.location.search);
-      params.set("jobId", job.id);
-      window.history.pushState(null, "", `/jobs?${params.toString()}`);
+  const handleJobClick = (job: Job, event?: React.MouseEvent) => {
+    // Store scroll position for both mobile and desktop
+    const currentScroll = window.scrollY;
+    setScrollPosition(currentScroll);
 
-      // Update state to show job details in right panel
-      if (jobDetailsScrollRef.current) {
-        jobDetailsScrollRef.current.scrollTop = 0;
-      }
-      console.log("👆 SETTING SELECTED JOB:", job.id);
-      setSelectedJob(job);
+    if (!isMobile) {
+      // Desktop: Activate desktop transitioning scroll lock
+      setIsDesktopTransitioning(true);
     }
+
+    // Update URL without triggering router change (prevents refetch)
+    const params = new URLSearchParams(window.location.search);
+    params.set("jobId", job.id);
+    window.history.pushState(null, "", `/jobs?${params.toString()}`);
+
+    // Reset scroll position of job details panel
+    if (jobDetailsScrollRef.current) {
+      jobDetailsScrollRef.current.scrollTop = 0;
+    }
+
+    setSelectedJob(job);
   };
 
   const formatSalary = (min: number | null, max: number | null) => {
@@ -1250,7 +1171,10 @@ function JobsContent() {
       engineering: "Engineering",
       research: "Research",
     };
-    return categories[category as keyof typeof categories] || categorySlugToName(category);
+    return (
+      categories[category as keyof typeof categories] ||
+      categorySlugToName(category)
+    );
   };
 
   const clearAllFilters = () => {
@@ -1263,16 +1187,6 @@ function JobsContent() {
     setSearchTerm("");
     setSelectedState("all");
   };
-
-  // Debug: Monitor searchTerm state changes
-  useEffect(() => {
-    console.log("🔍 DEBUG: searchTerm state changed:", {
-      searchTerm,
-      length: searchTerm.length,
-      userAuthenticated: !!user,
-      userId: user?.id || "guest",
-    });
-  }, [searchTerm, user]);
 
   if (loading) {
     return (
@@ -1311,23 +1225,8 @@ function JobsContent() {
                   key="jobs-search-input"
                   placeholder="Job title, keywords, or company"
                   value={searchTerm}
-                  onChange={(e) => {
-                    console.log("🔍 DEBUG: SearchInput onChange fired", {
-                      newValue: e.target.value,
-                      currentSearchTerm: searchTerm,
-                      userAuthenticated: !!user,
-                      userId: user?.id || "guest",
-                    });
-                    setSearchTerm(e.target.value);
-                    console.log(
-                      "🔍 DEBUG: setSearchTerm called with:",
-                      e.target.value
-                    );
-                  }}
-                  onClear={() => {
-                    console.log("🧹 DEBUG: SearchInput onClear fired");
-                    setSearchTerm("");
-                  }}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onClear={() => setSearchTerm("")}
                   leftIcon={<Search className="h-5 w-5" />}
                   className="h-12 text-base bg-white text-gray-900"
                 />
@@ -1337,10 +1236,7 @@ function JobsContent() {
                 <StateSelector
                   placeholder="Select location"
                   value={selectedState}
-                  onValueChange={(value) => {
-                    console.log("🗺️ Jobs page - State selected:", value);
-                    setSelectedState(value);
-                  }}
+                  onValueChange={setSelectedState}
                   className="h-12 text-base bg-white text-gray-900"
                 />
               </div>
@@ -1891,7 +1787,7 @@ function JobsContent() {
                         <Card
                           key={job.id}
                           className="cursor-pointer transition-all duration-200 hover:shadow-lg mx-2"
-                          onClick={() => handleJobClick(job)}
+                          onClick={(e) => handleJobClick(job, e)}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between">
@@ -2123,6 +2019,68 @@ function JobsContent() {
       </div>
 
       <Footer />
+
+      {/* Custom overlay for non-modal drawer */}
+      {isMobile && selectedJob && (
+        <div
+          className="fixed inset-0 z-40 bg-black/80 transition-opacity"
+          onClick={handleCloseJobDetails}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Mobile Job Details Drawer */}
+      <Drawer
+        open={isMobile && !!selectedJob}
+        onOpenChange={(open) => {
+          if (!open) {
+            // handleCloseJobDetails handles scroll lock activation on mobile
+            handleCloseJobDetails();
+          }
+        }}
+        modal={false}
+        shouldScaleBackground={false}
+        noBodyStyles
+        repositionInputs={false}
+      >
+        <DrawerContent className="max-h-[90vh]">
+          <div className="sticky top-0 z-10 bg-background border-b px-4 py-3 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCloseJobDetails}
+              className="h-8 w-8"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </Button>
+            <DrawerTitle className="text-base font-semibold">Jobs</DrawerTitle>
+          </div>
+          <div className="overflow-y-auto pb-4">
+            {selectedJob && (
+              <JobDetailsView
+                job={selectedJob}
+                onApply={handleApply}
+                onSaveClick={handleToggleSaveJob}
+                isJobSaved={isJobSaved(selectedJob.id)}
+                hasApplied={hasApplied[selectedJob.id] || false}
+                scrollContainerRef={jobDetailsScrollRef}
+              />
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Save Job Authentication Modal */}
       <SaveJobAuthModal

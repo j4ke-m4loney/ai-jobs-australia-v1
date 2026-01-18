@@ -44,7 +44,7 @@ interface Job {
 interface JobCardProps {
   job: Job;
   isSelected: boolean;
-  onClick: (job: Job) => void;
+  onClick: (job: Job, event?: React.MouseEvent) => void;
   onSaveClick: (jobId: string) => void;
   isJobSaved: boolean;
 }
@@ -96,7 +96,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           ? "ring-2 ring-primary bg-primary/5 shadow-md"
           : "hover:bg-muted/30 hover:border-border"
       } ${job.is_featured ? "border-l-4 border-l-primary" : ""}`}
-      onClick={() => onClick(job)}
+      onClick={(e) => onClick(job, e)}
     >
       <CardContent className="px-3 py-5 md:px-5">
         <div className="flex items-start justify-between">

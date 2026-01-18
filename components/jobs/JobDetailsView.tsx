@@ -119,9 +119,9 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
         overscrollBehavior: 'contain'
       }}
     >
-      <div className="border border-primary/50 bg-white m-4 rounded-lg">
+      <div className="border border-primary/50 bg-white m-2 lg:m-4 rounded-lg">
         {/* Job Header */}
-        <div className="p-6 border-b mx-4">
+        <div className="p-4 lg:p-6 border-b mx-2 lg:mx-4">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               {/* Company Logo - only show if exists */}
@@ -137,12 +137,12 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 </div>
               )}
 
-              <h1 className="text-2xl font-bold text-foreground mb-1">
+              <h1 className="text-lg lg:text-2xl font-bold text-foreground mb-1">
                 {job.title}
               </h1>
 
               <div className="flex items-center gap-2 text-foreground mb-2">
-                <span className="font-medium text-lg">
+                <span className="font-medium text-base lg:text-lg">
                   {job.companies?.name || "Company"}
                 </span>
                 {/* <Button variant="link" className="p-0 h-auto text-primary">
@@ -163,33 +163,31 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
               {job.show_salary !== false && formatSalary(job.salary_min, job.salary_max, job.salary_period) && (
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="font-semibold text-green-600 text-lg">
+                  <span className="font-semibold text-green-600 text-base lg:text-lg">
                     {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Heart icon aligned with company logo */}
-            <div className="w-16 h-16 flex items-center justify-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSaveClick(job.id);
-                }}
-                className="p-2"
-              >
-                <Heart
-                  className={`w-5 h-5 ${
-                    isJobSaved
-                      ? "fill-red-500 text-red-500"
-                      : "text-muted-foreground"
-                  }`}
-                />
-              </Button>
-            </div>
+            {/* Heart icon aligned with job title */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaveClick(job.id);
+              }}
+              className="p-2 self-start -mt-1"
+            >
+              <Heart
+                className={`w-5 h-5 ${
+                  isJobSaved
+                    ? "fill-red-500 text-red-500"
+                    : "text-muted-foreground"
+                }`}
+              />
+            </Button>
           </div>
 
           <div className="flex items-center justify-between">
@@ -230,7 +228,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
         </div>
 
         {/* Job Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
           {/* Job Description */}
           <div>
             <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
@@ -250,7 +248,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
           {/* Company Info Section */}
           {(job.companies?.description || job.companies?.website) && (
             <div>
-              <h3 className="font-semibold text-lg mb-3">
+              <h3 className="font-semibold text-base lg:text-lg mb-3">
                 About {job.companies?.name || "the Company"}
               </h3>
 
@@ -281,7 +279,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
           <div className="border-t pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-lg mb-1">Ready to apply?</h3>
+                <h3 className="font-semibold text-base lg:text-lg mb-1">Ready to apply?</h3>
                 {/* <p className="text-sm text-muted-foreground">
                   Expires in {getDaysUntilExpiry(job.expires_at)} days
                 </p> */}
