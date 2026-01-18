@@ -75,7 +75,7 @@ export default function HomepageSocialProof() {
           ))}
         </div>
         <p className="text-[9px] leading-[1.3] md:text-sm text-foreground font-medium max-w-[200px] md:max-w-none">
-          Join 500+ job seekers getting weekly alerts
+          Join 4,000+ job seekers getting weekly alerts
         </p>
       </div>
     </div>
