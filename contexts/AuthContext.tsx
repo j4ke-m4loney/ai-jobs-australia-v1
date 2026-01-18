@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { getAuthService } from "@/lib/auth";
 import type { AuthUser, AuthSession, AuthError } from "@/types/auth.types";
+import { trackSignUp, trackLogin } from "@/lib/analytics";
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -99,7 +100,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         ...(userType && { userType }),
       },
     });
-    
+
+    // Track successful signup
+    if (!result.error) {
+      trackSignUp({
+        user_type: userType || "job_seeker",
+        auth_method: "email",
+      });
+    }
+
     return { error: result.error ?? null };
   };
 
@@ -109,6 +118,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       email,
       password,
     });
+
+    // Track successful login
+    if (!result.error && result.session?.user) {
+      trackLogin({
+        user_type: (result.session.user.user_metadata?.user_type as "job_seeker" | "employer" | "admin") || "job_seeker",
+        auth_method: "email",
+      });
+    }
 
     return { error: result.error ?? null };
   };

@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { PostHogProvider } from "./PostHogProvider";
 import { PostHogPageView } from "./PostHogPageView";
 import { usePostHogIdentify } from "@/hooks/usePostHogIdentify";
+import { OAuthSignupTracker } from "@/components/analytics/OAuthSignupTracker";
 
 function PostHogIdentifyWrapper({ children }: { children: React.ReactNode }) {
   usePostHogIdentify();
@@ -22,6 +23,9 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
       <AuthProvider>
         <ProfileProvider>
           <PostHogIdentifyWrapper>
+            <Suspense fallback={null}>
+              <OAuthSignupTracker />
+            </Suspense>
             {children}
             <Toaster />
           </PostHogIdentifyWrapper>
