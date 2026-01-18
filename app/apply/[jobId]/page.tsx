@@ -29,7 +29,7 @@ import {
 import { formatSalary } from "@/lib/salary-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { trackApplicationStarted, trackApplicationSubmitted } from "@/lib/analytics";
+import { trackInternalApplicationStarted, trackApplicationSubmitted } from "@/lib/analytics";
 
 interface Job {
   id: string;
@@ -131,8 +131,8 @@ export default function ApplyPage() {
     } else {
       setJob(data as Job);
 
-      // Track application started
-      trackApplicationStarted({
+      // Track internal application started
+      trackInternalApplicationStarted({
         job_id: data.id,
         job_title: data.title,
         company: data.companies?.name || "Unknown",

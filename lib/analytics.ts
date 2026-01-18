@@ -55,13 +55,13 @@ export const trackJobUnsaved = (properties: {
   }
 };
 
-export const trackApplicationStarted = (properties: {
+export const trackInternalApplicationStarted = (properties: {
   job_id: string;
   job_title: string;
   company: string;
 }) => {
   if (typeof window !== "undefined") {
-    posthog.capture("application_started", properties);
+    posthog.capture("internal_application_started", properties);
   }
 };
 

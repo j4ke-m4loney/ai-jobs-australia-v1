@@ -25,6 +25,7 @@ import { formatSalary } from "@/lib/salary-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
+import { trackEvent } from "@/lib/analytics";
 
 interface Job {
   id: string;
@@ -133,6 +134,20 @@ export default function JobDetailPage() {
     }
 
     if (!job) return;
+
+    // Track Apply button click
+    trackEvent("apply_button_clicked", {
+      job_id: job.id,
+      job_title: job.title,
+      company: job.companies?.name || "Unknown",
+      location: job.location,
+      is_featured: job.is_featured,
+      location_type: job.location_type,
+      job_type: job.job_type,
+      category: job.category,
+      salary_min: job.salary_min,
+      salary_max: job.salary_max,
+    });
 
     // If external application, open link
     if (job.application_method === "external" && job.application_url) {
