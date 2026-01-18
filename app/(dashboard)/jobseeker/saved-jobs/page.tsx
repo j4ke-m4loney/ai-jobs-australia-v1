@@ -133,14 +133,6 @@ const JobSeekerSavedJobs = () => {
     }
   };
 
-  const formatSalary = (min: number | null, max: number | null) => {
-    if (!min && !max) return "Not specified";
-    if (min && max)
-      return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-    if (min) return `From $${min.toLocaleString()}`;
-    return `Up to $${max?.toLocaleString()}`;
-  };
-
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();

@@ -784,8 +784,6 @@ function JobsContent() {
       sortBy,
       currentPage,
       JOBS_PER_PAGE,
-      selectedJob,
-      user,
       fetchSuggestions,
     ]
   );
@@ -1132,7 +1130,7 @@ function JobsContent() {
 
   const jobDetailsScrollRef = useRef<HTMLDivElement>(null);
 
-  const handleJobClick = (job: Job, event?: React.MouseEvent) => {
+  const handleJobClick = (job: Job) => {
     // Store scroll position for both mobile and desktop
     const currentScroll = window.scrollY;
     setScrollPosition(currentScroll);
@@ -1787,7 +1785,7 @@ function JobsContent() {
                         <Card
                           key={job.id}
                           className="cursor-pointer transition-all duration-200 hover:shadow-lg mx-2"
-                          onClick={(e) => handleJobClick(job, e)}
+                          onClick={() => handleJobClick(job)}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between">
