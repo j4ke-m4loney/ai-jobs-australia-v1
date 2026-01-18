@@ -100,7 +100,11 @@ const EmployerAuthContent = () => {
     const { error } = await signIn(email, password);
 
     if (error) {
-      setSignInError(error.message);
+      if (error.message === "Email not confirmed") {
+        setSignInError("Check your inbox to confirm this email");
+      } else {
+        setSignInError(error.message);
+      }
       setLoading(false);
       return;
     }
