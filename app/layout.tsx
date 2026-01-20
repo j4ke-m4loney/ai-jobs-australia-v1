@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.aijobsaustralia.com.au"),
-  title: "#1 Home for all AI Opportunities In Australia",
+  title: "AI Jobs Australia | #1 Home for AI Opportunities",
   description:
     "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
   openGraph: {
