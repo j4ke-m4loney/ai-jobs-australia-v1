@@ -11,6 +11,7 @@ import {
   Sparkles,
   TrendingUp,
   Calculator,
+  MessageSquare,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -57,11 +58,25 @@ const tools = [
       "Estimate salary ranges for AI and ML roles across Australia. Compare cities and see how your skills impact compensation.",
     icon: Calculator,
     href: "/tools/ai-ml-salary-calculator",
-    badge: "New",
+    badge: null,
     features: [
       "Location-based estimates",
       "Skill impact analysis",
       "City comparison",
+      "100% private",
+    ],
+  },
+  {
+    title: "Interview Question Generator",
+    description:
+      "Practice interview questions tailored to your target AI/ML role. Get sample answers and tips for technical, behavioural, and system design rounds.",
+    icon: MessageSquare,
+    href: "/tools/ai-interview-question-generator",
+    badge: "New",
+    features: [
+      "Role-specific questions",
+      "Sample answers & tips",
+      "All interview stages",
       "100% private",
     ],
   },
