@@ -65,12 +65,18 @@ export async function requireAdmin() {
 export async function getAdminStats() {
   try {
     // Get stats directly from tables instead of using RPC function
-    const [jobsResult, usersResult] = await Promise.all([
+    const [jobsResult, usersResult, paymentsResult] = await Promise.all([
       supabase.from('jobs').select('*', { count: 'exact' }),
-      supabase.from('profiles').select('*', { count: 'exact' })
+      supabase.from('profiles').select('*', { count: 'exact' }),
+      supabase.from('payments').select('pricing_tier, status, job_id').eq('status', 'succeeded')
     ]);
 
     const jobs = jobsResult.data || [];
+    const payments = paymentsResult.data || [];
+
+    // Count paid jobs by pricing tier
+    const paid_featured_jobs = payments.filter(p => p.pricing_tier === 'featured').length;
+    const paid_standard_jobs = payments.filter(p => p.pricing_tier === 'standard').length;
 
     const stats = {
       total_jobs: jobs.length,
@@ -80,7 +86,9 @@ export async function getAdminStats() {
       featured: jobs.filter(j => j.is_featured === true).length,
       expired: jobs.filter(j => j.status === 'expired').length,
       total_companies: [...new Set(jobs.map(j => j.company_name).filter(Boolean))].length,
-      total_users: usersResult.count || 0
+      total_users: usersResult.count || 0,
+      paid_featured_jobs,
+      paid_standard_jobs
     };
 
     return stats;

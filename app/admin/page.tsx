@@ -20,6 +20,8 @@ import {
   Clock,
   Star,
   Plus,
+  Crown,
+  CreditCard,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -34,6 +36,8 @@ interface AdminStats {
   expired: number;
   total_companies: number;
   total_users: number;
+  paid_featured_jobs: number;
+  paid_standard_jobs: number;
 }
 
 export default function AdminDashboard() {
@@ -116,6 +120,28 @@ export default function AdminDashboard() {
       color: "text-orange-600",
       bgColor: "bg-orange-100",
     },
+    {
+      title: "Paid Featured",
+      value: stats?.paid_featured_jobs || 0,
+      icon: Crown,
+      color: "text-amber-600",
+      bgColor: "bg-amber-100",
+      action: {
+        label: "View",
+        href: "/admin/jobs?payment_tier=featured",
+      },
+    },
+    {
+      title: "Paid Standard",
+      value: stats?.paid_standard_jobs || 0,
+      icon: CreditCard,
+      color: "text-cyan-600",
+      bgColor: "bg-cyan-100",
+      action: {
+        label: "View",
+        href: "/admin/jobs?payment_tier=standard",
+      },
+    },
   ];
 
   return (
@@ -132,7 +158,7 @@ export default function AdminDashboard() {
         {/* Stats Grid */}
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[...Array(8)].map((_, i) => (
+            {[...Array(10)].map((_, i) => (
               <Card key={i}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">

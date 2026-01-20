@@ -70,7 +70,7 @@ const defaultFormData: JobFormData2 = {
   locationType: "in-person",
 
   // Job Details
-  jobType: "full-time",
+  jobTypes: ["full-time"],
   hoursConfig: undefined,
   contractConfig: undefined,
 
@@ -111,9 +111,12 @@ const defaultFormData: JobFormData2 = {
 
 export default function PostJob2() {
   // ALL hooks must be at the top, before any conditional returns
-  const { user, loading } = useAuth();
-  const { profile } = useProfile();
+  const { user, loading: authLoading } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const router = useRouter();
+
+  // Combined loading state - wait for both auth AND profile to load
+  const loading = authLoading || profileLoading;
   const [currentStep, setCurrentStep] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -147,9 +150,10 @@ export default function PostJob2() {
       return;
     }
 
-    // Redirect to employer auth if user is not an employer
+    // Redirect to employer auth if user is not an employer or admin
     const userType = profile?.user_type || user?.user_metadata?.user_type;
-    if (!loading && user && userType !== "employer") {
+    const canPostJobs = userType === "employer" || userType === "admin";
+    if (!loading && user && !canPostJobs) {
       router.push("/auth?next=/post-job");
       return;
     }
@@ -196,7 +200,8 @@ export default function PostJob2() {
 
   // Don't render anything if redirecting
   const userType = profile?.user_type || user?.user_metadata?.user_type;
-  if (!user || userType !== "employer") {
+  const canPostJobs = userType === "employer" || userType === "admin";
+  if (!user || !canPostJobs) {
     return null;
   }
 

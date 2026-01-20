@@ -15,7 +15,6 @@ import {
   DollarSign,
   Mail,
   ExternalLink,
-  Globe,
   Calendar,
   Gift,
 } from "lucide-react";
@@ -29,26 +28,33 @@ interface Props {
 
 export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
   const formatJobType = () => {
-    let type = formData.jobType
-      .replace("-", " ")
-      .replace(/\b\w/g, (l) => l.toUpperCase());
+    const jobTypes = formData.jobTypes || [];
 
-    if (formData.hoursConfig && formData.jobType === "part-time") {
-      const { showBy, fixedHours, minHours, maxHours } = formData.hoursConfig;
-      if (showBy === "fixed" && fixedHours) {
-        type += ` • ${fixedHours} hours/week`;
-      } else if (showBy === "range" && minHours && maxHours) {
-        type += ` • ${minHours}-${maxHours} hours/week`;
-      } else if (showBy === "maximum" && maxHours) {
-        type += ` • Up to ${maxHours} hours/week`;
-      } else if (showBy === "minimum" && minHours) {
-        type += ` • From ${minHours} hours/week`;
+    // Format each job type
+    const formattedTypes = jobTypes.map((type) =>
+      type.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+    );
+
+    let result = formattedTypes.join(" / ");
+
+    // Only show hours/contract config when exactly one job type is selected
+    if (jobTypes.length === 1) {
+      // Add hours config if part-time is selected
+      if (formData.hoursConfig && jobTypes.includes("part-time")) {
+        const { showBy, fixedHours, minHours, maxHours } = formData.hoursConfig;
+        if (showBy === "fixed" && fixedHours) {
+          result += ` • ${fixedHours} hours/week`;
+        } else if (showBy === "range" && minHours && maxHours) {
+          result += ` • ${minHours}-${maxHours} hours/week`;
+        } else if (showBy === "maximum" && maxHours) {
+          result += ` • Up to ${maxHours} hours/week`;
+        } else if (showBy === "minimum" && minHours) {
+          result += ` • From ${minHours} hours/week`;
+        }
       }
-    }
 
-    if (
-      formData.contractConfig &&
-      [
+      // Add contract config if any contract type is selected
+      const contractTypes = [
         "fixed-term",
         "subcontract",
         "casual",
@@ -56,13 +62,17 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
         "contract",
         "volunteer",
         "internship",
-      ].includes(formData.jobType)
-    ) {
-      const { length, period } = formData.contractConfig;
-      type += ` • ${length} ${period} contract`;
+      ];
+      if (
+        formData.contractConfig &&
+        jobTypes.some((type) => contractTypes.includes(type))
+      ) {
+        const { length, period } = formData.contractConfig;
+        result += ` • ${length} ${period} contract`;
+      }
     }
 
-    return type;
+    return result;
   };
 
   const formatPay = () => {
@@ -124,20 +134,19 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
                   {formData.jobTitle || "Job Title"}
                 </h1>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-foreground">
-                    {formData.companyName || "Company Name"}
-                  </span>
-                  {formData.companyWebsite && (
-                    <>
-                      <span className="text-muted-foreground">•</span>
-                      <a
-                        href={formData.companyWebsite}
-                        className="text-primary hover:underline flex items-center gap-1"
-                      >
-                        <Globe className="w-3 h-3" />
-                        Website
-                      </a>
-                    </>
+                  {formData.companyWebsite ? (
+                    <a
+                      href={formData.companyWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {formData.companyName || "Company Name"}
+                    </a>
+                  ) : (
+                    <span className="font-medium text-foreground">
+                      {formData.companyName || "Company Name"}
+                    </span>
                   )}
                 </div>
               </div>

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+// import { Switch } from "@/components/ui/switch"; // Commented out - restore when internal applications enabled
 import { JobFormData2 } from "@/types/job2";
 import { Mail, ExternalLink, Settings, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,11 +48,12 @@ interface Props {
 const applicationMethods = [
   {
     value: "external",
-    label: "Redirect to company website",
+    label: "Redirect to ATS or Company Website",
     icon: ExternalLink,
   },
   { value: "email", label: "Email applications", icon: Mail },
-  { value: "indeed", label: "AI Jobs Australia applications", icon: Settings },
+  // Commented out - can be restored when AI Jobs Australia applications feature is enabled
+  // { value: "indeed", label: "AI Jobs Australia applications", icon: Settings },
 ];
 
 // Commented out - can be restored when hiring timeline feature is re-enabled
@@ -104,14 +105,15 @@ export default function ApplicationSettingsStep({
     onNext();
   };
 
-  const updateCommunicationPref = (key: string, value: boolean) => {
-    updateFormData({
-      communicationPrefs: {
-        ...formData.communicationPrefs,
-        [key]: value,
-      },
-    });
-  };
+  // Commented out - restore when internal applications enabled
+  // const updateCommunicationPref = (key: string, value: boolean) => {
+  //   updateFormData({
+  //     communicationPrefs: {
+  //       ...formData.communicationPrefs,
+  //       [key]: value,
+  //     },
+  //   });
+  // };
 
   return (
     <Form {...form}>
@@ -236,8 +238,8 @@ export default function ApplicationSettingsStep({
             )}
           /> */}
 
-          {/* Communication Preferences */}
-          <div className="space-y-4">
+          {/* Communication Preferences - COMMENTED OUT - Can be restored when internal applications are enabled */}
+          {/* <div className="space-y-4">
             <FormLabel className="text-base font-medium">
               Communication Preferences
             </FormLabel>
@@ -263,8 +265,7 @@ export default function ApplicationSettingsStep({
                 />
               </div>
 
-              {/* Phone Screening - COMMENTED OUT - Can be restored later */}
-              {/* <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
+              <div className="flex items-center justify-between p-3 border border-primary rounded-lg">
                 <div className="flex items-center gap-3">
                   <Phone className="w-4 h-4 text-muted-foreground" />
                   <div>
@@ -280,9 +281,9 @@ export default function ApplicationSettingsStep({
                     updateCommunicationPref("phoneScreening", checked)
                   }
                 />
-              </div> */}
+              </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="flex justify-between items-center">

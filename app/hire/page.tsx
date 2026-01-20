@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import Image from "next/image";
 
 import {
   Star,
@@ -17,36 +16,27 @@ import {
   Building2,
   Briefcase,
   Clock,
+  TrendingUp,
+  Code,
 } from "lucide-react";
 import EmployerHeader from "@/components/EmployerHeader";
 import Footer from "@/components/Footer";
 
 export default function HirePage() {
-
-  const testimonials = [
-    {
-      name: "Sarah Chen",
-      title: "Head of Talent, TechFlow AI",
-      quote:
-        "AI Jobs Australia helped us find 3 exceptional machine learning engineers in just 2 weeks. The quality of candidates is outstanding.",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&crop=face",
-    },
-  ];
-
-  const companies = [
-    { name: "Atlassian", description: "Scaled their AI team by 40%" },
-    { name: "Canva", description: "Found 15+ AI specialists" },
-    { name: "Afterpay", description: "Built entire ML engineering team" },
-    { name: "REA Group", description: "Recruited senior AI architects" },
-  ];
+  // Platform stats - static values, update manually as platform grows
+  const platformStats = {
+    activeJobs: "50+",
+    aiProfessionals: "1K+",
+    weeklyApplications: "100+",
+    companiesHiring: "30+",
+  };
 
   const features = [
     {
       icon: Target,
       title: "Get more visibility",
       description:
-        "Your jobs reach Australia&apos;s top AI talent through our specialized platform and targeted outreach.",
+        "Your jobs reach Australia's top AI talent through our specialized platform and targeted outreach.",
     },
     {
       icon: UserCheck,
@@ -97,7 +87,7 @@ export default function HirePage() {
       <section className="pt-32 pb-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <Badge variant="secondary" className="mb-6">
-            🚀 For Employers
+            For Employers
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
             Get started in minutes!
@@ -118,73 +108,71 @@ export default function HirePage() {
           </Link>
 
           <p className="text-sm text-muted-foreground mt-4">
-            Join 200+ Australian companies already hiring top AI talent
+            Post your job to Australia&apos;s AI talent community
           </p>
         </div>
       </section>
 
-      {/* Customer Testimonial */}
+      {/* Platform Stats */}
       <section className="py-16 px-4 bg-muted/30">
-        <div className="container mx-auto max-w-4xl">
-          <Card className="border-0 shadow-lg">
-            <CardContent className="p-8">
-              <div className="flex items-center gap-6">
-                <Image
-                  src={testimonials[0].avatar}
-                  alt={testimonials[0].name}
-                  width={64}
-                  height={64}
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-1 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                      />
-                    ))}
-                  </div>
-                  <blockquote className="text-lg italic mb-3">
-                    &quot;{testimonials[0].quote}&quot;
-                  </blockquote>
-                  <cite className="text-sm font-medium">
-                    {testimonials[0].name}, {testimonials[0].title}
-                  </cite>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Social Proof */}
-      <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Trusted by Australia&apos;s leading tech companies
+          <h2 className="text-3xl font-bold text-center mb-8">
+            Platform Overview
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {companies.map((company, index) => (
-              <Card
-                key={index}
-                className="text-center p-6 hover:shadow-md transition-shadow"
-              >
-                <CardContent className="space-y-3">
-                  <Building2 className="w-8 h-8 mx-auto text-primary" />
-                  <h3 className="font-semibold text-lg">{company.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {company.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Briefcase className="h-10 w-10 text-blue-600 mx-auto mb-3" />
+                <div className="text-sm text-muted-foreground mb-1">
+                  Active AI Jobs
+                </div>
+                <div className="text-4xl font-bold">
+                  {platformStats.activeJobs}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Users className="h-10 w-10 text-green-600 mx-auto mb-3" />
+                <div className="text-sm text-muted-foreground mb-1">
+                  AI Professionals
+                </div>
+                <div className="text-4xl font-bold">
+                  {platformStats.aiProfessionals}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6 text-center">
+                <TrendingUp className="h-10 w-10 text-purple-600 mx-auto mb-3" />
+                <div className="text-sm text-muted-foreground mb-1">
+                  Weekly Applications
+                </div>
+                <div className="text-4xl font-bold">
+                  {platformStats.weeklyApplications}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Building2 className="h-10 w-10 text-orange-600 mx-auto mb-3" />
+                <div className="text-sm text-muted-foreground mb-1">
+                  Companies Hiring
+                </div>
+                <div className="text-4xl font-bold">
+                  {platformStats.companiesHiring}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="py-16 px-4 bg-muted/30">
+      <section className="py-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">
@@ -210,6 +198,169 @@ export default function HirePage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Who's Looking for AI Jobs */}
+      <section className="py-16 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="text-3xl font-bold text-center mb-4">
+            Who&apos;s Looking for AI Jobs?
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Our platform attracts highly skilled professionals in Australia&apos;s
+            AI and ML ecosystem
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Job Titles */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-blue-600" />
+                Job Titles Seeking
+              </h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  Machine Learning Engineers
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  Data Scientists
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  AI Researchers
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  Data Engineers
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  MLOps Engineers
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  AI Product Managers
+                </li>
+              </ul>
+            </div>
+
+            {/* Industries */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-purple-600" />
+                Industries They Come From
+              </h3>
+              <ul className="space-y-2 text-muted-foreground">
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  Technology & SaaS
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  Finance & Fintech
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  Healthcare & Biotech
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  E-commerce & Retail
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  Research & Academia
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                  Consulting
+                </li>
+              </ul>
+            </div>
+
+            {/* Experience Levels */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                Experience Levels
+              </h3>
+              <ul className="space-y-3 text-muted-foreground">
+                <li>
+                  <div className="flex justify-between mb-1">
+                    <span>Junior (0-2 yrs)</span>
+                    <span className="font-semibold">20%</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500"
+                      style={{ width: "20%" }}
+                    />
+                  </div>
+                </li>
+                <li>
+                  <div className="flex justify-between mb-1">
+                    <span>Mid (2-5 yrs)</span>
+                    <span className="font-semibold">35%</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500"
+                      style={{ width: "35%" }}
+                    />
+                  </div>
+                </li>
+                <li>
+                  <div className="flex justify-between mb-1">
+                    <span>Senior (5-10 yrs)</span>
+                    <span className="font-semibold">30%</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500"
+                      style={{ width: "30%" }}
+                    />
+                  </div>
+                </li>
+                <li>
+                  <div className="flex justify-between mb-1">
+                    <span>Lead (10+ yrs)</span>
+                    <span className="font-semibold">15%</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500"
+                      style={{ width: "15%" }}
+                    />
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            {/* Skills & Technologies */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Code className="h-5 w-5 text-orange-600" />
+                Skills & Technologies
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline">Python</Badge>
+                <Badge variant="outline">TensorFlow</Badge>
+                <Badge variant="outline">PyTorch</Badge>
+                <Badge variant="outline">Deep Learning</Badge>
+                <Badge variant="outline">NLP</Badge>
+                <Badge variant="outline">Computer Vision</Badge>
+                <Badge variant="outline">LLMs</Badge>
+                <Badge variant="outline">Generative AI</Badge>
+                <Badge variant="outline">MLOps</Badge>
+                <Badge variant="outline">AWS</Badge>
+                <Badge variant="outline">Azure</Badge>
+                <Badge variant="outline">GCP</Badge>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -285,8 +436,7 @@ export default function HirePage() {
             Ready to find your next AI hire?
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join hundreds of Australian companies who have successfully hired AI
-            talent through our platform.
+            Start reaching qualified AI candidates today.
           </p>
           <div className="space-y-4">
             <Link href="/post-job-login">

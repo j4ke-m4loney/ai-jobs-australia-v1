@@ -45,6 +45,7 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
+import { appendUtmParams } from "@/lib/utils";
 
 interface JobDetails {
   id: string;
@@ -426,7 +427,7 @@ export default function AdminJobReviewPage() {
                   <div className="flex items-center gap-2">
                     <Globe className="h-4 w-4 text-muted-foreground" />
                     <a
-                      href={job.application_url}
+                      href={appendUtmParams(job.application_url, job.id)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"

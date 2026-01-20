@@ -102,6 +102,9 @@ function AdminJobsContent() {
   const [statusFilter, setStatusFilter] = useState(
     searchParams.get("status") || "all"
   );
+  const [paymentTierFilter, setPaymentTierFilter] = useState(
+    searchParams.get("payment_tier") || ""
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
@@ -121,6 +124,20 @@ function AdminJobsContent() {
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
 
+      // If filtering by payment tier, first get job IDs from payments
+      let jobIdsFromPayments: string[] | null = null;
+      if (paymentTierFilter) {
+        const { data: payments, error: paymentsError } = await supabase
+          .from("payments")
+          .select("job_id")
+          .eq("pricing_tier", paymentTierFilter)
+          .eq("status", "succeeded");
+
+        if (paymentsError) throw paymentsError;
+
+        jobIdsFromPayments = payments?.map(p => p.job_id).filter(Boolean) as string[] || [];
+      }
+
       let query = supabase
         .from("jobs")
         .select(
@@ -134,6 +151,18 @@ function AdminJobsContent() {
         query = query.eq("status", statusFilter);
       }
 
+      // Filter by job IDs from payments if payment tier filter is active
+      if (jobIdsFromPayments !== null) {
+        if (jobIdsFromPayments.length === 0) {
+          // No jobs match the payment filter
+          setJobs([]);
+          setTotalCount(0);
+          setIsLoading(false);
+          return;
+        }
+        query = query.in("id", jobIdsFromPayments);
+      }
+
       const { data, error, count } = await query;
       if (error) throw error;
 
@@ -145,16 +174,16 @@ function AdminJobsContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter, currentPage]);
+  }, [statusFilter, paymentTierFilter, currentPage]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [statusFilter, searchQuery]);
+  }, [statusFilter, searchQuery, paymentTierFilter]);
 
   useEffect(() => {
     fetchJobs();
-  }, [statusFilter, refreshKey, fetchJobs]);
+  }, [statusFilter, paymentTierFilter, refreshKey, fetchJobs]);
 
   // Set up real-time subscription
   useEffect(() => {
@@ -480,6 +509,17 @@ function AdminJobsContent() {
                 >
                   <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
                 </Button>
+                {paymentTierFilter && (
+                  <Badge variant="secondary" className="flex items-center gap-1 px-3 py-1.5">
+                    Paid: {paymentTierFilter === "featured" ? "Featured" : "Standard"}
+                    <button
+                      onClick={() => setPaymentTierFilter("")}
+                      className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    >
+                      <XCircle className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
               </div>
 
               {selectedJobs.length > 0 && (

@@ -26,6 +26,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { trackEvent } from "@/lib/analytics";
+import { appendUtmParams } from "@/lib/utils";
 
 interface Job {
   id: string;
@@ -151,7 +152,7 @@ export default function JobDetailPage() {
 
     // If external application, open link
     if (job.application_method === "external" && job.application_url) {
-      window.open(job.application_url, "_blank");
+      window.open(appendUtmParams(job.application_url, job.id), "_blank");
       return;
     }
 

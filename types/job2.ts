@@ -1,3 +1,16 @@
+export type JobTypeOption =
+  | "full-time"
+  | "part-time"
+  | "permanent"
+  | "fixed-term"
+  | "subcontract"
+  | "casual"
+  | "temp-to-perm"
+  | "contract"
+  | "internship"
+  | "volunteer"
+  | "graduate";
+
 export interface JobFormData2 {
   // Job Basics
   jobTitle: string;
@@ -6,20 +19,9 @@ export interface JobFormData2 {
   locationState?: string;
   locationPostcode?: string;
   locationType: "in-person" | "fully-remote" | "hybrid" | "on-the-road";
-  
-  // Job Details
-  jobType: 
-    | "full-time"
-    | "part-time"
-    | "permanent"
-    | "fixed-term"
-    | "subcontract"
-    | "casual"
-    | "temp-to-perm"
-    | "contract"
-    | "internship"
-    | "volunteer"
-    | "graduate";
+
+  // Job Details - Now supports multiple selections (1-4)
+  jobTypes: JobTypeOption[];
   hoursConfig?: {
     showBy: "fixed" | "range" | "maximum" | "minimum";
     minHours?: number;
@@ -104,7 +106,6 @@ export const PRICING_TIERS = {
       "30-day listing",
       "Basic search ranking",
       "Standard support",
-      "Job analytics",
     ],
   },
   featured: {
@@ -117,22 +118,22 @@ export const PRICING_TIERS = {
       "30-day featured listing",
       "Top search ranking",
       "Homepage feature",
+      "Newsletter feature",
       "Priority support",
-      "Advanced analytics",
       "Social media promotion",
     ],
   },
   annual: {
-    name: "Annual Plan",
-    price: 999,
-    priceDisplay: "$999",
-    description: "Unlimited postings for 1 year",
+    name: "Enterprise Unlimited",
+    price: 0,
+    priceDisplay: "",
+    description: "Unlimited postings for your organization",
+    isEnterprise: true,
     features: [
       "Unlimited job postings",
       "All featured benefits",
       "Dedicated account manager",
       "Custom branding",
-      "API access",
       "Priority placement",
     ],
   },

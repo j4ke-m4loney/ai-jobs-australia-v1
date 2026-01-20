@@ -15,11 +15,9 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { JobFormData2 } from "@/types/job2";
 import {
   Building2,
-  Upload,
   Eye,
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
+import { useEffect } from "react";
 import { CompanyCombobox } from "@/components/admin/CompanyCombobox";
 
 const schema = z.object({
@@ -58,9 +56,6 @@ export default function DescribeJobStep({
   onShowPreview,
   companies,
 }: Props) {
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -82,18 +77,6 @@ export default function DescribeJobStep({
 
     return () => clearTimeout(timeoutId);
   }, [watchedValues, updateFormData]);
-
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      updateFormData({ companyLogo: file });
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setLogoPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const onSubmit = (values: z.infer<typeof schema>) => {
     updateFormData(values);
@@ -186,32 +169,17 @@ export default function DescribeJobStep({
                 )}
               />
 
+              {/* TODO: Re-enable logo upload when storage is configured
               <div>
                 <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-2 block">
                   Company Logo
                 </label>
                 <div className="flex items-center gap-4">
-                  <div
-                    className="w-16 h-16 border-2 border-dashed border-primary rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors relative"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {logoPreview ? (
-                      <Image
-                        src={logoPreview}
-                        alt="Company logo"
-                        fill
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <Upload className="w-6 h-6 text-muted-foreground" />
-                    )}
+                  <div className="w-16 h-16 border-2 border-dashed border-primary rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors relative">
+                    <Upload className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
+                    <Button type="button" variant="outline">
                       Choose File
                     </Button>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -219,14 +187,8 @@ export default function DescribeJobStep({
                     </p>
                   </div>
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="hidden"
-                />
               </div>
+              */}
 
               <FormField
                 control={form.control}

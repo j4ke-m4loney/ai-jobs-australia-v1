@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { JobSeekerLayout } from "@/components/jobseeker/JobSeekerLayout";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
+import { appendUtmParams } from "@/lib/utils";
 
 interface EmployerQuestion {
   id: string;
@@ -304,11 +305,11 @@ export default function SavedJobDetailPage() {
 
   const handleApply = () => {
     if (!job) return;
-    
+
     // Check if it's an external application
     if (job.application_method === "external") {
       if (job.application_url) {
-        window.open(job.application_url, "_blank");
+        window.open(appendUtmParams(job.application_url, job.id), "_blank");
       } else if (job.application_email) {
         window.open(`mailto:${job.application_email}`);
       }

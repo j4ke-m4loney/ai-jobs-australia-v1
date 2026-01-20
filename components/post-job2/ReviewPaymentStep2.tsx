@@ -39,26 +39,33 @@ export default function ReviewPaymentStep2({
   const selectedPlan = PRICING_TIERS[formData.pricingTier];
 
   const formatJobType = () => {
-    let type = formData.jobType
-      .replace("-", " ")
-      .replace(/\b\w/g, (l) => l.toUpperCase());
+    const jobTypes = formData.jobTypes || [];
 
-    if (formData.hoursConfig && formData.jobType === "part-time") {
-      const { showBy, fixedHours, minHours, maxHours } = formData.hoursConfig;
-      if (showBy === "fixed" && fixedHours) {
-        type += ` (${fixedHours} hours/week)`;
-      } else if (showBy === "range" && minHours && maxHours) {
-        type += ` (${minHours}-${maxHours} hours/week)`;
-      } else if (showBy === "maximum" && maxHours) {
-        type += ` (max ${maxHours} hours/week)`;
-      } else if (showBy === "minimum" && minHours) {
-        type += ` (min ${minHours} hours/week)`;
+    // Format each job type
+    const formattedTypes = jobTypes.map((type) =>
+      type.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+    );
+
+    let result = formattedTypes.join(" / ");
+
+    // Only show hours/contract config when exactly one job type is selected
+    if (jobTypes.length === 1) {
+      // Add hours config if part-time is selected
+      if (formData.hoursConfig && jobTypes.includes("part-time")) {
+        const { showBy, fixedHours, minHours, maxHours } = formData.hoursConfig;
+        if (showBy === "fixed" && fixedHours) {
+          result += ` (${fixedHours} hours/week)`;
+        } else if (showBy === "range" && minHours && maxHours) {
+          result += ` (${minHours}-${maxHours} hours/week)`;
+        } else if (showBy === "maximum" && maxHours) {
+          result += ` (max ${maxHours} hours/week)`;
+        } else if (showBy === "minimum" && minHours) {
+          result += ` (min ${minHours} hours/week)`;
+        }
       }
-    }
 
-    if (
-      formData.contractConfig &&
-      [
+      // Add contract config if any contract type is selected
+      const contractTypes = [
         "fixed-term",
         "subcontract",
         "casual",
@@ -66,13 +73,17 @@ export default function ReviewPaymentStep2({
         "contract",
         "volunteer",
         "internship",
-      ].includes(formData.jobType)
-    ) {
-      const { length, period } = formData.contractConfig;
-      type += ` (${length} ${period})`;
+      ];
+      if (
+        formData.contractConfig &&
+        jobTypes.some((type) => contractTypes.includes(type))
+      ) {
+        const { length, period } = formData.contractConfig;
+        result += ` (${length} ${period})`;
+      }
     }
 
-    return type;
+    return result;
   };
 
   const formatPay = () => {

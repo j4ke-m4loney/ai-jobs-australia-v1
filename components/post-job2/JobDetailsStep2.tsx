@@ -18,24 +18,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { JobFormData2 } from "@/types/job2";
+import { JobFormData2, JobTypeOption } from "@/types/job2";
 import { Clock, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const jobTypeValues = [
+  "full-time",
+  "part-time",
+  "permanent",
+  "fixed-term",
+  "subcontract",
+  "casual",
+  "temp-to-perm",
+  "contract",
+  "volunteer",
+  "internship",
+  "graduate",
+] as const;
+
 const schema = z.object({
-  jobType: z.enum([
-    "full-time",
-    "part-time",
-    "permanent",
-    "fixed-term",
-    "subcontract",
-    "casual",
-    "temp-to-perm",
-    "contract",
-    "volunteer",
-    "internship",
-    "graduate",
-  ]),
+  jobTypes: z
+    .array(z.enum(jobTypeValues))
+    .min(1, "Select at least one job type")
+    .max(4, "Select up to 4 job types"),
 });
 
 interface Props {
@@ -65,7 +70,9 @@ export default function JobDetailsStep2({
   onNext,
   onPrev,
 }: Props) {
-  const [selectedJobType, setSelectedJobType] = useState(formData.jobType);
+  const [selectedJobTypes, setSelectedJobTypes] = useState<JobTypeOption[]>(
+    formData.jobTypes || ["full-time"]
+  );
   const [hoursConfig, setHoursConfig] = useState(
     formData.hoursConfig || { showBy: "fixed" as const }
   );
@@ -76,12 +83,14 @@ export default function JobDetailsStep2({
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
-      jobType: formData.jobType,
+      jobTypes: formData.jobTypes || ["full-time"],
     },
   });
 
-  const requiresHoursConfig = selectedJobType === "part-time";
-  const requiresContractConfig = [
+  // Only show hours/contract config when exactly one job type is selected
+  const requiresHoursConfig =
+    selectedJobTypes.length === 1 && selectedJobTypes.includes("part-time");
+  const contractTypes = [
     "fixed-term",
     "subcontract",
     "casual",
@@ -89,11 +98,14 @@ export default function JobDetailsStep2({
     "contract",
     "volunteer",
     "internship",
-  ].includes(selectedJobType);
+  ];
+  const requiresContractConfig =
+    selectedJobTypes.length === 1 &&
+    selectedJobTypes.some((type) => contractTypes.includes(type));
 
   const onSubmit = (values: z.infer<typeof schema>) => {
     const updateData: Partial<JobFormData2> = {
-      jobType: values.jobType,
+      jobTypes: values.jobTypes,
       hoursConfig: requiresHoursConfig ? hoursConfig : undefined,
       contractConfig: requiresContractConfig ? contractConfig : undefined,
     };
@@ -101,10 +113,24 @@ export default function JobDetailsStep2({
     onNext();
   };
 
-  const handleJobTypeChange = (value: string) => {
-    const jobType = value as JobFormData2["jobType"];
-    setSelectedJobType(jobType);
-    form.setValue("jobType", jobType);
+  const handleJobTypeToggle = (value: JobTypeOption) => {
+    const isSelected = selectedJobTypes.includes(value);
+    let newSelection: JobTypeOption[];
+
+    if (isSelected) {
+      newSelection = selectedJobTypes.filter((t) => t !== value);
+      if (newSelection.length === 0) {
+        return;
+      }
+    } else {
+      if (selectedJobTypes.length >= 4) {
+        return;
+      }
+      newSelection = [...selectedJobTypes, value];
+    }
+
+    setSelectedJobTypes(newSelection);
+    form.setValue("jobTypes", newSelection);
   };
 
   return (
@@ -113,30 +139,37 @@ export default function JobDetailsStep2({
         <div className="space-y-6">
           <FormField
             control={form.control}
-            name="jobType"
+            name="jobTypes"
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             render={({ field: _field /* intentionally unused */ }) => (
               <FormItem>
                 <FormLabel className="flex items-center gap-2 text-base font-medium">
                   <Clock className="w-5 h-5" />
-                  Job type *
+                  Job type * <span className="text-sm font-normal text-muted-foreground">(select up to 4)</span>
                 </FormLabel>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
-                  {jobTypeOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => handleJobTypeChange(option.value)}
-                      className={cn(
-                        "p-3 border rounded-lg text-left transition-all hover:border-primary",
-                        selectedJobType === option.value
-                          ? "border-primary bg-primary/5 text-primary font-medium"
-                          : "border-primary text-muted-foreground"
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                  {jobTypeOptions.map((option) => {
+                    const isSelected = selectedJobTypes.includes(option.value as JobTypeOption);
+                    const isDisabled = !isSelected && selectedJobTypes.length >= 4;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleJobTypeToggle(option.value as JobTypeOption)}
+                        disabled={isDisabled}
+                        className={cn(
+                          "p-3 border rounded-lg text-left transition-all",
+                          isSelected
+                            ? "border-primary bg-primary/5 text-primary font-medium"
+                            : "border-primary text-muted-foreground hover:border-primary",
+                          isDisabled && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
                 </div>
                 <FormMessage />
               </FormItem>

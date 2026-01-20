@@ -142,12 +142,20 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
               </h1>
 
               <div className="flex items-center gap-2 text-foreground mb-2">
-                <span className="font-medium text-base lg:text-lg">
-                  {job.companies?.name || "Company"}
-                </span>
-                {/* <Button variant="link" className="p-0 h-auto text-primary">
-                  View all jobs
-                </Button> */}
+                {job.companies?.website ? (
+                  <a
+                    href={job.companies.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-base lg:text-lg text-primary hover:underline"
+                  >
+                    {job.companies?.name || "Company"}
+                  </a>
+                ) : (
+                  <span className="font-medium text-base lg:text-lg">
+                    {job.companies?.name || "Company"}
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-foreground mb-3">

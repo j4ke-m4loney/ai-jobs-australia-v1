@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Calculator,
   MessageSquare,
+  FileSearch,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -53,6 +54,20 @@ const tools = [
     ],
   },
   {
+    title: "Job Description Decoder",
+    description:
+      "Paste any job description to extract required skills, experience level, salary hints, and spot potential red flags before you apply.",
+    icon: FileSearch,
+    href: "/tools/ai-job-description-decoder",
+    badge: "New",
+    features: [
+      "Skills extraction",
+      "Red flag detection",
+      "Salary hints",
+      "100% private",
+    ],
+  },
+  {
     title: "AI/ML Salary Calculator",
     description:
       "Estimate salary ranges for AI and ML roles across Australia. Compare cities and see how your skills impact compensation.",
@@ -72,7 +87,7 @@ const tools = [
       "Practice interview questions tailored to your target AI/ML role. Get sample answers and tips for technical, behavioural, and system design rounds.",
     icon: MessageSquare,
     href: "/tools/ai-interview-question-generator",
-    badge: "New",
+    badge: null,
     features: [
       "Role-specific questions",
       "Sample answers & tips",

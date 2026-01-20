@@ -245,7 +245,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     requirements: jobFormData.requirements,
     location: jobFormData.locationAddress,
     location_type: mapLocationType(jobFormData.locationType),
-    job_type: mapJobType(jobFormData.jobType),
+    job_type: mapJobType(jobFormData.jobTypes[0]), // Use first selected type for DB compatibility
     category: 'ai', // Default category
     salary_min: getSalaryMin(jobFormData.payConfig),
     salary_max: getSalaryMax(jobFormData.payConfig),

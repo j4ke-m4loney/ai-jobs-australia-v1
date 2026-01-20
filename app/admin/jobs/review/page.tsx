@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { appendUtmParams } from "@/lib/utils";
 
 interface JobNeedingReview {
   id: string;
@@ -294,7 +295,7 @@ export default function AdminJobReviewPage() {
                             </TableCell>
                             <TableCell>
                               <a
-                                href={job.application_url}
+                                href={appendUtmParams(job.application_url, job.id)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"

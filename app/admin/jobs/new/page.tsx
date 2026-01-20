@@ -133,7 +133,7 @@ export default function AdminNewJobPage() {
     locationType: "in-person",
 
     // Job Details
-    jobType: "full-time",
+    jobTypes: ["full-time"],
     hoursConfig: {
       showBy: "fixed",
       fixedHours: 40,
@@ -308,7 +308,7 @@ export default function AdminNewJobPage() {
         // Optional fields that match schema
         requirements: formData.requirements || null,
         location_type: locationTypeMap[formData.locationType] || "onsite",
-        job_type: formData.jobType,
+        job_type: formData.jobTypes[0], // Use first selected type for DB compatibility
         category: adminOptions.category,
         salary_min: getSalaryMin(formData.payConfig),
         salary_max: getSalaryMax(formData.payConfig),

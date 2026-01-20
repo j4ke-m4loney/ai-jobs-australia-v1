@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { JobFormData2 } from "@/types/job2";
+import { JobFormData2, JobTypeOption } from "@/types/job2";
 import {
   Briefcase,
   Clock,
@@ -34,6 +34,20 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const jobTypeValues = [
+  "full-time",
+  "part-time",
+  "permanent",
+  "fixed-term",
+  "subcontract",
+  "casual",
+  "temp-to-perm",
+  "contract",
+  "volunteer",
+  "internship",
+  "graduate",
+] as const;
+
 const schema = z.object({
   jobTitle: z.string().min(5, "Job title must be at least 5 characters"),
   locationAddress: z.string().min(2, "Location is required"),
@@ -41,19 +55,10 @@ const schema = z.object({
   locationState: z.string().optional(),
   locationPostcode: z.string().optional(),
   locationType: z.enum(["in-person", "fully-remote", "hybrid", "on-the-road"]),
-  jobType: z.enum([
-    "full-time",
-    "part-time",
-    "permanent",
-    "fixed-term",
-    "subcontract",
-    "casual",
-    "temp-to-perm",
-    "contract",
-    "volunteer",
-    "internship",
-    "graduate",
-  ]),
+  jobTypes: z
+    .array(z.enum(jobTypeValues))
+    .min(1, "Select at least one job type")
+    .max(4, "Select up to 4 job types"),
   showPay: z.boolean(),
 });
 
@@ -82,7 +87,9 @@ export default function JobBasicsStep({
   updateFormData,
   onNext,
 }: Props) {
-  const [selectedJobType, setSelectedJobType] = useState(formData.jobType);
+  const [selectedJobTypes, setSelectedJobTypes] = useState<JobTypeOption[]>(
+    formData.jobTypes || ["full-time"]
+  );
   const [hoursConfig, setHoursConfig] = useState(
     formData.hoursConfig || { showBy: "fixed" as const }
   );
@@ -104,7 +111,7 @@ export default function JobBasicsStep({
       locationState: formData.locationState,
       locationPostcode: formData.locationPostcode,
       locationType: formData.locationType,
-      jobType: formData.jobType,
+      jobTypes: formData.jobTypes || ["full-time"],
       showPay: formData.payConfig.showPay,
     },
   });
@@ -119,7 +126,7 @@ export default function JobBasicsStep({
       // Update the form data with watched values plus other state
       updateFormData({
         ...watchedValues,
-        jobType: selectedJobType,
+        jobTypes: selectedJobTypes,
         hoursConfig: hoursConfig,
         contractConfig: contractConfig,
         payConfig: { ...formData.payConfig, showPay: watchedValues.showPay },
@@ -130,7 +137,7 @@ export default function JobBasicsStep({
     return () => clearTimeout(timeoutId);
   }, [
     watchedValues,
-    selectedJobType,
+    selectedJobTypes,
     hoursConfig,
     contractConfig,
     formData.payConfig,
@@ -138,8 +145,10 @@ export default function JobBasicsStep({
     highlights,
   ]);
 
-  const requiresHoursConfig = selectedJobType === "part-time";
-  const requiresContractConfig = [
+  // Only show hours/contract config when exactly one job type is selected
+  const requiresHoursConfig =
+    selectedJobTypes.length === 1 && selectedJobTypes.includes("part-time");
+  const contractTypes = [
     "fixed-term",
     "subcontract",
     "casual",
@@ -147,7 +156,10 @@ export default function JobBasicsStep({
     "contract",
     "volunteer",
     "internship",
-  ].includes(selectedJobType);
+  ];
+  const requiresContractConfig =
+    selectedJobTypes.length === 1 &&
+    selectedJobTypes.some((type) => contractTypes.includes(type));
 
   const onSubmit = (values: z.infer<typeof schema>) => {
     // Validate that salary is provided
@@ -173,9 +185,26 @@ export default function JobBasicsStep({
     onNext();
   };
 
-  const handleJobTypeChange = (value: string) => {
-    setSelectedJobType(value as "full-time" | "part-time" | "contract" | "casual" | "internship");
-    form.setValue("jobType", value as "full-time" | "part-time" | "contract" | "casual" | "internship");
+  const handleJobTypeToggle = (value: JobTypeOption) => {
+    const isSelected = selectedJobTypes.includes(value);
+    let newSelection: JobTypeOption[];
+
+    if (isSelected) {
+      // Remove if already selected (but keep at least 1)
+      newSelection = selectedJobTypes.filter((t) => t !== value);
+      if (newSelection.length === 0) {
+        return; // Don't allow empty selection
+      }
+    } else {
+      // Add if not selected (but max 4)
+      if (selectedJobTypes.length >= 4) {
+        return; // Don't allow more than 4
+      }
+      newSelection = [...selectedJobTypes, value];
+    }
+
+    setSelectedJobTypes(newSelection);
+    form.setValue("jobTypes", newSelection);
   };
 
 
@@ -342,10 +371,10 @@ export default function JobBasicsStep({
                       <Input
                         placeholder={
                           index === 0
-                            ? "e.g. Lead innovative AI solutions using cutting-edge machine learning"
+                            ? "What is the main focus of the job?"
                             : index === 1
-                            ? "e.g. Work with world-class data scientists on breakthrough research"
-                            : "e.g. Competitive salary with equity and comprehensive benefits package"
+                            ? "What experience is required?"
+                            : "What skills or requirements are needed?"
                         }
                         value={highlight}
                         onChange={(e) =>
@@ -388,29 +417,36 @@ export default function JobBasicsStep({
 
             <FormField
               control={form.control}
-              name="jobType"
+              name="jobTypes"
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               render={({ field: _field /* intentionally unused */ }) => (
                 <FormItem>
                   <FormLabel className="text-base font-medium">
-                    Job type *
+                    Job type * <span className="text-sm font-normal text-muted-foreground">(select up to 4)</span>
                   </FormLabel>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
-                    {jobTypeOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => handleJobTypeChange(option.value)}
-                        className={cn(
-                          "p-3 border rounded-lg text-left transition-all hover:border-primary",
-                          selectedJobType === option.value
-                            ? "border-primary bg-primary/5 text-primary font-medium"
-                            : "border-primary text-muted-foreground"
-                        )}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+                    {jobTypeOptions.map((option) => {
+                      const isSelected = selectedJobTypes.includes(option.value as JobTypeOption);
+                      const isDisabled = !isSelected && selectedJobTypes.length >= 4;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => handleJobTypeToggle(option.value as JobTypeOption)}
+                          disabled={isDisabled}
+                          className={cn(
+                            "p-3 border rounded-lg text-left transition-all",
+                            isSelected
+                              ? "border-primary bg-primary/5 text-primary font-medium"
+                              : "border-primary text-muted-foreground hover:border-primary",
+                            isDisabled && "opacity-50 cursor-not-allowed"
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -588,14 +624,13 @@ export default function JobBasicsStep({
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
               <DollarSign className="w-5 h-5" />
-              Pay & Benefits
+              Salary
             </h3>
 
             <div className="space-y-4">
               <div>
-                <FormLabel className="flex items-center gap-2 text-base font-medium mb-2">
-                  <DollarSign className="w-5 h-5" />
-                  Salary Range <span className="text-red-500">*</span>
+                <FormLabel className="text-base font-medium mb-2">
+                  Range *
                 </FormLabel>
                 <p className="text-sm text-muted-foreground mb-3">
                   Salary information is required for job filtering. Use the toggle below to control whether the salary is publicly displayed.

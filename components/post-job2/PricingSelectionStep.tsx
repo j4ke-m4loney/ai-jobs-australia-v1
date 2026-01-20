@@ -87,17 +87,25 @@ export default function PricingSelectionStep({
               const isSelected = watchedTier === tier;
               const isPopular = tier === "featured";
 
+              const isEnterprise = tier === "annual";
+
               return (
                 <Card
                   key={tier}
                   className={cn(
                     "relative cursor-pointer transition-all hover:shadow-lg",
-                    isSelected
+                    isSelected && !isEnterprise
                       ? tierColors[tier as keyof typeof tierColors]
                       : "border-border",
                     isPopular && "ring-2 ring-primary"
                   )}
-                  onClick={() => form.setValue("pricingTier", tier as "standard" | "featured" | "annual")}
+                  onClick={() => {
+                    if (isEnterprise) {
+                      window.open("/contact", "_blank");
+                    } else {
+                      form.setValue("pricingTier", tier as "standard" | "featured" | "annual");
+                    }
+                  }}
                 >
                   {isPopular && (
                     <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground">
@@ -121,17 +129,7 @@ export default function PricingSelectionStep({
                     <CardTitle className="text-xl">{details.name}</CardTitle>
                     <div className="text-3xl font-bold text-foreground">
                       {details.priceDisplay}
-                      {tier === "annual" && (
-                        <span className="text-sm font-normal text-muted-foreground ml-1">
-                          /year
-                        </span>
-                      )}
                     </div>
-                    {tier === "annual" && (
-                      <p className="text-sm text-green-600 font-medium">
-                        Save ${(PRICING_TIERS.standard.price * 6 - PRICING_TIERS.annual.price).toLocaleString()} vs 6x Standard
-                      </p>
-                    )}
                   </CardHeader>
 
                   <CardContent className="pt-0">
@@ -146,14 +144,31 @@ export default function PricingSelectionStep({
                       ))}
                     </ul>
 
-                    <Button
-                      type="button"
-                      variant={isSelected ? "default" : "outline"}
-                      className="w-full mt-6"
-                      onClick={() => form.setValue("pricingTier", tier as "standard" | "featured" | "annual")}
-                    >
-                      {isSelected ? "Selected" : "Select Plan"}
-                    </Button>
+                    {tier === "annual" ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full mt-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open("/contact", "_blank");
+                        }}
+                      >
+                        Contact Us
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant={isSelected ? "default" : "outline"}
+                        className="w-full mt-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          form.setValue("pricingTier", tier as "standard" | "featured" | "annual");
+                        }}
+                      >
+                        {isSelected ? "Selected" : "Select Plan"}
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               );

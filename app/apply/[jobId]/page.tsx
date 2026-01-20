@@ -27,6 +27,7 @@ import {
   Mail,
 } from "lucide-react";
 import { formatSalary } from "@/lib/salary-utils";
+import { appendUtmParams } from "@/lib/utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trackInternalApplicationStarted, trackApplicationSubmitted } from "@/lib/analytics";
@@ -529,7 +530,7 @@ export default function ApplyPage() {
               <Button
                 onClick={() =>
                   job.application_url &&
-                  window.open(job.application_url, "_blank")
+                  window.open(appendUtmParams(job.application_url, job.id), "_blank")
                 }
                 size="lg"
                 className="w-full bg-primary hover:bg-primary/90 text-white"

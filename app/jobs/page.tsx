@@ -34,6 +34,7 @@ import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { trackJobSearch } from "@/lib/analytics";
 import { categorySlugToName } from "@/lib/categories/generator";
+import { appendUtmParams } from "@/lib/utils";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 
 interface Job {
@@ -1073,7 +1074,7 @@ function JobsContent() {
       selectedJob.application_method === "external" &&
       selectedJob.application_url
     ) {
-      window.open(selectedJob.application_url, "_blank");
+      window.open(appendUtmParams(selectedJob.application_url, selectedJob.id), "_blank");
       return;
     }
 
