@@ -309,7 +309,7 @@ export default function SavedJobDetailPage() {
     // Check if it's an external application
     if (job.application_method === "external") {
       if (job.application_url) {
-        window.open(appendUtmParams(job.application_url, job.id), "_blank");
+        window.open(appendUtmParams(job.application_url, job.id, job.is_featured), "_blank");
       } else if (job.application_email) {
         window.open(`mailto:${job.application_email}`);
       }

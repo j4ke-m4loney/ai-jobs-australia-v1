@@ -427,7 +427,7 @@ export default function AdminJobReviewPage() {
                   <div className="flex items-center gap-2">
                     <Globe className="h-4 w-4 text-muted-foreground" />
                     <a
-                      href={appendUtmParams(job.application_url, job.id)}
+                      href={appendUtmParams(job.application_url, job.id, job.is_featured)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"

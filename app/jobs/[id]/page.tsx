@@ -152,7 +152,7 @@ export default function JobDetailPage() {
 
     // If external application, open link
     if (job.application_method === "external" && job.application_url) {
-      window.open(appendUtmParams(job.application_url, job.id), "_blank");
+      window.open(appendUtmParams(job.application_url, job.id, job.is_featured), "_blank");
       return;
     }
 

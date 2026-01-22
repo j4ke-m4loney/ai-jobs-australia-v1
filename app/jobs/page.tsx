@@ -1074,7 +1074,7 @@ function JobsContent() {
       selectedJob.application_method === "external" &&
       selectedJob.application_url
     ) {
-      window.open(appendUtmParams(selectedJob.application_url, selectedJob.id), "_blank");
+      window.open(appendUtmParams(selectedJob.application_url, selectedJob.id, selectedJob.is_featured), "_blank");
       return;
     }
 
