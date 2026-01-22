@@ -23,6 +23,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching jobs for sitemap:', jobsError)
   }
 
+  // Fetch all published blog posts
+  const { data: blogPosts, error: blogError } = await supabase
+    .from('blog_posts')
+    .select('slug, published_at, updated_at')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+
+  if (blogError) {
+    console.error('Error fetching blog posts for sitemap:', blogError)
+  }
+
   // Fetch all companies with jobs
   const { data: companies, error: companiesError } = await supabase
     .from('companies')
@@ -71,6 +82,48 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/tools`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-jobs-resume-keyword-analyser`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-ml-salary-calculator`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-interview-question-generator`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-job-description-decoder`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-skills-gap-analyzer`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
   ]
 
   // Job pages
@@ -86,6 +139,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${BASE_URL}/company/${company.id}`,
     lastModified: company.updated_at ? new Date(company.updated_at) : new Date(company.created_at),
     changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  })) || []
+
+  // Blog post pages
+  const blogPages: MetadataRoute.Sitemap = blogPosts?.map((post) => ({
+    url: `${BASE_URL}/blog/${post.slug}`,
+    lastModified: post.updated_at ? new Date(post.updated_at) : new Date(post.published_at),
+    changeFrequency: 'monthly' as const,
     priority: 0.7,
   })) || []
 
@@ -107,5 +168,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.85, // High priority for local SEO
   }))
 
-  return [...staticPages, ...categoryPages, ...locationPages, ...jobPages, ...companyPages]
+  return [...staticPages, ...categoryPages, ...locationPages, ...jobPages, ...companyPages, ...blogPages]
 }

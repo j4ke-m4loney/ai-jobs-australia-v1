@@ -86,6 +86,130 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function JobLayout({ children }: Props) {
-  return <>{children}</>;
+// Helper to map job_type to schema.org employmentType
+function getEmploymentType(jobType: string): string {
+  const mapping: Record<string, string> = {
+    'full-time': 'FULL_TIME',
+    'part-time': 'PART_TIME',
+    'contract': 'CONTRACTOR',
+    'casual': 'TEMPORARY',
+    'internship': 'INTERN',
+  };
+  return mapping[jobType?.toLowerCase()] || 'FULL_TIME';
+}
+
+// Helper to map location_type to jobLocationType
+function getJobLocationType(locationType: string): string | null {
+  if (locationType === 'remote') return 'TELECOMMUTE';
+  return null;
+}
+
+// Server component to render structured data
+async function JobStructuredData({ id }: { id: string }) {
+  const { data: job } = await supabase
+    .from("jobs")
+    .select(`
+      *,
+      companies (
+        name,
+        logo_url,
+        website
+      )
+    `)
+    .eq("id", id)
+    .eq("status", "approved")
+    .single();
+
+  if (!job || !job.companies) return null;
+
+  // Strip HTML for description
+  const cleanDescription = job.description
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Build the JobPosting schema
+  const jobPostingSchema: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: job.title,
+    description: cleanDescription,
+    datePosted: job.created_at,
+    validThrough: job.expires_at,
+    employmentType: getEmploymentType(job.job_type),
+    hiringOrganization: {
+      "@type": "Organization",
+      name: job.companies.name,
+      ...(job.companies.logo_url && { logo: job.companies.logo_url }),
+      ...(job.companies.website && { sameAs: job.companies.website }),
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: job.location,
+        addressCountry: "AU",
+      },
+    },
+    identifier: {
+      "@type": "PropertyValue",
+      name: "AI Jobs Australia",
+      value: job.id,
+    },
+  };
+
+  // Add remote work indicator if applicable
+  const jobLocationType = getJobLocationType(job.location_type);
+  if (jobLocationType) {
+    jobPostingSchema.jobLocationType = jobLocationType;
+    jobPostingSchema.applicantLocationRequirements = {
+      "@type": "Country",
+      name: "Australia",
+    };
+  }
+
+  // Add salary if shown and available
+  if (job.show_salary !== false && (job.salary_min || job.salary_max)) {
+    const salaryPeriod = job.salary_period || 'year';
+    const unitText = salaryPeriod === 'year' ? 'YEAR' : salaryPeriod === 'hour' ? 'HOUR' : 'YEAR';
+
+    jobPostingSchema.baseSalary = {
+      "@type": "MonetaryAmount",
+      currency: "AUD",
+      value: {
+        "@type": "QuantitativeValue",
+        ...(job.salary_min && job.salary_max
+          ? { minValue: job.salary_min, maxValue: job.salary_max }
+          : job.salary_min
+          ? { value: job.salary_min }
+          : { value: job.salary_max }),
+        unitText,
+      },
+    };
+  }
+
+  // Add direct apply URL if external
+  if (job.application_method === "external" && job.application_url) {
+    jobPostingSchema.directApply = true;
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(jobPostingSchema),
+      }}
+    />
+  );
+}
+
+export default async function JobLayout({ children, params }: Props) {
+  const { id } = await params;
+
+  return (
+    <>
+      <JobStructuredData id={id} />
+      {children}
+    </>
+  );
 }

@@ -13,18 +13,20 @@ import {
   Calculator,
   MessageSquare,
   FileSearch,
+  Search,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title:
-    "Free AI Job Search Tools | Resume Analyser & Salary Calculator | AI Jobs Australia",
+    "Free AI Job Search Tools | Resume Analyser, Skills Gap Analyser & Salary Calculator | AI Jobs Australia",
   description:
-    "Free tools to help you land your dream AI job in Australia. Resume keyword analyser, salary calculator, ATS checker, and more career tools for AI, ML, and data science professionals.",
+    "Free tools to help you land your dream AI job in Australia. Resume keyword analyser, skills gap analyser, salary calculator, interview prep, and more career tools for AI, ML, and data science professionals.",
   keywords: [
     "AI job tools",
     "resume tools",
     "salary calculator",
     "ATS checker",
+    "skills gap analyser",
     "AI jobs Australia",
     "career tools",
     "job search tools",
@@ -92,6 +94,20 @@ const tools = [
       "Role-specific questions",
       "Sample answers & tips",
       "All interview stages",
+      "100% private",
+    ],
+  },
+  {
+    title: "Skills Gap Analyser",
+    description:
+      "Compare your resume against job descriptions to identify matching skills, gaps, and get personalised learning recommendations to improve your fit.",
+    icon: Search,
+    href: "/tools/ai-skills-gap-analyser",
+    badge: "New",
+    features: [
+      "Resume vs job comparison",
+      "Gap identification",
+      "Learning resources",
       "100% private",
     ],
   },

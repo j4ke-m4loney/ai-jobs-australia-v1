@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requestJobIndexing, isIndexingConfigured } from '@/lib/google-indexing';
 
 interface RouteParams {
   id: string;
@@ -135,6 +136,16 @@ export async function POST(
       jobId,
       newStatus,
     });
+
+    // Request Google indexing for approved jobs
+    if (newStatus === 'approved' && isIndexingConfigured()) {
+      try {
+        const indexResult = await requestJobIndexing(jobId);
+        console.log('[AdminJobReview] Google Indexing request:', indexResult);
+      } catch (indexError) {
+        console.error('[AdminJobReview] Google Indexing error (non-blocking):', indexError);
+      }
+    }
 
     return NextResponse.json({
       success: true,

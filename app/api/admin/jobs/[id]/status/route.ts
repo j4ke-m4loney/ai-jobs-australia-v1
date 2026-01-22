@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { emailService } from '@/lib/email/postmark-service';
 import { getSiteUrl } from '@/lib/utils/get-site-url';
+import { requestJobIndexing, requestJobRemoval, isIndexingConfigured } from '@/lib/google-indexing';
 
 interface RouteParams {
   id: string;
@@ -188,6 +189,22 @@ export async function PUT(
         isEmployerAdmin,
         skipReason: isEmployerAdmin ? 'Employer is admin - skipping notification' : 'Missing email or user error'
       });
+    }
+
+    // Request Google indexing for approved jobs, removal for rejected jobs
+    if (isIndexingConfigured()) {
+      try {
+        if (status === 'approved') {
+          const indexResult = await requestJobIndexing(jobId);
+          console.log('🔍 Google Indexing request:', indexResult);
+        } else if (status === 'rejected') {
+          const removeResult = await requestJobRemoval(jobId);
+          console.log('🔍 Google Indexing removal request:', removeResult);
+        }
+      } catch (indexError) {
+        console.error('❌ Google Indexing error (non-blocking):', indexError);
+        // Don't fail the request if indexing fails
+      }
     }
 
     return NextResponse.json({
