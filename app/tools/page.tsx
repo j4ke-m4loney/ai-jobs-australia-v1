@@ -14,6 +14,7 @@ import {
   MessageSquare,
   FileSearch,
   Search,
+  Linkedin,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -103,11 +104,25 @@ const tools = [
       "Compare your resume against job descriptions to identify matching skills, gaps, and get personalised learning recommendations to improve your fit.",
     icon: Search,
     href: "/tools/ai-skills-gap-analyser",
-    badge: "New",
+    badge: null,
     features: [
       "Resume vs job comparison",
       "Gap identification",
       "Learning resources",
+      "100% private",
+    ],
+  },
+  {
+    title: "LinkedIn Profile Optimiser",
+    description:
+      "Analyse your LinkedIn headline, About section, and experience for AI/ML keywords. Get headline suggestions and a profile score to help recruiters find you.",
+    icon: Linkedin,
+    href: "/tools/ai-linkedin-profile-optimiser",
+    badge: "New",
+    features: [
+      "Headline generator",
+      "Keyword optimisation",
+      "Section analysis",
       "100% private",
     ],
   },
