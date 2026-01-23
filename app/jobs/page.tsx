@@ -144,11 +144,11 @@ function calculateSearchRelevance(job: Job, searchTerm: string): number {
     score = 100;
   }
 
-  // COMPANY NAME SCORING (much lower priority, only as tiebreaker)
+  // COMPANY NAME SCORING - exact matches should rank highly
   if (companyName === search) {
-    score += 20;
+    score += 2000;  // Exact company match ranks above title substrings
   } else if (companyName.includes(search)) {
-    score += 5;
+    score += 50;    // Partial company match as secondary signal
   }
 
   // MINIMAL FEATURED BONUS (should never override relevance)
@@ -226,6 +226,7 @@ function JobsContent() {
   const [jobsLoading, setJobsLoading] = useState(true);
   // Initialize with server-safe defaults to prevent hydration mismatch
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedState, setSelectedState] = useState("all");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
@@ -269,10 +270,19 @@ function JobsContent() {
   const previousFilterDepsRef = useRef<string>("");
   const fetchJobsRef = useRef<(() => Promise<void>) | null>(null);
 
+  // Debounce search term to prevent race conditions during rapid typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Memoized filter dependencies to prevent unnecessary re-renders
   const filterDeps = useMemo(
     () => ({
-      searchTerm,
+      searchTerm: debouncedSearchTerm,
       selectedState,
       selectedCategories: selectedCategories.join(","),
       selectedLocations: selectedLocations.join(","),
@@ -285,7 +295,7 @@ function JobsContent() {
       currentPage,
     }),
     [
-      searchTerm,
+      debouncedSearchTerm,
       selectedState,
       selectedCategories,
       selectedLocations,
@@ -384,7 +394,7 @@ function JobsContent() {
 
         // Use override parameters if provided, otherwise use state values
         const effectiveSearchTerm =
-          overrideSearch !== undefined ? overrideSearch : searchTerm;
+          overrideSearch !== undefined ? overrideSearch : debouncedSearchTerm;
         const effectiveLocationTerm =
           overrideLocation !== undefined ? overrideLocation : selectedState;
 
@@ -773,7 +783,7 @@ function JobsContent() {
       }
     },
     [
-      searchTerm,
+      debouncedSearchTerm,
       selectedState,
       selectedCategories,
       selectedLocations,
