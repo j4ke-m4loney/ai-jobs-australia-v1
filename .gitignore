@@ -49,3 +49,6 @@ tool-ideas.md
 
 # Claude Code context (local only)
 CLAUDE.md
+
+# Email preview files (local only)
+/email-previews/
