@@ -15,6 +15,7 @@ import {
   FileSearch,
   Search,
   Linkedin,
+  Mail,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -118,11 +119,25 @@ const tools = [
       "Analyse your LinkedIn headline, About section, and experience for AI/ML keywords. Get headline suggestions and a profile score to help recruiters find you.",
     icon: Linkedin,
     href: "/tools/ai-linkedin-profile-optimiser",
-    badge: "New",
+    badge: null,
     features: [
       "Headline generator",
       "Keyword optimisation",
       "Section analysis",
+      "100% private",
+    ],
+  },
+  {
+    title: "Cover Letter Analyser",
+    description:
+      "Analyse your cover letter for AI/ML roles. Get feedback on structure, keywords, personalisation, and actionable tips to make your application stand out.",
+    icon: Mail,
+    href: "/tools/ai-cover-letter-analyser",
+    badge: "New",
+    features: [
+      "Structure analysis",
+      "Keyword optimisation",
+      "Red flag detection",
       "100% private",
     ],
   },
