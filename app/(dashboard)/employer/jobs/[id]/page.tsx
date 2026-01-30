@@ -58,6 +58,7 @@ import {
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getCombinedJobContent } from "@/lib/jobs/content-utils";
 
 interface Job {
   id: string;
@@ -1558,16 +1559,9 @@ const JobManagementPage = () => {
                   )}
 
                   <div>
-                    <h3 className="font-semibold mb-3">Description</h3>
-                    <HTMLRenderer content={job.description} />
+                    <h3 className="font-semibold mb-3">Job Details</h3>
+                    <HTMLRenderer content={getCombinedJobContent(job.description, job.requirements)} />
                   </div>
-
-                  {job.requirements && (
-                    <div>
-                      <h3 className="font-semibold mb-3">Requirements</h3>
-                      <HTMLRenderer content={job.requirements} />
-                    </div>
-                  )}
 
                   <Separator />
 

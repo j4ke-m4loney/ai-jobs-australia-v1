@@ -50,7 +50,7 @@ export interface JobFormData2 {
   
   // Describe Job
   jobDescription: string;
-  requirements: string;
+  requirements?: string;
   
   // Application Settings
   applicationMethod: "external" | "email" | "indeed";

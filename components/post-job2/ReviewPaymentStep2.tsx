@@ -254,23 +254,11 @@ export default function ReviewPaymentStep2({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="font-medium text-foreground mb-2">Description</h4>
             <div className="prose prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{ 
-                __html: formData.jobDescription.length > 200 
-                  ? formData.jobDescription.substring(0, 200) + "..." 
-                  : formData.jobDescription 
-              }} />
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-medium text-foreground mb-2">Requirements</h4>
-            <div className="prose prose-sm max-w-none">
-              <div dangerouslySetInnerHTML={{ 
-                __html: formData.requirements.length > 200 
-                  ? formData.requirements.substring(0, 200) + "..." 
-                  : formData.requirements 
+              <div dangerouslySetInnerHTML={{
+                __html: formData.jobDescription.length > 300
+                  ? formData.jobDescription.substring(0, 300) + "..."
+                  : formData.jobDescription
               }} />
             </div>
           </div>

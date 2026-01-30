@@ -21,13 +21,13 @@ import {
   ArrowLeft,
   Check,
   BookOpen,
-  CheckCircle,
   Info,
   ExternalLink,
   Mail,
 } from "lucide-react";
 import { formatSalary } from "@/lib/salary-utils";
 import { appendUtmParams } from "@/lib/utils";
+import { getCombinedJobContent } from "@/lib/jobs/content-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trackInternalApplicationStarted, trackApplicationSubmitted } from "@/lib/analytics";
@@ -471,29 +471,16 @@ export default function ApplyPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Job Description */}
+            {/* Job Description (combined with requirements for display) */}
             <div>
               <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <BookOpen className="w-5 h-5" />
-                Job Description
+                Job Details
               </h3>
               <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                <div dangerouslySetInnerHTML={{ __html: job.description }} />
+                <div dangerouslySetInnerHTML={{ __html: getCombinedJobContent(job.description, job.requirements) }} />
               </div>
             </div>
-
-            {/* Requirements */}
-            {job.requirements && (
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
-                  Requirements
-                </h3>
-                <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                  <div dangerouslySetInnerHTML={{ __html: job.requirements }} />
-                </div>
-              </div>
-            )}
 
             {/* Company Info Section */}
             {job.companies?.description && (

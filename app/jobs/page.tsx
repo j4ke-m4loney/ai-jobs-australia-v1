@@ -1576,11 +1576,19 @@ function JobsContent() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex flex-col lg:flex-row gap-0 lg:gap-1 min-h-screen">
-        {/* Jobs List - Left Side */}
-        <div className="w-full lg:w-2/5 border-r-0 lg:border-r border-border">
-          <div className="p-4 border-b border-border bg-white mx-4">
+      {/* Main Content - 3-column layout */}
+      <div className="flex justify-center min-h-screen">
+        {/* Left ad column - hidden below 1280px */}
+        <div className="hidden xl:block w-[160px] shrink-0">
+          {/* Future ad space */}
+        </div>
+
+        {/* Middle content */}
+        <div className="flex-1 max-w-6xl">
+          <div className="flex flex-col lg:flex-row gap-0 lg:gap-4">
+            {/* Jobs List - Left Side */}
+            <div className="w-full lg:w-2/5">
+              <div className="p-4 border-b border-border bg-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {(() => {
@@ -1801,11 +1809,6 @@ function JobsContent() {
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                {job.is_featured && (
-                                  <Badge className="bg-gradient-hero text-white text-xs mb-2">
-                                    Featured
-                                  </Badge>
-                                )}
                                 <h3 className="font-semibold text-base mb-1 text-foreground">
                                   {job.title}
                                 </h3>
@@ -2024,6 +2027,13 @@ function JobsContent() {
               </div>
             </div>
           )}
+        </div>
+          </div>
+        </div>
+
+        {/* Right ad column - hidden below 1280px */}
+        <div className="hidden xl:block w-[160px] shrink-0">
+          {/* Future ad space */}
         </div>
       </div>
 

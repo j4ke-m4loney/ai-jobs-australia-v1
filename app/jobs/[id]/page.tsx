@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import Head from "next/head";
@@ -22,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
 import { formatSalary } from "@/lib/salary-utils";
+import { getCombinedJobContent } from "@/lib/jobs/content-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
@@ -268,13 +268,6 @@ export default function JobDetailPage() {
                     />
                   )}
                   <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      {job.is_featured && (
-                        <Badge className="bg-gradient-hero text-white">
-                          Featured
-                        </Badge>
-                      )}
-                    </div>
                     <CardTitle className="text-2xl mb-2">{job.title}</CardTitle>
                     <div className="flex items-center gap-2 text-muted-foreground mb-3">
                       <Building2 className="w-4 h-4" />
@@ -303,25 +296,14 @@ export default function JobDetailPage() {
               </CardHeader>
             </Card>
 
-            {/* Job Description */}
+            {/* Job Description (combined with requirements for display) */}
             <Card>
               <CardContent className="pt-6">
                 <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
-                  <div dangerouslySetInnerHTML={{ __html: job.description }} />
+                  <div dangerouslySetInnerHTML={{ __html: getCombinedJobContent(job.description, job.requirements) }} />
                 </div>
               </CardContent>
             </Card>
-
-            {/* Requirements */}
-            {job.requirements && (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
-                    <div dangerouslySetInnerHTML={{ __html: job.requirements }} />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Company placeholder */}
           </div>

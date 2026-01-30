@@ -24,9 +24,6 @@ const schema = z.object({
   jobDescription: z
     .string()
     .min(100, "Job description must be at least 100 characters"),
-  requirements: z
-    .string()
-    .min(50, "Requirements must be at least 50 characters"),
   companyName: z.string().min(2, "Company name is required"),
   companyDescription: z
     .string()
@@ -60,7 +57,6 @@ export default function DescribeJobStep({
     resolver: zodResolver(schema),
     defaultValues: {
       jobDescription: formData.jobDescription,
-      requirements: formData.requirements,
       companyName: formData.companyName,
       companyDescription: formData.companyDescription,
       companyWebsite: formData.companyWebsite,
@@ -100,41 +96,14 @@ export default function DescribeJobStep({
                   <RichTextEditor
                     value={field.value || ""}
                     onChange={field.onChange}
-                    placeholder="Describe the role, responsibilities, team culture, and what makes this opportunity exciting..."
-                    minHeight="150px"
+                    placeholder="Describe the role, responsibilities, team culture, requirements, qualifications, and what makes this opportunity exciting..."
+                    minHeight="200px"
                     className="border-primary"
                   />
                 </FormControl>
                 <p className="text-sm text-muted-foreground">
-                  Include details about daily responsibilities, team structure,
-                  growth opportunities, and company culture.
-                </p>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Requirements */}
-          <FormField
-            control={form.control}
-            name="requirements"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base font-medium">
-                  Requirements *
-                </FormLabel>
-                <FormControl>
-                  <RichTextEditor
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    placeholder="List the essential skills, experience, qualifications, and personal qualities required for this role..."
-                    minHeight="120px"
-                    className="border-primary"
-                  />
-                </FormControl>
-                <p className="text-sm text-muted-foreground">
-                  Include technical skills, years of experience, education
-                  requirements, and any certifications.
+                  Include all details about the role: daily responsibilities, team structure,
+                  required skills, qualifications, experience, growth opportunities, and company culture.
                 </p>
                 <FormMessage />
               </FormItem>

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { trackEvent } from "@/lib/analytics";
+import { getCombinedJobContent } from "@/lib/jobs/content-utils";
 
 interface Job {
   id: string;
@@ -237,21 +238,12 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
         {/* Job Content */}
         <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
-          {/* Job Description */}
+          {/* Job Description (combined with requirements for display) */}
           <div>
             <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
-              <div dangerouslySetInnerHTML={{ __html: job.description }} />
+              <div dangerouslySetInnerHTML={{ __html: getCombinedJobContent(job.description, job.requirements) }} />
             </div>
           </div>
-
-          {/* Requirements */}
-          {job.requirements && (
-            <div>
-              <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
-                <div dangerouslySetInnerHTML={{ __html: job.requirements }} />
-              </div>
-            </div>
-          )}
 
           {/* Company Info Section */}
           {(job.companies?.description || job.companies?.website) && (

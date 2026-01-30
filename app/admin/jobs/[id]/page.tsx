@@ -46,6 +46,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { appendUtmParams } from "@/lib/utils";
+import { getCombinedJobContent } from "@/lib/jobs/content-utils";
 
 interface JobDetails {
   id: string;
@@ -372,19 +373,11 @@ export default function AdminJobReviewPage() {
 
             <Separator />
 
-            {/* Description */}
+            {/* Job Content (Description + Requirements) */}
             <div>
-              <h3 className="font-semibold mb-2">Description</h3>
+              <h3 className="font-semibold mb-2">Job Details</h3>
               <div className="prose prose-sm max-w-none">
-                <p className="whitespace-pre-wrap">{job.description}</p>
-              </div>
-            </div>
-
-            {/* Requirements */}
-            <div>
-              <h3 className="font-semibold mb-2">Requirements</h3>
-              <div className="prose prose-sm max-w-none">
-                <p className="whitespace-pre-wrap">{job.requirements}</p>
+                <p className="whitespace-pre-wrap">{getCombinedJobContent(job.description, job.requirements)}</p>
               </div>
             </div>
 

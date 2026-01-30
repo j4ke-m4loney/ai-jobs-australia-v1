@@ -102,7 +102,7 @@ export const JobCard: React.FC<JobCardProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <h3 className="font-semibold text-lg line-clamp-2 text-foreground">
+              <h3 className="font-semibold text-base line-clamp-2 text-foreground">
                 {job.title}
               </h3>
               {job.status === "pending" && (
@@ -112,7 +112,7 @@ export const JobCard: React.FC<JobCardProps> = ({
               )}
             </div>
 
-            <div className="flex items-center gap-1 text-base text-foreground mb-3">
+            <div className="flex items-center gap-1 text-sm text-foreground mb-3">
               <span className="font-medium">
                 {job.companies?.name || "Company"}
               </span>
@@ -135,13 +135,13 @@ export const JobCard: React.FC<JobCardProps> = ({
             {/* Job Highlights */}
             {job.highlights && job.highlights.length > 0 && (
               <div className="mb-3">
-                <ul className="space-y-1 text-sm text-foreground">
+                <ul className="space-y-1 text-xs text-foreground">
                   {job.highlights
                     .filter((highlight) => highlight.trim().length > 0)
                     .slice(0, 3)
                     .map((highlight, index) => (
                       <li key={index} className="flex items-start gap-1.5 md:gap-2">
-                        <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 shrink-0"></span>
+                        <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full mt-1.5 shrink-0"></span>
                         <span className="leading-relaxed flex-1 break-words">{highlight}</span>
                       </li>
                     ))}

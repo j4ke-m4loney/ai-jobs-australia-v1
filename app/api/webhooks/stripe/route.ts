@@ -242,7 +242,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     company_id: companyId,
     title: jobFormData.jobTitle,
     description: jobFormData.jobDescription,
-    requirements: jobFormData.requirements,
+    requirements: jobFormData.requirements || null,
     location: jobFormData.locationAddress,
     location_type: mapLocationType(jobFormData.locationType),
     job_type: mapJobType(jobFormData.jobTypes[0]), // Use first selected type for DB compatibility

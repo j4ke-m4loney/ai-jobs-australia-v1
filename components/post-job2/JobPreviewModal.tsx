@@ -216,17 +216,6 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
             </div>
           )}
 
-          {/* Requirements */}
-          {formData.requirements && (
-            <div>
-              <div className="prose prose-sm max-w-none text-muted-foreground">
-                <div
-                  dangerouslySetInnerHTML={{ __html: formData.requirements }}
-                />
-              </div>
-            </div>
-          )}
-
           {/* Company Description */}
           {formData.companyDescription && (
             <div>

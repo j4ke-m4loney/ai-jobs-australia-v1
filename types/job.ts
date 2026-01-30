@@ -8,7 +8,7 @@ export interface JobFormData {
   salaryMax: string;
   showSalary: boolean;
   jobDescription: string;
-  requirements: string;
+  requirements?: string;
   
   // Company Info
   companyName: string;
