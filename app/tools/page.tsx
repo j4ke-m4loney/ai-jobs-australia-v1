@@ -16,6 +16,7 @@ import {
   Search,
   Linkedin,
   Mail,
+  Lightbulb,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -133,11 +134,25 @@ const tools = [
       "Analyse your cover letter for AI/ML roles. Get feedback on structure, keywords, personalisation, and actionable tips to make your application stand out.",
     icon: Mail,
     href: "/tools/ai-cover-letter-analyser",
-    badge: "New",
+    badge: null,
     features: [
       "Structure analysis",
       "Keyword optimisation",
       "Red flag detection",
+      "100% private",
+    ],
+  },
+  {
+    title: "Portfolio Project Generator",
+    description:
+      "Get personalised portfolio project ideas for ML Engineers, Data Scientists, MLOps Engineers, and more. Includes tech stacks, datasets, and interview prep tips.",
+    icon: Lightbulb,
+    href: "/tools/ai-portfolio-project-generator",
+    badge: "New",
+    features: [
+      "Role-specific ideas",
+      "Tech stack & datasets",
+      "Interview prep tips",
       "100% private",
     ],
   },
