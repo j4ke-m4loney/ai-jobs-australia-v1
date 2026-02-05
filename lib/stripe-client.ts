@@ -65,6 +65,23 @@ export const PRICING_CONFIG = {
 
 export type PricingTier = keyof typeof PRICING_CONFIG;
 
+// Job seeker subscription pricing
+export const JOBSEEKER_PRICING_CONFIG = {
+  intelligence: {
+    name: 'AJA Intelligence',
+    price: 1499, // $14.99/month in cents
+    priceDisplay: '$14.99/mo',
+    description: 'Premium AI insights for job seekers',
+    features: [
+      'AI Focus scores on all job listings',
+      'Understand AI/ML relevance at a glance',
+      'Prioritise your applications effectively',
+    ],
+  },
+} as const;
+
+export type JobSeekerPricingTier = keyof typeof JOBSEEKER_PRICING_CONFIG;
+
 // Helper function to validate pricing tier
 export function isValidPricingTier(tier: string): tier is PricingTier {
   return tier in PRICING_CONFIG;

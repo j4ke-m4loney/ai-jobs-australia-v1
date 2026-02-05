@@ -5,6 +5,7 @@ import Stripe from 'stripe';
 import { JobFormData2 } from '@/types/job2';
 import { emailService } from '@/lib/email/postmark-service';
 import { getSiteUrl } from '@/lib/utils/get-site-url';
+import { triggerAIFocusAnalysis } from '@/lib/ai-focus/trigger-analysis';
 
 // Type definitions for webhook data
 interface PaymentRecord {
@@ -353,6 +354,16 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     // Don't fail the webhook if email fails - job was created successfully
   }
 
+  // Trigger AI Focus analysis asynchronously (non-blocking)
+  triggerAIFocusAnalysis(
+    job.id,
+    jobFormData.jobTitle,
+    jobFormData.jobDescription,
+    jobFormData.requirements
+  ).catch((error) => {
+    console.error('AI Focus analysis trigger failed:', error);
+  });
+
   return job;
 }
 
@@ -394,7 +405,43 @@ async function handleAnnualSubscription(session: Stripe.Checkout.Session, paymen
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   console.log('Processing subscription created:', subscription.id);
-  // This will be handled by checkout.session.completed for new subscriptions
+
+  // Check if this is an intelligence subscription
+  const planType = subscription.metadata?.plan_type;
+  const userId = subscription.metadata?.user_id;
+
+  if (planType === 'intelligence' && userId) {
+    console.log('Creating intelligence subscription for user:', userId);
+
+    const { error } = await getSupabaseAdmin()
+      .from('subscriptions')
+      .upsert({
+        user_id: userId,
+        plan_type: 'intelligence',
+        status: subscription.status === 'active' ? 'active' as const : subscription.status === 'canceled' ? 'cancelled' as const : subscription.status === 'past_due' ? 'past_due' as const : 'trialing' as const,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        stripe_customer_id: subscription.customer as string,
+        stripe_subscription_id: subscription.id,
+        price_per_month: 1499, // $14.99 in cents
+        features: {
+          ai_focus_scores: true,
+        },
+        metadata: {
+          plan_type: 'intelligence',
+        },
+      }, {
+        onConflict: 'user_id'
+      });
+
+    if (error) {
+      console.error('Error creating intelligence subscription:', error);
+    } else {
+      console.log('✅ Intelligence subscription created successfully');
+    }
+  }
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {

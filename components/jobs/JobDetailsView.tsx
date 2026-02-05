@@ -1,12 +1,15 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Clock, Heart } from "lucide-react";
+import { Clock, Heart, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { trackEvent } from "@/lib/analytics";
 import { getCombinedJobContent } from "@/lib/jobs/content-utils";
+import { AnalyseRoleModal } from "@/components/jobs/AnalyseRoleModal";
 
 interface Job {
   id: string;
@@ -33,6 +36,24 @@ interface Job {
   status?: "pending" | "approved" | "rejected" | "expired";
   company_id?: string | null;
   highlights?: string[] | null;
+  ai_focus_percentage?: number | null;
+  ai_focus_rationale?: string | null;
+  ai_focus_confidence?: "high" | "medium" | "low" | null;
+  ai_focus_analysed_at?: string | null;
+  interview_difficulty_level?: "easy" | "medium" | "hard" | "very_hard" | null;
+  interview_difficulty_rationale?: string | null;
+  interview_difficulty_confidence?: "high" | "medium" | "low" | null;
+  interview_difficulty_analysed_at?: string | null;
+  role_summary_one_liner?: string | null;
+  role_summary_plain_english?: string | null;
+  role_summary_confidence?: "high" | "medium" | "low" | null;
+  role_summary_analysed_at?: string | null;
+  who_role_is_for_bullets?: string[] | null;
+  who_role_is_for_confidence?: "high" | "medium" | "low" | null;
+  who_role_is_for_analysed_at?: string | null;
+  who_role_is_not_for_bullets?: string[] | null;
+  who_role_is_not_for_confidence?: "high" | "medium" | "low" | null;
+  who_role_is_not_for_analysed_at?: string | null;
   companies?: {
     id: string;
     name: string;
@@ -49,6 +70,8 @@ interface JobDetailsViewProps {
   isJobSaved: boolean;
   hasApplied: boolean;
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+  hasAIFocusAccess?: boolean;
+  onIntelligenceCTAClick?: () => void;
 }
 
 // Helper functions
@@ -92,7 +115,11 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
   isJobSaved,
   hasApplied,
   scrollContainerRef,
+  hasAIFocusAccess = false,
+  onIntelligenceCTAClick,
 }) => {
+  const [analyseModalOpen, setAnalyseModalOpen] = useState(false);
+
   const handleApplyClick = () => {
     // Track Apply button click
     trackEvent("apply_button_clicked", {
@@ -200,8 +227,28 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-xs text-foreground">
-              <span>Posted {getTimeAgo(job.created_at)}</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-4 text-xs text-foreground">
+                <span>Posted {getTimeAgo(job.created_at)}</span>
+              </div>
+              {/* AJA Intelligence CTA */}
+              {hasAIFocusAccess ? (
+                <button
+                  onClick={() => setAnalyseModalOpen(true)}
+                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:underline mt-1 font-medium"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Analyse Role
+                </button>
+              ) : onIntelligenceCTAClick ? (
+                <button
+                  onClick={onIntelligenceCTAClick}
+                  className="flex items-center gap-1 text-xs text-primary hover:underline mt-1"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Try AJA Intelligence
+                </button>
+              ) : null}
             </div>
 
             <div className="flex items-center gap-3">
@@ -298,6 +345,15 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Analyse Role Modal for subscribers */}
+      {hasAIFocusAccess && (
+        <AnalyseRoleModal
+          isOpen={analyseModalOpen}
+          onClose={() => setAnalyseModalOpen(false)}
+          job={job}
+        />
+      )}
     </div>
   );
 };

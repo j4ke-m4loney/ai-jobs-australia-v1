@@ -28,7 +28,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
+import { useSubscription } from "@/hooks/useSubscription";
 import { SaveJobAuthModal } from "@/components/SaveJobAuthModal";
+import { AJAIntelligenceModal } from "@/components/jobs/AJAIntelligenceModal";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -62,6 +64,24 @@ interface Job {
   status?: "pending" | "approved" | "rejected" | "expired";
   company_id?: string | null;
   highlights?: string[] | null;
+  ai_focus_percentage?: number | null;
+  ai_focus_rationale?: string | null;
+  ai_focus_confidence?: "high" | "medium" | "low" | null;
+  ai_focus_analysed_at?: string | null;
+  interview_difficulty_level?: "easy" | "medium" | "hard" | "very_hard" | null;
+  interview_difficulty_rationale?: string | null;
+  interview_difficulty_confidence?: "high" | "medium" | "low" | null;
+  interview_difficulty_analysed_at?: string | null;
+  role_summary_one_liner?: string | null;
+  role_summary_plain_english?: string | null;
+  role_summary_confidence?: "high" | "medium" | "low" | null;
+  role_summary_analysed_at?: string | null;
+  who_role_is_for_bullets?: string[] | null;
+  who_role_is_for_confidence?: "high" | "medium" | "low" | null;
+  who_role_is_for_analysed_at?: string | null;
+  who_role_is_not_for_bullets?: string[] | null;
+  who_role_is_not_for_confidence?: "high" | "medium" | "low" | null;
+  who_role_is_not_for_analysed_at?: string | null;
   companies?: {
     id: string;
     name: string;
@@ -220,6 +240,7 @@ function JobsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toggleSaveJob, isJobSaved } = useSavedJobs();
+  const { hasAIFocusAccess } = useSubscription();
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -251,6 +272,7 @@ function JobsContent() {
   const [suggestedJobs, setSuggestedJobs] = useState<Job[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [intelligenceModalOpen, setIntelligenceModalOpen] = useState(false);
   const [pendingJobId, setPendingJobId] = useState<string | null>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isDrawerClosing, setIsDrawerClosing] = useState(false);
@@ -2012,6 +2034,8 @@ function JobsContent() {
               isJobSaved={isJobSaved(selectedJob.id)}
               hasApplied={hasApplied[selectedJob.id] || false}
               scrollContainerRef={jobDetailsScrollRef}
+              hasAIFocusAccess={hasAIFocusAccess()}
+              onIntelligenceCTAClick={() => setIntelligenceModalOpen(true)}
             />
           ) : (
             <div className="lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] flex items-center justify-center mx-4">
@@ -2095,6 +2119,8 @@ function JobsContent() {
                 isJobSaved={isJobSaved(selectedJob.id)}
                 hasApplied={hasApplied[selectedJob.id] || false}
                 scrollContainerRef={jobDetailsScrollRef}
+                hasAIFocusAccess={hasAIFocusAccess()}
+                onIntelligenceCTAClick={() => setIntelligenceModalOpen(true)}
               />
             )}
           </div>
@@ -2106,6 +2132,12 @@ function JobsContent() {
         isOpen={authModalOpen}
         onClose={handleCloseAuthModal}
         onAuthSuccess={handleAuthSuccess}
+      />
+
+      {/* AJA Intelligence Modal */}
+      <AJAIntelligenceModal
+        isOpen={intelligenceModalOpen}
+        onClose={() => setIntelligenceModalOpen(false)}
       />
     </div>
   );
