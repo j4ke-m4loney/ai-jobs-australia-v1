@@ -6,6 +6,7 @@ import {
   User,
   Heart,
   FileText,
+  CreditCard,
   Settings,
   LogOut,
   Search,
@@ -49,6 +50,11 @@ const menuItems = [
     title: "Applied Jobs",
     url: "/jobseeker/applications",
     icon: FileText,
+  },
+  {
+    title: "Billing",
+    url: "/jobseeker/billing",
+    icon: CreditCard,
   },
   {
     title: "Settings",

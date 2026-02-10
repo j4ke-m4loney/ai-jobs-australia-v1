@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { AnalyseRoleModal } from "@/components/jobs/AnalyseRoleModal";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -17,10 +19,13 @@ import {
   Briefcase,
   Users,
   Heart,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
+import { useSubscription } from "@/hooks/useSubscription";
 import { formatSalary } from "@/lib/salary-utils";
+import { AJAIntelligenceModal } from "@/components/jobs/AJAIntelligenceModal";
 import { getCombinedJobContent } from "@/lib/jobs/content-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -41,6 +46,24 @@ interface Job {
   salary_max: number | null;
   salary_period?: string;
   show_salary?: boolean;
+  ai_focus_percentage?: number | null;
+  ai_focus_rationale?: string | null;
+  ai_focus_confidence?: "high" | "medium" | "low" | null;
+  ai_focus_analysed_at?: string | null;
+  interview_difficulty_level?: "easy" | "medium" | "hard" | "very_hard" | null;
+  interview_difficulty_rationale?: string | null;
+  interview_difficulty_confidence?: "high" | "medium" | "low" | null;
+  interview_difficulty_analysed_at?: string | null;
+  role_summary_one_liner?: string | null;
+  role_summary_plain_english?: string | null;
+  role_summary_confidence?: "high" | "medium" | "low" | null;
+  role_summary_analysed_at?: string | null;
+  who_role_is_for_bullets?: string[] | null;
+  who_role_is_for_confidence?: "high" | "medium" | "low" | null;
+  who_role_is_for_analysed_at?: string | null;
+  who_role_is_not_for_bullets?: string[] | null;
+  who_role_is_not_for_confidence?: "high" | "medium" | "low" | null;
+  who_role_is_not_for_analysed_at?: string | null;
   application_method: string;
   application_url: string | null;
   application_email: string | null;
@@ -61,11 +84,15 @@ export default function JobDetailPage() {
   const id = params.id as string;
   const router = useRouter();
   const { user } = useAuth();
+  const { profile } = useProfile();
   const { toggleSaveJob, isJobSaved } = useSavedJobs();
+  const { hasAIFocusAccess } = useSubscription();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasApplied, setHasApplied] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [intelligenceModalOpen, setIntelligenceModalOpen] = useState(false);
+  const [analyseModalOpen, setAnalyseModalOpen] = useState(false);
 
   // Define callback functions first
   const fetchJob = useCallback(async () => {
@@ -367,11 +394,69 @@ export default function JobDetailPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* AJA Intelligence Card - only show to authenticated users */}
+            {user && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-500" />
+                    AJA Intelligence
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {hasAIFocusAccess() ? (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Get AI-powered insights about this role
+                      </p>
+                      <Button
+                        onClick={() => setAnalyseModalOpen(true)}
+                        className="w-full gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Analyse Role
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Subscribe to AJA Intelligence to see AI insights including AI Focus Score and Interview Difficulty predictions.
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIntelligenceModalOpen(true)}
+                        className="gap-2"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Learn More
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
 
       <Footer />
+
+      {/* AJA Intelligence Modal (for non-subscribers) */}
+      <AJAIntelligenceModal
+        isOpen={intelligenceModalOpen}
+        onClose={() => setIntelligenceModalOpen(false)}
+        source="job_detail_page"
+      />
+
+      {/* Analyse Role Modal (for subscribers) */}
+      <AnalyseRoleModal
+        isOpen={analyseModalOpen}
+        onClose={() => setAnalyseModalOpen(false)}
+        job={job}
+        userSkills={profile?.skills}
+        source="job_detail_page"
+      />
       </div>
     </>
   );

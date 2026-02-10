@@ -227,6 +227,77 @@ export const trackSponsorshipInquiry = () => {
   }
 };
 
+// AJA Intelligence Events
+export const trackIntelligenceModalViewed = (properties: {
+  source: string;
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("intelligence_modal_viewed", properties);
+  }
+};
+
+export const trackIntelligenceBillingToggle = (properties: {
+  selected_interval: "month" | "year";
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("intelligence_billing_toggle", properties);
+  }
+};
+
+export const trackIntelligenceCheckoutClicked = (properties: {
+  billing_interval: "month" | "year";
+  price: string;
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("intelligence_checkout_clicked", properties);
+  }
+};
+
+export const trackIntelligenceSigninPrompt = (properties: {
+  billing_interval: "month" | "year";
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("intelligence_signin_prompt", properties);
+  }
+};
+
+export const trackIntelligenceSubscribed = (properties?: {
+  session_id?: string;
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("intelligence_subscribed", properties);
+  }
+};
+
+export const trackAnalyseRoleModalOpened = (properties: {
+  job_id: string;
+  job_title: string;
+  source: string;
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("analyse_role_modal_opened", properties);
+  }
+};
+
+export const trackIntelligenceInsightViewed = (properties: {
+  insight_type: string;
+  job_id: string;
+  job_title: string;
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("intelligence_insight_viewed", properties);
+  }
+};
+
+export const trackSkillsMatchAnalysed = (properties: {
+  job_id: string;
+  match_percentage: number | null;
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("skills_match_analysed", properties);
+  }
+};
+
 // Generic Event Tracker
 export const trackEvent = (
   eventName: string,
