@@ -4,6 +4,8 @@ import { analyseInterviewDifficulty } from './analyse-interview-difficulty';
 import { analyseRoleSummary } from './analyse-role-summary';
 import { analyseWhoRoleIsFor } from './analyse-who-role-is-for';
 import { analyseWhoRoleIsNotFor } from './analyse-who-role-is-not-for';
+import { analyseAutonomyVsProcess } from './analyse-autonomy-vs-process';
+import { analysePromotionLikelihood } from './analyse-promotion-likelihood';
 
 // Helper function to create Supabase admin client
 function getSupabaseAdmin() {
@@ -14,9 +16,9 @@ function getSupabaseAdmin() {
 }
 
 /**
- * Triggers AI Focus, Interview Difficulty, Role Summary, Who Role Is For, and Who Role Is NOT For analysis for a job posting.
- * This should be called asynchronously after job creation.
- * Failures are logged but don't affect job creation.
+ * Triggers all 7 AJA Intelligence analyses for a job posting.
+ * This should be called asynchronously after job approval.
+ * Failures are logged but don't affect the approval flow.
  */
 export async function triggerJobAnalysis(
   jobId: string,
@@ -27,13 +29,23 @@ export async function triggerJobAnalysis(
   try {
     console.log(`🤖 Starting job analysis for job ${jobId}`);
 
-    // Run all analyses in parallel
-    const [aiFocusResult, interviewDifficultyResult, roleSummaryResult, whoRoleIsForResult, whoRoleIsNotForResult] = await Promise.allSettled([
+    // Run all 7 analyses in parallel
+    const [
+      aiFocusResult,
+      interviewDifficultyResult,
+      roleSummaryResult,
+      whoRoleIsForResult,
+      whoRoleIsNotForResult,
+      autonomyVsProcessResult,
+      promotionLikelihoodResult,
+    ] = await Promise.allSettled([
       analyseJobAIFocus(title, description, requirements),
       analyseInterviewDifficulty(title, description, requirements),
       analyseRoleSummary(title, description, requirements),
       analyseWhoRoleIsFor(title, description, requirements),
       analyseWhoRoleIsNotFor(title, description, requirements),
+      analyseAutonomyVsProcess(title, description, requirements),
+      analysePromotionLikelihood(title, description, requirements),
     ]);
 
     // Build the update object based on successful results
@@ -100,6 +112,33 @@ export async function triggerJobAnalysis(
       );
     } else {
       console.error(`❌ Who Role Is NOT For analysis failed for job ${jobId}:`, whoRoleIsNotForResult.reason);
+    }
+
+    if (autonomyVsProcessResult.status === 'fulfilled') {
+      const analysis = autonomyVsProcessResult.value;
+      updateData.autonomy_level = analysis.autonomy_level;
+      updateData.process_load = analysis.process_load;
+      updateData.autonomy_vs_process_rationale = analysis.rationale;
+      updateData.autonomy_vs_process_confidence = analysis.confidence;
+      updateData.autonomy_vs_process_analysed_at = new Date().toISOString();
+      console.log(
+        `✅ Autonomy vs Process analysis complete for job ${jobId}: autonomy=${analysis.autonomy_level}, process=${analysis.process_load} (${analysis.confidence} confidence)`
+      );
+    } else {
+      console.error(`❌ Autonomy vs Process analysis failed for job ${jobId}:`, autonomyVsProcessResult.reason);
+    }
+
+    if (promotionLikelihoodResult.status === 'fulfilled') {
+      const analysis = promotionLikelihoodResult.value;
+      updateData.promotion_likelihood_signal = analysis.signal;
+      updateData.promotion_likelihood_rationale = analysis.rationale;
+      updateData.promotion_likelihood_confidence = analysis.confidence;
+      updateData.promotion_likelihood_analysed_at = new Date().toISOString();
+      console.log(
+        `✅ Promotion Likelihood analysis complete for job ${jobId}: ${analysis.signal} (${analysis.confidence} confidence)`
+      );
+    } else {
+      console.error(`❌ Promotion Likelihood analysis failed for job ${jobId}:`, promotionLikelihoodResult.reason);
     }
 
     // Only update if we have some data

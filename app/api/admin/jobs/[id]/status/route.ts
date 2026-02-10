@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { emailService } from '@/lib/email/postmark-service';
 import { getSiteUrl } from '@/lib/utils/get-site-url';
 import { requestJobIndexing, requestJobRemoval, isIndexingConfigured } from '@/lib/google-indexing';
+import { triggerJobAnalysis } from '@/lib/ai-focus/trigger-analysis';
 
 interface RouteParams {
   id: string;
@@ -63,7 +64,7 @@ export async function PUT(
     // Get job details
     const { data: job, error: jobFetchError } = await supabaseAdmin
       .from('jobs')
-      .select('id, title, status, employer_id')
+      .select('id, title, description, requirements, status, employer_id')
       .eq('id', jobId)
       .single();
 
@@ -205,6 +206,18 @@ export async function PUT(
         console.error('❌ Google Indexing error (non-blocking):', indexError);
         // Don't fail the request if indexing fails
       }
+    }
+
+    // Trigger AJA Intelligence analysis for approved jobs (non-blocking)
+    if (status === 'approved') {
+      triggerJobAnalysis(
+        jobId,
+        job.title,
+        job.description,
+        job.requirements
+      ).catch((error) => {
+        console.error('❌ AJA Intelligence analysis trigger failed:', error);
+      });
     }
 
     return NextResponse.json({
