@@ -11,11 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Check, CreditCard, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { CancelSubscriptionModal } from "@/components/billing/CancelSubscriptionModal";
+import { trackSubscriptionCancelled } from "@/lib/analytics";
 
 export default function JobSeekerBillingPage() {
   const { user } = useAuth();
   const { subscription, loading, refetch } = useSubscription();
   const [cancelling, setCancelling] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
   const config = JOBSEEKER_PRICING_CONFIG.intelligence;
 
@@ -27,18 +30,19 @@ export default function JobSeekerBillingPage() {
     });
   };
 
-  const handleCancel = async () => {
+  const handleCancel = async (reason: string, feedback: string) => {
     if (!user || !subscription) return;
 
-    const endDate = subscription.current_period_end
-      ? formatDate(subscription.current_period_end)
-      : "the end of your billing period";
+    const billingInterval =
+      (subscription.metadata as Record<string, unknown>)?.billing_interval === "year"
+        ? "year"
+        : "month";
 
-    const confirmed = window.confirm(
-      `Cancel AJA Intelligence? You'll keep access until ${endDate}.`
-    );
-
-    if (!confirmed) return;
+    trackSubscriptionCancelled({
+      reason,
+      feedback: feedback || undefined,
+      billing_interval: billingInterval,
+    });
 
     setCancelling(true);
     try {
@@ -54,6 +58,7 @@ export default function JobSeekerBillingPage() {
       }
 
       toast.success("Subscription cancelled successfully");
+      setCancelModalOpen(false);
       refetch();
     } catch (error) {
       console.error("Error cancelling subscription:", error);
@@ -194,10 +199,9 @@ export default function JobSeekerBillingPage() {
                     variant="outline"
                     size="sm"
                     className="w-full sm:w-auto"
-                    onClick={handleCancel}
-                    disabled={cancelling}
+                    onClick={() => setCancelModalOpen(true)}
                   >
-                    {cancelling ? "Cancelling…" : "Cancel Subscription"}
+                    Cancel Subscription
                   </Button>
                 </div>
               )}
@@ -222,6 +226,18 @@ export default function JobSeekerBillingPage() {
           </Card>
         )}
       </div>
+
+      <CancelSubscriptionModal
+        isOpen={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        onConfirm={handleCancel}
+        endDate={
+          subscription?.current_period_end
+            ? formatDate(subscription.current_period_end)
+            : "the end of your billing period"
+        }
+        cancelling={cancelling}
+      />
     </JobSeekerLayout>
   );
 }

@@ -298,6 +298,16 @@ export const trackSkillsMatchAnalysed = (properties: {
   }
 };
 
+export const trackSubscriptionCancelled = (properties: {
+  reason: string;
+  feedback?: string;
+  billing_interval?: string;
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("subscription_cancelled", properties);
+  }
+};
+
 // Generic Event Tracker
 export const trackEvent = (
   eventName: string,
