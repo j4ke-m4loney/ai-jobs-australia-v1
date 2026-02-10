@@ -16,6 +16,7 @@ import { StateSelector } from "@/components/ui/state-selector";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import {
   MapPin,
   Search,
@@ -237,6 +238,7 @@ function JobsLoading() {
 // Main component that uses useSearchParams
 function JobsContent() {
   const { user, loading } = useAuth();
+  const { profile } = useProfile();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toggleSaveJob, isJobSaved } = useSavedJobs();
@@ -2035,7 +2037,8 @@ function JobsContent() {
               hasApplied={hasApplied[selectedJob.id] || false}
               scrollContainerRef={jobDetailsScrollRef}
               hasAIFocusAccess={hasAIFocusAccess()}
-              onIntelligenceCTAClick={() => setIntelligenceModalOpen(true)}
+              onIntelligenceCTAClick={user ? () => setIntelligenceModalOpen(true) : undefined}
+              userSkills={profile?.skills}
             />
           ) : (
             <div className="lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] flex items-center justify-center mx-4">
@@ -2120,7 +2123,8 @@ function JobsContent() {
                 hasApplied={hasApplied[selectedJob.id] || false}
                 scrollContainerRef={jobDetailsScrollRef}
                 hasAIFocusAccess={hasAIFocusAccess()}
-                onIntelligenceCTAClick={() => setIntelligenceModalOpen(true)}
+                onIntelligenceCTAClick={user ? () => setIntelligenceModalOpen(true) : undefined}
+                userSkills={profile?.skills}
               />
             )}
           </div>
@@ -2138,6 +2142,7 @@ function JobsContent() {
       <AJAIntelligenceModal
         isOpen={intelligenceModalOpen}
         onClose={() => setIntelligenceModalOpen(false)}
+        source="jobs_page"
       />
     </div>
   );

@@ -5,6 +5,7 @@ import { AnalyseRoleModal } from "@/components/jobs/AnalyseRoleModal";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -83,6 +84,7 @@ export default function JobDetailPage() {
   const id = params.id as string;
   const router = useRouter();
   const { user } = useAuth();
+  const { profile } = useProfile();
   const { toggleSaveJob, isJobSaved } = useSavedJobs();
   const { hasAIFocusAccess } = useSubscription();
   const [job, setJob] = useState<Job | null>(null);
@@ -393,45 +395,47 @@ export default function JobDetailPage() {
               </CardContent>
             </Card>
 
-            {/* AJA Intelligence Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-500" />
-                  AJA Intelligence
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {hasAIFocusAccess() ? (
-                  <>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Get AI-powered insights about this role
-                    </p>
-                    <Button
-                      onClick={() => setAnalyseModalOpen(true)}
-                      className="w-full gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      Analyse Role
-                    </Button>
-                  </>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Subscribe to AJA Intelligence to see AI insights including AI Focus Score and Interview Difficulty predictions.
-                    </p>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIntelligenceModalOpen(true)}
-                      className="gap-2"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      Learn More
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* AJA Intelligence Card - only show to authenticated users */}
+            {user && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-500" />
+                    AJA Intelligence
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {hasAIFocusAccess() ? (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Get AI-powered insights about this role
+                      </p>
+                      <Button
+                        onClick={() => setAnalyseModalOpen(true)}
+                        className="w-full gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Analyse Role
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Subscribe to AJA Intelligence to see AI insights including AI Focus Score and Interview Difficulty predictions.
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIntelligenceModalOpen(true)}
+                        className="gap-2"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Learn More
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
@@ -442,6 +446,7 @@ export default function JobDetailPage() {
       <AJAIntelligenceModal
         isOpen={intelligenceModalOpen}
         onClose={() => setIntelligenceModalOpen(false)}
+        source="job_detail_page"
       />
 
       {/* Analyse Role Modal (for subscribers) */}
@@ -449,6 +454,8 @@ export default function JobDetailPage() {
         isOpen={analyseModalOpen}
         onClose={() => setAnalyseModalOpen(false)}
         job={job}
+        userSkills={profile?.skills}
+        source="job_detail_page"
       />
       </div>
     </>

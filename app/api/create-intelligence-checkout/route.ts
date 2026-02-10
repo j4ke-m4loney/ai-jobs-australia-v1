@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { JOBSEEKER_PRICING_CONFIG } from '@/lib/stripe-client';
 import { createClient } from '@supabase/supabase-js';
 import { getSiteUrl } from '@/lib/utils/get-site-url';
 
@@ -12,12 +11,19 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { userId, userEmail } = await request.json();
+    const { userId, userEmail, billingInterval = 'month' } = await request.json();
 
     // Validate input
     if (!userId || !userEmail) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    if (billingInterval !== 'month' && billingInterval !== 'year') {
+      return NextResponse.json(
+        { error: 'Invalid billing interval' },
         { status: 400 }
       );
     }
@@ -64,7 +70,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pricingConfig = JOBSEEKER_PRICING_CONFIG.intelligence;
+    // Look up the pre-created Stripe Price ID for the selected interval
+    const priceId = billingInterval === 'year'
+      ? process.env.STRIPE_INTELLIGENCE_ANNUAL_PRICE_ID
+      : process.env.STRIPE_INTELLIGENCE_MONTHLY_PRICE_ID;
+
+    if (!priceId) {
+      console.error(`Missing STRIPE_INTELLIGENCE_${billingInterval === 'year' ? 'ANNUAL' : 'MONTHLY'}_PRICE_ID env var`);
+      return NextResponse.json(
+        { error: 'Stripe price not configured' },
+        { status: 500 }
+      );
+    }
 
     // Create or retrieve Stripe customer
     let customer;
@@ -99,17 +116,7 @@ export async function POST(request: NextRequest) {
       payment_method_types: ['card'],
       line_items: [
         {
-          price_data: {
-            currency: 'aud',
-            product_data: {
-              name: pricingConfig.name,
-              description: pricingConfig.description,
-            },
-            unit_amount: pricingConfig.price,
-            recurring: {
-              interval: 'month',
-            },
-          },
+          price: priceId,
           quantity: 1,
         },
       ],

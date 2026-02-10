@@ -1,20 +1,31 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Sparkles, ArrowRight } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
+import { trackIntelligenceSubscribed } from "@/lib/analytics";
 
 export default function SubscriptionSuccessPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { refetch } = useSubscription();
+  const hasTracked = useRef(false);
 
   useEffect(() => {
     // Refetch subscription status to update the UI
     refetch();
-  }, [refetch]);
+
+    // Track subscription success (once)
+    if (!hasTracked.current) {
+      hasTracked.current = true;
+      trackIntelligenceSubscribed({
+        session_id: searchParams.get("session_id") ?? undefined,
+      });
+    }
+  }, [refetch, searchParams]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-lg">

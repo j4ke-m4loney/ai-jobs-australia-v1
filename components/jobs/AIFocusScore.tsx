@@ -18,47 +18,59 @@ interface AIFocusScoreProps {
  */
 function getScoreInfo(percentage: number): {
   label: string;
-  bgClass: string;
   textClass: string;
   borderClass: string;
+  gradientFrom: string;
+  gradientTo: string;
+  shadowClass: string;
 } {
   if (percentage >= 80) {
     return {
       label: "Highly AI-Focused",
-      bgClass: "bg-green-100",
-      textClass: "text-green-800",
-      borderClass: "border-green-300",
+      textClass: "text-green-700",
+      borderClass: "border-green-400/50",
+      gradientFrom: "from-green-400",
+      gradientTo: "to-green-600",
+      shadowClass: "shadow-green-500/10",
     };
   }
   if (percentage >= 60) {
     return {
       label: "Strongly AI-Related",
-      bgClass: "bg-blue-100",
-      textClass: "text-blue-800",
-      borderClass: "border-blue-300",
+      textClass: "text-blue-700",
+      borderClass: "border-blue-400/50",
+      gradientFrom: "from-blue-400",
+      gradientTo: "to-blue-600",
+      shadowClass: "shadow-blue-500/10",
     };
   }
   if (percentage >= 40) {
     return {
       label: "Moderately AI-Related",
-      bgClass: "bg-yellow-100",
-      textClass: "text-yellow-800",
-      borderClass: "border-yellow-300",
+      textClass: "text-yellow-700",
+      borderClass: "border-yellow-400/50",
+      gradientFrom: "from-yellow-400",
+      gradientTo: "to-yellow-600",
+      shadowClass: "shadow-yellow-500/10",
     };
   }
   if (percentage >= 20) {
     return {
       label: "Some AI Elements",
-      bgClass: "bg-orange-100",
-      textClass: "text-orange-800",
-      borderClass: "border-orange-300",
+      textClass: "text-orange-700",
+      borderClass: "border-orange-400/50",
+      gradientFrom: "from-orange-400",
+      gradientTo: "to-orange-600",
+      shadowClass: "shadow-orange-500/10",
     };
   }
   return {
     label: "Limited AI Focus",
-    bgClass: "bg-gray-100",
     textClass: "text-gray-600",
-    borderClass: "border-gray-300",
+    borderClass: "border-gray-400/50",
+    gradientFrom: "from-gray-400",
+    gradientTo: "to-gray-600",
+    shadowClass: "shadow-gray-500/10",
   };
 }
 
@@ -84,11 +96,10 @@ export function AIFocusScore({
 
   if (compact) {
     return (
-      <div className={cn("flex items-center gap-2", className)}>
+      <div className={cn("flex items-center gap-2 bg-white/50 backdrop-blur-sm rounded-lg p-2", className)}>
         <div
           className={cn(
-            "flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold text-sm",
-            scoreInfo.bgClass,
+            "flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold text-sm bg-white/90 backdrop-blur-sm shadow-sm",
             scoreInfo.textClass,
             scoreInfo.borderClass
           )}
@@ -105,18 +116,19 @@ export function AIFocusScore({
   return (
     <div
       className={cn(
-        "rounded-lg border p-4 space-y-3",
-        scoreInfo.bgClass,
-        scoreInfo.borderClass,
+        "relative overflow-hidden rounded-xl border border-slate-200/40 bg-white/70 backdrop-blur-xl p-3 sm:p-5 space-y-3 shadow-lg",
+        scoreInfo.shadowClass,
         className
       )}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      {/* Top accent bar */}
+      <div className={cn("absolute top-0 left-0 right-0 h-1 bg-gradient-to-r rounded-t-xl", scoreInfo.gradientFrom, scoreInfo.gradientTo)} />
+
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <div
             className={cn(
-              "flex items-center justify-center w-12 h-12 rounded-full border-2 font-bold text-lg",
-              "bg-white",
+              "flex items-center justify-center w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 font-bold text-sm sm:text-lg bg-white/90 backdrop-blur-sm shadow-lg",
               scoreInfo.textClass,
               scoreInfo.borderClass
             )}
@@ -124,7 +136,7 @@ export function AIFocusScore({
             {percentage}%
           </div>
           <div>
-            <div className={cn("font-semibold", scoreInfo.textClass)}>
+            <div className={cn("font-semibold text-sm sm:text-base", scoreInfo.textClass)}>
               {scoreInfo.label}
             </div>
             <div className="text-xs text-muted-foreground">AI Focus Score</div>
@@ -134,7 +146,7 @@ export function AIFocusScore({
           <Badge
             variant="outline"
             className={cn(
-              "capitalize text-xs",
+              "capitalize text-xs bg-white/60 backdrop-blur-sm",
               confidence === "high" && "border-green-500 text-green-700",
               confidence === "medium" && "border-yellow-500 text-yellow-700",
               confidence === "low" && "border-gray-400 text-gray-600"
@@ -146,7 +158,7 @@ export function AIFocusScore({
       </div>
 
       {rationale && (
-        <p className="text-sm text-foreground/80 leading-relaxed">{rationale}</p>
+        <p className="text-sm text-slate-600 leading-relaxed">{rationale}</p>
       )}
     </div>
   );

@@ -72,6 +72,7 @@ interface JobDetailsViewProps {
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
   hasAIFocusAccess?: boolean;
   onIntelligenceCTAClick?: () => void;
+  userSkills?: string[] | null;
 }
 
 // Helper functions
@@ -117,6 +118,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
   scrollContainerRef,
   hasAIFocusAccess = false,
   onIntelligenceCTAClick,
+  userSkills,
 }) => {
   const [analyseModalOpen, setAnalyseModalOpen] = useState(false);
 
@@ -352,6 +354,8 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
           isOpen={analyseModalOpen}
           onClose={() => setAnalyseModalOpen(false)}
           job={job}
+          userSkills={userSkills}
+          source="jobs_page_sidebar"
         />
       )}
     </div>

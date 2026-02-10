@@ -18,45 +18,57 @@ interface InterviewDifficultyScoreProps {
  */
 function getDifficultyInfo(level: string): {
   label: string;
-  bgClass: string;
   textClass: string;
-  borderClass: string;
+  gradientFrom: string;
+  gradientTo: string;
+  glowColour: string;
+  shadowClass: string;
 } {
   switch (level) {
     case "easy":
       return {
         label: "Easy",
-        bgClass: "bg-green-100",
-        textClass: "text-green-800",
-        borderClass: "border-green-300",
+        textClass: "text-green-700",
+        gradientFrom: "from-green-400",
+        gradientTo: "to-green-600",
+        glowColour: "bg-green-400/20",
+        shadowClass: "shadow-green-500/10",
       };
     case "medium":
       return {
         label: "Medium",
-        bgClass: "bg-yellow-100",
-        textClass: "text-yellow-800",
-        borderClass: "border-yellow-300",
+        textClass: "text-yellow-700",
+        gradientFrom: "from-yellow-400",
+        gradientTo: "to-yellow-600",
+        glowColour: "bg-yellow-400/20",
+        shadowClass: "shadow-yellow-500/10",
       };
     case "hard":
       return {
         label: "Hard",
-        bgClass: "bg-orange-100",
-        textClass: "text-orange-800",
-        borderClass: "border-orange-300",
+        textClass: "text-orange-700",
+        gradientFrom: "from-orange-400",
+        gradientTo: "to-orange-600",
+        glowColour: "bg-orange-400/20",
+        shadowClass: "shadow-orange-500/10",
       };
     case "very_hard":
       return {
         label: "Very Hard",
-        bgClass: "bg-red-100",
-        textClass: "text-red-800",
-        borderClass: "border-red-300",
+        textClass: "text-red-700",
+        gradientFrom: "from-red-400",
+        gradientTo: "to-red-600",
+        glowColour: "bg-red-400/20",
+        shadowClass: "shadow-red-500/10",
       };
     default:
       return {
         label: "Unknown",
-        bgClass: "bg-gray-100",
         textClass: "text-gray-600",
-        borderClass: "border-gray-300",
+        gradientFrom: "from-gray-400",
+        gradientTo: "to-gray-600",
+        glowColour: "bg-gray-400/20",
+        shadowClass: "shadow-gray-500/10",
       };
   }
 }
@@ -86,11 +98,8 @@ export function InterviewDifficultyScore({
       <div className={cn("flex items-center gap-2", className)}>
         <Badge
           className={cn(
-            "text-xs font-medium px-2 py-0.5",
-            difficultyInfo.bgClass,
-            difficultyInfo.textClass,
-            difficultyInfo.borderClass,
-            "border"
+            "text-xs font-medium px-2 py-0.5 text-white border-0",
+            `bg-gradient-to-r ${difficultyInfo.gradientFrom} ${difficultyInfo.gradientTo}`
           )}
         >
           {difficultyInfo.label}
@@ -103,27 +112,26 @@ export function InterviewDifficultyScore({
   return (
     <div
       className={cn(
-        "rounded-lg border p-4 space-y-3",
-        difficultyInfo.bgClass,
-        difficultyInfo.borderClass,
+        "relative overflow-hidden rounded-xl border border-slate-200/40 bg-white/70 backdrop-blur-xl p-3 sm:p-5 space-y-3 shadow-lg",
+        difficultyInfo.shadowClass,
         className
       )}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      {/* Corner glow */}
+      <div className={cn("absolute -top-8 -right-8 w-24 h-24 rounded-full blur-3xl", difficultyInfo.glowColour)} />
+
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 relative">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <Badge
             className={cn(
-              "text-sm font-semibold px-3 py-1",
-              "bg-white",
-              difficultyInfo.textClass,
-              difficultyInfo.borderClass,
-              "border"
+              "text-sm font-semibold px-3 py-1 text-white border-0 shadow-md",
+              `bg-gradient-to-r ${difficultyInfo.gradientFrom} ${difficultyInfo.gradientTo}`
             )}
           >
             {difficultyInfo.label}
           </Badge>
           <div>
-            <div className={cn("font-semibold", difficultyInfo.textClass)}>
+            <div className="font-semibold text-slate-800 text-sm sm:text-base">
               Interview Difficulty
             </div>
             <div className="text-xs text-muted-foreground">Predicted challenge level</div>
@@ -133,7 +141,7 @@ export function InterviewDifficultyScore({
           <Badge
             variant="outline"
             className={cn(
-              "capitalize text-xs",
+              "capitalize text-xs bg-white/60 backdrop-blur-sm",
               confidence === "high" && "border-green-500 text-green-700",
               confidence === "medium" && "border-yellow-500 text-yellow-700",
               confidence === "low" && "border-gray-400 text-gray-600"
@@ -145,7 +153,7 @@ export function InterviewDifficultyScore({
       </div>
 
       {rationale && (
-        <p className="text-sm text-foreground/80 leading-relaxed">{rationale}</p>
+        <p className="text-sm text-slate-600 leading-relaxed">{rationale}</p>
       )}
     </div>
   );

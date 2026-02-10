@@ -413,6 +413,12 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   if (planType === 'intelligence' && userId) {
     console.log('Creating intelligence subscription for user:', userId);
 
+    // Derive billing interval and price from the actual Stripe subscription
+    const priceItem = subscription.items.data[0]?.price;
+    const billingInterval = priceItem?.recurring?.interval === 'year' ? 'year' : 'month';
+    const unitAmount = priceItem?.unit_amount ?? 0;
+    const pricePerMonth = billingInterval === 'year' ? Math.round(unitAmount / 12) : unitAmount;
+
     const { error } = await getSupabaseAdmin()
       .from('subscriptions')
       .upsert({
@@ -425,12 +431,13 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
         stripe_customer_id: subscription.customer as string,
         stripe_subscription_id: subscription.id,
-        price_per_month: 1499, // $14.99 in cents
+        price_per_month: pricePerMonth,
         features: {
           ai_focus_scores: true,
         },
         metadata: {
           plan_type: 'intelligence',
+          billing_interval: billingInterval,
         },
       }, {
         onConflict: 'user_id'
