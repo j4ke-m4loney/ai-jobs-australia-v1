@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requestJobIndexing, isIndexingConfigured } from '@/lib/google-indexing';
+import { triggerJobAnalysis } from '@/lib/ai-focus/trigger-analysis';
 
 interface RouteParams {
   id: string;
@@ -76,7 +77,7 @@ export async function POST(
     // Get job details
     const { data: job, error: jobFetchError } = await supabaseAdmin
       .from('jobs')
-      .select('id, title, status, employer_id, check_failure_reason')
+      .select('id, title, description, requirements, status, employer_id, check_failure_reason')
       .eq('id', jobId)
       .single();
 
@@ -144,6 +145,22 @@ export async function POST(
         console.log('[AdminJobReview] Google Indexing request:', indexResult);
       } catch (indexError) {
         console.error('[AdminJobReview] Google Indexing error (non-blocking):', indexError);
+      }
+    }
+
+    // Trigger AJA Intelligence analysis for approved jobs
+    // Must be awaited — Vercel terminates serverless functions after response is sent
+    if (newStatus === 'approved') {
+      try {
+        await triggerJobAnalysis(
+          jobId,
+          job.title,
+          job.description,
+          job.requirements
+        );
+      } catch (error) {
+        console.error('[AdminJobReview] AJA Intelligence analysis trigger failed:', error);
+        // Don't fail the approval if analysis fails
       }
     }
 

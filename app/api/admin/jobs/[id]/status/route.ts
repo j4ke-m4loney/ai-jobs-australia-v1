@@ -208,16 +208,20 @@ export async function PUT(
       }
     }
 
-    // Trigger AJA Intelligence analysis for approved jobs (non-blocking)
+    // Trigger AJA Intelligence analysis for approved jobs
+    // Must be awaited — Vercel terminates serverless functions after response is sent
     if (status === 'approved') {
-      triggerJobAnalysis(
-        jobId,
-        job.title,
-        job.description,
-        job.requirements
-      ).catch((error) => {
+      try {
+        await triggerJobAnalysis(
+          jobId,
+          job.title,
+          job.description,
+          job.requirements
+        );
+      } catch (error) {
         console.error('❌ AJA Intelligence analysis trigger failed:', error);
-      });
+        // Don't fail the approval if analysis fails
+      }
     }
 
     return NextResponse.json({
