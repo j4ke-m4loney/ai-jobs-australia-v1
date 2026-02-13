@@ -303,6 +303,8 @@ export default function AdminNewJobPage() {
         title: formData.jobTitle,
         description: formData.jobDescription,
         location: formData.locationAddress || `${formData.locationSuburb}, ${formData.locationState}`,
+        suburb: formData.locationSuburb || null,
+        state: formData.locationState || null,
         employer_id: adminOptions.postOnBehalfOf || user.id,
 
         // Optional fields that match schema

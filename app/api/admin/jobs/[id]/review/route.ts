@@ -3,6 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 import { requestJobIndexing, isIndexingConfigured } from '@/lib/google-indexing';
 import { triggerJobAnalysis } from '@/lib/ai-focus/trigger-analysis';
 
+// Allow up to 60 seconds — analysis runs 7 parallel Claude API calls
+export const maxDuration = 60;
+
 interface RouteParams {
   id: string;
 }

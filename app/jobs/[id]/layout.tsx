@@ -104,6 +104,20 @@ function getJobLocationType(locationType: string): string | null {
   return null;
 }
 
+// Parse location strings like "Melbourne VIC", "Sydney, NSW", or "Melbourne VIC | Sydney NSW"
+function parseLocations(location: string): Array<{ locality: string; region: string | null }> {
+  const parts = location.split('|').map(p => p.trim()).filter(Boolean);
+
+  return parts.map(part => {
+    // Match "Suburb STATE" or "Suburb, STATE" where STATE is 2-3 uppercase letters
+    const match = part.match(/^(.+?)[\s,]+([A-Z]{2,3})$/);
+    if (match) {
+      return { locality: match[1].trim(), region: match[2] };
+    }
+    return { locality: part, region: null };
+  });
+}
+
 // Server component to render structured data
 async function JobStructuredData({ id }: { id: string }) {
   const { data: job } = await supabase
@@ -143,14 +157,19 @@ async function JobStructuredData({ id }: { id: string }) {
       ...(job.companies.logo_url && { logo: job.companies.logo_url }),
       ...(job.companies.website && { sameAs: job.companies.website }),
     },
-    jobLocation: {
-      "@type": "Place",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: job.location,
-        addressCountry: "AU",
-      },
-    },
+    jobLocation: (() => {
+      const locations = parseLocations(job.location || '');
+      const places = locations.map(loc => ({
+        "@type": "Place" as const,
+        address: {
+          "@type": "PostalAddress" as const,
+          addressLocality: loc.locality,
+          ...(loc.region && { addressRegion: loc.region }),
+          addressCountry: "AU",
+        },
+      }));
+      return places.length === 1 ? places[0] : places;
+    })(),
     identifier: {
       "@type": "PropertyValue",
       name: "AI Jobs Australia",
