@@ -1,14 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-
 import {
-  Star,
-  Users,
-  Target,
   CheckCircle,
   UserCheck,
   Calendar,
@@ -18,45 +14,91 @@ import {
   Clock,
   TrendingUp,
   Code,
+  X,
+  Check,
+  Home,
+  Search,
+  Mail,
 } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import EmployerHeader from "@/components/EmployerHeader";
 import Footer from "@/components/Footer";
+import { PostHogEmbed } from "@/components/hire/PostHogEmbed";
+import { cn } from "@/lib/utils";
+
+const faqs = [
+  {
+    question: "How long does it take to post a job?",
+    answer:
+      "Listing go live within 12-24 hours after approval. Just create an account, fill in the job details, and pay — you'll be emailed as soon as your job is live.",
+  },
+  {
+    question: "How long does my job listing stay active?",
+    answer:
+      "All listings (Standard and Featured) run for 30 days from the date of posting.",
+  },
+  {
+    question: "Can I edit my job post after it's live?",
+    answer:
+      "Yes, you can update your job title, description, and other details at any time from your employer dashboard.",
+  },
+  {
+    question: "What payment methods do you accept?",
+    answer:
+      "We accept all major credit and debit cards (Visa, Mastercard, Amex) via Stripe. All payments are processed securely.",
+  },
+  {
+    question: "What's the difference between Standard and Featured?",
+    answer:
+      "Standard ($99) gives you a 30-day listing that appears in search results. Featured ($299) adds homepage placement, top search positioning, inclusion in our weekly newsletter, social media promotion, and priority support — typically delivering 3x more visibility.",
+  },
+  {
+    question: "How many applicants can I expect?",
+    answer:
+      "This varies by role, location, and seniority. You can see our real-time apply click data above to get a sense of platform engagement. Featured listings typically receive significantly more applications than Standard.",
+  },
+  {
+    question: "What kind of candidates use AI Jobs Australia?",
+    answer:
+      "Our audience includes machine learning engineers, data scientists, AI researchers, data engineers, MLOps engineers, and AI product managers across all experience levels — from junior to lead.",
+  },
+  {
+    question: "Is AI Jobs Australia only for Australian roles?",
+    answer:
+      "Yes. We're focused exclusively on the Australian AI and machine learning job market, which means your listing reaches a highly targeted local audience.",
+  },
+  {
+    question: "Do you screen or verify candidates?",
+    answer:
+      "We don't screen candidates directly. We provide the platform for employers to receive applications and manage their hiring process. All applications come directly to you.",
+  },
+  {
+    question: "Can I get a refund if I don't receive any applications?",
+    answer:
+      "We don't offer refunds as job visibility begins immediately upon posting. However, if you're not seeing results, contact us at hello@aijobsaustralia.com.au and we'll work with you to improve your listing.",
+  },
+  {
+    question: "Do you offer bulk or enterprise pricing?",
+    answer:
+      "Yes! Our Enterprise Unlimited plan gives you unlimited job postings with all Featured benefits, a dedicated account manager, and custom branding. Email us at hello@aijobsaustralia.com.au for a quote.",
+  },
+  {
+    question: "Can I promote multiple roles at once?",
+    answer:
+      "Absolutely. Each role is posted as a separate listing. If you're hiring for multiple positions, our Enterprise plan may be the most cost-effective option.",
+  },
+];
 
 export default function HirePage() {
-  // Platform stats - static values, update manually as platform grows
-  const platformStats = {
-    activeJobs: "50+",
-    aiProfessionals: "1K+",
-    weeklyApplications: "100+",
-    companiesHiring: "30+",
-  };
-
-  const features = [
-    {
-      icon: Target,
-      title: "Get more visibility",
-      description:
-        "Your jobs reach Australia's top AI talent through our specialized platform and targeted outreach.",
-    },
-    {
-      icon: UserCheck,
-      title: "Find quality applicants",
-      description:
-        "Access pre-screened candidates with verified AI/ML skills and experience in Australian companies.",
-    },
-    {
-      icon: CheckCircle,
-      title: "Verify abilities",
-      description:
-        "Review portfolios, GitHub profiles, and technical assessments to ensure the right fit.",
-    },
-    {
-      icon: Users,
-      title: "Organize candidates",
-      description:
-        "Manage applications with our intuitive dashboard and streamlined hiring workflow.",
-    },
-  ];
+  const posthogVisitorsUrl =
+    process.env.NEXT_PUBLIC_POSTHOG_EMBED_VISITORS || "";
+  const posthogApplyClicksUrl =
+    process.env.NEXT_PUBLIC_POSTHOG_EMBED_APPLY_CLICKS || "";
 
   const steps = [
     {
@@ -83,134 +125,82 @@ export default function HirePage() {
     <div className="min-h-screen bg-gradient-subtle">
       <EmployerHeader />
 
-      {/* Hero Section */}
+      {/* 1. Hero Section */}
       <section className="pt-32 pb-16 px-4">
         <div className="container mx-auto max-w-4xl text-center">
           <Badge variant="secondary" className="mb-6">
             For Employers
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
-            Get started in minutes!
+            Hire Australia&apos;s Best AI Talent!
           </h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Post your AI and machine learning jobs to Australia&apos;s
-            fastest-growing tech talent community. Reach qualified candidates
-            faster than ever.
+            Reach AI professionals in all fields actively looking for their next
+            role
           </p>
 
-          <Link href="/post-job-login">
-            <Button
-              size="lg"
-              className="bg-gradient-hero hover:opacity-90 text-white font-semibold px-8 py-6 text-lg"
-            >
-              Start Posting Jobs →
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/post-job-login">
+              <Button
+                size="lg"
+                className="bg-gradient-hero hover:opacity-90 text-white font-semibold px-8 py-6 text-lg"
+              >
+                Post a Job <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <a href="mailto:hello@aijobsaustralia.com.au">
+              <Button variant="outline" size="lg" className="px-8 py-6 text-lg">
+                <Mail className="mr-2 h-5 w-5" />
+                Prefer to chat first? Email us
+              </Button>
+            </a>
+          </div>
 
-          <p className="text-sm text-muted-foreground mt-4">
-            Post your job to Australia&apos;s AI talent community
+          <p className="text-sm text-muted-foreground mt-6">
+            Take only 2-3 Minutes to post your job!
           </p>
         </div>
       </section>
 
-      {/* Platform Stats */}
+      {/* 2. PostHog Live Analytics Embeds */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="text-3xl font-bold text-center mb-8">
-            Platform Overview
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Briefcase className="h-10 w-10 text-blue-600 mx-auto mb-3" />
-                <div className="text-sm text-muted-foreground mb-1">
-                  Active AI Jobs
-                </div>
-                <div className="text-4xl font-bold">
-                  {platformStats.activeJobs}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Users className="h-10 w-10 text-green-600 mx-auto mb-3" />
-                <div className="text-sm text-muted-foreground mb-1">
-                  AI Professionals
-                </div>
-                <div className="text-4xl font-bold">
-                  {platformStats.aiProfessionals}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6 text-center">
-                <TrendingUp className="h-10 w-10 text-purple-600 mx-auto mb-3" />
-                <div className="text-sm text-muted-foreground mb-1">
-                  Weekly Applications
-                </div>
-                <div className="text-4xl font-bold">
-                  {platformStats.weeklyApplications}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Building2 className="h-10 w-10 text-orange-600 mx-auto mb-3" />
-                <div className="text-sm text-muted-foreground mb-1">
-                  Companies Hiring
-                </div>
-                <div className="text-4xl font-bold">
-                  {platformStats.companiesHiring}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">
-              Why choose AI Jobs Australia?
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-3">
+              Real-Time Platform Activity
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to find and hire Australia&apos;s best AI and
-              machine learning talent
+              Live data from our analytics — see the traffic and engagement your
+              job posts will receive.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="p-6 hover:shadow-md transition-shadow"
-              >
-                <CardContent className="space-y-4">
-                  <feature.icon className="w-10 h-10 text-primary" />
-                  <h3 className="font-semibold text-lg">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="grid grid-cols-1 gap-6 max-w-4xl mx-auto">
+            <PostHogEmbed
+              title="Job Seeker Traffic"
+              description="Live data of active jobs seekers on AI Jobs Australia"
+              iframeSrc={posthogVisitorsUrl}
+              height={400}
+            />
+            <PostHogEmbed
+              title="Application Activity"
+              description="Live apply clicks across all listings on AI Jobs Australia"
+              iframeSrc={posthogApplyClicksUrl}
+              height={400}
+            />
           </div>
         </div>
       </section>
 
-      {/* Who's Looking for AI Jobs */}
+      {/* 4. Audience Profile — "Your Talent Pool" */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-3xl font-bold text-center mb-4">
-            Who&apos;s Looking for AI Jobs?
+            Your Talent Pool
           </h2>
           <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Our platform attracts highly skilled professionals in Australia&apos;s
-            AI and ML ecosystem
+            Here&apos;s who you&apos;ll reach — highly skilled AI and ML
+            professionals across Australia, actively searching for their next
+            opportunity.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -218,33 +208,25 @@ export default function HirePage() {
             <div>
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-blue-600" />
-                Job Titles Seeking
+                Roles They&apos;re Seeking
               </h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  Machine Learning Engineers
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  Data Scientists
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  AI Researchers
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  Data Engineers
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  MLOps Engineers
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  AI Product Managers
-                </li>
+                {[
+                  "Machine Learning Engineers",
+                  "AI Engineers",
+                  "Data Scientists",
+                  "Data Engineers",
+                  "AI Researchers",
+                  "AI Analysts",
+                  "MLOps Engineers",
+                  "AI Product Managers",
+                  "And more...",
+                ].map((title) => (
+                  <li key={title} className="flex items-start">
+                    <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                    {title}
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -255,30 +237,22 @@ export default function HirePage() {
                 Industries They Come From
               </h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  Technology & SaaS
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  Finance & Fintech
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  Healthcare & Biotech
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  E-commerce & Retail
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  Research & Academia
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  Consulting
-                </li>
+                {[
+                  "Technology & SaaS",
+                  "Mining & Resources",
+                  "Finance & Fintech",
+                  "Insurance",
+                  "Government & Defence",
+                  "Healthcare & Biotech",
+                  "E-commerce & Retail",
+                  "Research & Academia",
+                  "And more...",
+                ].map((industry) => (
+                  <li key={industry} className="flex items-start">
+                    <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
+                    {industry}
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -289,54 +263,25 @@ export default function HirePage() {
                 Experience Levels
               </h3>
               <ul className="space-y-3 text-muted-foreground">
-                <li>
-                  <div className="flex justify-between mb-1">
-                    <span>Junior (0-2 yrs)</span>
-                    <span className="font-semibold">20%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-500"
-                      style={{ width: "20%" }}
-                    />
-                  </div>
-                </li>
-                <li>
-                  <div className="flex justify-between mb-1">
-                    <span>Mid (2-5 yrs)</span>
-                    <span className="font-semibold">35%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-500"
-                      style={{ width: "35%" }}
-                    />
-                  </div>
-                </li>
-                <li>
-                  <div className="flex justify-between mb-1">
-                    <span>Senior (5-10 yrs)</span>
-                    <span className="font-semibold">30%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-500"
-                      style={{ width: "30%" }}
-                    />
-                  </div>
-                </li>
-                <li>
-                  <div className="flex justify-between mb-1">
-                    <span>Lead (10+ yrs)</span>
-                    <span className="font-semibold">15%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-500"
-                      style={{ width: "15%" }}
-                    />
-                  </div>
-                </li>
+                {[
+                  { label: "Junior (0-2 yrs)", pct: 20 },
+                  { label: "Mid (2-5 yrs)", pct: 35 },
+                  { label: "Senior (5-10 yrs)", pct: 30 },
+                  { label: "Lead (10+ yrs)", pct: 15 },
+                ].map((level) => (
+                  <li key={level.label}>
+                    <div className="flex justify-between mb-1">
+                      <span>{level.label}</span>
+                      <span className="font-semibold">{level.pct}%</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-green-500"
+                        style={{ width: `${level.pct}%` }}
+                      />
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -344,32 +289,184 @@ export default function HirePage() {
             <div>
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Code className="h-5 w-5 text-orange-600" />
-                Skills & Technologies
+                Skills &amp; Technologies
               </h3>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">Python</Badge>
-                <Badge variant="outline">TensorFlow</Badge>
-                <Badge variant="outline">PyTorch</Badge>
-                <Badge variant="outline">Deep Learning</Badge>
-                <Badge variant="outline">NLP</Badge>
-                <Badge variant="outline">Computer Vision</Badge>
-                <Badge variant="outline">LLMs</Badge>
-                <Badge variant="outline">Generative AI</Badge>
-                <Badge variant="outline">MLOps</Badge>
-                <Badge variant="outline">AWS</Badge>
-                <Badge variant="outline">Azure</Badge>
-                <Badge variant="outline">GCP</Badge>
+                {[
+                  "Python",
+                  "TensorFlow",
+                  "PyTorch",
+                  "Scikit-learn",
+                  "Deep Learning",
+                  "NLP",
+                  "Computer Vision",
+                  "LLMs",
+                  "Generative AI",
+                  "RAG",
+                  "Hugging Face",
+                  "LangChain",
+                  "Prompt Engineering",
+                  "Transformers",
+                  "Reinforcement Learning",
+                  "MLOps",
+                  "Kubernetes",
+                  "Docker",
+                  "Spark",
+                  "SQL",
+                  "R",
+                  "Databricks",
+                  "Snowflake",
+                  "dbt",
+                  "Airflow",
+                  "SageMaker",
+                  "Vertex AI",
+                  "AWS",
+                  "Azure",
+                  "GCP",
+                  "And many more...",
+                ].map((skill) => (
+                  <Badge key={skill} variant="outline">
+                    {skill}
+                  </Badge>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* 5. Featured vs Standard Comparison */}
+      <section className="py-16 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-3">
+              Standard vs Featured Posts
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              See what you get with a Featured listing, maximum visibility for
+              your most important roles.
+            </p>
+          </div>
+
+          {/* Part A — Feature comparison */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
+            {/* Standard Card */}
+            <Card>
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="text-xl">Standard</CardTitle>
+                <div className="text-3xl font-bold">$99</div>
+                <p className="text-sm text-muted-foreground">30-day listing</p>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {[
+                    { feature: "30-day listing", included: true },
+                    { feature: "Appears in search results", included: true },
+                    { feature: "Homepage featured section", included: false },
+                    { feature: "Newsletter inclusion", included: false },
+                    { feature: "Social media promotion", included: false },
+                    { feature: "Priority support", included: false },
+                  ].map((item) => (
+                    <li key={item.feature} className="flex items-center gap-2">
+                      {item.included ? (
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      ) : (
+                        <X className="w-4 h-4 text-muted-foreground/40 flex-shrink-0" />
+                      )}
+                      <span
+                        className={cn(
+                          "text-sm",
+                          !item.included && "text-muted-foreground/60",
+                        )}
+                      >
+                        {item.feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Featured Card */}
+            <Card className="ring-2 ring-primary relative">
+              <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground">
+                Recommended
+              </Badge>
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="text-xl">Featured</CardTitle>
+                <div className="text-3xl font-bold">$299</div>
+                <p className="text-sm text-muted-foreground">
+                  30-day featured listing
+                </p>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {[
+                    { feature: "3x more visibility", included: true },
+                    { feature: "30-day listing", included: true },
+                    {
+                      feature: "Appears in search results (top position)",
+                      included: true,
+                    },
+                    { feature: "Homepage featured section", included: true },
+                    { feature: "Newsletter inclusion", included: true },
+                    { feature: "Social media promotion", included: true },
+                    { feature: "Priority support", included: true },
+                  ].map((item) => (
+                    <li key={item.feature} className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="text-sm">{item.feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Part B — Where Featured Jobs Appear */}
+          <div className="max-w-4xl mx-auto">
+            <h3 className="text-xl font-semibold text-center mb-6">
+              Where <span className="underline decoration-wavy decoration-primary decoration-2 underline-offset-4">Featured</span> Jobs Appear
+            </h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="text-center">
+                <CardContent className="p-6">
+                  <Home className="h-10 w-10 text-primary mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">Homepage</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Pinned in the Featured Jobs section, the first thing
+                    visitors see.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="text-center">
+                <CardContent className="p-6">
+                  <Search className="h-10 w-10 text-primary mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">Search Results</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Appears at the top of results with a featured badge.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="text-center">
+                <CardContent className="p-6">
+                  <Mail className="h-10 w-10 text-primary mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">Newsletter</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Featured in our weekly email to AI professionals.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. How It Works */}
       <section className="py-16 px-4">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">How it works</h2>
+            <h2 className="text-3xl font-bold mb-4">How It Works</h2>
             <p className="text-lg text-muted-foreground">
               Get your job posting live in 3 simple steps
             </p>
@@ -392,68 +489,87 @@ export default function HirePage() {
         </div>
       </section>
 
-      {/* Sponsored Jobs Info */}
+      {/* 8. FAQ Section */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto max-w-4xl">
-          <Card className="border-2 border-primary/20">
-            <CardContent className="p-8 text-center">
-              <div className="space-y-6">
-                <div className="w-16 h-16 bg-gradient-hero rounded-full flex items-center justify-center mx-auto">
-                  <Star className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold">
-                  Boost your job&apos;s visibility
-                </h2>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                  Premium job placements get 3x more visibility and reach the
-                  top of search results. Perfect for senior roles and urgent
-                  hiring needs.
-                </p>
-                <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    Featured placement
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    Priority support
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    Enhanced analytics
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Common questions from employers about posting on AI Jobs Australia
+            </p>
+          </div>
+
+          <Accordion type="single" collapsible className="space-y-4">
+            {faqs.map((faq, index) => (
+              <AccordionItem
+                key={index}
+                value={`item-${index}`}
+                className="bg-background border rounded-lg px-6"
+              >
+                <AccordionTrigger className="text-left hover:no-underline">
+                  <span className="font-semibold">{faq.question}</span>
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-16 px-4">
+      {/* 9. Final CTA + Chat */}
+      <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Ready to find your next AI hire?
+            Ready to hire Australia&apos;s next AI star?
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
             Start reaching qualified AI candidates today.
           </p>
-          <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/post-job-login">
               <Button
                 size="lg"
                 className="bg-gradient-hero hover:opacity-90 text-white font-semibold px-8 py-6 text-lg"
               >
-                Post Your First Job →
+                Post a Job <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <p className="text-sm text-muted-foreground">
-              <Clock className="w-4 h-4 inline mr-1" />
-              Average setup time: 3 minutes
-            </p>
+            <a href="mailto:hello@aijobsaustralia.com.au">
+              <Button variant="outline" size="lg" className="px-8 py-6 text-lg">
+                <Mail className="mr-2 h-5 w-5" />
+                Questions? Email Us
+              </Button>
+            </a>
           </div>
+          <p className="text-sm text-muted-foreground mt-6">
+            <Clock className="w-4 h-4 inline mr-1" />
+            Average setup time: 3 minutes
+          </p>
         </div>
       </section>
+
+      {/* FAQPage Schema.org structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqs.map((faq) => ({
+              "@type": "Question",
+              name: faq.question,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: faq.answer,
+              },
+            })),
+          }),
+        }}
+      />
 
       <Footer />
     </div>
