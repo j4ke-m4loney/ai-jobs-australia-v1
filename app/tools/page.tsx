@@ -17,6 +17,7 @@ import {
   Linkedin,
   Mail,
   Lightbulb,
+  Compass,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -153,6 +154,20 @@ const tools = [
       "Role-specific ideas",
       "Tech stack & datasets",
       "Interview prep tips",
+      "100% private",
+    ],
+  },
+  {
+    title: "AI Career Path Quiz",
+    description:
+      "Discover which AI career path suits you best. Answer 12 quick questions to get personalised recommendations with Australian salary data and demand levels across 10 AI career paths.",
+    icon: Compass,
+    href: "/tools/ai-career-path-quiz",
+    badge: "New",
+    features: [
+      "10 AI career paths",
+      "Australian salary data",
+      "Personalised results",
       "100% private",
     ],
   },
