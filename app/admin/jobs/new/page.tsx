@@ -259,6 +259,9 @@ export default function AdminNewJobPage() {
       locationType: data.locationType,
       jobTypes: data.jobTypes as JobFormData2["jobTypes"],
       hoursConfig: { showBy: "fixed", fixedHours: 40 },
+      contractConfig: data.jobTypes.includes("internship")
+        ? { length: 3, period: "months" }
+        : undefined,
       payConfig,
       benefits: [],
       highlights: [data.highlight1, data.highlight2, data.highlight3],

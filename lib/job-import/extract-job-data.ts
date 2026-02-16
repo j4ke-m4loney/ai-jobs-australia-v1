@@ -200,8 +200,8 @@ Field guidelines:
 - highlight1: Max 80 chars — main function/s of the job. No emojis, no em dashes.
 - highlight2: Max 80 chars — years of experience. Use + not 'plus', - not 'to' (e.g. '5+ years ML experience').
 - highlight3: Max 80 chars — key skills. No emojis, no em dashes.
-- jobDescription: Extract using EXACT original text, word for word. Do NOT rewrite, paraphrase, or summarise. Skip scraped navigation/headers/footers. Wrap in clean HTML (<p>, <ul>, <li>, <strong>).
-- requirements: Extract using EXACT original text. Wrap in HTML. Empty string if already in jobDescription.
+- jobDescription: Extract the FULL job listing using EXACT original text, word for word. Include ALL sections (responsibilities, requirements, qualifications, skills, attributes, etc.). Do NOT rewrite, paraphrase, or summarise. Do NOT split content into requirements — put everything here. Skip scraped navigation/headers/footers. Wrap in clean HTML (<p>, <ul>, <li>, <strong>).
+- requirements: Always return an empty string. All content should be in jobDescription.
 - applicationUrl: Application URL if found, or empty string
 - applicationEmail: Application email if found, or empty string
 - companyName: The hiring company name
@@ -211,8 +211,9 @@ Field guidelines:
 
 IMPORTANT RULES:
 - For salary: convert to annual AUD if given in other periods. If salary is NOT mentioned, estimate a realistic range based on role, seniority, experience, and Australian market rates. Set payType to "range" and salaryIsEstimated to true. NEVER leave all salary fields null.
-- For jobDescription and requirements: use the EXACT words from the original listing. Do NOT rewrite, paraphrase, or summarise. Identify relevant content, skip website chrome/navigation, and wrap in HTML tags.
-- If the role is remote-eligible or mentions "work from home", set locationType to "fully-remote" or "hybrid" as appropriate.`;
+- For jobDescription: use the EXACT words from the original listing. Do NOT rewrite, paraphrase, or summarise. Include ALL sections — do NOT move any content to requirements. Skip website chrome/navigation, and wrap in HTML tags.
+- If the role is remote-eligible or mentions "work from home", set locationType to "fully-remote" or "hybrid" as appropriate.
+- REDACT contact information in jobDescription: Replace phone numbers with asterisks (keep first digit, e.g. 0455 123 456 → 0*** *** ***). Replace emails with asterisks (keep first character and @, e.g. jane@example.com → j***@***********).`;
 
 const EXTRACT_JOB_TOOL: Anthropic.Messages.Tool = {
   name: 'extract_job_data',
@@ -252,6 +253,37 @@ const EXTRACT_JOB_TOOL: Anthropic.Messages.Tool = {
     ],
   },
 };
+
+/**
+ * Redact phone numbers and email addresses from text.
+ * Phone: keep first digit, replace rest with *
+ * Email: keep first char and @, replace rest with *
+ */
+function redactContactInfo(text: string): string {
+  // Redact emails: keep first char and @
+  let result = text.replace(
+    /\b([a-zA-Z0-9])[a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b/g,
+    (match, firstChar) => {
+      const [local, domain] = match.split('@');
+      return firstChar + '*'.repeat(local.length - 1) + '@' + '*'.repeat(domain.length);
+    }
+  );
+
+  // Redact AU phone numbers: +61 / 04xx / (0x) / 1300/1800 formats
+  // Keep first digit, replace remaining digits with *
+  result = result.replace(
+    /(?:\+61[\s.-]?|0)[2-578](?:[\s.-]?\d){7,9}\b/g,
+    (match) => {
+      let first = true;
+      return match.replace(/\d/g, (d) => {
+        if (first) { first = false; return d; }
+        return '*';
+      });
+    }
+  );
+
+  return result;
+}
 
 /**
  * Extract structured job data from text using Claude.
@@ -305,7 +337,7 @@ export async function extractJobData(
     highlight1: String(raw.highlight1 || '').slice(0, 80).trim(),
     highlight2: String(raw.highlight2 || '').slice(0, 80).trim(),
     highlight3: String(raw.highlight3 || '').slice(0, 80).trim(),
-    jobDescription: String(raw.jobDescription || ''),
+    jobDescription: redactContactInfo(String(raw.jobDescription || '')),
     requirements: String(raw.requirements || ''),
     applicationMethod: raw.applicationMethod === 'email' ? 'email' : 'external',
     applicationUrl: String(raw.applicationUrl || '').trim(),
