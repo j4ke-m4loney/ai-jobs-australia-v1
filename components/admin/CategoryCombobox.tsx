@@ -4,6 +4,7 @@ import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { JOB_CATEGORIES } from "@/lib/job-import/categories";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -23,13 +24,7 @@ interface Category {
   label: string;
 }
 
-const defaultCategories: Category[] = [
-  { value: "ai", label: "AI" },
-  { value: "ml", label: "Machine Learning" },
-  { value: "data-science", label: "Data Science" },
-  { value: "engineering", label: "Engineering" },
-  { value: "research", label: "Research" },
-];
+const defaultCategories: Category[] = [...JOB_CATEGORIES];
 
 interface CategoryComboboxProps {
   value: string;

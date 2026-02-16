@@ -25,6 +25,8 @@ import { cn } from "@/lib/utils";
 import { JobFormData2 } from "@/types/job2";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { JobImportCard } from "@/components/admin/JobImportCard";
+import type { ExtractedJobData } from "@/lib/job-import/extract-job-data";
 
 // Reuse existing step components
 import JobBasicsStep from "@/components/post-job2/JobBasicsStep";
@@ -121,6 +123,7 @@ export default function AdminNewJobPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [importCounter, setImportCounter] = useState(0);
 
   // Form data
   const [formData, setFormData] = useState<JobFormData2>({
@@ -236,6 +239,52 @@ export default function AdminNewJobPage() {
 
   const updateFormData = (updates: Partial<JobFormData2>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
+  };
+
+  const handleImport = (data: ExtractedJobData) => {
+    // Map pay data
+    const payConfig: JobFormData2["payConfig"] = {
+      showPay: !data.salaryIsEstimated,
+      payType: data.payType || "range",
+      payRangeMin: data.payRangeMin ?? undefined,
+      payRangeMax: data.payRangeMax ?? undefined,
+      payAmount: data.payAmount ?? undefined,
+      payPeriod: data.payPeriod || "year",
+      currency: "AUD",
+    };
+
+    setFormData({
+      jobTitle: data.jobTitle,
+      locationAddress: data.locationAddress,
+      locationType: data.locationType,
+      jobTypes: data.jobTypes as JobFormData2["jobTypes"],
+      hoursConfig: { showBy: "fixed", fixedHours: 40 },
+      payConfig,
+      benefits: [],
+      highlights: [data.highlight1, data.highlight2, data.highlight3],
+      jobDescription: data.jobDescription,
+      requirements: data.requirements,
+      applicationMethod: data.applicationMethod,
+      applicationUrl: data.applicationUrl,
+      applicationEmail: data.applicationEmail,
+      communicationPrefs: { emailUpdates: true, phoneScreening: false },
+      hiringTimeline: "flexible",
+      pricingTier: "standard",
+      companyName: data.companyName,
+      companyLogo: null,
+      companyDescription: "",
+      companyWebsite: data.companyWebsite,
+    });
+
+    setAdminOptions((prev) => ({
+      ...prev,
+      category: data.category,
+    }));
+
+    // Force step components to remount with fresh defaultValues
+    setImportCounter((c) => c + 1);
+    setCurrentStep(1);
+    toast.success("Job data imported — review each step and submit.");
   };
 
   const handleNext = () => {
@@ -379,6 +428,7 @@ export default function AdminNewJobPage() {
       case 1:
         return (
           <JobBasicsStep
+            key={`basics-${importCounter}`}
             formData={formData}
             updateFormData={updateFormData}
             onNext={handleNext}
@@ -387,6 +437,7 @@ export default function AdminNewJobPage() {
       case 2:
         return (
           <DescribeJobStep
+            key={`describe-${importCounter}`}
             formData={formData}
             updateFormData={updateFormData}
             onNext={handleNext}
@@ -398,6 +449,7 @@ export default function AdminNewJobPage() {
       case 3:
         return (
           <ApplicationSettingsStep
+            key={`application-${importCounter}`}
             formData={formData}
             updateFormData={updateFormData}
             onNext={handleNext}
@@ -555,6 +607,9 @@ export default function AdminNewJobPage() {
             Preview
           </Button>
         </div>
+
+        {/* Import Card */}
+        <JobImportCard onImport={handleImport} companies={companies} />
 
         {/* Progress Steps */}
         <div className="flex items-center justify-between">
