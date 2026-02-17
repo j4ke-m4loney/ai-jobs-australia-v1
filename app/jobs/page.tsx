@@ -62,6 +62,7 @@ interface Job {
   application_method: string;
   application_url: string | null;
   application_email: string | null;
+  disable_utm_tracking?: boolean;
   status?: "pending" | "approved" | "rejected" | "expired";
   company_id?: string | null;
   highlights?: string[] | null;
@@ -1108,7 +1109,7 @@ function JobsContent() {
       selectedJob.application_method === "external" &&
       selectedJob.application_url
     ) {
-      window.open(appendUtmParams(selectedJob.application_url, selectedJob.id, selectedJob.is_featured), "_blank");
+      window.open(appendUtmParams(selectedJob.application_url, selectedJob.disable_utm_tracking), "_blank");
       return;
     }
 

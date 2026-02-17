@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -76,6 +77,7 @@ interface JobDetails {
   admin_notes: string | null;
   employer_id: string;
   payment_id: string | null;
+  disable_utm_tracking: boolean;
 }
 
 export default function AdminJobReviewPage() {
@@ -420,7 +422,7 @@ export default function AdminJobReviewPage() {
                   <div className="flex items-center gap-2">
                     <Globe className="h-4 w-4 text-muted-foreground" />
                     <a
-                      href={appendUtmParams(job.application_url, job.id, job.is_featured)}
+                      href={appendUtmParams(job.application_url, job.disable_utm_tracking)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"
@@ -438,6 +440,32 @@ export default function AdminJobReviewPage() {
                     >
                       {job.application_email}
                     </a>
+                  </div>
+                )}
+                {job.application_url && (
+                  <div className="flex items-center justify-between mt-3 p-3 bg-muted/50 rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label>Disable UTM tracking</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Turn off UTM params for application URLs that break with extra query parameters
+                      </p>
+                    </div>
+                    <Switch
+                      checked={job.disable_utm_tracking}
+                      onCheckedChange={async (checked) => {
+                        const { error } = await supabase
+                          .from("jobs")
+                          .update({ disable_utm_tracking: checked })
+                          .eq("id", jobId);
+                        if (error) {
+                          console.error("Error updating UTM tracking:", error);
+                          toast.error("Failed to update UTM tracking setting");
+                          return;
+                        }
+                        setJob({ ...job, disable_utm_tracking: checked });
+                        toast.success(`UTM tracking ${checked ? "disabled" : "enabled"}`);
+                      }}
+                    />
                   </div>
                 )}
               </div>

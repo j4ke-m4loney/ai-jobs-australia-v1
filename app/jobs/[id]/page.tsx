@@ -67,6 +67,7 @@ interface Job {
   application_method: string;
   application_url: string | null;
   application_email: string | null;
+  disable_utm_tracking?: boolean;
   created_at: string;
   expires_at: string;
   is_featured: boolean;
@@ -179,7 +180,7 @@ export default function JobDetailPage() {
 
     // If external application, open link
     if (job.application_method === "external" && job.application_url) {
-      window.open(appendUtmParams(job.application_url, job.id, job.is_featured), "_blank");
+      window.open(appendUtmParams(job.application_url, job.disable_utm_tracking), "_blank");
       return;
     }
 

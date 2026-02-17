@@ -66,6 +66,7 @@ interface AdminOptions {
   autoApprove: boolean;
   isFeatured: boolean;
   featuredDays: number;
+  disableUtmTracking: boolean;
   adminNotes: string;
   postOnBehalfOf: string;
   category: string;
@@ -183,6 +184,7 @@ export default function AdminNewJobPage() {
     autoApprove: true,
     isFeatured: false,
     featuredDays: 30,
+    disableUtmTracking: false,
     adminNotes: "",
     postOnBehalfOf: "",
     category: "ai",
@@ -386,6 +388,9 @@ export default function AdminNewJobPage() {
         // Array fields (existing schema)
         highlights: formData.highlights.filter(h => h.trim() !== ""), // Remove empty highlights
 
+        // UTM tracking opt-out
+        disable_utm_tracking: adminOptions.disableUtmTracking,
+
         // Admin tracking
         posted_by_admin: true,
         admin_notes: adminOptions.adminNotes || null,
@@ -513,6 +518,21 @@ export default function AdminNewJobPage() {
                   />
                 </div>
               )}
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Disable UTM tracking</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Turn off UTM params for application URLs that break with extra query parameters
+                  </p>
+                </div>
+                <Switch
+                  checked={adminOptions.disableUtmTracking}
+                  onCheckedChange={(checked) =>
+                    setAdminOptions((prev) => ({ ...prev, disableUtmTracking: checked }))
+                  }
+                />
+              </div>
 
               <div className="space-y-2">
                 <Label>Job Category</Label>

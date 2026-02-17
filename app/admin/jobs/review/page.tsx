@@ -295,7 +295,7 @@ export default function AdminJobReviewPage() {
                             </TableCell>
                             <TableCell>
                               <a
-                                href={appendUtmParams(job.application_url, job.id)}
+                                href={appendUtmParams(job.application_url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-sm"

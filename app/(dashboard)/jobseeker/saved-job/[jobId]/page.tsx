@@ -51,6 +51,7 @@ interface Job {
   application_method?: string;
   application_url?: string | null;
   application_email?: string | null;
+  disable_utm_tracking?: boolean;
   status?: "pending" | "approved" | "rejected" | "expired";
   company_id?: string | null;
   highlights?: string[] | null;
@@ -309,7 +310,7 @@ export default function SavedJobDetailPage() {
     // Check if it's an external application
     if (job.application_method === "external") {
       if (job.application_url) {
-        window.open(appendUtmParams(job.application_url, job.id, job.is_featured), "_blank");
+        window.open(appendUtmParams(job.application_url, job.disable_utm_tracking), "_blank");
       } else if (job.application_email) {
         window.open(`mailto:${job.application_email}`);
       }

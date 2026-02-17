@@ -9,11 +9,10 @@ export function cn(...inputs: ClassValue[]) {
  * Appends UTM tracking parameters to an application URL
  * Removes any existing UTM params to prevent duplicates
  * @param url - The application URL
- * @param jobId - Optional job ID to include in tracking
- * @param isFeatured - Whether this is a featured job listing
+ * @param disableTracking - When true, returns the URL unchanged (for external systems that break with extra query params)
  */
-export function appendUtmParams(url: string, jobId?: string, isFeatured?: boolean): string {
-  if (!url) return url;
+export function appendUtmParams(url: string, disableTracking?: boolean): string {
+  if (!url || disableTracking) return url;
 
   try {
     const urlObj = new URL(url);
@@ -25,11 +24,7 @@ export function appendUtmParams(url: string, jobId?: string, isFeatured?: boolea
     // Add clean UTM parameters
     urlObj.searchParams.set('utm_source', 'ai_jobs_australia');
     urlObj.searchParams.set('utm_medium', 'job_board');
-    urlObj.searchParams.set('utm_campaign', isFeatured ? 'featured_job' : 'job_post');
-
-    if (jobId) {
-      urlObj.searchParams.set('utm_content', jobId);
-    }
+    urlObj.searchParams.set('utm_campaign', 'job_post');
 
     return urlObj.toString();
   } catch {
@@ -42,10 +37,7 @@ export function appendUtmParams(url: string, jobId?: string, isFeatured?: boolea
     const utmParams = new URLSearchParams();
     utmParams.set('utm_source', 'ai_jobs_australia');
     utmParams.set('utm_medium', 'job_board');
-    utmParams.set('utm_campaign', isFeatured ? 'featured_job' : 'job_post');
-    if (jobId) {
-      utmParams.set('utm_content', jobId);
-    }
+    utmParams.set('utm_campaign', 'job_post');
 
     const separator = cleanUrl.includes('?') ? '&' : '?';
     return `${cleanUrl}${separator}${utmParams.toString()}`;
