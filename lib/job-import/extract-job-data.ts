@@ -45,6 +45,57 @@ export interface ExtractedJobData {
 
 const MAX_TEXT_LENGTH = 15000;
 
+/** Annual AUD salary caps by job type. Internships/graduates get tighter limits. */
+const SALARY_CAPS: Record<string, { min: number; max: number }> = {
+  internship: { min: 30000, max: 90000 },
+  graduate:   { min: 40000, max: 100000 },
+  default:    { min: 20000, max: 500000 },
+};
+
+/**
+ * Clamp salary fields to realistic ranges based on job type.
+ * If any value is clamped, marks the salary as estimated so it won't display publicly.
+ */
+function sanitiseSalary(data: ExtractedJobData): void {
+  // Only applies to annual salaries
+  if (data.payPeriod !== 'year') return;
+
+  // Pick the tightest cap that matches any of the job's types
+  const applicableTypes = data.jobTypes
+    .map((t) => t.toLowerCase())
+    .filter((t) => t in SALARY_CAPS);
+  const cap = applicableTypes.length > 0
+    ? SALARY_CAPS[applicableTypes[0]]
+    : SALARY_CAPS.default;
+
+  let clamped = false;
+
+  if (data.payRangeMin !== null) {
+    const original = data.payRangeMin;
+    data.payRangeMin = Math.max(cap.min, Math.min(cap.max, data.payRangeMin));
+    if (data.payRangeMin !== original) clamped = true;
+  }
+
+  if (data.payRangeMax !== null) {
+    const original = data.payRangeMax;
+    data.payRangeMax = Math.max(cap.min, Math.min(cap.max, data.payRangeMax));
+    if (data.payRangeMax !== original) clamped = true;
+  }
+
+  if (data.payAmount !== null) {
+    const original = data.payAmount;
+    data.payAmount = Math.max(cap.min, Math.min(cap.max, data.payAmount));
+    if (data.payAmount !== original) clamped = true;
+  }
+
+  if (clamped) {
+    data.salaryIsEstimated = true;
+    console.warn(
+      `[salary-sanity] Clamped salary for "${data.jobTitle}" (types: ${data.jobTypes.join(', ')}, cap: ${cap.min}–${cap.max})`
+    );
+  }
+}
+
 /**
  * Direct fetch + cheerio extraction. Returns extracted text (may be empty/short).
  */
@@ -362,6 +413,9 @@ export async function extractJobData(
   if (!result.jobTitle) {
     throw new Error('Could not extract a job title from the content');
   }
+
+  // Clamp unrealistic salary estimates before returning
+  sanitiseSalary(result);
 
   return result;
 }

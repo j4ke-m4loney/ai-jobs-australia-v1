@@ -50,7 +50,7 @@ interface Job {
   state?: string | null;
   location_display?: string | null;
   location_type: "onsite" | "remote" | "hybrid";
-  job_type: "full-time" | "part-time" | "contract" | "internship";
+  job_type: "full-time" | "part-time" | "contract" | "internship" | "casual";
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;
@@ -1325,8 +1325,10 @@ function JobsContent() {
                           : selectedJobTypes[0] === "contract"
                             ? "Contract"
                             : selectedJobTypes[0] === "internship"
-                              ? "Casual/Temporary"
-                              : "Any job type"
+                              ? "Internship"
+                              : selectedJobTypes[0] === "casual"
+                                ? "Casual/Temporary"
+                                : "Any job type"
                       : "Any job type"}
                     <svg
                       className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 md:w-3 md:h-3"
@@ -1389,6 +1391,15 @@ function JobsContent() {
                         }}
                         className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
                       >
+                        Internship
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedJobTypes(["casual"]);
+                          setActivePill(null);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors"
+                      >
                         Casual/Temporary
                       </button>
                     </div>
@@ -1438,60 +1449,18 @@ function JobsContent() {
                           Any Salary
                         </button>
                       )}
-                      <button
-                        onClick={() => {
-                          setSelectedSalary("30000");
-                          setActivePill(null);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
-                      >
-                        $30,000+
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedSalary("50000");
-                          setActivePill(null);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
-                      >
-                        $50,000+
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedSalary("70000");
-                          setActivePill(null);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
-                      >
-                        $70,000+
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedSalary("90000");
-                          setActivePill(null);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
-                      >
-                        $90,000+
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedSalary("110000");
-                          setActivePill(null);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
-                      >
-                        $110,000+
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedSalary("140000");
-                          setActivePill(null);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
-                      >
-                        $140,000+
-                      </button>
+                      {[50000, 70000, 100000, 130000, 160000, 200000, 250000, 350000].map((salary) => (
+                        <button
+                          key={salary}
+                          onClick={() => {
+                            setSelectedSalary(String(salary));
+                            setActivePill(null);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                        >
+                          ${salary.toLocaleString()}+
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
