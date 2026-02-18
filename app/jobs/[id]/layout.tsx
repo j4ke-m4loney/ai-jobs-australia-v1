@@ -150,7 +150,9 @@ async function JobStructuredData({ id }: { id: string }) {
     description: cleanDescription,
     datePosted: job.created_at,
     validThrough: job.expires_at,
-    employmentType: getEmploymentType(job.job_type),
+    employmentType: Array.isArray(job.job_type)
+      ? job.job_type.map(getEmploymentType)
+      : getEmploymentType(job.job_type),
     hiringOrganization: {
       "@type": "Organization",
       name: job.companies.name,
