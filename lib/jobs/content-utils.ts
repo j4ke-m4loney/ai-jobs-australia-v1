@@ -26,10 +26,12 @@ function formatJobTypeSlug(type: string): string {
 }
 
 /**
- * Formats a job_type array for display, e.g. ["part-time", "internship"] → "Part Time / Internship"
+ * Formats a job_type for display. Handles both string (legacy) and string[] (current).
+ * e.g. "full-time" → "Full Time", ["part-time", "internship"] → "Part Time / Internship"
  */
-export function formatJobTypes(types: string[]): string {
-  return types.map(formatJobTypeSlug).join(" / ");
+export function formatJobTypes(types: string | string[]): string {
+  const arr = Array.isArray(types) ? types : [types];
+  return arr.map(formatJobTypeSlug).join(" / ");
 }
 
 export function getCombinedJobContent(
