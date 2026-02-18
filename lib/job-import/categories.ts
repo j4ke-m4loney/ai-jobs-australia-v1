@@ -12,6 +12,7 @@ export const JOB_CATEGORIES = [
   { value: 'machine-learning', label: 'Machine Learning' },
   { value: 'marketing', label: 'Marketing' },
   { value: 'product', label: 'Product' },
+  { value: 'quality-assurance', label: 'Quality Assurance' },
   { value: 'sales', label: 'Sales' },
   { value: 'software-development', label: 'Software Development' },
   { value: 'strategy-transformation', label: 'Strategy & Transformation' },

@@ -39,6 +39,7 @@ import { trackJobSearch } from "@/lib/analytics";
 import { categorySlugToName } from "@/lib/categories/generator";
 import { appendUtmParams } from "@/lib/utils";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { JOB_CATEGORIES } from "@/lib/job-import/categories";
 
 interface Job {
   id: string;
@@ -253,6 +254,7 @@ function JobsContent() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedState, setSelectedState] = useState("all");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
   const [selectedLocationTypes, setSelectedLocationTypes] = useState<string[]>(
@@ -303,6 +305,24 @@ function JobsContent() {
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Fetch category counts on mount (lightweight - one column only)
+  useEffect(() => {
+    const fetchCategoryCounts = async () => {
+      const { data } = await supabase
+        .from("jobs")
+        .select("category")
+        .eq("status", "approved");
+      const counts: Record<string, number> = {};
+      data?.forEach((job) => {
+        if (job.category) {
+          counts[job.category] = (counts[job.category] || 0) + 1;
+        }
+      });
+      setCategoryCounts(counts);
+    };
+    fetchCategoryCounts();
+  }, []);
 
   // Memoized filter dependencies to prevent unnecessary re-renders
   const filterDeps = useMemo(
@@ -1305,6 +1325,83 @@ function JobsContent() {
             {/* Filter Pills */}
             {showFilters && (
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-2 animate-fade-in">
+                {/* Category Filter (Multi-select) */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActivePill(activePill === "category" ? null : "category")
+                    }
+                    className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
+                      activePill === "category"
+                        ? "bg-white text-gray-900 border-gray-200"
+                        : "bg-white/10 text-white border-white/20 backdrop-blur-sm"
+                    } ${activePill && activePill !== "category" ? "opacity-60" : "opacity-100"}`}
+                  >
+                    {selectedCategories.length === 0
+                      ? "All categories"
+                      : selectedCategories.length === 1
+                        ? getCategoryDisplay(selectedCategories[0])
+                        : `${selectedCategories.length} categories`}
+                    <svg
+                      className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 pointer-events-none w-3 h-3 md:w-3 md:h-3"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                    >
+                      <path
+                        d="M3 4.5L6 7.5L9 4.5"
+                        stroke={activePill === "category" ? "#111827" : "white"}
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  {activePill === "category" && (
+                    <div className="absolute top-full left-0 mt-1 min-w-[240px] bg-white border border-gray-200 rounded-sm overflow-hidden z-50 shadow-lg max-h-80 overflow-y-auto">
+                      {selectedCategories.length > 0 && (
+                        <button
+                          onClick={() => setSelectedCategories([])}
+                          className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-gray-100 transition-colors whitespace-nowrap border-b border-gray-100"
+                        >
+                          All categories
+                        </button>
+                      )}
+                      {[...JOB_CATEGORIES]
+                        .sort((a, b) => a.label.localeCompare(b.label))
+                        .map((cat) => {
+                          const isChecked = selectedCategories.includes(cat.value);
+                          const count = categoryCounts[cat.value] || 0;
+                          return (
+                            <label
+                              key={cat.value}
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {
+                                  setSelectedCategories((prev) =>
+                                    isChecked
+                                      ? prev.filter((c) => c !== cat.value)
+                                      : [...prev, cat.value]
+                                  );
+                                }}
+                                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary"
+                              />
+                              <span className="flex-1">{cat.label}</span>
+                              {count > 0 && (
+                                <span className="text-xs text-gray-400 tabular-nums">
+                                  {count}
+                                </span>
+                              )}
+                            </label>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+
                 {/* Job Type Filter */}
                 <div className="relative">
                   <button
