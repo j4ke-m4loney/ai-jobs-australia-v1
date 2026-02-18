@@ -94,7 +94,11 @@ const PostJobLoginContent = () => {
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError(error.message);
+      setError(
+        error.message?.includes("Email not confirmed")
+          ? "Check your inbox to confirm this email"
+          : error.message
+      );
       setLoading(false);
     } else {
       // Redirect to post-job after successful signin

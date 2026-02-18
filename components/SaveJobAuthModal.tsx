@@ -70,7 +70,11 @@ export const SaveJobAuthModal = ({
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError(error.message);
+      setError(
+        error.message?.includes("Email not confirmed")
+          ? "Check your inbox to confirm this email"
+          : error.message
+      );
     } else {
       toast({
         title: "Welcome back!",
