@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, type Profile } from "@/contexts/ProfileContext";
+import { formatJobTypes } from "@/lib/jobs/content-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +28,7 @@ interface Application {
     title: string;
     location: string;
     location_type: string;
-    job_type: string;
+    job_type: string[];
     salary_min: number | null;
     salary_max: number | null;
     companies?: {
@@ -53,6 +54,7 @@ export const JobSeekerDashboardOverview = () => {
     title: string;
     company_name: string;
     location: string;
+    job_type: string[];
     salary_min?: number;
     salary_max?: number;
   }[]>([]);
@@ -379,8 +381,8 @@ export const JobSeekerDashboardOverview = () => {
                     </h4>
                     <p className="text-sm text-muted-foreground">
                       {savedJob.company_name || "Company"} •{" "}
-                      {savedJob.location} • {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {(savedJob as any).job_type || "Full-time"}
+                      {savedJob.location} •{" "}
+                      {formatJobTypes(savedJob.job_type || ["full-time"])}
                     </p>
                     {savedJob.salary_min && (
                       <p className="text-xs text-green-600 mt-1">
@@ -435,7 +437,7 @@ export const JobSeekerDashboardOverview = () => {
                     </h4>
                     <p className="text-sm text-muted-foreground">
                       {application.job.companies?.name || "Company"} •{" "}
-                      {application.job.location} • <span className="capitalize">{application.job.job_type}</span>
+                      {application.job.location} • {formatJobTypes(application.job.job_type)}
                     </p>
                   </div>
                   <div className="text-right">

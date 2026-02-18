@@ -47,6 +47,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { appendUtmParams } from "@/lib/utils";
+import { formatJobTypes } from "@/lib/jobs/content-utils";
 import { getCombinedJobContent } from "@/lib/jobs/content-utils";
 
 interface JobDetails {
@@ -60,7 +61,7 @@ interface JobDetails {
   company_logo_url: string | null;
   location: string;
   location_type: string;
-  job_type: string;
+  job_type: string[];
   category: string;
   salary_min: number | null;
   salary_max: number | null;
@@ -359,7 +360,7 @@ export default function AdminJobReviewPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-muted-foreground" />
-                <span className="capitalize">{job.job_type}</span>
+                <span>{formatJobTypes(job.job_type)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />

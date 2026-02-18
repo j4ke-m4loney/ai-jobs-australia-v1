@@ -462,8 +462,12 @@ function generateReport(
   // State
   const byState = countBy(jobs, j => deriveState(j.location, j.location_type));
 
-  // Job type
-  const byJobType = countBy(jobs, j => j.job_type || 'Not specified');
+  // Job type (job_type is an array — count each type separately)
+  const byJobType: Record<string, number> = {};
+  jobs.forEach(j => {
+    const types = Array.isArray(j.job_type) ? j.job_type : [j.job_type || 'Not specified'];
+    types.forEach(t => { byJobType[t] = (byJobType[t] || 0) + 1; });
+  });
 
   // Salary (annual, disclosed)
   const salaryJobs = jobs.filter(j =>

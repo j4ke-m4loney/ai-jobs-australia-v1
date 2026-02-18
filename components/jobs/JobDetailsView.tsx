@@ -8,7 +8,7 @@ import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { trackEvent } from "@/lib/analytics";
-import { getCombinedJobContent } from "@/lib/jobs/content-utils";
+import { getCombinedJobContent, formatJobTypes } from "@/lib/jobs/content-utils";
 import { AnalyseRoleModal } from "@/components/jobs/AnalyseRoleModal";
 
 interface Job {
@@ -21,7 +21,7 @@ interface Job {
   state?: string | null;
   location_display?: string | null;
   location_type: "onsite" | "remote" | "hybrid";
-  job_type: "full-time" | "part-time" | "contract" | "internship" | "casual";
+  job_type: string[];
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;
@@ -195,7 +195,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 <LocationTypeBadge locationType={job.location_type} />
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  <span className="capitalize">{job.job_type}</span>
+                  <span>{formatJobTypes(job.job_type)}</span>
                 </div>
               </div>
 

@@ -61,6 +61,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { formatJobTypes } from "@/lib/jobs/content-utils";
 
 interface Job {
   id: string;
@@ -68,7 +69,7 @@ interface Job {
   company_name: string;
   location: string;
   location_type: string;
-  job_type: string;
+  job_type: string[];
   salary_min: number | null;
   salary_max: number | null;
   status: string;
@@ -605,7 +606,7 @@ function AdminJobsContent() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="capitalize">{job.job_type}</Badge>
+                        <Badge variant="outline">{formatJobTypes(job.job_type)}</Badge>
                       </TableCell>
                       <TableCell>{getStatusBadge(job.status)}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">

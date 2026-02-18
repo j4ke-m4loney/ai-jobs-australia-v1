@@ -15,6 +15,23 @@
  * Before cleanup, verify no jobs have `requirements` data:
  * SELECT COUNT(*) FROM jobs WHERE requirements IS NOT NULL AND requirements != '';
  */
+/**
+ * Formats a single job type slug (e.g. "full-time") into display text ("Full Time").
+ */
+function formatJobTypeSlug(type: string): string {
+  return type
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+/**
+ * Formats a job_type array for display, e.g. ["part-time", "internship"] → "Part Time / Internship"
+ */
+export function formatJobTypes(types: string[]): string {
+  return types.map(formatJobTypeSlug).join(" / ");
+}
+
 export function getCombinedJobContent(
   description: string,
   requirements: string | null | undefined

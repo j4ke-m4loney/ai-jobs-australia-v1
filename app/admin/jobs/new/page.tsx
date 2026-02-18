@@ -362,7 +362,7 @@ export default function AdminNewJobPage() {
         // Optional fields that match schema
         requirements: formData.requirements || null,
         location_type: locationTypeMap[formData.locationType] || "onsite",
-        job_type: formData.jobTypes[0], // Use first selected type for DB compatibility
+        job_type: formData.jobTypes,
         category: adminOptions.category,
         salary_min: getSalaryMin(formData.payConfig),
         salary_max: getSalaryMax(formData.payConfig),

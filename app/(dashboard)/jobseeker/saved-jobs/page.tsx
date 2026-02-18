@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { useSavedJobs } from "@/hooks/useSavedJobs";
 import Image from "next/image";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
+import { formatJobTypes } from "@/lib/jobs/content-utils";
 
 interface SavedJob {
   id: string;
@@ -26,7 +27,7 @@ interface SavedJob {
     title: string;
     location: string;
     location_type: string;
-    job_type: string;
+    job_type: string[];
     salary_min: number | null;
     salary_max: number | null;
     salary_period?: string;
@@ -235,7 +236,7 @@ const JobSeekerSavedJobs = () => {
                         <LocationTypeBadge locationType={savedJob.job.location_type} />
                         <span className="text-[11px] md:text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          <span className="capitalize">{savedJob.job.job_type}</span>
+                          <span>{formatJobTypes(savedJob.job.job_type)}</span>
                         </span>
                       </div>
 

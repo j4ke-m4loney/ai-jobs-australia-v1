@@ -26,7 +26,7 @@ import { useSavedJobs } from "@/hooks/useSavedJobs";
 import { useSubscription } from "@/hooks/useSubscription";
 import { formatSalary } from "@/lib/salary-utils";
 import { AJAIntelligenceModal } from "@/components/jobs/AJAIntelligenceModal";
-import { getCombinedJobContent } from "@/lib/jobs/content-utils";
+import { getCombinedJobContent, formatJobTypes } from "@/lib/jobs/content-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
@@ -40,7 +40,7 @@ interface Job {
   requirements: string | null;
   location: string;
   location_type: string;
-  job_type: string;
+  job_type: string[];
   category: string;
   salary_min: number | null;
   salary_max: number | null;
@@ -309,7 +309,7 @@ export default function JobDetailPage() {
                       <LocationTypeBadge locationType={job.location_type} />
                       <div className="flex items-center gap-1">
                         <Briefcase className="w-4 h-4" />
-                        <span className="capitalize">{job.job_type}</span>
+                        <span>{formatJobTypes(job.job_type)}</span>
                       </div>
                       {job.show_salary !== false &&
                         (job.salary_min || job.salary_max) && (

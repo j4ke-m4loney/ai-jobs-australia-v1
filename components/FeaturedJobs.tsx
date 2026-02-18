@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { Sparkles } from "lucide-react";
+import { formatJobTypes } from "@/lib/jobs/content-utils";
 
 interface Company {
   id: string;
@@ -22,7 +23,7 @@ interface FeaturedJob {
   description: string;
   location: string;
   location_type: string;
-  job_type: string;
+  job_type: string[];
   salary_min?: number;
   salary_max?: number;
   salary_period?: string;
@@ -73,12 +74,6 @@ export default function FeaturedJobs() {
     router.push(`/jobs/${jobId}`);
   };
 
-  const formatJobType = (jobType: string) => {
-    return jobType
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
 
   if (loading) {
     return (
@@ -162,7 +157,7 @@ export default function FeaturedJobs() {
 
                   {/* Job Type */}
                   <div className="text-sm text-foreground mb-3">
-                    {formatJobType(job.job_type)}
+                    {formatJobTypes(job.job_type)}
                   </div>
 
                   {/* Salary */}

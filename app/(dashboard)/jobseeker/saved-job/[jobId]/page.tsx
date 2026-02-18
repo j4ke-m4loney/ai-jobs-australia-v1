@@ -37,7 +37,7 @@ interface Job {
   requirements: string | null;
   location: string;
   location_type: "onsite" | "remote" | "hybrid";
-  job_type: "full-time" | "part-time" | "contract" | "internship";
+  job_type: string[];
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;

@@ -114,11 +114,11 @@ async function getNewsletterStats(): Promise<JobStats> {
     byLocation[location] = (byLocation[location] || 0) + 1;
   });
 
-  // By job type
+  // By job type (job_type is an array — count each type separately)
   const byJobType: Record<string, number> = {};
   jobsThisWeek.forEach(j => {
-    const type = j.job_type || 'unknown';
-    byJobType[type] = (byJobType[type] || 0) + 1;
+    const types = Array.isArray(j.job_type) ? j.job_type : [j.job_type || 'unknown'];
+    types.forEach(t => { byJobType[t] = (byJobType[t] || 0) + 1; });
   });
 
   // Salary stats (from jobs with salary shown)

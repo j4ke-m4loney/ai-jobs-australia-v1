@@ -20,6 +20,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatJobTypes } from "@/lib/jobs/content-utils";
 import Header from "@/components/Header";
 
 interface SavedJob {
@@ -28,7 +29,7 @@ interface SavedJob {
   description: string;
   location: string;
   location_type: string;
-  job_type: string;
+  job_type: string[];
   category: string;
   salary_min: number | null;
   salary_max: number | null;
@@ -378,9 +379,9 @@ const SavedJobs = () => {
                         </Badge>
                         <Badge
                           variant="secondary"
-                          className="text-xs capitalize"
+                          className="text-xs"
                         >
-                          {job.job_type.replace("-", " ")}
+                          {formatJobTypes(job.job_type)}
                         </Badge>
 
                         {getDaysUntilExpiry(job.expires_at) <= 7 && (

@@ -51,7 +51,7 @@ interface Job {
   state?: string | null;
   location_display?: string | null;
   location_type: "onsite" | "remote" | "hybrid";
-  job_type: "full-time" | "part-time" | "contract" | "internship" | "casual";
+  job_type: string[];
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;
@@ -486,7 +486,7 @@ function JobsContent() {
           query = query.in("category", selectedCategories);
         }
         if (selectedJobTypes.length > 0) {
-          query = query.in("job_type", selectedJobTypes);
+          query = query.overlaps("job_type", selectedJobTypes);
         }
         if (selectedLocationTypes.length > 0) {
           query = query.in("location_type", selectedLocationTypes);

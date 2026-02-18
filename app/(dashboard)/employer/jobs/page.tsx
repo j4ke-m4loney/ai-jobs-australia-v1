@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatSalary } from "@/lib/salary-utils";
+import { formatJobTypes } from "@/lib/jobs/content-utils";
 
 interface Job {
   id: string;
@@ -40,7 +41,7 @@ interface Job {
   description: string;
   location: string;
   location_type: string;
-  job_type: string;
+  job_type: string[];
   category: string;
   salary_min: number | null;
   salary_max: number | null;
@@ -156,9 +157,6 @@ const EmployerJobs = () => {
     }
   }, [user, fetchJobsAndStats]);
 
-  const formatJobType = (jobType: string): string => {
-    return jobType.charAt(0).toUpperCase() + jobType.slice(1).replace("-", " ");
-  };
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -330,7 +328,7 @@ const EmployerJobs = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4 flex-shrink-0" />
-                          <span>{formatJobType(job.job_type)}</span>
+                          <span>{formatJobTypes(job.job_type)}</span>
                         </div>
                       </div>
                     </div>

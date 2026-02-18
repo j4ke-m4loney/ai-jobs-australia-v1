@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       requirements: jobData.requirements,
       location: jobData.locationAddress,
       location_type: mapLocationType(jobData.locationType),
-      job_type: mapJobType(jobData.jobType),
+      job_type: [mapJobType(jobData.jobType)],
       category: 'ai', // Default category, could be determined from title/description
       salary_min: getSalaryMin(jobData.payConfig),
       salary_max: getSalaryMax(jobData.payConfig),

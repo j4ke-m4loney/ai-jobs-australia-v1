@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { formatSalary } from "@/lib/salary-utils";
 import { appendUtmParams } from "@/lib/utils";
-import { getCombinedJobContent } from "@/lib/jobs/content-utils";
+import { getCombinedJobContent, formatJobTypes } from "@/lib/jobs/content-utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trackInternalApplicationStarted, trackApplicationSubmitted } from "@/lib/analytics";
@@ -39,7 +39,7 @@ interface Job {
   requirements: string | null;
   location: string;
   location_type: "onsite" | "remote" | "hybrid";
-  job_type: "full-time" | "part-time" | "contract" | "internship";
+  job_type: string[];
   category: "ai" | "ml" | "data-science" | "engineering" | "research";
   salary_min: number | null;
   salary_max: number | null;
@@ -445,7 +445,7 @@ export default function ApplyPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    <span className="capitalize">{job.job_type}</span>
+                    <span>{formatJobTypes(job.job_type)}</span>
                   </div>
                 </div>
 

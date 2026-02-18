@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
+import { formatJobTypes } from "@/lib/jobs/content-utils";
 
 interface Application {
   id: string;
@@ -31,7 +32,7 @@ interface Application {
     title: string;
     location: string;
     location_type: string;
-    job_type: string;
+    job_type: string[];
     salary_min: number | null;
     salary_max: number | null;
     salary_period?: string;
@@ -313,7 +314,7 @@ const JobSeekerApplications = () => {
                                 <LocationTypeBadge locationType={application.job.location_type} />
                                 <div className="flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
-                                  <span className="capitalize">{application.job.job_type}</span>
+                                  <span>{formatJobTypes(application.job.job_type)}</span>
                                 </div>
                                 {application.job.show_salary !== false && (
                                   <div className="flex items-center gap-1">

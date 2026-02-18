@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Image from "next/image";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
+import { formatJobTypes } from "@/lib/jobs/content-utils";
 
 interface Company {
   id: string;
@@ -38,7 +39,7 @@ interface Job {
   description: string;
   location: string;
   location_type: string;
-  job_type: string;
+  job_type: string[];
   salary_min: number | null;
   salary_max: number | null;
   is_featured: boolean;
@@ -299,8 +300,8 @@ export default function CompanyProfilePage() {
                                     Featured
                                   </Badge>
                                 )}
-                                <Badge variant="outline" className="capitalize">
-                                  {job.job_type.replace("-", " ")}
+                                <Badge variant="outline">
+                                  {formatJobTypes(job.job_type)}
                                 </Badge>
                               </div>
                               <h3 className="font-semibold text-lg mb-2">

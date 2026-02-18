@@ -58,7 +58,7 @@ import {
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getCombinedJobContent } from "@/lib/jobs/content-utils";
+import { getCombinedJobContent, formatJobTypes } from "@/lib/jobs/content-utils";
 
 interface Job {
   id: string;
@@ -71,7 +71,7 @@ interface Job {
   suburb: string | null;
   state: string | null;
   location_type: string;
-  job_type: string;
+  job_type: string[];
   category: string;
   salary_min: number | null;
   salary_max: number | null;
@@ -263,7 +263,7 @@ const JobManagementPage = () => {
       }
 
       // Initialize hours configuration for part-time jobs with sensible defaults
-      if (data.job_type === "part-time") {
+      if (data.job_type?.includes("part-time")) {
         setHoursConfig({
           showBy: "range",
           minHours: 20,
@@ -274,7 +274,7 @@ const JobManagementPage = () => {
 
       // Initialize contract configuration for contract-type jobs with sensible defaults
       const contractJobTypes = ["fixed-term", "subcontract", "casual", "temp-to-perm", "contract", "volunteer", "internship"];
-      if (contractJobTypes.includes(data.job_type)) {
+      if (data.job_type?.some((t: string) => contractJobTypes.includes(t))) {
         setContractConfig({
           length: 6,
           period: "months",
@@ -376,7 +376,7 @@ const JobManagementPage = () => {
         job.requirements !== editedJob.requirements ||
         job.location !== editedJob.location ||
         job.location_type !== editedJob.location_type ||
-        job.job_type !== editedJob.job_type ||
+        JSON.stringify(job.job_type) !== JSON.stringify(editedJob.job_type) ||
         job.category !== editedJob.category ||
         job.salary_min !== newSalaryMin ||
         job.salary_max !== newSalaryMax ||
@@ -652,7 +652,7 @@ const JobManagementPage = () => {
           if (job.requirements !== editedJob.requirements) changedFields.push('requirements');
           if (job.location !== editedJob.location) changedFields.push('location');
           if (job.location_type !== editedJob.location_type) changedFields.push('work arrangement');
-          if (job.job_type !== editedJob.job_type) changedFields.push('job type');
+          if (JSON.stringify(job.job_type) !== JSON.stringify(editedJob.job_type)) changedFields.push('job type');
           if (job.category !== editedJob.category) changedFields.push('category');
           if (job.salary_min !== newSalaryMin || job.salary_max !== newSalaryMax) changedFields.push('salary');
           if (JSON.stringify(job.highlights || []) !== JSON.stringify(highlights.filter(h => h.trim()))) changedFields.push('highlights');
@@ -795,16 +795,10 @@ const JobManagementPage = () => {
   };
 
   // Conditional logic for job types
-  const requiresHoursConfig = editedJob.job_type === "part-time";
-  const requiresContractConfig = [
-    "fixed-term",
-    "subcontract", 
-    "casual",
-    "temp-to-perm",
-    "contract",
-    "volunteer", 
-    "internship",
-  ].includes(editedJob.job_type || "");
+  const requiresHoursConfig = editedJob.job_type?.includes("part-time");
+  const requiresContractConfig = editedJob.job_type?.some((t) =>
+    ["fixed-term", "subcontract", "casual", "temp-to-perm", "contract", "volunteer", "internship"].includes(t)
+  );
 
   if (loading) {
     return (
@@ -990,8 +984,8 @@ const JobManagementPage = () => {
                     <div className="space-y-2">
                       <Label htmlFor="job_type">Job Type</Label>
                       <Select
-                        value={editedJob.job_type || "full-time"}
-                        onValueChange={(value) => setEditedJob({ ...editedJob, job_type: value })}
+                        value={editedJob.job_type?.[0] || "full-time"}
+                        onValueChange={(value) => setEditedJob({ ...editedJob, job_type: [value] })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -1531,7 +1525,7 @@ const JobManagementPage = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      <span className="capitalize">{job.job_type.replace("-", " ")}</span>
+                      <span>{formatJobTypes(job.job_type)}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <DollarSign className="w-4 h-4" />

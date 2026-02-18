@@ -13,7 +13,7 @@ interface Job {
   description: string;
   location: string;
   location_type: "onsite" | "remote" | "hybrid";
-  job_type: "full-time" | "part-time" | "contract" | "internship";
+  job_type: string[];
   salary_min: number | null;
   salary_max: number | null;
   show_salary: boolean;
