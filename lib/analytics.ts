@@ -308,6 +308,16 @@ export const trackSubscriptionCancelled = (properties: {
   }
 };
 
+// Filter Events
+export const trackCategoryFilterClicked = (properties: {
+  action: "opened" | "closed";
+  selected_categories: string[];
+}) => {
+  if (typeof window !== "undefined") {
+    posthog.capture("category_filter_clicked", properties);
+  }
+};
+
 // Generic Event Tracker
 export const trackEvent = (
   eventName: string,

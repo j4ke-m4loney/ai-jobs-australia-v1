@@ -35,7 +35,7 @@ import { AJAIntelligenceModal } from "@/components/jobs/AJAIntelligenceModal";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { trackJobSearch } from "@/lib/analytics";
+import { trackJobSearch, trackCategoryFilterClicked } from "@/lib/analytics";
 import { categorySlugToName } from "@/lib/categories/generator";
 import { appendUtmParams } from "@/lib/utils";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
@@ -1329,9 +1329,14 @@ function JobsContent() {
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() =>
-                      setActivePill(activePill === "category" ? null : "category")
-                    }
+                    onClick={() => {
+                      const newState = activePill === "category" ? null : "category";
+                      setActivePill(newState);
+                      trackCategoryFilterClicked({
+                        action: newState === "category" ? "opened" : "closed",
+                        selected_categories: selectedCategories,
+                      });
+                    }}
                     className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
                       activePill === "category"
                         ? "bg-white text-gray-900 border-gray-200"
