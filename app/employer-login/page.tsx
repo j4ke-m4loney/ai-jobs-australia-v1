@@ -181,7 +181,7 @@ const EmployerAuthContent = () => {
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   {signInError && (
-                    <Alert variant="destructive">
+                    <Alert variant="destructive" id="signin-error">
                       <AlertDescription>{signInError}</AlertDescription>
                     </Alert>
                   )}
@@ -193,6 +193,8 @@ const EmployerAuthContent = () => {
                       type="email"
                       placeholder="your@company.com"
                       required
+                      aria-invalid={!!signInError}
+                      aria-describedby={signInError ? "signin-error" : undefined}
                     />
                   </div>
                   <div className="space-y-2">
@@ -202,6 +204,8 @@ const EmployerAuthContent = () => {
                       name="password"
                       type="password"
                       required
+                      aria-invalid={!!signInError}
+                      aria-describedby={signInError ? "signin-error" : undefined}
                     />
                   </div>
                   <div className="text-right">
@@ -256,7 +260,7 @@ const EmployerAuthContent = () => {
                 ) : (
                   <form onSubmit={handleSignUp} className="space-y-4">
                     {signUpError && (
-                      <Alert variant="destructive">
+                      <Alert variant="destructive" id="signup-error">
                         <AlertDescription>
                           {signUpError.includes('already registered') ? (
                             <div>
@@ -280,6 +284,8 @@ const EmployerAuthContent = () => {
                         type="email"
                         placeholder="your@company.com"
                         required
+                        aria-invalid={!!signUpError}
+                        aria-describedby={signUpError ? "signup-error" : undefined}
                       />
                     </div>
                     <div className="space-y-2">
@@ -290,6 +296,8 @@ const EmployerAuthContent = () => {
                         type="password"
                         minLength={6}
                         required
+                        aria-invalid={!!signUpError}
+                        aria-describedby={signUpError ? "signup-error" : undefined}
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>

@@ -172,7 +172,7 @@ const JobSeekerAuthContent = () => {
   return (
     <div className="min-h-screen flex flex-col bg-muted">
       <Header />
-      <div className="flex-1 flex flex-col items-center justify-center pt-32 pb-20 gap-6">
+      <div id="main-content" className="flex-1 flex flex-col items-center justify-center pt-32 pb-20 gap-6">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -195,7 +195,7 @@ const JobSeekerAuthContent = () => {
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 {signInError && (
-                  <Alert variant="destructive">
+                  <Alert variant="destructive" id="signin-error">
                     <AlertDescription>{signInError}</AlertDescription>
                   </Alert>
                 )}
@@ -207,6 +207,8 @@ const JobSeekerAuthContent = () => {
                     type="email"
                     placeholder="your@email.com"
                     required
+                    aria-invalid={!!signInError}
+                    aria-describedby={signInError ? "signin-error" : undefined}
                   />
                 </div>
                 <div className="space-y-2">
@@ -216,6 +218,8 @@ const JobSeekerAuthContent = () => {
                     name="password"
                     type="password"
                     required
+                    aria-invalid={!!signInError}
+                    aria-describedby={signInError ? "signin-error" : undefined}
                   />
                 </div>
                 <div className="text-right">
@@ -297,7 +301,7 @@ const JobSeekerAuthContent = () => {
               ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
                   {signUpError && (
-                    <Alert variant="destructive">
+                    <Alert variant="destructive" id="signup-error">
                       <AlertDescription>
                         {signUpError.includes('already registered') ? (
                           <div>
@@ -321,6 +325,8 @@ const JobSeekerAuthContent = () => {
                       type="email"
                       placeholder="your@email.com"
                       required
+                      aria-invalid={!!signUpError}
+                      aria-describedby={signUpError ? "signup-error" : undefined}
                     />
                   </div>
                   <div className="space-y-2">
@@ -331,6 +337,8 @@ const JobSeekerAuthContent = () => {
                       type="password"
                       minLength={6}
                       required
+                      aria-invalid={!!signUpError}
+                      aria-describedby={signUpError ? "signup-error" : undefined}
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>

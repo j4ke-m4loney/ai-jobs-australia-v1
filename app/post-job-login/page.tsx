@@ -133,7 +133,7 @@ const PostJobLoginContent = () => {
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   {error && (
-                    <Alert variant="destructive">
+                    <Alert variant="destructive" id="signin-error">
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
@@ -145,6 +145,8 @@ const PostJobLoginContent = () => {
                       type="email"
                       placeholder="your@company.com"
                       required
+                      aria-invalid={!!error}
+                      aria-describedby={error ? "signin-error" : undefined}
                     />
                   </div>
                   <div className="space-y-2">
@@ -154,6 +156,8 @@ const PostJobLoginContent = () => {
                       name="password"
                       type="password"
                       required
+                      aria-invalid={!!error}
+                      aria-describedby={error ? "signin-error" : undefined}
                     />
                   </div>
                   <div className="text-right">
@@ -217,7 +221,7 @@ const PostJobLoginContent = () => {
                 ) : (
                   <form onSubmit={handleSignUp} className="space-y-4">
                     {error && (
-                      <Alert variant="destructive">
+                      <Alert variant="destructive" id="signup-error">
                         <AlertDescription>{error}</AlertDescription>
                       </Alert>
                     )}
@@ -229,6 +233,8 @@ const PostJobLoginContent = () => {
                         type="email"
                         placeholder="your@company.com"
                         required
+                        aria-invalid={!!error}
+                        aria-describedby={error ? "signup-error" : undefined}
                       />
                     </div>
                     <div className="space-y-2">
@@ -239,6 +245,8 @@ const PostJobLoginContent = () => {
                         type="password"
                         minLength={6}
                         required
+                        aria-invalid={!!error}
+                        aria-describedby={error ? "signup-error" : undefined}
                       />
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>

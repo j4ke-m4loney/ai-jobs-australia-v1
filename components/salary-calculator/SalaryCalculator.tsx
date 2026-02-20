@@ -260,14 +260,14 @@ export default function SalaryCalculator() {
       </Card>
 
       {/* Results Section */}
-      {result && (
-        <div id="results">
+      <div id="results" aria-live="polite">
+        {result && (
           <SalaryResults
             result={result.salaryResult}
             cityComparison={result.cityComparison}
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

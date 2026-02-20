@@ -114,7 +114,7 @@ export const SaveJobAuthModal = ({
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 {error && (
-                  <Alert variant="destructive">
+                  <Alert variant="destructive" id="modal-signin-error">
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
@@ -126,6 +126,8 @@ export const SaveJobAuthModal = ({
                     type="email"
                     placeholder="your@email.com"
                     required
+                    aria-invalid={!!error}
+                    aria-describedby={error ? "modal-signin-error" : undefined}
                   />
                 </div>
                 <div className="space-y-2">
@@ -135,6 +137,8 @@ export const SaveJobAuthModal = ({
                     name="password"
                     type="password"
                     required
+                    aria-invalid={!!error}
+                    aria-describedby={error ? "modal-signin-error" : undefined}
                   />
                 </div>
                 <div className="text-right">
@@ -196,7 +200,7 @@ export const SaveJobAuthModal = ({
               ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
                   {error && (
-                    <Alert variant="destructive">
+                    <Alert variant="destructive" id="modal-signup-error">
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
@@ -208,6 +212,8 @@ export const SaveJobAuthModal = ({
                       type="email"
                       placeholder="your@email.com"
                       required
+                      aria-invalid={!!error}
+                      aria-describedby={error ? "modal-signup-error" : undefined}
                     />
                   </div>
                   <div className="space-y-2">
@@ -218,6 +224,8 @@ export const SaveJobAuthModal = ({
                       type="password"
                       minLength={6}
                       required
+                      aria-invalid={!!error}
+                      aria-describedby={error ? "modal-signup-error" : undefined}
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>

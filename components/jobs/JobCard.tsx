@@ -91,12 +91,21 @@ export const JobCard: React.FC<JobCardProps> = ({
 }) => {
   return (
     <Card
-      className={`cursor-pointer transition-all duration-200 hover:shadow-lg border border-primary/50 ${
+      className={`cursor-pointer transition-all duration-200 hover:shadow-lg border border-primary/50 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
         isSelected
           ? "ring-2 ring-primary bg-primary/5 shadow-md"
           : "hover:bg-muted/30 hover:border-border"
       } ${job.is_featured ? "border-l-4 border-l-primary" : ""}`}
       onClick={(e) => onClick(job, e)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick(job);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View ${job.title} at ${job.companies?.name || "Company"}`}
     >
       <CardContent className="px-3 py-5 md:px-5">
         <div className="flex items-start justify-between">

@@ -185,7 +185,7 @@ const HomePage = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main>
+      <main id="main-content">
         {/* Hero Search Section */}
         <section className="pt-20 pb-16 bg-gradient-to-br from-background via-muted/30 to-primary-light/20">
           <div className="container mx-auto px-4">

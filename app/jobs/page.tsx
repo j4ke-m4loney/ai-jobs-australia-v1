@@ -1260,7 +1260,7 @@ function JobsContent() {
       <Header />
 
       {/* Search Header */}
-      <div className="bg-primary text-white py-8 mt-16">
+      <div id="main-content" className="bg-primary text-white py-8 mt-16">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6 text-center">
             Find Your Dream AI Job
@@ -1778,7 +1778,7 @@ function JobsContent() {
             </div>
           </div>
 
-          <div className="pb-8">
+          <div className="pb-8" aria-live="polite" aria-busy={jobsLoading}>
             {jobsLoading ? (
               <div className="p-4 space-y-4">
                 {[...Array(5)].map((_, i) => (
@@ -1899,8 +1899,17 @@ function JobsContent() {
                       {suggestedJobs.map((job) => (
                         <Card
                           key={job.id}
-                          className="cursor-pointer transition-all duration-200 hover:shadow-lg mx-2"
+                          className="cursor-pointer transition-all duration-200 hover:shadow-lg mx-2 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                           onClick={() => handleJobClick(job)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleJobClick(job);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`View ${job.title} at ${job.companies?.name || "Company"}`}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between">

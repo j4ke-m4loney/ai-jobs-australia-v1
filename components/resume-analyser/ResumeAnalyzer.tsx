@@ -94,11 +94,11 @@ export default function ResumeAnalyzer() {
       </Card>
 
       {/* Results Section */}
-      {result && (
-        <div id="results">
+      <div id="results" aria-live="polite">
+        {result && (
           <AnalysisResults result={result} />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

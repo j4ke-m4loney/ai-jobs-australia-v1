@@ -131,8 +131,17 @@ export default function FeaturedJobs() {
             .map((job) => (
               <Card
                 key={job.id}
-                className="w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] h-full transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border border-l-4 border-l-primary cursor-pointer"
+                className="w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] h-full transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border border-l-4 border-l-primary cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 onClick={() => handleJobClick(job.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleJobClick(job.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`View ${job.title} at ${job.companies?.name || "Company"}`}
               >
                 <CardContent className="p-5 flex flex-col h-full">
                   {/* Job Title */}
