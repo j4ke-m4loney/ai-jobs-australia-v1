@@ -217,6 +217,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 onSaveClick(job.id);
               }}
               className="p-2 self-start -mt-1"
+              aria-label={isJobSaved ? "Unsave job" : "Save job"}
             >
               <Heart
                 className={`w-5 h-5 ${

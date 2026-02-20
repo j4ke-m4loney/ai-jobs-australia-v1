@@ -185,6 +185,7 @@ export const JobCard: React.FC<JobCardProps> = ({
                 e.stopPropagation();
                 onSaveClick(job.id);
               }}
+              aria-label={isJobSaved ? "Unsave job" : "Save job"}
             >
               <Heart
                 className={`w-4 h-4 md:w-5 md:h-5 ${

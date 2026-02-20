@@ -1337,6 +1337,9 @@ function JobsContent() {
                         selected_categories: selectedCategories,
                       });
                     }}
+                    aria-expanded={activePill === "category"}
+                    aria-haspopup="listbox"
+                    aria-label="Filter by category"
                     className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
                       activePill === "category"
                         ? "bg-white text-gray-900 border-gray-200"
@@ -1414,6 +1417,9 @@ function JobsContent() {
                     onClick={() =>
                       setActivePill(activePill === "jobType" ? null : "jobType")
                     }
+                    aria-expanded={activePill === "jobType"}
+                    aria-haspopup="listbox"
+                    aria-label="Filter by job type"
                     className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
                       activePill === "jobType"
                         ? "bg-white text-gray-900 border-gray-200"
@@ -1516,6 +1522,9 @@ function JobsContent() {
                     onClick={() =>
                       setActivePill(activePill === "salary" ? null : "salary")
                     }
+                    aria-expanded={activePill === "salary"}
+                    aria-haspopup="listbox"
+                    aria-label="Filter by salary"
                     className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
                       activePill === "salary"
                         ? "bg-white text-gray-900 border-gray-200"
@@ -1575,6 +1584,9 @@ function JobsContent() {
                     onClick={() =>
                       setActivePill(activePill === "date" ? null : "date")
                     }
+                    aria-expanded={activePill === "date"}
+                    aria-haspopup="listbox"
+                    aria-label="Filter by date posted"
                     className={`h-8 md:h-10 pl-2 md:pl-3 pr-6 md:pr-8 py-1 md:py-2 text-xs md:text-sm border rounded-sm appearance-none relative transition-all duration-200 ${
                       activePill === "date"
                         ? "bg-white text-gray-900 border-gray-200"
@@ -1727,6 +1739,9 @@ function JobsContent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  aria-label="Sort options"
+                  aria-expanded={showSortDropdown}
+                  aria-haspopup="listbox"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                 </Button>
@@ -2011,7 +2026,7 @@ function JobsContent() {
 
             {/* Pagination Controls */}
             {totalJobs > JOBS_PER_PAGE && (
-              <div className="flex items-center justify-center gap-2 p-4">
+              <nav className="flex items-center justify-center gap-2 p-4" aria-label="Pagination">
                 {/* Previous Button */}
                 <Button
                   variant="outline"
@@ -2019,12 +2034,14 @@ function JobsContent() {
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   className="h-10 w-10"
+                  aria-label="Previous page"
                 >
                   <svg
                     className="h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -2061,6 +2078,8 @@ function JobsContent() {
                         size="icon"
                         onClick={() => setCurrentPage(pageNum)}
                         className="h-10 w-10"
+                        aria-label={`Page ${pageNum}`}
+                        aria-current={currentPage === pageNum ? "page" : undefined}
                       >
                         {pageNum}
                       </Button>
@@ -2079,12 +2098,14 @@ function JobsContent() {
                   }
                   disabled={currentPage >= Math.ceil(totalJobs / JOBS_PER_PAGE)}
                   className="h-10 w-10"
+                  aria-label="Next page"
                 >
                   <svg
                     className="h-4 w-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -2094,7 +2115,7 @@ function JobsContent() {
                     />
                   </svg>
                 </Button>
-              </div>
+              </nav>
             )}
 
             {/* Footer spacer to ensure scrolling works */}

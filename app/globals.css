@@ -177,3 +177,12 @@
     overflow-x: hidden;
   }
 }
+
+/* Ensure gradient text remains visible in Windows High Contrast Mode */
+@media (forced-colors: active) {
+  .bg-clip-text {
+    -webkit-text-fill-color: unset;
+    background: none;
+    color: LinkText;
+  }
+}

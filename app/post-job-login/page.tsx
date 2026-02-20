@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,11 @@ const PostJobLoginContent = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (error) errorRef.current?.focus();
+  }, [error]);
 
   // If user is already logged in, redirect to post-job
   useEffect(() => {
@@ -133,7 +138,7 @@ const PostJobLoginContent = () => {
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   {error && (
-                    <Alert variant="destructive" id="signin-error">
+                    <Alert variant="destructive" id="signin-error" ref={errorRef} tabIndex={-1}>
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
@@ -221,7 +226,7 @@ const PostJobLoginContent = () => {
                 ) : (
                   <form onSubmit={handleSignUp} className="space-y-4">
                     {error && (
-                      <Alert variant="destructive" id="signup-error">
+                      <Alert variant="destructive" id="signup-error" ref={errorRef} tabIndex={-1}>
                         <AlertDescription>{error}</AlertDescription>
                       </Alert>
                     )}

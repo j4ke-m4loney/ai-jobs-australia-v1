@@ -266,11 +266,14 @@ const Footer = () => {
                   href="https://x.com/aijobsaustralia"
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Follow us on X (Twitter)"
                 >
                   <Button
                     variant="ghost"
                     size="sm"
                     className="text-background/60 hover:text-background hover:bg-background/10"
+                    aria-hidden="true"
+                    tabIndex={-1}
                   >
                     <Twitter className="w-4 h-4" />
                   </Button>
@@ -279,20 +282,25 @@ const Footer = () => {
                   href="https://www.linkedin.com/company/ai-jobs-australia/?viewAsMember=true"
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Follow us on LinkedIn"
                 >
                   <Button
                     variant="ghost"
                     size="sm"
                     className="text-background/60 hover:text-background hover:bg-background/10"
+                    aria-hidden="true"
+                    tabIndex={-1}
                   >
                     <Linkedin className="w-4 h-4" />
                   </Button>
                 </Link>
-                <Link href="/contact">
+                <Link href="/contact" aria-label="Contact us">
                   <Button
                     variant="ghost"
                     size="sm"
                     className="text-background/60 hover:text-background hover:bg-background/10"
+                    aria-hidden="true"
+                    tabIndex={-1}
                   >
                     <Mail className="w-4 h-4" />
                   </Button>

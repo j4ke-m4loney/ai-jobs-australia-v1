@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,11 @@ export const SaveJobAuthModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (error) errorRef.current?.focus();
+  }, [error]);
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -114,7 +119,7 @@ export const SaveJobAuthModal = ({
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 {error && (
-                  <Alert variant="destructive" id="modal-signin-error">
+                  <Alert variant="destructive" id="modal-signin-error" ref={errorRef} tabIndex={-1}>
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
@@ -200,7 +205,7 @@ export const SaveJobAuthModal = ({
               ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
                   {error && (
-                    <Alert variant="destructive" id="modal-signup-error">
+                    <Alert variant="destructive" id="modal-signup-error" ref={errorRef} tabIndex={-1}>
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}

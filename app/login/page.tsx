@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,16 @@ const JobSeekerAuthContent = () => {
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [preventRedirect, setPreventRedirect] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
+  const signInErrorRef = useRef<HTMLDivElement>(null);
+  const signUpErrorRef = useRef<HTMLDivElement>(null);
+
+  // Focus error alerts when they appear
+  useEffect(() => {
+    if (signInError) signInErrorRef.current?.focus();
+  }, [signInError]);
+  useEffect(() => {
+    if (signUpError) signUpErrorRef.current?.focus();
+  }, [signUpError]);
 
   // If user is already logged in, redirect appropriately
   useEffect(() => {
@@ -195,7 +205,7 @@ const JobSeekerAuthContent = () => {
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 {signInError && (
-                  <Alert variant="destructive" id="signin-error">
+                  <Alert variant="destructive" id="signin-error" ref={signInErrorRef} tabIndex={-1}>
                     <AlertDescription>{signInError}</AlertDescription>
                   </Alert>
                 )}
@@ -301,7 +311,7 @@ const JobSeekerAuthContent = () => {
               ) : (
                 <form onSubmit={handleSignUp} className="space-y-4">
                   {signUpError && (
-                    <Alert variant="destructive" id="signup-error">
+                    <Alert variant="destructive" id="signup-error" ref={signUpErrorRef} tabIndex={-1}>
                       <AlertDescription>
                         {signUpError.includes('already registered') ? (
                           <div>

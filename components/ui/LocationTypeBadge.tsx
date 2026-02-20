@@ -11,7 +11,7 @@ export function LocationTypeBadge({ locationType }: LocationTypeBadgeProps) {
   }
 
   return (
-    <span className="capitalize text-[10px] md:text-xs bg-green-50 text-green-700 border border-green-200 rounded px-1.5 py-0.5 inline-flex items-center font-medium">
+    <span className="capitalize text-[10px] md:text-xs bg-green-50 text-green-800 border border-green-200 rounded px-1.5 py-0.5 inline-flex items-center font-medium">
       {locationType}
     </span>
   );
