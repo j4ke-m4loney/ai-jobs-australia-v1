@@ -291,7 +291,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
           {/* Job Description (combined with requirements for display) */}
           <div>
             <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
-              <div dangerouslySetInnerHTML={{ __html: getCombinedJobContent(job.description, job.requirements) }} />
+              <div aria-label="Job description" dangerouslySetInnerHTML={{ __html: getCombinedJobContent(job.description, job.requirements) }} />
             </div>
           </div>
 
@@ -304,7 +304,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
               {job.companies?.description && (
                 <div className="text-foreground leading-relaxed mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
-                  <div dangerouslySetInnerHTML={{ __html: job.companies.description }} />
+                  <div aria-label="Company description" dangerouslySetInnerHTML={{ __html: job.companies.description }} />
                 </div>
               )}
 

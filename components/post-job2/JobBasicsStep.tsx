@@ -364,11 +364,12 @@ export default function JobBasicsStep({
 
                 return (
                   <div key={index}>
-                    <FormLabel className="text-sm font-medium">
+                    <label htmlFor={`highlight-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       Highlight {index + 1}
-                    </FormLabel>
+                    </label>
                     <div className="space-y-1">
                       <Input
+                        id={`highlight-${index}`}
                         placeholder={
                           index === 0
                             ? "What is the main focus of the job?"
@@ -421,34 +422,38 @@ export default function JobBasicsStep({
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               render={({ field: _field /* intentionally unused */ }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">
-                    Job type * <span className="text-sm font-normal text-muted-foreground">(select up to 4)</span>
-                  </FormLabel>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
-                    {jobTypeOptions.map((option) => {
-                      const isSelected = selectedJobTypes.includes(option.value as JobTypeOption);
-                      const isDisabled = !isSelected && selectedJobTypes.length >= 4;
+                  <fieldset>
+                    <legend className="text-base font-medium">
+                      Job type * <span className="text-sm font-normal text-muted-foreground">(select up to 4)</span>
+                    </legend>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3" role="group" aria-label="Job type options">
+                      {jobTypeOptions.map((option) => {
+                        const isSelected = selectedJobTypes.includes(option.value as JobTypeOption);
+                        const isDisabled = !isSelected && selectedJobTypes.length >= 4;
 
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => handleJobTypeToggle(option.value as JobTypeOption)}
-                          disabled={isDisabled}
-                          className={cn(
-                            "p-3 border rounded-lg text-left transition-all",
-                            isSelected
-                              ? "border-primary bg-primary/5 text-primary font-medium"
-                              : "border-primary text-muted-foreground hover:border-primary",
-                            isDisabled && "opacity-50 cursor-not-allowed"
-                          )}
-                        >
-                          {option.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <FormMessage />
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            role="checkbox"
+                            aria-checked={isSelected}
+                            onClick={() => handleJobTypeToggle(option.value as JobTypeOption)}
+                            disabled={isDisabled}
+                            className={cn(
+                              "p-3 border rounded-lg text-left transition-all",
+                              isSelected
+                                ? "border-primary bg-primary/5 text-primary font-medium"
+                                : "border-primary text-muted-foreground hover:border-primary",
+                              isDisabled && "opacity-50 cursor-not-allowed"
+                            )}
+                          >
+                            {option.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <FormMessage />
+                  </fieldset>
                 </FormItem>
               )}
             />
@@ -459,7 +464,7 @@ export default function JobBasicsStep({
                 <h4 className="font-medium text-foreground">Expected hours</h4>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
+                  <label htmlFor="hours-show-by" className="text-sm font-medium text-muted-foreground">
                     Show by
                   </label>
                   <Select
@@ -471,7 +476,7 @@ export default function JobBasicsStep({
                       }))
                     }
                   >
-                    <SelectTrigger className="mt-1 border-primary">
+                    <SelectTrigger id="hours-show-by" className="mt-1 border-primary">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -485,8 +490,9 @@ export default function JobBasicsStep({
 
                 {hoursConfig.showBy === "fixed" && (
                   <div className="flex items-center gap-2">
-                    <span>Fixed at</span>
+                    <label htmlFor="hours-fixed">Fixed at</label>
                     <Input
+                      id="hours-fixed"
                       type="number"
                       placeholder="40"
                       className="w-20 border-primary"
@@ -504,8 +510,9 @@ export default function JobBasicsStep({
 
                 {hoursConfig.showBy === "range" && (
                   <div className="flex items-center gap-2">
-                    <span>From</span>
+                    <label htmlFor="hours-range-min">From</label>
                     <Input
+                      id="hours-range-min"
                       type="number"
                       placeholder="20"
                       className="w-20 border-primary"
@@ -517,8 +524,9 @@ export default function JobBasicsStep({
                         }))
                       }
                     />
-                    <span>To</span>
+                    <label htmlFor="hours-range-max">To</label>
                     <Input
+                      id="hours-range-max"
                       type="number"
                       placeholder="40"
                       className="w-20 border-primary"
@@ -536,8 +544,9 @@ export default function JobBasicsStep({
 
                 {hoursConfig.showBy === "maximum" && (
                   <div className="flex items-center gap-2">
-                    <span>No more than</span>
+                    <label htmlFor="hours-max">No more than</label>
                     <Input
+                      id="hours-max"
                       type="number"
                       placeholder="40"
                       className="w-20 border-primary"
@@ -555,8 +564,9 @@ export default function JobBasicsStep({
 
                 {hoursConfig.showBy === "minimum" && (
                   <div className="flex items-center gap-2">
-                    <span>No less than</span>
+                    <label htmlFor="hours-min">No less than</label>
                     <Input
+                      id="hours-min"
                       type="number"
                       placeholder="20"
                       className="w-20 border-primary"
@@ -583,8 +593,9 @@ export default function JobBasicsStep({
                 </h4>
 
                 <div className="flex items-center gap-2">
-                  <span>Length</span>
+                  <label htmlFor="contract-length">Length</label>
                   <Input
+                    id="contract-length"
                     type="number"
                     placeholder="6"
                     className="w-20 border-primary"
@@ -596,7 +607,7 @@ export default function JobBasicsStep({
                       }))
                     }
                   />
-                  <span>Period</span>
+                  <label htmlFor="contract-period">Period</label>
                   <Select
                     value={contractConfig.period}
                     onValueChange={(value) =>
@@ -606,7 +617,7 @@ export default function JobBasicsStep({
                       }))
                     }
                   >
-                    <SelectTrigger className="w-32 border-primary">
+                    <SelectTrigger id="contract-period" className="w-32 border-primary">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -640,7 +651,7 @@ export default function JobBasicsStep({
               {/* Always show salary input fields */}
               <div className="bg-muted/50 p-4 rounded-lg space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
+                  <label htmlFor="pay-type" className="text-sm font-medium text-muted-foreground">
                     Show pay as
                   </label>
                   <Select
@@ -649,7 +660,7 @@ export default function JobBasicsStep({
                       handlePayConfigChange("payType", value)
                     }
                   >
-                    <SelectTrigger className="mt-1 border-primary">
+                    <SelectTrigger id="pay-type" className="mt-1 border-primary">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -664,10 +675,11 @@ export default function JobBasicsStep({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {payConfig.payType === "fixed" && (
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">
+                      <label htmlFor="pay-amount" className="text-sm font-medium text-muted-foreground">
                         Amount
                       </label>
                       <Input
+                        id="pay-amount"
                         type="number"
                         placeholder="80000"
                         value={payConfig.payAmount || ""}
@@ -685,10 +697,11 @@ export default function JobBasicsStep({
                   {payConfig.payType === "range" && (
                     <>
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground">
+                        <label htmlFor="pay-range-min" className="text-sm font-medium text-muted-foreground">
                           Minimum
                         </label>
                         <Input
+                          id="pay-range-min"
                           type="number"
                           placeholder="70000"
                           value={payConfig.payRangeMin || ""}
@@ -702,10 +715,11 @@ export default function JobBasicsStep({
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-muted-foreground">
+                        <label htmlFor="pay-range-max" className="text-sm font-medium text-muted-foreground">
                           Maximum
                         </label>
                         <Input
+                          id="pay-range-max"
                           type="number"
                           placeholder="100000"
                           value={payConfig.payRangeMax || ""}
@@ -723,10 +737,11 @@ export default function JobBasicsStep({
 
                   {payConfig.payType === "maximum" && (
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">
+                      <label htmlFor="pay-max-amount" className="text-sm font-medium text-muted-foreground">
                         Maximum
                       </label>
                       <Input
+                        id="pay-max-amount"
                         type="number"
                         placeholder="100000"
                         value={payConfig.payRangeMax || ""}
@@ -743,10 +758,11 @@ export default function JobBasicsStep({
 
                   {payConfig.payType === "minimum" && (
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground">
+                      <label htmlFor="pay-min-amount" className="text-sm font-medium text-muted-foreground">
                         Minimum
                       </label>
                       <Input
+                        id="pay-min-amount"
                         type="number"
                         placeholder="70000"
                         value={payConfig.payRangeMin || ""}
@@ -762,7 +778,7 @@ export default function JobBasicsStep({
                   )}
 
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">
+                    <label htmlFor="pay-period" className="text-sm font-medium text-muted-foreground">
                       Per
                     </label>
                     <Select
@@ -771,7 +787,7 @@ export default function JobBasicsStep({
                         handlePayConfigChange("payPeriod", value)
                       }
                     >
-                      <SelectTrigger className="mt-1 border-primary">
+                      <SelectTrigger id="pay-period" className="mt-1 border-primary">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

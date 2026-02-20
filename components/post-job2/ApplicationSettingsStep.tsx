@@ -120,19 +120,21 @@ export default function ApplicationSettingsStep({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-6">
           {/* Application Method */}
-          <div className="space-y-4">
-            <FormLabel className="flex items-center gap-2 text-base font-medium">
+          <fieldset className="space-y-4">
+            <legend className="flex items-center gap-2 text-base font-medium">
               <Settings className="w-5 h-5" />
               How should candidates apply? *
-            </FormLabel>
+            </legend>
 
-            <div className="grid gap-3">
+            <div className="grid gap-3" role="radiogroup" aria-label="Application method">
               {applicationMethods.map((method) => {
                 const Icon = method.icon;
                 return (
                   <button
                     key={method.value}
                     type="button"
+                    role="radio"
+                    aria-checked={watchedMethod === method.value}
                     onClick={() =>
                       form.setValue("applicationMethod", method.value as "email" | "external" | "indeed")
                     }
@@ -149,7 +151,7 @@ export default function ApplicationSettingsStep({
                 );
               })}
             </div>
-          </div>
+          </fieldset>
 
           {/* Application URL for external method */}
           {watchedMethod === "external" && (

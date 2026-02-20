@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -14,6 +14,35 @@ const Header = () => {
   const { profile } = useProfile();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Focus trap for mobile menu
+  const handleMenuKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setMobileMenuOpen(false);
+      menuButtonRef.current?.focus();
+      return;
+    }
+
+    if (e.key !== "Tab" || !mobileMenuRef.current) return;
+
+    const focusableElements = mobileMenuRef.current.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (e.shiftKey && document.activeElement === firstElement) {
+      e.preventDefault();
+      lastElement.focus();
+    } else if (!e.shiftKey && document.activeElement === lastElement) {
+      e.preventDefault();
+      firstElement.focus();
+    }
+  }, []);
 
   // Helper function to get user type with profiles-first approach
   const getUserType = () => {
@@ -33,6 +62,14 @@ const Header = () => {
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
+
+  // Focus first menu item when menu opens
+  useEffect(() => {
+    if (mobileMenuOpen && mobileMenuRef.current) {
+      const firstFocusable = mobileMenuRef.current.querySelector<HTMLElement>('a[href], button');
+      firstFocusable?.focus();
+    }
+  }, [mobileMenuOpen]);
 
   // Close mobile menu on screen resize to desktop
   useEffect(() => {
@@ -138,9 +175,11 @@ const Header = () => {
 
         {/* Mobile Hamburger Button */}
         <button
+          ref={menuButtonRef}
           onClick={toggleMobileMenu}
           className="block lg:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
-          aria-label="Toggle mobile menu"
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? (
             <X className="w-6 h-6" />
@@ -162,7 +201,13 @@ const Header = () => {
 
     {/* Mobile Menu */}
     {mobileMenuOpen && (
-      <div className="fixed top-16 left-0 right-0 lg:hidden bg-white border-t border-border/50 z-50">
+      <div
+        ref={mobileMenuRef}
+        role="dialog"
+        aria-label="Mobile navigation menu"
+        onKeyDown={handleMenuKeyDown}
+        className="fixed top-16 left-0 right-0 lg:hidden bg-white border-t border-border/50 z-50"
+      >
           <div className="container mx-auto px-4 py-4 space-y-4">
             {/* Mobile Navigation Links */}
             <Link

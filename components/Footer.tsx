@@ -49,7 +49,7 @@ const Footer = () => {
             </div>
 
             {/* Job Categories */}
-            <div>
+            <nav aria-label="AI Job Categories">
               <h4 className="font-semibold mb-4">AI Job Categories</h4>
               <ul className="space-y-2 text-background/80">
                 <li>
@@ -101,10 +101,10 @@ const Footer = () => {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </nav>
 
             {/* Locations */}
-            <div>
+            <nav aria-label="Browse by Location">
               <h4 className="font-semibold mb-4">Browse by Location</h4>
               <ul className="space-y-2 text-background/80">
                 <li>
@@ -156,10 +156,10 @@ const Footer = () => {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </nav>
 
             {/* Quick Links */}
-            <div>
+            <nav aria-label="Platform">
               <h4 className="font-semibold mb-4">Platform</h4>
               <ul className="space-y-2 text-background/80">
                 <li>
@@ -219,10 +219,10 @@ const Footer = () => {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </nav>
 
             {/* Legal */}
-            <div>
+            <nav aria-label="Legal">
               <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-background/80">
                 <li>
@@ -250,7 +250,7 @@ const Footer = () => {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </nav>
           </div>
 
           {/* Bottom Bar */}
