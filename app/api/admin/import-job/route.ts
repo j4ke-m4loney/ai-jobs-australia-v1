@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { fetchAndExtractText, extractJobData } from '@/lib/job-import/extract-job-data';
 import { matchCompany } from '@/lib/job-import/match-company';
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {

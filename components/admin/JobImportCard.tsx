@@ -84,7 +84,18 @@ export function JobImportCard({ onImport, companies }: JobImportCardProps) {
         body: JSON.stringify(body),
       });
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        // Non-JSON response (e.g. Vercel 504 gateway timeout)
+        if (response.status === 504) {
+          setError("The request timed out. The job text may be too long — try trimming it and retrying.");
+        } else {
+          setError(`Server error (${response.status}). Please try again.`);
+        }
+        return;
+      }
 
       if (!response.ok) {
         setError(result.error || "Import failed.");
