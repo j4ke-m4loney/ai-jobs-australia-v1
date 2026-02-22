@@ -83,7 +83,7 @@ export default function RootLayout({
               "@type": "WebSite",
               "@id": "https://www.aijobsaustralia.com.au/#website",
               name: "AI Jobs Australia",
-              alternateName: "AI Jobs Australia",
+              alternateName: "AJA",
               url: "https://www.aijobsaustralia.com.au",
               description:
                 "The #1 platform for AI related roles in Australia (AI, Machine Learning, Data Science, AI Analyst, AI Marketing etc.)",
@@ -112,7 +112,7 @@ export default function RootLayout({
               "@type": "Organization",
               "@id": "https://www.aijobsaustralia.com.au/#organization",
               name: "AI Jobs Australia",
-              alternateName: "AIJobsAustralia.com.au",
+              alternateName: "AJA",
               url: "https://www.aijobsaustralia.com.au",
               logo: {
                 "@type": "ImageObject",
