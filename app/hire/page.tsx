@@ -19,6 +19,10 @@ import {
   Home,
   Search,
   Mail,
+  Target,
+  ShieldCheck,
+  DollarSign,
+  Quote,
 } from "lucide-react";
 import {
   Accordion,
@@ -80,7 +84,7 @@ const faqs = [
   {
     question: "Can I get a refund if I don't receive any applications?",
     answer:
-      "We don't offer refunds as job visibility begins immediately upon posting. However, if you're not seeing results, contact us at hello@aijobsaustralia.com.au and we'll work with you to improve your listing.",
+      "We don't offer refunds as job visibility begins immediately upon posting. However, if you're not seeing the results you expected, we'll work with you to optimise your listing at no extra cost — just email us at hello@aijobsaustralia.com.au.",
   },
   {
     question: "Do you offer bulk or enterprise pricing?",
@@ -162,7 +166,49 @@ export default function HirePage() {
         </div>
       </section>
 
-      {/* 2. PostHog Live Analytics Embeds */}
+      {/* 2. "Why AJA" Trust Strip */}
+      <section className="py-10 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Target className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Niche Audience</h3>
+                <p className="text-sm text-muted-foreground">
+                  100% AI &amp; ML focused — no generic job board noise
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Risk-Free</h3>
+                <p className="text-sm text-muted-foreground">
+                  Not seeing results? We&apos;ll optimise your listing at no
+                  extra cost
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Affordable</h3>
+                <p className="text-sm text-muted-foreground">
+                  From $99 — a fraction of other major job boards
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. PostHog Live Analytics Embeds */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-10">
@@ -188,6 +234,19 @@ export default function HirePage() {
               height={400}
             />
           </div>
+        </div>
+      </section>
+
+      {/* Employer Testimonial */}
+      <section className="py-16 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-3xl text-center">
+          <Quote className="h-10 w-10 text-primary/30 mx-auto mb-6" />
+          <blockquote className="text-xl md:text-2xl font-medium italic mb-6">
+            &ldquo;The benefit was we received highly relevant applicants within
+            2 weeks. I think the niche focus meant we weren&apos;t sifting
+            through hundreds of unqualified resumes.&rdquo;
+          </blockquote>
+          <p className="font-semibold">— Manager, Sydney AI Startup</p>
         </div>
       </section>
 
@@ -426,7 +485,11 @@ export default function HirePage() {
           {/* Part B — Where Featured Jobs Appear */}
           <div className="max-w-4xl mx-auto">
             <h3 className="text-xl font-semibold text-center mb-6">
-              Where <span className="underline decoration-wavy decoration-primary decoration-2 underline-offset-4">Featured</span> Jobs Appear
+              Where{" "}
+              <span className="underline decoration-wavy decoration-primary decoration-2 underline-offset-4">
+                Featured
+              </span>{" "}
+              Jobs Appear
             </h3>
             <div className="grid md:grid-cols-3 gap-6">
               <Card className="text-center">
@@ -459,6 +522,12 @@ export default function HirePage() {
               </Card>
             </div>
           </div>
+
+          {/* SEEK/LinkedIn comparison */}
+          <p className="text-center text-muted-foreground text-sm mt-10 max-w-2xl mx-auto">
+            Compared to other broad job boards, AI Jobs Australia gives you
+            direct access to a niche AI audience — at a fraction of the cost.
+          </p>
         </div>
       </section>
 
@@ -489,7 +558,7 @@ export default function HirePage() {
         </div>
       </section>
 
-      {/* 8. FAQ Section */}
+      {/* 9. FAQ Section */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-12">
