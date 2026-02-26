@@ -14,7 +14,10 @@ export const getStripe = () => {
   return stripePromise;
 };
 
-// Pricing configuration that matches our database
+// Display-only pricing for job posting tiers.
+// At checkout time, the actual Stripe Price IDs come from env vars
+// (STRIPE_STANDARD_JOB_PRICE_ID, STRIPE_FEATURED_JOB_PRICE_ID).
+// The annual/enterprise tier is "Contact Us" and lives in PRICING_TIERS in types/job2.ts.
 export const PRICING_CONFIG = {
   standard: {
     name: 'Standard',
@@ -43,22 +46,6 @@ export const PRICING_CONFIG = {
       'Priority support',
       'Advanced analytics',
       'Social media promotion',
-    ],
-  },
-  annual: {
-    name: 'Annual Plan',
-    price: 99900, // $999.00 in cents
-    priceDisplay: '$999',
-    description: 'Unlimited postings for 1 year',
-    isFeatured: true,
-    isSubscription: true,
-    features: [
-      'Unlimited job postings',
-      'All featured benefits',
-      'Dedicated account manager',
-      'Custom branding',
-      'API access',
-      'Priority placement',
     ],
   },
 } as const;

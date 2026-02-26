@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { emailService } from '@/lib/email/postmark-service';
+import { getSiteUrl } from '@/lib/utils/get-site-url';
 import { requestJobIndexing, isIndexingConfigured } from '@/lib/google-indexing';
 import { triggerJobAnalysis } from '@/lib/ai-focus/trigger-analysis';
 
@@ -140,6 +142,45 @@ export async function POST(
       jobId,
       newStatus,
     });
+
+    // Send email notification to employer
+    if (newStatus === 'approved') {
+      try {
+        const [userResult, profileResult] = await Promise.all([
+          supabaseAdmin.auth.admin.getUserById(job.employer_id),
+          supabaseAdmin
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('user_id', job.employer_id)
+            .single(),
+        ]);
+
+        const employerEmail = userResult.data?.user?.email;
+        const profileData = profileResult.data;
+
+        if (employerEmail) {
+          const employerName = profileData?.first_name && profileData?.last_name
+            ? `${profileData.first_name} ${profileData.last_name}`.trim()
+            : profileData?.first_name || profileData?.last_name || 'Employer';
+
+          await emailService.sendJobStatusUpdate({
+            employerName,
+            employerEmail,
+            jobTitle: job.title,
+            jobId: job.id,
+            status: 'approved',
+            dashboardUrl: `${getSiteUrl()}/employer/jobs/${job.id}`,
+          });
+
+          console.log('[AdminJobReview] Approval email sent to:', employerEmail);
+        } else {
+          console.log('[AdminJobReview] No employer email found for:', job.employer_id);
+        }
+      } catch (emailError) {
+        console.error('[AdminJobReview] Failed to send approval email:', emailError);
+        // Don't fail the request if email fails
+      }
+    }
 
     // Request Google indexing for approved jobs
     if (newStatus === 'approved' && isIndexingConfigured()) {

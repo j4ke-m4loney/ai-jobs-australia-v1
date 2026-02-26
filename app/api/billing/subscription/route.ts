@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { stripe } from '@/lib/stripe';
+import { mapStripeSubscriptionStatus, getStripeSubscriptionPeriod } from '@/lib/stripe-helpers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,23 +50,22 @@ export async function GET(request: NextRequest) {
 
         // Update local subscription with Stripe data if needed
         if (stripeSubscription.status !== subscription.status) {
+          const mappedStatus = mapStripeSubscriptionStatus(stripeSubscription.status);
+          const period = getStripeSubscriptionPeriod(stripeSubscription);
+
           await supabaseAdmin
             .from('subscriptions')
             .update({
-              status: stripeSubscription.status as 'active' | 'inactive' | 'canceled' | 'past_due' | 'unpaid' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'paused',
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              current_period_start: new Date((stripeSubscription as any).current_period_start * 1000).toISOString(),
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              current_period_end: new Date((stripeSubscription as any).current_period_end * 1000).toISOString(),
+              status: mappedStatus,
+              current_period_start: period.current_period_start,
+              current_period_end: period.current_period_end,
             })
             .eq('id', subscription.id);
 
           // Return updated data
-          subscription.status = stripeSubscription.status as 'active' | 'inactive' | 'canceled' | 'past_due' | 'unpaid' | 'trialing' | 'incomplete' | 'incomplete_expired' | 'paused';
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          subscription.current_period_start = new Date((stripeSubscription as any).current_period_start * 1000).toISOString();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          subscription.current_period_end = new Date((stripeSubscription as any).current_period_end * 1000).toISOString();
+          subscription.status = mappedStatus;
+          subscription.current_period_start = period.current_period_start;
+          subscription.current_period_end = period.current_period_end;
         }
       } catch (stripeError) {
         console.error('Error syncing with Stripe:', stripeError);

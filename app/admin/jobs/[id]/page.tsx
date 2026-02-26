@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { updateJobStatus, markJobAsDuplicate, logAdminAction } from "@/lib/admin/auth";
+import { markJobAsDuplicate, logAdminAction } from "@/lib/admin/auth";
 import {
   Card,
   CardContent,
@@ -121,14 +121,32 @@ export default function AdminJobReviewPage() {
 
   const handleApprove = async () => {
     setIsUpdating(true);
-    const result = await updateJobStatus([jobId], "approved");
-    if (result.success) {
-      toast.success("Job approved successfully");
-      await logAdminAction("approve_job", "job", jobId, { notes: adminNotes });
-      await saveAdminNotes();
-      router.push("/admin/jobs");
-    } else {
-      toast.error(result.error || "Failed to approve job");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const response = await fetch(`/api/admin/jobs/${jobId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "approved", adminId: user.id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to approve job");
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        toast.success("Job approved successfully");
+        await logAdminAction("approve_job", "job", jobId, { notes: adminNotes });
+        await saveAdminNotes();
+        router.push("/admin/jobs");
+      } else {
+        toast.error("Failed to approve job");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to approve job");
     }
     setIsUpdating(false);
   };
@@ -140,18 +158,36 @@ export default function AdminJobReviewPage() {
     }
 
     setIsUpdating(true);
-    const result = await updateJobStatus([jobId], "rejected", rejectionReason);
-    if (result.success) {
-      toast.success("Job rejected successfully");
-      await logAdminAction("reject_job", "job", jobId, {
-        reason: rejectionReason,
-        notes: adminNotes
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      const response = await fetch(`/api/admin/jobs/${jobId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "rejected", rejectionReason, adminId: user.id }),
       });
-      await saveAdminNotes();
-      setRejectDialogOpen(false);
-      router.push("/admin/jobs");
-    } else {
-      toast.error(result.error || "Failed to reject job");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to reject job");
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        toast.success("Job rejected successfully");
+        await logAdminAction("reject_job", "job", jobId, {
+          reason: rejectionReason,
+          notes: adminNotes
+        });
+        await saveAdminNotes();
+        setRejectDialogOpen(false);
+        router.push("/admin/jobs");
+      } else {
+        toast.error("Failed to reject job");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to reject job");
     }
     setIsUpdating(false);
   };
