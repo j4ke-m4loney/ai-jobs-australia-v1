@@ -133,6 +133,7 @@ export async function GET(request: NextRequest) {
           console.log(
             `[JobCleanup] Marking as expired: ${job.id} - ${job.title}`
           );
+
         } else if (result.decision === "needs_review") {
           updateData.status = "needs_review";
           updateData.check_failure_reason =

@@ -7,20 +7,20 @@
  * Or for all jobs: npx tsx scripts/rerun-all-intelligence.ts all
  */
 
-import { createClient } from '@supabase/supabase-js';
-import Anthropic from '@anthropic-ai/sdk';
-import * as dotenv from 'dotenv';
-import { truncateAtWordBoundary } from './utils/truncate';
+import { createClient } from "@supabase/supabase-js";
+import Anthropic from "@anthropic-ai/sdk";
+import * as dotenv from "dotenv";
+import { truncateAtWordBoundary } from "./utils/truncate";
 
 // Load environment variables
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: ".env.local" });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const anthropicApiKey = process.env.ANTHROPIC_API_KEY!;
 
 if (!supabaseUrl || !supabaseServiceKey || !anthropicApiKey) {
-  console.error('Missing required environment variables');
+  console.error("Missing required environment variables");
   process.exit(1);
 }
 
@@ -32,37 +32,37 @@ const anthropic = new Anthropic({ apiKey: anthropicApiKey });
 interface RoleSummaryAnalysis {
   one_liner: string;
   plain_english: string;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 interface AIFocusAnalysis {
   percentage: number;
   rationale: string;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 interface InterviewDifficultyAnalysis {
-  level: 'easy' | 'medium' | 'hard' | 'very_hard';
+  level: "easy" | "medium" | "hard" | "very_hard";
   rationale: string;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 interface WhoForAnalysis {
   bullets: string[];
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 interface AutonomyVsProcessAnalysis {
-  autonomy_level: 'low' | 'medium' | 'high';
-  process_load: 'low' | 'medium' | 'high';
+  autonomy_level: "low" | "medium" | "high";
+  process_load: "low" | "medium" | "high";
   rationale: string;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 interface PromotionLikelihoodAnalysis {
-  signal: 'low' | 'medium' | 'high';
+  signal: "low" | "medium" | "high";
   rationale: string;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 // ============ SYSTEM PROMPTS ============
@@ -271,19 +271,36 @@ Use Australian/British English spelling.`;
 // ============ TRACKING ============
 
 // Track all truncation errors so we can report at the end
-const truncationErrors: { jobTitle: string; field: string; length: number; limit: number }[] = [];
+const truncationErrors: {
+  jobTitle: string;
+  field: string;
+  length: number;
+  limit: number;
+}[] = [];
 
 // ============ HELPER FUNCTIONS ============
 
 /**
  * Validates text length - logs ERROR if exceeded (should not happen with good prompts)
  */
-function validateAndTruncate(text: string, maxLength: number, fieldName: string, jobTitle: string): string {
-  if (!text) return '';
+function validateAndTruncate(
+  text: string,
+  maxLength: number,
+  fieldName: string,
+  jobTitle: string,
+): string {
+  if (!text) return "";
 
   if (text.length > maxLength) {
-    console.error(`    ❌ ERROR: ${fieldName} exceeded limit (${text.length}/${maxLength} chars)`);
-    truncationErrors.push({ jobTitle, field: fieldName, length: text.length, limit: maxLength });
+    console.error(
+      `    ❌ ERROR: ${fieldName} exceeded limit (${text.length}/${maxLength} chars)`,
+    );
+    truncationErrors.push({
+      jobTitle,
+      field: fieldName,
+      length: text.length,
+      limit: maxLength,
+    });
     return truncateAtWordBoundary(text, maxLength);
   }
 
@@ -293,30 +310,45 @@ function validateAndTruncate(text: string, maxLength: number, fieldName: string,
 /**
  * Validates array items - logs ERROR if any exceeded (should not happen with good prompts)
  */
-function validateAndTruncateArray(items: string[], maxLength: number, fieldName: string, jobTitle: string): string[] {
+function validateAndTruncateArray(
+  items: string[],
+  maxLength: number,
+  fieldName: string,
+  jobTitle: string,
+): string[] {
   if (!items || !Array.isArray(items)) return [];
 
-  return items.slice(0, 3).map((item, index) => {
-    if (item && item.length > maxLength) {
-      console.error(`    ❌ ERROR: ${fieldName}[${index}] exceeded limit (${item.length}/${maxLength} chars)`);
-      truncationErrors.push({ jobTitle, field: `${fieldName}[${index}]`, length: item.length, limit: maxLength });
-      return truncateAtWordBoundary(item, maxLength);
-    }
-    return item || '';
-  }).filter(item => item.length > 0);
+  return items
+    .slice(0, 3)
+    .map((item, index) => {
+      if (item && item.length > maxLength) {
+        console.error(
+          `    ❌ ERROR: ${fieldName}[${index}] exceeded limit (${item.length}/${maxLength} chars)`,
+        );
+        truncationErrors.push({
+          jobTitle,
+          field: `${fieldName}[${index}]`,
+          length: item.length,
+          limit: maxLength,
+        });
+        return truncateAtWordBoundary(item, maxLength);
+      }
+      return item || "";
+    })
+    .filter((item) => item.length > 0);
 }
 
 function cleanAndParseJSON<T>(text: string): T {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error('No JSON found in response');
+    throw new Error("No JSON found in response");
   }
 
   let jsonStr = jsonMatch[0];
   jsonStr = jsonStr
-    .replace(/[\r\n]+/g, ' ')
-    .replace(/,\s*}/g, '}')
-    .replace(/,\s*]/g, ']');
+    .replace(/[\r\n]+/g, " ")
+    .replace(/,\s*}/g, "}")
+    .replace(/,\s*]/g, "]");
 
   // Try parsing as-is first
   try {
@@ -324,8 +356,8 @@ function cleanAndParseJSON<T>(text: string): T {
   } catch {
     // Strip control characters and curly/smart quotes, then retry
     const sanitised = jsonStr
-      .replace(/[\x00-\x1F\x7F]/g, ' ')
-      .replace(/\t/g, ' ')
+      .replace(/[\x00-\x1F\x7F]/g, " ")
+      .replace(/\t/g, " ")
       .replace(/[\u201C\u201D]/g, '\\"')
       .replace(/[\u2018\u2019]/g, "'");
 
@@ -337,57 +369,61 @@ async function analyseWithRetry<T>(
   jobContent: string,
   systemPrompt: string,
   userPrompt: string,
-  retries = 2
+  retries = 2,
 ): Promise<T> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-haiku-20240307',
+        model: "claude-3-haiku-20240307",
         max_tokens: 1024,
-        messages: [{ role: 'user', content: `${userPrompt}\n\n${jobContent}` }],
+        messages: [{ role: "user", content: `${userPrompt}\n\n${jobContent}` }],
         system: systemPrompt,
       });
 
       const textContent = response.content.find(
-        (block): block is Anthropic.TextBlock => block.type === 'text'
+        (block): block is Anthropic.TextBlock => block.type === "text",
       );
 
       if (!textContent) {
-        throw new Error('No text content in response');
+        throw new Error("No text content in response");
       }
 
       return cleanAndParseJSON<T>(textContent.text);
     } catch (err) {
       if (attempt < retries) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } else {
         throw err;
       }
     }
   }
-  throw new Error('All retries failed');
+  throw new Error("All retries failed");
 }
 
 // ============ MAIN FUNCTION ============
 
 async function rerunAllIntelligence(limit: number = 10) {
-  console.log(`🚀 Re-running ALL AJA Intelligence analyses (limit: ${limit})...\n`);
+  console.log(
+    `🚀 Re-running ALL AJA Intelligence analyses (limit: ${limit})...\n`,
+  );
 
   // Fetch approved jobs that are MISSING any intelligence data
   const { data: jobs, error } = await supabase
-    .from('jobs')
-    .select('id, title, description, requirements')
-    .eq('status', 'approved')
-    .or('role_summary_one_liner.is.null,ai_focus_percentage.is.null,interview_difficulty_level.is.null,who_role_is_for_bullets.is.null,who_role_is_not_for_bullets.is.null,autonomy_level.is.null,promotion_likelihood_signal.is.null')
+    .from("jobs")
+    .select("id, title, description, requirements")
+    .eq("status", "approved")
+    .or(
+      "role_summary_one_liner.is.null,ai_focus_percentage.is.null,interview_difficulty_level.is.null,who_role_is_for_bullets.is.null,who_role_is_not_for_bullets.is.null,autonomy_level.is.null,promotion_likelihood_signal.is.null",
+    )
     .limit(limit);
 
   if (error) {
-    console.error('Error fetching jobs:', error);
+    console.error("Error fetching jobs:", error);
     return;
   }
 
   if (!jobs || jobs.length === 0) {
-    console.log('✅ No jobs found to re-analyse');
+    console.log("✅ No jobs found to re-analyse");
     return;
   }
 
@@ -406,54 +442,64 @@ Job Title: ${job.title}
 Job Description:
 ${job.description.slice(0, 3000)}
 
-${job.requirements ? `Requirements:\n${job.requirements.slice(0, 1000)}` : ''}
+${job.requirements ? `Requirements:\n${job.requirements.slice(0, 1000)}` : ""}
 `.trim();
 
       // Run all analyses in parallel - use allSettled so partial results are saved
-      const analysisNames = ['roleSummary', 'aiFocus', 'interviewDifficulty', 'whoFor', 'whoNotFor', 'autonomyVsProcess', 'promotionLikelihood'];
+      const analysisNames = [
+        "roleSummary",
+        "aiFocus",
+        "interviewDifficulty",
+        "whoFor",
+        "whoNotFor",
+        "autonomyVsProcess",
+        "promotionLikelihood",
+      ];
       const results = await Promise.allSettled([
         analyseWithRetry<RoleSummaryAnalysis>(
           jobContent,
           ROLE_SUMMARY_PROMPT,
-          'Summarise this job posting in plain English. Return ONLY valid JSON:'
+          "Summarise this job posting in plain English. Return ONLY valid JSON:",
         ),
         analyseWithRetry<AIFocusAnalysis>(
           jobContent,
           AI_FOCUS_PROMPT,
-          'Analyse this job posting and determine its AI/ML focus level. Return ONLY valid JSON:'
+          "Analyse this job posting and determine its AI/ML focus level. Return ONLY valid JSON:",
         ),
         analyseWithRetry<InterviewDifficultyAnalysis>(
           jobContent,
           INTERVIEW_DIFFICULTY_PROMPT,
-          'Analyse this job posting and predict the interview difficulty level. Return ONLY valid JSON:'
+          "Analyse this job posting and predict the interview difficulty level. Return ONLY valid JSON:",
         ),
         analyseWithRetry<WhoForAnalysis>(
           jobContent,
           WHO_FOR_PROMPT,
-          'Analyse this job posting and identify who would be ideal for this role. Return ONLY valid JSON:'
+          "Analyse this job posting and identify who would be ideal for this role. Return ONLY valid JSON:",
         ),
         analyseWithRetry<WhoForAnalysis>(
           jobContent,
           WHO_NOT_FOR_PROMPT,
-          'Analyse this job posting and identify who should NOT apply for this role. Return ONLY valid JSON:'
+          "Analyse this job posting and identify who should NOT apply for this role. Return ONLY valid JSON:",
         ),
         analyseWithRetry<AutonomyVsProcessAnalysis>(
           jobContent,
           AUTONOMY_VS_PROCESS_PROMPT,
-          'Analyse this job posting to determine the autonomy vs process balance. Return ONLY valid JSON:'
+          "Analyse this job posting to determine the autonomy vs process balance. Return ONLY valid JSON:",
         ),
         analyseWithRetry<PromotionLikelihoodAnalysis>(
           jobContent,
           PROMOTION_LIKELIHOOD_PROMPT,
-          'Analyse this job posting to assess the promotion/career progression likelihood. Return ONLY valid JSON:'
+          "Analyse this job posting to assess the promotion/career progression likelihood. Return ONLY valid JSON:",
         ),
       ]);
 
       // Extract results, logging failures but continuing with partial data
       const getValue = <T>(index: number): T | null => {
         const result = results[index];
-        if (result.status === 'fulfilled') return result.value as T;
-        console.error(`    ⚠️ ${analysisNames[index]} failed: ${result.reason?.message || result.reason}`);
+        if (result.status === "fulfilled") return result.value as T;
+        console.error(
+          `    ⚠️ ${analysisNames[index]} failed: ${result.reason?.message || result.reason}`,
+        );
         return null;
       };
 
@@ -465,7 +511,7 @@ ${job.requirements ? `Requirements:\n${job.requirements.slice(0, 1000)}` : ''}
       const autonomyVsProcess = getValue<AutonomyVsProcessAnalysis>(5);
       const promotionLikelihood = getValue<PromotionLikelihoodAnalysis>(6);
 
-      const failedCount = results.filter(r => r.status === 'rejected').length;
+      const failedCount = results.filter((r) => r.status === "rejected").length;
       const succeededCount = results.length - failedCount;
 
       if (succeededCount === 0) {
@@ -479,117 +525,208 @@ ${job.requirements ? `Requirements:\n${job.requirements.slice(0, 1000)}` : ''}
       const updateData: Record<string, any> = {};
 
       if (roleSummary) {
-        updateData.role_summary_one_liner = validateAndTruncate(roleSummary.one_liner || 'Role summary available', 300, 'one_liner', job.title);
-        updateData.role_summary_plain_english = validateAndTruncate(roleSummary.plain_english || 'Analysis completed', 1000, 'plain_english', job.title);
-        updateData.role_summary_confidence = roleSummary.confidence || 'medium';
+        updateData.role_summary_one_liner = validateAndTruncate(
+          roleSummary.one_liner || "Role summary available",
+          300,
+          "one_liner",
+          job.title,
+        );
+        updateData.role_summary_plain_english = validateAndTruncate(
+          roleSummary.plain_english || "Analysis completed",
+          1000,
+          "plain_english",
+          job.title,
+        );
+        updateData.role_summary_confidence = roleSummary.confidence || "medium";
         updateData.role_summary_analysed_at = new Date().toISOString();
       }
 
       if (aiFocus) {
-        updateData.ai_focus_percentage = Math.max(0, Math.min(100, Math.round(aiFocus.percentage)));
-        updateData.ai_focus_rationale = validateAndTruncate(aiFocus.rationale || 'Analysis completed', 1000, 'ai_focus_rationale', job.title);
-        updateData.ai_focus_confidence = aiFocus.confidence || 'medium';
+        updateData.ai_focus_percentage = Math.max(
+          0,
+          Math.min(100, Math.round(aiFocus.percentage)),
+        );
+        updateData.ai_focus_rationale = validateAndTruncate(
+          aiFocus.rationale || "Analysis completed",
+          1000,
+          "ai_focus_rationale",
+          job.title,
+        );
+        updateData.ai_focus_confidence = aiFocus.confidence || "medium";
         updateData.ai_focus_analysed_at = new Date().toISOString();
       }
 
       if (interviewDifficulty) {
-        updateData.interview_difficulty_level = ['easy', 'medium', 'hard', 'very_hard'].includes(interviewDifficulty.level)
+        updateData.interview_difficulty_level = [
+          "easy",
+          "medium",
+          "hard",
+          "very_hard",
+        ].includes(interviewDifficulty.level)
           ? interviewDifficulty.level
-          : 'medium';
-        updateData.interview_difficulty_rationale = validateAndTruncate(interviewDifficulty.rationale || 'Analysis completed', 1000, 'interview_rationale', job.title);
-        updateData.interview_difficulty_confidence = interviewDifficulty.confidence || 'medium';
+          : "medium";
+        updateData.interview_difficulty_rationale = validateAndTruncate(
+          interviewDifficulty.rationale || "Analysis completed",
+          1000,
+          "interview_rationale",
+          job.title,
+        );
+        updateData.interview_difficulty_confidence =
+          interviewDifficulty.confidence || "medium";
         updateData.interview_difficulty_analysed_at = new Date().toISOString();
       }
 
       if (whoFor) {
-        updateData.who_role_is_for_bullets = validateAndTruncateArray(whoFor.bullets || [], 250, 'who_for_bullets', job.title);
-        updateData.who_role_is_for_confidence = whoFor.confidence || 'medium';
+        updateData.who_role_is_for_bullets = validateAndTruncateArray(
+          whoFor.bullets || [],
+          250,
+          "who_for_bullets",
+          job.title,
+        );
+        updateData.who_role_is_for_confidence = whoFor.confidence || "medium";
         updateData.who_role_is_for_analysed_at = new Date().toISOString();
       }
 
       if (whoNotFor) {
-        updateData.who_role_is_not_for_bullets = validateAndTruncateArray(whoNotFor.bullets || [], 250, 'who_not_for_bullets', job.title);
-        updateData.who_role_is_not_for_confidence = whoNotFor.confidence || 'medium';
+        updateData.who_role_is_not_for_bullets = validateAndTruncateArray(
+          whoNotFor.bullets || [],
+          250,
+          "who_not_for_bullets",
+          job.title,
+        );
+        updateData.who_role_is_not_for_confidence =
+          whoNotFor.confidence || "medium";
         updateData.who_role_is_not_for_analysed_at = new Date().toISOString();
       }
 
       if (autonomyVsProcess) {
-        updateData.autonomy_level = ['low', 'medium', 'high'].includes(autonomyVsProcess.autonomy_level)
+        updateData.autonomy_level = ["low", "medium", "high"].includes(
+          autonomyVsProcess.autonomy_level,
+        )
           ? autonomyVsProcess.autonomy_level
-          : 'medium';
-        updateData.process_load = ['low', 'medium', 'high'].includes(autonomyVsProcess.process_load)
+          : "medium";
+        updateData.process_load = ["low", "medium", "high"].includes(
+          autonomyVsProcess.process_load,
+        )
           ? autonomyVsProcess.process_load
-          : 'medium';
-        updateData.autonomy_vs_process_rationale = validateAndTruncate(autonomyVsProcess.rationale || 'Analysis completed', 1000, 'autonomy_vs_process_rationale', job.title);
-        updateData.autonomy_vs_process_confidence = autonomyVsProcess.confidence || 'medium';
+          : "medium";
+        updateData.autonomy_vs_process_rationale = validateAndTruncate(
+          autonomyVsProcess.rationale || "Analysis completed",
+          1000,
+          "autonomy_vs_process_rationale",
+          job.title,
+        );
+        updateData.autonomy_vs_process_confidence =
+          autonomyVsProcess.confidence || "medium";
         updateData.autonomy_vs_process_analysed_at = new Date().toISOString();
       }
 
       if (promotionLikelihood) {
-        updateData.promotion_likelihood_signal = ['low', 'medium', 'high'].includes(promotionLikelihood.signal)
+        updateData.promotion_likelihood_signal = [
+          "low",
+          "medium",
+          "high",
+        ].includes(promotionLikelihood.signal)
           ? promotionLikelihood.signal
-          : 'medium';
-        updateData.promotion_likelihood_rationale = validateAndTruncate(promotionLikelihood.rationale || 'Analysis completed', 1000, 'promotion_likelihood_rationale', job.title);
-        updateData.promotion_likelihood_confidence = promotionLikelihood.confidence || 'medium';
+          : "medium";
+        updateData.promotion_likelihood_rationale = validateAndTruncate(
+          promotionLikelihood.rationale || "Analysis completed",
+          1000,
+          "promotion_likelihood_rationale",
+          job.title,
+        );
+        updateData.promotion_likelihood_confidence =
+          promotionLikelihood.confidence || "medium";
         updateData.promotion_likelihood_analysed_at = new Date().toISOString();
       }
 
       const { error: updateError } = await supabase
-        .from('jobs')
+        .from("jobs")
         .update(updateData)
-        .eq('id', job.id);
+        .eq("id", job.id);
 
       if (updateError) {
         console.error(`  ❌ Failed to update: ${updateError.message}`);
         failCount++;
       } else if (failedCount > 0) {
-        console.log(`  ⚠️ ${succeededCount}/7 analyses saved (${failedCount} failed - will retry on next run)`);
-        if (updateData.role_summary_one_liner) console.log(`     📝 Role: ${updateData.role_summary_one_liner.slice(0, 50)}...`);
-        if (updateData.ai_focus_percentage != null) console.log(`     🎯 AI Focus: ${updateData.ai_focus_percentage}%`);
-        if (updateData.interview_difficulty_level) console.log(`     📋 Interview: ${updateData.interview_difficulty_level}`);
-        if (updateData.autonomy_level) console.log(`     🎯 Autonomy: ${updateData.autonomy_level}, Process: ${updateData.process_load}`);
-        if (updateData.promotion_likelihood_signal) console.log(`     📈 Promotion: ${updateData.promotion_likelihood_signal}`);
+        console.log(
+          `  ⚠️ ${succeededCount}/7 analyses saved (${failedCount} failed - will retry on next run)`,
+        );
+        if (updateData.role_summary_one_liner)
+          console.log(
+            `     📝 Role: ${updateData.role_summary_one_liner.slice(0, 50)}...`,
+          );
+        if (updateData.ai_focus_percentage != null)
+          console.log(`     🎯 AI Focus: ${updateData.ai_focus_percentage}%`);
+        if (updateData.interview_difficulty_level)
+          console.log(
+            `     📋 Interview: ${updateData.interview_difficulty_level}`,
+          );
+        if (updateData.autonomy_level)
+          console.log(
+            `     🎯 Autonomy: ${updateData.autonomy_level}, Process: ${updateData.process_load}`,
+          );
+        if (updateData.promotion_likelihood_signal)
+          console.log(
+            `     📈 Promotion: ${updateData.promotion_likelihood_signal}`,
+          );
         successCount++;
       } else {
         console.log(`  ✅ All 7 analyses complete`);
-        console.log(`     📝 Role: ${updateData.role_summary_one_liner.slice(0, 50)}...`);
+        console.log(
+          `     📝 Role: ${updateData.role_summary_one_liner.slice(0, 50)}...`,
+        );
         console.log(`     🎯 AI Focus: ${updateData.ai_focus_percentage}%`);
-        console.log(`     📋 Interview: ${updateData.interview_difficulty_level}`);
-        console.log(`     🎯 Autonomy: ${updateData.autonomy_level}, Process: ${updateData.process_load}`);
-        console.log(`     📈 Promotion: ${updateData.promotion_likelihood_signal}`);
+        console.log(
+          `     📋 Interview: ${updateData.interview_difficulty_level}`,
+        );
+        console.log(
+          `     🎯 Autonomy: ${updateData.autonomy_level}, Process: ${updateData.process_load}`,
+        );
+        console.log(
+          `     📈 Promotion: ${updateData.promotion_likelihood_signal}`,
+        );
         successCount++;
       }
 
       // Small delay to avoid rate limiting (7 API calls per job)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (err) {
       console.error(`  ❌ Analysis failed:`, err);
       failCount++;
     }
   }
 
-  console.log(`\n${'='.repeat(60)}`);
+  console.log(`\n${"=".repeat(60)}`);
   console.log(`🎉 Re-analysis complete!`);
   console.log(`   ✅ Success: ${successCount}`);
   console.log(`   ❌ Failed: ${failCount}`);
 
   // Report truncation errors
   if (truncationErrors.length > 0) {
-    console.log(`\n${'='.repeat(60)}`);
-    console.log(`⚠️  TRUNCATION ERRORS: ${truncationErrors.length} fields exceeded limits`);
-    console.log(`   These fields had text cut off (prompts need adjustment):\n`);
+    console.log(`\n${"=".repeat(60)}`);
+    console.log(
+      `⚠️  TRUNCATION ERRORS: ${truncationErrors.length} fields exceeded limits`,
+    );
+    console.log(
+      `   These fields had text cut off (prompts need adjustment):\n`,
+    );
 
-    truncationErrors.forEach(err => {
-      console.log(`   • "${err.jobTitle.slice(0, 40)}..." → ${err.field}: ${err.length}/${err.limit} chars`);
+    truncationErrors.forEach((err) => {
+      console.log(
+        `   • "${err.jobTitle.slice(0, 40)}..." → ${err.field}: ${err.length}/${err.limit} chars`,
+      );
     });
 
-    console.log(`\n   Action: Review prompts to ensure Claude stays within limits.`);
+    console.log(
+      `\n   Action: Review prompts to ensure Claude stays within limits.`,
+    );
   } else {
     console.log(`\n   ✅ No truncation errors - all text within limits!`);
   }
 }
 
-// Run with optional limit argument
+// Run with optional limit argument (default: all jobs)
 const limitArg = process.argv[2];
-const limit = limitArg === 'all' || limitArg === '0' ? 1000 : (parseInt(limitArg) || 10);
+const limit = limitArg && limitArg !== "all" ? parseInt(limitArg) || 10000 : 10000;
 rerunAllIntelligence(limit);

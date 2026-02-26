@@ -228,7 +228,7 @@ export default function BillingPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold">
-                    {PRICING_CONFIG[subscription.plan_type].name}
+                    {(PRICING_CONFIG as Record<string, { name: string }>)[subscription.plan_type]?.name ?? subscription.plan_type}
                   </h3>
                   <p className="text-muted-foreground">
                     {formatPrice(subscription.price_per_month)} per month
@@ -253,7 +253,7 @@ export default function BillingPage() {
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Plan Features</p>
                 <ul className="space-y-1">
-                  {PRICING_CONFIG[subscription.plan_type].features.map((feature, index) => (
+                  {((PRICING_CONFIG as Record<string, { features?: readonly string[] }>)[subscription.plan_type]?.features ?? []).map((feature: string, index: number) => (
                     <li key={index} className="text-sm flex items-center gap-2">
                       <Check className="w-3 h-3 text-green-600" />
                       {feature}
@@ -365,7 +365,7 @@ export default function BillingPage() {
                     </div>
                     <div>
                       <p className="font-medium">
-                        {PRICING_CONFIG[payment.pricing_tier].name} Job Posting
+                        {(PRICING_CONFIG as Record<string, { name: string }>)[payment.pricing_tier]?.name ?? payment.pricing_tier} Job Posting
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {formatDate(payment.created_at)} • {payment.payment_method_type}

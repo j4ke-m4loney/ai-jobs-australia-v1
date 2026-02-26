@@ -217,7 +217,9 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
           )}
 
           {/* Company Description */}
-          {formData.companyDescription && (
+          {formData.companyDescription &&
+           formData.companyDescription.replace(/<[^>]*>/g, "").trim().length >
+             0 && (
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-3">
                 About {formData.companyName || "the Company"}
@@ -249,10 +251,15 @@ export default function JobPreviewModal({ isOpen, onClose, formData }: Props) {
               ) : formData.applicationMethod === "external" ? (
                 <>
                   <ExternalLink className="w-4 h-4 text-primary" />
-                  <span>Apply on company website: </span>
-                  <span className="font-medium text-primary">
-                    {formData.applicationUrl}
-                  </span>
+                  <span>Apply on company website</span>
+                  <a
+                    href={formData.applicationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90"
+                  >
+                    Apply <ExternalLink className="w-3 h-3" />
+                  </a>
                 </>
               ) : (
                 <>

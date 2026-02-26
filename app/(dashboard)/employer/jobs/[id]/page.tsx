@@ -1562,13 +1562,25 @@ const JobManagementPage = () => {
                   <div>
                     <h3 className="font-semibold mb-3">Application Details</h3>
                     <div className="space-y-2 text-sm">
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="font-medium">Method:</span>{" "}
-                        {job.application_method === "email"
-                          ? `Email to ${job.application_email}`
-                          : job.application_method === "external"
-                          ? `Redirect to Company Website: ${job.application_url}`
-                          : "AI Jobs Australia applications"}
+                        {job.application_method === "email" ? (
+                          `Email to ${job.application_email}`
+                        ) : job.application_method === "external" ? (
+                          <>
+                            <span>Company website</span>
+                            <a
+                              href={job.application_url ?? "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-0.5 text-xs font-medium text-white hover:bg-primary/90"
+                            >
+                              Apply <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </>
+                        ) : (
+                          "AI Jobs Australia applications"
+                        )}
                       </div>
                       <div>
                         <span className="font-medium">Expires:</span>{" "}

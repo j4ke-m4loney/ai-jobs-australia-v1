@@ -6,12 +6,13 @@ import { JobFormData2 } from '@/types/job2';
 import { emailService } from '@/lib/email/postmark-service';
 import { getSiteUrl } from '@/lib/utils/get-site-url';
 import { triggerAIFocusAnalysis } from '@/lib/ai-focus/trigger-analysis';
+import { mapStripeSubscriptionStatus, getStripeSubscriptionPeriod } from '@/lib/stripe-helpers';
 
 // Type definitions for webhook data
 interface PaymentRecord {
   id: string;
   user_id: string;
-  pricing_tier: 'standard' | 'featured' | 'annual';
+  pricing_tier: 'standard' | 'featured';
   amount: number;
   currency: string;
 }
@@ -20,7 +21,7 @@ interface PaymentSession {
   id: string;
   user_id: string;
   stripe_session_id: string;
-  pricing_tier: 'standard' | 'featured' | 'annual';
+  pricing_tier: 'standard' | 'featured';
   amount: number;
   currency: string;
   job_form_data: JobFormData2;
@@ -149,11 +150,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   // Create job posting
   await createJobFromPayment(payment, paymentSession);
-
-  // For annual subscriptions, also create/update subscription record
-  if (paymentSession.pricing_tier === 'annual' && session.subscription) {
-    await handleAnnualSubscription(session, paymentSession);
-  }
 }
 
 async function handleCheckoutSessionExpired(session: Stripe.Checkout.Session) {
@@ -205,7 +201,19 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
 
 async function createJobFromPayment(payment: PaymentRecord, paymentSession: PaymentSession) {
   const jobFormData = paymentSession.job_form_data;
-  const isFeatured = ['featured', 'annual'].includes(payment.pricing_tier);
+  const isFeatured = payment.pricing_tier === 'featured';
+
+  // Idempotency: skip if a job already exists for this payment
+  const { data: existingJob } = await getSupabaseAdmin()
+    .from('jobs')
+    .select('id')
+    .eq('payment_id', payment.id)
+    .maybeSingle();
+
+  if (existingJob) {
+    console.log('Job already exists for payment:', payment.id, '— skipping');
+    return existingJob;
+  }
 
   // Handle company creation/linking first
   let companyId = null;
@@ -225,7 +233,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
           name: jobFormData.companyName.trim(),
           description: jobFormData.companyDescription?.trim() || null,
           website: jobFormData.companyWebsite?.trim() || null,
-          logo_url: null, // TODO: Handle logo upload
+          logo_url: null,
         })
         .select()
         .single();
@@ -243,11 +251,11 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     company_id: companyId,
     title: jobFormData.jobTitle,
     description: jobFormData.jobDescription,
-    requirements: jobFormData.requirements || null,
+    requirements: null, // Requirements are now included in the description field
     location: jobFormData.locationAddress,
     location_type: mapLocationType(jobFormData.locationType),
     job_type: jobFormData.jobTypes.map(mapJobType),
-    category: 'ai', // Default category
+    category: 'ai',
     salary_min: getSalaryMin(jobFormData.payConfig),
     salary_max: getSalaryMax(jobFormData.payConfig),
     salary_period: jobFormData.payConfig?.payPeriod || 'year',
@@ -256,12 +264,12 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     application_url: jobFormData.applicationMethod === 'indeed' ? null : jobFormData.applicationUrl,
     application_email: jobFormData.applicationMethod === 'email' ? jobFormData.applicationEmail : null,
     is_featured: isFeatured,
-    featured_until: isFeatured ? new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) : null, // 3 days from now
-    featured_order: isFeatured ? Math.floor(Date.now() / 1000) : 0, // Use timestamp for ordering
+    featured_until: isFeatured ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
+    featured_order: isFeatured ? Math.floor(Date.now() / 1000) : 0,
     highlights: jobFormData.highlights || [],
-    status: 'pending_approval', // Jobs require admin approval before going live
-    payment_status: 'completed', // Payment succeeded via Stripe webhook
-    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+    status: 'pending_approval',
+    payment_status: 'completed',
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   };
 
   // Insert the job into the database
@@ -279,79 +287,39 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
   console.log('Job created successfully:', job.id);
 
   // Send job submission confirmation email to employer
-  console.log('📧 Attempting to send job submission confirmation email...');
-  console.log('📧 Payment user_id:', payment.user_id);
-  console.log('📧 Job ID:', job.id);
-
   try {
-    // Get employer's email from auth.users table (where emails are actually stored)
     const { data: userData, error: userError } = await getSupabaseAdmin()
       .auth.admin.getUserById(payment.user_id);
 
-    console.log('📧 User data lookup:', {
-      hasUser: !!userData,
-      email: userData?.user?.email,
-      error: userError
-    });
-
-    // Get employer's profile for the name
-    const { data: employerProfile, error: profileError } = await getSupabaseAdmin()
+    const { data: employerProfile } = await getSupabaseAdmin()
       .from('profiles')
       .select('first_name, last_name')
       .eq('id', payment.user_id)
       .single();
 
-    console.log('📧 Employer profile lookup:', {
-      hasProfile: !!employerProfile,
-      firstName: employerProfile?.first_name,
-      lastName: employerProfile?.last_name,
-      error: profileError
-    });
-
     const employerEmail = userData?.user?.email;
 
     if (!userError && employerEmail) {
-      // Job submission confirmations are transactional emails - always send them
-      // (Users can't opt out of transactional emails, only marketing/notification emails)
-      console.log('📧 Sending job submission confirmation (transactional email)');
+      const employerName = employerProfile?.first_name && employerProfile?.last_name
+        ? `${employerProfile.first_name} ${employerProfile.last_name}`.trim()
+        : employerProfile?.first_name || employerProfile?.last_name || 'Employer';
 
-      if (true) { // Always send job submission confirmations
-        console.log('📧 Sending email with data:', {
-          jobTitle: jobFormData.jobTitle,
-          companyName: jobFormData.companyName,
-          location: jobFormData.locationAddress || `${jobFormData.locationSuburb}, ${jobFormData.locationState}`,
-          pricingTier: payment.pricing_tier
-        });
-
-        const employerName = employerProfile?.first_name && employerProfile?.last_name
-          ? `${employerProfile.first_name} ${employerProfile.last_name}`.trim()
-          : employerProfile?.first_name || employerProfile?.last_name || 'Employer';
-
-        const emailResult = await emailService.sendJobSubmissionConfirmation({
-          employerName,
-          employerEmail: employerEmail,
-          jobTitle: jobFormData.jobTitle,
-          jobId: job.id,
-          companyName: jobFormData.companyName,
-          location: jobFormData.locationAddress || `${jobFormData.locationSuburb}, ${jobFormData.locationState}`,
-          pricingTier: payment.pricing_tier,
-          dashboardUrl: `${getSiteUrl()}/employer/jobs/${job.id}`
-        });
-
-        console.log('✅ Job submission confirmation email sent to employer:', employerEmail);
-        console.log('✅ Email service result:', emailResult);
-      } else {
-        console.log('⚠️ Email not sent - preferences disabled');
-      }
-    } else {
-      console.log('⚠️ Email not sent - no employer email found or user lookup failed:', {
-        hasEmail: !!employerEmail,
-        userError
+      await emailService.sendJobSubmissionConfirmation({
+        employerName,
+        employerEmail: employerEmail,
+        jobTitle: jobFormData.jobTitle,
+        jobId: job.id,
+        companyName: jobFormData.companyName,
+        location: jobFormData.locationAddress || `${jobFormData.locationSuburb}, ${jobFormData.locationState}`,
+        pricingTier: payment.pricing_tier,
+        dashboardUrl: `${getSiteUrl()}/employer/jobs/${job.id}`
       });
+
+      console.log('Job submission confirmation email sent to:', employerEmail);
     }
   } catch (emailError) {
-    console.error('❌ Failed to send job submission confirmation email:', emailError);
-    // Don't fail the webhook if email fails - job was created successfully
+    console.error('Failed to send job submission confirmation email:', emailError);
+    // Don't fail the webhook if email fails — job was created successfully
   }
 
   // Trigger AI Focus analysis asynchronously (non-blocking)
@@ -367,42 +335,6 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
   return job;
 }
 
-async function handleAnnualSubscription(session: Stripe.Checkout.Session, paymentSession: PaymentSession) {
-  if (!session.subscription) return;
-
-  const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-
-  // Create or update subscription record
-  const { error } = await getSupabaseAdmin()
-    .from('subscriptions')
-    .upsert({
-      user_id: paymentSession.user_id,
-      plan_type: 'annual',
-      status: subscription.status === 'active' ? 'active' as const : subscription.status === 'canceled' ? 'cancelled' as const : subscription.status === 'past_due' ? 'past_due' as const : 'trialing' as const,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
-      stripe_customer_id: subscription.customer as string,
-      stripe_subscription_id: subscription.id,
-      price_per_month: paymentSession.amount,
-      features: {
-        unlimited_postings: true,
-        featured_jobs: true,
-        priority_support: true,
-      },
-      metadata: {
-        pricing_tier: 'annual',
-      },
-    }, {
-      onConflict: 'user_id'
-    });
-
-  if (error) {
-    console.error('Error creating/updating subscription:', error);
-  }
-}
-
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   console.log('Processing subscription created:', subscription.id);
 
@@ -413,22 +345,21 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   if (planType === 'intelligence' && userId) {
     console.log('Creating intelligence subscription for user:', userId);
 
-    // Derive billing interval and price from the actual Stripe subscription
     const priceItem = subscription.items.data[0]?.price;
     const billingInterval = priceItem?.recurring?.interval === 'year' ? 'year' : 'month';
     const unitAmount = priceItem?.unit_amount ?? 0;
     const pricePerMonth = billingInterval === 'year' ? Math.round(unitAmount / 12) : unitAmount;
+
+    const period = getStripeSubscriptionPeriod(subscription);
 
     const { error } = await getSupabaseAdmin()
       .from('subscriptions')
       .upsert({
         user_id: userId,
         plan_type: 'intelligence',
-        status: subscription.status === 'active' ? 'active' as const : subscription.status === 'canceled' ? 'cancelled' as const : subscription.status === 'past_due' ? 'past_due' as const : 'trialing' as const,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        status: mapStripeSubscriptionStatus(subscription.status),
+        current_period_start: period.current_period_start,
+        current_period_end: period.current_period_end,
         stripe_customer_id: subscription.customer as string,
         stripe_subscription_id: subscription.id,
         price_per_month: pricePerMonth,
@@ -446,7 +377,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     if (error) {
       console.error('Error creating intelligence subscription:', error);
     } else {
-      console.log('✅ Intelligence subscription created successfully');
+      console.log('Intelligence subscription created successfully');
     }
   }
 }
@@ -454,14 +385,14 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   console.log('Processing subscription updated:', subscription.id);
 
+  const period = getStripeSubscriptionPeriod(subscription);
+
   const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .update({
-      status: subscription.status === 'active' ? 'active' as const : subscription.status === 'canceled' ? 'cancelled' as const : subscription.status === 'past_due' ? 'past_due' as const : 'trialing' as const,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      current_period_start: new Date((subscription as any).current_period_start * 1000).toISOString(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
+      status: mapStripeSubscriptionStatus(subscription.status),
+      current_period_start: period.current_period_start,
+      current_period_end: period.current_period_end,
     })
     .eq('stripe_subscription_id', subscription.id);
 
@@ -512,7 +443,6 @@ function mapJobType(jobType: string): string {
 }
 
 function getSalaryMin(payConfig: JobFormData2['payConfig']): number | null {
-  // Store original salary values, not converted to annual
   if (!payConfig) return null;
 
   if (payConfig.payType === 'range' && payConfig.payRangeMin) {
@@ -529,7 +459,6 @@ function getSalaryMin(payConfig: JobFormData2['payConfig']): number | null {
 }
 
 function getSalaryMax(payConfig: JobFormData2['payConfig']): number | null {
-  // Store original salary values, not converted to annual
   if (!payConfig) return null;
 
   if (payConfig.payType === 'range' && payConfig.payRangeMax) {

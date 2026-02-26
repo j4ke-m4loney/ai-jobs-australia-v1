@@ -131,26 +131,15 @@ export async function PUT(
 
     const employerEmail = userData?.user?.email;
 
-    // Check if the employer is an admin - don't send emails for admin-posted jobs
-    const { data: employerProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('user_type')
-      .eq('user_id', job.employer_id)
-      .single();
-
-    const isEmployerAdmin = employerProfile?.user_type === 'admin';
-
     // Job approval/rejection emails are critical status updates - always send them
-    // BUT skip if the employer is an admin (admin-posted jobs don't need email notifications)
     console.log('📧 Attempting to send job status update email (critical notification)');
     console.log('📧 Email check:', {
       hasUserError: !!userError,
       hasEmployerEmail: !!employerEmail,
       employerEmail: employerEmail,
-      isEmployerAdmin: isEmployerAdmin
     });
 
-    if (!userError && employerEmail && !isEmployerAdmin) {
+    if (!userError && employerEmail) {
       try {
         const employerName = profileData?.first_name && profileData?.last_name
           ? `${profileData.first_name} ${profileData.last_name}`.trim()
@@ -190,8 +179,6 @@ export async function PUT(
         userError: userError?.message,
         hasEmployerEmail: !!employerEmail,
         employerEmail,
-        isEmployerAdmin,
-        skipReason: isEmployerAdmin ? 'Employer is admin - skipping notification' : 'Missing email or user error'
       });
     }
 
