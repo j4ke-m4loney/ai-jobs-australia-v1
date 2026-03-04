@@ -214,27 +214,28 @@ async function jinaFetch(url: string): Promise<string> {
 
 /**
  * Fetch a URL and extract the main text content.
- * Tries direct fetch + cheerio first, falls back to Jina Reader for JS-rendered sites.
+ * Tries Jina Reader first (handles JS-rendered career sites), falls back to direct fetch + cheerio.
  */
 export async function fetchAndExtractText(url: string): Promise<string> {
-  // Try direct fetch + cheerio first
+  // Try Jina Reader first — most career sites are JS-rendered SPAs
+  try {
+    const text = await jinaFetch(url);
+    if (text.length >= 200) return text;
+  } catch {
+    // Fall through to direct fetch fallback
+  }
+
+  // Fallback: direct fetch + cheerio for simple static pages
   try {
     const text = await directFetch(url);
-    if (text.length >= 50) return text;
+    if (text.length >= 200) return text;
   } catch {
-    // Fall through to Jina fallback
+    // Both methods failed
   }
 
-  // Fallback: use Jina Reader for JS-rendered sites
-  const text = await jinaFetch(url);
-
-  if (text.length < 50) {
-    throw new Error(
-      'Could not extract meaningful text from the page. The site may block automated requests.'
-    );
-  }
-
-  return text;
+  throw new Error(
+    'Could not extract meaningful text from the page. The site may block automated requests.'
+  );
 }
 
 const SYSTEM_PROMPT = `You are an expert job listing data extractor for an Australian AI jobs board. Extract structured data from job listing text by calling the extract_job_data tool.

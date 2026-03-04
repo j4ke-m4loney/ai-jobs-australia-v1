@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(curl:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git add 'app/api/admin/jobs/[id]/review/route.ts' 'app/api/admin/jobs/[id]/status/route.ts' 'app/admin/jobs/[id]/page.tsx')"
     ],
     "deny": [],
     "ask": []

@@ -20,6 +20,7 @@ import {
   FileText,
   DollarSign,
   Mail,
+  Radar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -82,6 +83,12 @@ const navigation = [
     href: "/admin/newsletter",
     icon: Mail,
   },
+  {
+    name: "Career Pages",
+    href: "/admin/career-pages",
+    icon: Radar,
+    badge: "discovered",
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
@@ -90,6 +97,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
+  const [discoveredCount, setDiscoveredCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -130,12 +138,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, []);
 
+  const fetchDiscoveredCount = useCallback(async () => {
+    try {
+      const { count } = await supabase
+        .from("discovered_jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending_extraction");
+
+      setDiscoveredCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching discovered count:", error);
+    }
+  }, []);
+
   // Effect to check admin access and fetch pending count
   useEffect(() => {
     checkAdminAccess();
     fetchPendingCount();
     fetchReviewCount();
-  }, [checkAdminAccess, fetchPendingCount, fetchReviewCount]);
+    fetchDiscoveredCount();
+  }, [checkAdminAccess, fetchPendingCount, fetchReviewCount, fetchDiscoveredCount]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut({ scope: 'local' });
@@ -218,6 +240,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   {item.badge === "review" && reviewCount > 0 && (
                     <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600">
                       {reviewCount}
+                    </span>
+                  )}
+                  {item.badge === "discovered" && discoveredCount > 0 && (
+                    <span className="inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600">
+                      {discoveredCount}
                     </span>
                   )}
                 </Link>
