@@ -40,6 +40,7 @@ import { categorySlugToName } from "@/lib/categories/generator";
 import { appendUtmParams } from "@/lib/utils";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { JOB_CATEGORIES } from "@/lib/job-import/categories";
+import { getLocationSearchTerms } from "@/lib/locations/search-terms";
 
 interface Job {
   id: string;
@@ -183,30 +184,6 @@ function calculateSearchRelevance(job: Job, searchTerm: string): number {
 }
 
 // Convert state codes to appropriate search terms for database filtering
-function getLocationSearchTerms(stateCode: string): string[] {
-  const stateMapping: Record<string, string[]> = {
-    all: [], // Return empty array for "all" - no filtering needed
-    nsw: ["NSW", "New South Wales", "Sydney", "Newcastle", "Wollongong"],
-    vic: ["VIC", "Victoria", "Melbourne", "Geelong", "Ballarat"],
-    qld: [
-      "QLD",
-      "Queensland",
-      "Brisbane",
-      "Gold Coast",
-      "Cairns",
-      "Townsville",
-    ],
-    wa: ["WA", "Western Australia", "Perth", "Fremantle"],
-    sa: ["SA", "South Australia", "Adelaide"],
-    tas: ["TAS", "Tasmania", "Hobart", "Launceston"],
-    act: ["ACT", "Australian Capital Territory", "Canberra"],
-    nt: ["NT", "Northern Territory", "Darwin", "Alice Springs"],
-    remote: ["Remote", "Work from home", "WFH", "Anywhere"],
-  };
-
-  return stateMapping[stateCode] || [];
-}
-
 // Loading component for Suspense fallback
 function JobsLoading() {
   return (
@@ -2018,6 +1995,7 @@ function JobsContent() {
                       onClick={handleJobClick}
                       onSaveClick={handleToggleSaveJob}
                       isJobSaved={isJobSaved(job.id)}
+                      selectedState={selectedState}
                     />
                   ))}
                 </div>
@@ -2141,6 +2119,7 @@ function JobsContent() {
               hasAIFocusAccess={hasAIFocusAccess()}
               onIntelligenceCTAClick={user ? () => setIntelligenceModalOpen(true) : undefined}
               userSkills={profile?.skills}
+              selectedState={selectedState}
             />
           ) : (
             <div className="lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] flex items-center justify-center mx-4">
@@ -2227,6 +2206,7 @@ function JobsContent() {
                 hasAIFocusAccess={hasAIFocusAccess()}
                 onIntelligenceCTAClick={user ? () => setIntelligenceModalOpen(true) : undefined}
                 userSkills={profile?.skills}
+                selectedState={selectedState}
               />
             )}
           </div>

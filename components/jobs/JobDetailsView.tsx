@@ -7,6 +7,7 @@ import { Clock, Heart, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
+import { HighlightedLocation } from "@/components/jobs/HighlightedLocation";
 import { trackEvent } from "@/lib/analytics";
 import { getCombinedJobContent, formatJobTypes } from "@/lib/jobs/content-utils";
 import { AnalyseRoleModal } from "@/components/jobs/AnalyseRoleModal";
@@ -73,6 +74,7 @@ interface JobDetailsViewProps {
   hasAIFocusAccess?: boolean;
   onIntelligenceCTAClick?: () => void;
   userSkills?: string[] | null;
+  selectedState?: string;
 }
 
 // Helper functions
@@ -119,6 +121,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
   hasAIFocusAccess = false,
   onIntelligenceCTAClick,
   userSkills,
+  selectedState,
 }) => {
   const [analyseModalOpen, setAnalyseModalOpen] = useState(false);
 
@@ -190,7 +193,10 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-foreground mb-3">
                 <div className="flex items-center gap-1">
-                  {job.location_display || job.location}
+                  <HighlightedLocation
+                    location={job.location_display || job.location}
+                    selectedState={selectedState}
+                  />
                 </div>
                 <LocationTypeBadge locationType={job.location_type} />
                 <div className="flex items-center gap-1">

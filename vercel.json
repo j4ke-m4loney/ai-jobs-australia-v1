@@ -3,6 +3,14 @@
     {
       "path": "/api/jobs/cleanup",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/jobs/discover",
+      "schedule": "0 20 * * *"
+    },
+    {
+      "path": "/api/jobs/discover/extract",
+      "schedule": "0 21 * * *"
     }
   ]
 }

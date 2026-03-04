@@ -42,6 +42,7 @@ import {
   Copy,
   Star,
   User,
+  Pencil,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -59,6 +60,7 @@ interface JobDetails {
   company_website: string;
   company_description: string;
   company_logo_url: string | null;
+  highlights: string[];
   location: string;
   location_type: string;
   job_type: string[];
@@ -293,6 +295,13 @@ export default function AdminJobReviewPage() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/admin/jobs/${jobId}/edit`)}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
             {job.status === "pending_approval" && (
               <>
                 <Button
@@ -412,12 +421,27 @@ export default function AdminJobReviewPage() {
 
             <Separator />
 
+            {/* Highlights */}
+            {job.highlights && job.highlights.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-2">Highlights</h3>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  {job.highlights.map((highlight, index) => (
+                    <li key={index}>{highlight}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {job.highlights && job.highlights.length > 0 && <Separator />}
+
             {/* Job Content (Description + Requirements) */}
             <div>
               <h3 className="font-semibold mb-2">Job Details</h3>
-              <div className="prose prose-sm max-w-none">
-                <p className="whitespace-pre-wrap">{getCombinedJobContent(job.description, job.requirements)}</p>
-              </div>
+              <div
+                className="prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: getCombinedJobContent(job.description, job.requirements) }}
+              />
             </div>
 
             <Separator />

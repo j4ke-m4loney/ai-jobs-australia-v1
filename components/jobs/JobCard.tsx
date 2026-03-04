@@ -6,6 +6,7 @@ import { Heart } from "lucide-react";
 import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
+import { HighlightedLocation } from "@/components/jobs/HighlightedLocation";
 
 interface Job {
   id: string;
@@ -47,6 +48,7 @@ interface JobCardProps {
   onClick: (job: Job, event?: React.MouseEvent) => void;
   onSaveClick: (jobId: string) => void;
   isJobSaved: boolean;
+  selectedState?: string;
 }
 
 // Helper functions
@@ -88,6 +90,7 @@ export const JobCard: React.FC<JobCardProps> = ({
   onClick,
   onSaveClick,
   isJobSaved,
+  selectedState,
 }) => {
   return (
     <Card
@@ -129,7 +132,10 @@ export const JobCard: React.FC<JobCardProps> = ({
 
             <div className="flex items-center gap-4 text-sm text-foreground mb-3">
               <div className="flex items-center gap-1">
-                <span>{job.location_display || job.location}</span>
+                <HighlightedLocation
+                  location={job.location_display || job.location}
+                  selectedState={selectedState}
+                />
               </div>
               <LocationTypeBadge locationType={job.location_type} />
             </div>
