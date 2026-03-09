@@ -9,6 +9,7 @@ import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { Sparkles } from "lucide-react";
 import { formatJobTypes } from "@/lib/jobs/content-utils";
+import Image from "next/image";
 
 interface Company {
   id: string;
@@ -144,16 +145,31 @@ export default function FeaturedJobs() {
                 aria-label={`View ${job.title} at ${job.companies?.name || "Company"}`}
               >
                 <CardContent className="p-5 flex flex-col h-full">
-                  {/* Job Title */}
-                  <h3 className="font-semibold text-lg line-clamp-2 text-foreground mb-1">
-                    {job.title}
-                  </h3>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      {/* Job Title */}
+                      <h3 className="font-semibold text-lg line-clamp-2 text-foreground mb-2">
+                        {job.title}
+                      </h3>
 
-                  {/* Company Name */}
-                  <div className="flex items-center gap-1 text-base text-foreground mb-3">
-                    <span className="font-medium">
-                      {job.companies?.name || "Company"}
-                    </span>
+                      {/* Company Name */}
+                      <div className="text-base text-foreground mb-3">
+                        <span className="font-medium">
+                          {job.companies?.name || "Company"}
+                        </span>
+                      </div>
+                    </div>
+                    {job.companies?.logo_url && (
+                      <div className="ml-3 shrink-0">
+                        <Image
+                          src={job.companies.logo_url}
+                          alt={`${job.companies.name} logo`}
+                          width={48}
+                          height={48}
+                          className="w-12 h-12 rounded object-contain"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Location + Location Type Badge */}

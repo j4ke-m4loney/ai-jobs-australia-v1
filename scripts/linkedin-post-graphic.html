@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Jobs Australia — February 2026 Data</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #f0f0f0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .card {
+    width: 1080px;
+    height: 1080px;
+    background: linear-gradient(145deg, #0a1628 0%, #0f2040 40%, #162d54 100%);
+    padding: 64px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle background glow */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(56, 120, 230, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: -150px;
+    left: -150px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .date-badge {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 8px 16px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .title {
+    font-size: 38px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+    margin-bottom: 48px;
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+  }
+
+  .title span {
+    background: linear-gradient(135deg, #3878e6, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stat-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.3s;
+  }
+
+  .stat-card.highlight {
+    background: linear-gradient(135deg, rgba(56, 120, 230, 0.12), rgba(124, 58, 237, 0.12));
+    border-color: rgba(56, 120, 230, 0.25);
+  }
+
+  .stat-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+
+  .stat-number {
+    font-size: 52px;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-card.highlight .stat-number {
+    background: linear-gradient(135deg, #5a9cf5, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-label {
+    font-size: 17px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.35;
+    margin-bottom: 6px;
+  }
+
+  .stat-detail {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.4;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer-text {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .footer-url {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="brand">AI Jobs Australia</div>
+    <div class="date-badge">February 2026 Data</div>
+  </div>
+
+  <div class="title">What the data says about <span>AI hiring in Australia</span> right now</div>
+
+  <div class="stats-grid">
+    <div class="stat-card highlight">
+      <div class="stat-icon">🔍</div>
+      <div class="stat-number">37.5%</div>
+      <div class="stat-label">of traffic comes from Google</div>
+      <div class="stat-detail">Our biggest discovery channel — SEO is how candidates find AI roles</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🤖</div>
+      <div class="stat-number">116</div>
+      <div class="stat-label">visits from AI chatbots</div>
+      <div class="stat-detail">ChatGPT & Perplexity are emerging as a new way candidates discover jobs</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🏦</div>
+      <div class="stat-number">19</div>
+      <div class="stat-label">roles from the big 4 banks</div>
+      <div class="stat-detail">CommBank, Westpac, Suncorp & Bankwest — 10%+ of all February listings</div>
+    </div>
+
+    <div class="stat-card highlight">
+      <div class="stat-icon">📈</div>
+      <div class="stat-number">+125%</div>
+      <div class="stat-label">apply clicks vs January</div>
+      <div class="stat-detail">Candidates aren't just browsing — they're acting</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-number">67%</div>
+      <div class="stat-label">of roles have hard interviews</div>
+      <div class="stat-detail">AI isn't a market where you can wing it — expect deep technical questions</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🏠</div>
+      <div class="stat-number">2x</div>
+      <div class="stat-label">more clicks on remote roles</div>
+      <div class="stat-detail">The most-applied listings are remote or multi-city — flexibility wins</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-text">178 jobs · 2,653 searches · 425 apply clicks · 123 companies</div>
+    <div class="footer-url">aijobsaustralia.com.au</div>
+  </div>
+</div>
+
+</body>
+</html>

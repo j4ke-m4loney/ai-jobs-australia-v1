@@ -91,7 +91,7 @@ export const RecentJobCard: React.FC<RecentJobCardProps> = ({ job }) => {
       }`}
     >
       <CardContent className="p-5 flex flex-col h-full">
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             {job.is_featured && (
               <Badge className="bg-gradient-hero text-white text-xs mb-2">
@@ -99,54 +99,20 @@ export const RecentJobCard: React.FC<RecentJobCardProps> = ({ job }) => {
               </Badge>
             )}
 
-            <h3 className="font-semibold text-lg line-clamp-2 text-foreground mb-1">
+            <h3 className="font-semibold text-lg line-clamp-2 text-foreground mb-2">
               {job.title}
             </h3>
 
-            <div className="flex items-center gap-1 text-base text-foreground mb-3">
+            <div className="text-base text-foreground mb-3">
               <span className="font-medium">
                 {job.companies?.name || "Company"}
               </span>
-            </div>
-
-            <div className="flex items-center gap-4 text-sm text-foreground mb-3">
-              <div className="flex items-center gap-1">
-                <span>{job.location}</span>
-              </div>
-              <LocationTypeBadge locationType={job.location_type} />
-            </div>
-
-            {job.show_salary !== false && formatSalary(job.salary_min, job.salary_max) && (
-              <div className="text-sm font-semibold text-green-600 mb-3">
-                {formatSalary(job.salary_min, job.salary_max)}
-              </div>
-            )}
-
-            {/* Job Highlights */}
-            {job.highlights && job.highlights.length > 0 && (
-              <div className="mb-3">
-                <ul className="space-y-1 text-sm text-foreground">
-                  {job.highlights
-                    .filter((highlight) => highlight.trim().length > 0)
-                    .slice(0, 3)
-                    .map((highlight, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 shrink-0"></span>
-                        <span className="leading-relaxed">{highlight}</span>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="text-xs text-muted-foreground">
-              Posted {getTimeAgo(job.created_at)}
             </div>
           </div>
 
           {/* Company Logo */}
           {job.companies?.logo_url && (
-            <div className="w-12 h-12 ml-4">
+            <div className="ml-3 shrink-0">
               <Image
                 src={job.companies.logo_url}
                 alt={job.companies.name || "Company logo"}
@@ -156,6 +122,40 @@ export const RecentJobCard: React.FC<RecentJobCardProps> = ({ job }) => {
               />
             </div>
           )}
+        </div>
+
+        <div className="flex items-center gap-4 text-sm text-foreground mb-3">
+          <div className="flex items-center gap-1">
+            <span>{job.location}</span>
+          </div>
+          <LocationTypeBadge locationType={job.location_type} />
+        </div>
+
+        {job.show_salary !== false && formatSalary(job.salary_min, job.salary_max) && (
+          <div className="text-sm font-semibold text-green-600 mb-3">
+            {formatSalary(job.salary_min, job.salary_max)}
+          </div>
+        )}
+
+        {/* Job Highlights */}
+        {job.highlights && job.highlights.length > 0 && (
+          <div className="mb-3">
+            <ul className="space-y-1 text-sm text-foreground">
+              {job.highlights
+                .filter((highlight) => highlight.trim().length > 0)
+                .slice(0, 3)
+                .map((highlight, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span className="w-1 h-1 bg-muted-foreground rounded-full mt-2 shrink-0"></span>
+                    <span className="leading-relaxed">{highlight}</span>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="text-xs text-muted-foreground mb-4">
+          Posted {getTimeAgo(job.created_at)}
         </div>
 
         {/* View Job Button - at the bottom */}

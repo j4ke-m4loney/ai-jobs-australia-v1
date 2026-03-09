@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Jobs Australia — Growth</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #f0f0f0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .card {
+    width: 1080px;
+    height: 1080px;
+    background: linear-gradient(155deg, #0a1628 0%, #0f2040 50%, #162d54 100%);
+    padding: 64px 72px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(56, 120, 230, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .date-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 8px 18px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .title {
+    font-size: 38px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.15;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .title span {
+    background: linear-gradient(135deg, #5a9cf5, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 17px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 36px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .chart-container {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 28px;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 24px;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 20px 24px;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+
+  .stat-number.blue {
+    background: linear-gradient(135deg, #60a5fa, #93c5fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-number.purple {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-number.green {
+    background: linear-gradient(135deg, #34d399, #6ee7b7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer-text {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.25);
+  }
+
+  .footer-url {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .legend {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .legend-dot.clicks { background: #60a5fa; }
+  .legend-dot.impressions { background: #8b5cf6; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="brand">AI Jobs Australia</div>
+    <div class="date-badge">Google Search Console</div>
+  </div>
+
+  <div class="title">5 months. Zero ads. <span>Pure organic growth.</span></div>
+  <div class="subtitle">Oct 2025 — Feb 2026</div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot clicks"></div> Clicks</div>
+    <div class="legend-item"><div class="legend-dot impressions"></div> Impressions</div>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="growthChart"></canvas>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-number blue">101</div>
+      <div class="stat-label">Peak daily clicks</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number purple">11.3K</div>
+      <div class="stat-label">Peak daily impressions</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number green">+125%</div>
+      <div class="stat-label">Apply clicks MoM</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-text">Organic search only — no paid ads or sponsored placements</div>
+    <div class="footer-url">aijobsaustralia.com.au</div>
+  </div>
+</div>
+
+<script>
+  // Real GSC data
+  const rawData = [
+    ["2025-10-09",0,6],["2025-10-10",0,7],["2025-10-11",0,11],["2025-10-12",0,13],
+    ["2025-10-13",2,32],["2025-10-14",2,45],["2025-10-15",3,60],["2025-10-16",8,82],
+    ["2025-10-17",5,53],["2025-10-18",5,31],["2025-10-19",7,51],["2025-10-20",2,40],
+    ["2025-10-21",2,66],["2025-10-22",1,43],["2025-10-23",1,51],["2025-10-24",1,39],
+    ["2025-10-25",3,30],["2025-10-26",3,29],["2025-10-27",5,46],["2025-10-28",4,77],
+    ["2025-10-29",5,73],["2025-10-30",4,76],["2025-10-31",1,54],
+    ["2025-11-01",3,44],["2025-11-02",3,93],["2025-11-03",3,86],["2025-11-04",10,86],
+    ["2025-11-05",6,116],["2025-11-06",4,97],["2025-11-07",0,113],["2025-11-08",3,111],
+    ["2025-11-09",9,170],["2025-11-10",3,141],["2025-11-11",8,167],["2025-11-12",8,164],
+    ["2025-11-13",5,156],["2025-11-14",3,135],["2025-11-15",18,379],["2025-11-16",30,480],
+    ["2025-11-17",14,257],["2025-11-18",13,230],["2025-11-19",11,209],["2025-11-20",3,189],
+    ["2025-11-21",7,153],["2025-11-22",7,142],["2025-11-23",4,169],["2025-11-24",8,282],
+    ["2025-11-25",11,462],["2025-11-26",18,414],["2025-11-27",10,351],["2025-11-28",18,249],
+    ["2025-11-29",7,331],["2025-11-30",17,395],
+    ["2025-12-01",15,437],["2025-12-02",23,526],["2025-12-03",18,949],["2025-12-04",16,314],
+    ["2025-12-05",14,347],["2025-12-06",12,322],["2025-12-07",14,388],["2025-12-08",27,520],
+    ["2025-12-09",13,445],["2025-12-10",22,499],["2025-12-11",18,493],["2025-12-12",7,337],
+    ["2025-12-13",8,377],["2025-12-14",14,387],["2025-12-15",10,421],["2025-12-16",9,456],
+    ["2025-12-17",14,396],["2025-12-18",13,320],["2025-12-19",5,284],["2025-12-20",8,274],
+    ["2025-12-21",9,325],["2025-12-22",5,520],["2025-12-23",18,547],["2025-12-24",7,803],
+    ["2025-12-25",7,411],["2025-12-26",6,577],["2025-12-27",10,669],["2025-12-28",17,900],
+    ["2025-12-29",21,1140],["2025-12-30",16,1422],["2025-12-31",19,1224],
+    ["2026-01-01",19,1626],["2026-01-02",21,2486],["2026-01-03",17,1861],["2026-01-04",37,2339],
+    ["2026-01-05",35,2470],["2026-01-06",46,3181],["2026-01-07",40,3244],["2026-01-08",26,3452],
+    ["2026-01-09",80,4295],["2026-01-10",60,3930],["2026-01-11",53,4316],["2026-01-12",64,4667],
+    ["2026-01-13",55,4892],["2026-01-14",55,4359],["2026-01-15",60,6241],["2026-01-16",44,4688],
+    ["2026-01-17",36,4235],["2026-01-18",67,5589],["2026-01-19",60,6922],["2026-01-20",59,8339],
+    ["2026-01-21",65,7590],["2026-01-22",41,8629],["2026-01-23",32,6636],["2026-01-24",41,6769],
+    ["2026-01-25",35,6732],["2026-01-26",75,9333],["2026-01-27",91,9836],["2026-01-28",74,10629],
+    ["2026-01-29",65,9367],["2026-01-30",44,8544],["2026-01-31",45,7579],
+    ["2026-02-01",66,9184],["2026-02-02",66,9494],["2026-02-03",70,8679],["2026-02-04",74,9077],
+    ["2026-02-05",63,8550],["2026-02-06",44,7751],["2026-02-07",30,6049],["2026-02-08",51,8814],
+    ["2026-02-09",56,8981],["2026-02-10",73,11234],["2026-02-11",86,9811],["2026-02-12",63,9287],
+    ["2026-02-13",42,6470],["2026-02-14",39,6492],["2026-02-15",60,8283],["2026-02-16",91,9109],
+    ["2026-02-17",81,9226],["2026-02-18",104,11250],["2026-02-19",77,11253],["2026-02-20",54,8900],
+    ["2026-02-21",65,8896],["2026-02-22",96,11337],["2026-02-23",101,11244]
+  ];
+
+  const labels = rawData.map(d => {
+    const date = new Date(d[0] + 'T00:00:00');
+    const month = date.toLocaleString('en-AU', { month: 'short' });
+    const day = date.getDate();
+    return (day === 1 || day === 15) ? `${day} ${month}` : '';
+  });
+
+  const clicksData = rawData.map(d => d[1]);
+  const impressionsData = rawData.map(d => d[2]);
+
+  const ctx = document.getElementById('growthChart').getContext('2d');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Clicks',
+          data: clicksData,
+          borderColor: '#60a5fa',
+          backgroundColor: 'rgba(96, 165, 250, 0.08)',
+          fill: true,
+          borderWidth: 2.5,
+          pointRadius: 0,
+          tension: 0.3,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Impressions',
+          data: impressionsData,
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139, 92, 246, 0.05)',
+          fill: true,
+          borderWidth: 2.5,
+          pointRadius: 0,
+          tension: 0.3,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        x: {
+          grid: {
+            color: 'rgba(255, 255, 255, 0.04)',
+            drawBorder: false,
+          },
+          ticks: {
+            color: 'rgba(255, 255, 255, 0.3)',
+            font: { family: 'Inter', size: 12, weight: '500' },
+            maxRotation: 0,
+            autoSkip: false,
+          },
+          border: { display: false },
+        },
+        y: {
+          position: 'left',
+          grid: {
+            color: 'rgba(255, 255, 255, 0.04)',
+            drawBorder: false,
+          },
+          ticks: {
+            color: 'rgba(96, 165, 250, 0.5)',
+            font: { family: 'Inter', size: 12, weight: '600' },
+          },
+          border: { display: false },
+          title: {
+            display: true,
+            text: 'Clicks',
+            color: 'rgba(96, 165, 250, 0.5)',
+            font: { family: 'Inter', size: 12, weight: '600' },
+          },
+          min: 0,
+          max: 120,
+        },
+        y1: {
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: {
+            color: 'rgba(139, 92, 246, 0.5)',
+            font: { family: 'Inter', size: 12, weight: '600' },
+            callback: function(value) {
+              if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+              return value;
+            },
+          },
+          border: { display: false },
+          title: {
+            display: true,
+            text: 'Impressions',
+            color: 'rgba(139, 92, 246, 0.5)',
+            font: { family: 'Inter', size: 12, weight: '600' },
+          },
+          min: 0,
+          max: 12000,
+        },
+      },
+    },
+  });
+</script>
+
+</body>
+</html>

@@ -338,6 +338,49 @@ function validateAndTruncateArray(
     .filter((item) => item.length > 0);
 }
 
+/**
+ * Fixes unescaped double quotes inside JSON string values.
+ * Heuristic: a quote followed by , } ] or : (after optional whitespace) is a
+ * structural delimiter; anything else is an internal quote that needs escaping.
+ */
+function fixUnescapedQuotes(jsonStr: string): string {
+  let result = "";
+  let inString = false;
+
+  for (let i = 0; i < jsonStr.length; i++) {
+    const char = jsonStr[i];
+    const prevChar = i > 0 ? jsonStr[i - 1] : "";
+
+    if (char === '"' && prevChar !== "\\") {
+      if (!inString) {
+        inString = true;
+        result += char;
+      } else {
+        // Check if this quote ends the string by looking at what follows
+        const remaining = jsonStr.slice(i + 1).trimStart();
+        const nextChar = remaining[0];
+        if (
+          !nextChar ||
+          nextChar === "," ||
+          nextChar === "}" ||
+          nextChar === "]" ||
+          nextChar === ":"
+        ) {
+          inString = false;
+          result += char;
+        } else {
+          // Internal quote — escape it
+          result += '\\"';
+        }
+      }
+    } else {
+      result += char;
+    }
+  }
+
+  return result;
+}
+
 function cleanAndParseJSON<T>(text: string): T {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
@@ -361,7 +404,13 @@ function cleanAndParseJSON<T>(text: string): T {
       .replace(/[\u201C\u201D]/g, '\\"')
       .replace(/[\u2018\u2019]/g, "'");
 
-    return JSON.parse(sanitised);
+    try {
+      return JSON.parse(sanitised);
+    } catch {
+      // Last resort: fix unescaped quotes inside string values
+      const fixed = fixUnescapedQuotes(sanitised);
+      return JSON.parse(fixed);
+    }
   }
 }
 

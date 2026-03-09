@@ -113,7 +113,7 @@ export const JobCard: React.FC<JobCardProps> = ({
       <CardContent className="px-3 py-5 md:px-5">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-1">
+            <div className="flex items-start justify-between gap-2 mb-2">
               <h3 className="font-semibold text-base line-clamp-2 text-foreground">
                 {job.title}
               </h3>
@@ -124,65 +124,67 @@ export const JobCard: React.FC<JobCardProps> = ({
               )}
             </div>
 
-            <div className="flex items-center gap-1 text-sm text-foreground mb-3">
+            <div className="flex items-center gap-1 text-base text-foreground mb-3">
               <span className="font-medium">
                 {job.companies?.name || "Company"}
               </span>
             </div>
-
-            <div className="flex items-center gap-4 text-sm text-foreground mb-3">
-              <div className="flex items-center gap-1">
-                <HighlightedLocation
-                  location={job.location_display || job.location}
-                  selectedState={selectedState}
-                />
-              </div>
-              <LocationTypeBadge locationType={job.location_type} />
-            </div>
-
-            {job.show_salary !== false &&
-              formatSalary(job.salary_min, job.salary_max, job.salary_period) && (
-                <div className="text-sm font-semibold text-green-600 mb-3">
-                  {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
-                </div>
-              )}
-
-            {/* Job Highlights */}
-            {job.highlights && job.highlights.length > 0 && (
-              <div className="mb-3">
-                <ul className="space-y-1 text-xs text-foreground">
-                  {job.highlights
-                    .filter((highlight) => highlight.trim().length > 0)
-                    .slice(0, 3)
-                    .map((highlight, index) => (
-                      <li key={index} className="flex items-start gap-1.5 md:gap-2">
-                        <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full mt-1.5 shrink-0"></span>
-                        <span className="leading-relaxed flex-1 break-words">{highlight}</span>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="text-xs text-muted-foreground">
-              {job.is_featured ? "Featured" : `Posted ${getTimeAgo(job.created_at)}`}
-            </div>
           </div>
 
-          <div className="flex flex-col items-center gap-3 ml-1.5 md:ml-3">
-            {/* Company Logo - only show if exists */}
-            {job.companies?.logo_url && (
-              <div className="hidden md:block w-10 h-10 md:w-12 md:h-12">
-                <Image
-                  src={job.companies.logo_url}
-                  alt={job.companies.name || "Company logo"}
-                  width={48}
-                  height={48}
-                  className="w-10 h-10 md:w-12 md:h-12 rounded object-contain"
-                />
-              </div>
-            )}
+          {/* Company Logo - only show if exists */}
+          {job.companies?.logo_url && (
+            <div className="ml-1.5 md:ml-3">
+              <Image
+                src={job.companies.logo_url}
+                alt={job.companies.name || "Company logo"}
+                width={48}
+                height={48}
+                className="w-10 h-10 md:w-12 md:h-12 rounded object-contain"
+              />
+            </div>
+          )}
+        </div>
 
+        <div className="flex items-center gap-4 text-sm text-foreground mb-3">
+          <div className="flex items-center gap-1">
+            <HighlightedLocation
+              location={job.location_display || job.location}
+              selectedState={selectedState}
+            />
+          </div>
+          <LocationTypeBadge locationType={job.location_type} />
+        </div>
+
+        {job.show_salary !== false &&
+          formatSalary(job.salary_min, job.salary_max, job.salary_period) && (
+            <div className="text-sm font-semibold text-green-600 mb-3">
+              {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
+            </div>
+          )}
+
+        {/* Job Highlights */}
+        {job.highlights && job.highlights.length > 0 && (
+          <div className="mb-3">
+            <ul className="space-y-1 text-xs text-foreground">
+              {job.highlights
+                .filter((highlight) => highlight.trim().length > 0)
+                .slice(0, 3)
+                .map((highlight, index) => (
+                  <li key={index} className="flex items-start gap-1.5 md:gap-2">
+                    <span className="w-1.5 h-1.5 bg-muted-foreground rounded-full mt-1.5 shrink-0"></span>
+                    <span className="leading-relaxed flex-1 break-words">{highlight}</span>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mt-1">
+          <div className="text-xs text-muted-foreground">
+            {job.is_featured ? "Featured" : `Posted ${getTimeAgo(job.created_at)}`}
+          </div>
+          {/* Width matches logo column so heart centers under logo */}
+          <div className={`flex justify-center ${job.companies?.logo_url ? "w-[46px] md:w-[60px]" : ""}`}>
             <Button
               variant="ghost"
               size="sm"
