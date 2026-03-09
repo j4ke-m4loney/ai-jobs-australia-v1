@@ -170,6 +170,9 @@ export default function AdminJobEditPage() {
           disable_utm_tracking: disableUtmTracking,
           admin_notes: adminNotes.trim() || null,
           is_featured: isFeatured,
+          featured_until: isFeatured
+            ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            : null,
           status,
         })
         .eq("id", jobId);

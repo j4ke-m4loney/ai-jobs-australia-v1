@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hiring AI Talent in Australia — February 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --primary: #005ae0;
+    --primary-light: #e8f0fe;
+    --accent: #7c3aed;
+    --text: #1a1a2e;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --bg: #ffffff;
+    --bg-subtle: #f8fafc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 10.5pt;
+  }
+
+  /* Cover Page */
+  .cover {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #005ae0 0%, #7c3aed 100%);
+    color: white;
+    text-align: center;
+    padding: 60px;
+    page-break-after: always;
+  }
+
+  .cover-logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 40px;
+  }
+
+  .cover h1 {
+    font-size: 32pt;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  .cover .subtitle {
+    font-size: 14pt;
+    font-weight: 400;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 40px;
+  }
+
+  .cover .date {
+    font-size: 11pt;
+    color: rgba(255,255,255,0.7);
+    border-top: 1px solid rgba(255,255,255,0.3);
+    padding-top: 20px;
+    margin-top: 20px;
+  }
+
+  /* Content pages */
+  .content {
+    padding: 50px 60px;
+  }
+
+  /* Header bar on content pages */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 12px;
+    margin-bottom: 32px;
+  }
+
+  .page-header .brand {
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .page-header .report-title {
+    font-size: 8pt;
+    color: var(--text-muted);
+  }
+
+  /* Section titles */
+  h2 {
+    font-size: 16pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 28px;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  h2 .section-num {
+    display: inline-block;
+    background: var(--primary);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    font-size: 12pt;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+
+  p {
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  /* Highlight boxes */
+  .stat-highlight {
+    background: linear-gradient(135deg, var(--primary-light) 0%, #f0e6ff 100%);
+    border-left: 4px solid var(--primary);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+    font-size: 11pt;
+  }
+
+  .stat-highlight strong {
+    color: var(--primary);
+  }
+
+  /* Key insight callout */
+  .callout {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+
+  .callout-title {
+    font-weight: 700;
+    font-size: 10pt;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  /* Action box */
+  .action-box {
+    background: #fffbeb;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 14px 0;
+  }
+
+  .action-box strong {
+    color: #b45309;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 10pt;
+  }
+
+  th {
+    background: var(--primary);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  th:first-child { border-radius: 6px 0 0 0; }
+  th:last-child { border-radius: 0 6px 0 0; }
+
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:nth-child(even) td {
+    background: var(--bg-subtle);
+  }
+
+  tr:last-child td:first-child { border-radius: 0 0 0 6px; }
+  tr:last-child td:last-child { border-radius: 0 0 6px 0; }
+
+  /* Lists */
+  ul, ol {
+    margin: 10px 0 14px 20px;
+  }
+
+  li {
+    margin-bottom: 6px;
+  }
+
+  li strong {
+    color: var(--text);
+  }
+
+  /* Mismatch visual */
+  .mismatch-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+  }
+
+  .bar-label {
+    width: 80px;
+    font-size: 9pt;
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 24px;
+    background: var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .bar-fill-demand {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 8pt;
+    color: white;
+    font-weight: 600;
+  }
+
+  .bar-fill-supply {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 8pt;
+    color: white;
+    font-weight: 600;
+  }
+
+  /* Takeaway boxes */
+  .takeaway {
+    background: white;
+    border: 2px solid var(--primary);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 14px 0;
+  }
+
+  .takeaway h4 {
+    color: var(--primary);
+    font-size: 11pt;
+    margin-bottom: 6px;
+  }
+
+  .takeaway p {
+    margin-bottom: 0;
+    font-size: 10pt;
+  }
+
+  /* Divider */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 28px 0;
+  }
+
+  /* Avoid breaking inside key elements */
+  .stat-highlight, .callout, .action-box, .takeaway, .cta-box, table {
+    page-break-inside: avoid;
+  }
+
+  h2, h3 {
+    page-break-after: avoid;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 2px solid var(--primary);
+    text-align: center;
+  }
+
+  .footer p {
+    font-size: 9pt;
+    color: var(--text-muted);
+  }
+
+  .footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* CTA */
+  .cta-box {
+    background: linear-gradient(135deg, #005ae0 0%, #7c3aed 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 28px 32px;
+    text-align: center;
+    margin: 30px 0;
+  }
+
+  .cta-box h3 {
+    color: white;
+    font-size: 14pt;
+    margin-bottom: 8px;
+  }
+
+  .cta-box p {
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 0;
+    font-size: 10.5pt;
+  }
+
+  .cta-box a {
+    color: white;
+    text-decoration: underline;
+  }
+
+  /* Small text */
+  .small {
+    font-size: 8.5pt;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* Intro paragraph */
+  .intro {
+    font-size: 11.5pt;
+    color: var(--text);
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <svg class="cover-logo" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+    <path fill="white" d="M225.05,71c7.78,8.82,15.41,17.81,23.41,26.45,5.1-1.15,8.3-2.89,13.74-1.57,20.83,5.08,18.11,36.96-4.05,36.65l-16.44,61.02c12.54,7.26,12.4,27.05-1.05,33.01-1.97.87-4,.79-5.56,1.51-2.4,1.1-1.1,3.5-1.49,5.58-.23,1.23-.91,2.32-1.09,3.41-.97,5.92-1.09,12.04-2.54,17.89,10.33,4.91,15.42,16.14,8.94,26.43-6.36,10.11-22.19,10.97-29.39,1.5-8.45-11.13-1.54-27.58,12.5-28.34l4.43-26.14-.51-1.12c-8.63-2.72-15.05-12.44-12.22-21.54l-46.62-15.34c-9.16,15.29-32.34,12.25-35.05-5.84l-63.97-1.75c-2.91,5.62-5.7,11.56-12.05,14.06-23.2,9.12-37.87-23.94-15.18-34.59l-5.83-37.53c-8.96,1.09-18.8-7.02-19.86-15.81-2.27-18.87,17.21-28.19,32.06-17.91l44.26-28.71c-.4-6.92-.99-12.17,3.62-17.91,9.35-11.64,25.61-7.99,32.13,4.37l41.06-11.52c1.25-.77,1.66-6.24,2.51-8.41,1.5-3.83,4.75-7.65,8.38-9.61,19-10.28,38.56,12.13,25.63,29.38,6.83,7.37,13.56,14.88,20.21,22.41ZM180.29,54.07c-1.87-.06-3.52-1.33-4.83-2.57-4.94-4.69-1.14-7.6-10.07-5.62-12.45,2.76-24.53,7.77-37.12,10.12l-2.55,10.48,32.29,26.67,11.45-3.48,10.83-35.6ZM204.48,59.43l-5.31-5.28-11.49,3.1-10.31,34.71c5.63,3.33,9.43,7.79,11.03,14.19l51.6,2.45,2.37-6.34-37.89-42.84ZM51.8,97.19c-.33.47.88,4.11,2.19,3.78,28.54,1.52,56.96,2.35,85.53,3.18,3.32.1,7.1,1.51,10.62.39l1.88-5.2-31.5-26.99c-1.94-.9-6.17,1.77-8.83,2.09-5.99.73-11.24-2.22-15.89-5.63l-43.99,28.38ZM48.63,160.65c4.85-.02,9.22,2.29,12.97,5.15l89.13-51.66c-.85-1.15-1.44-1.45-2.85-1.64-4.36-.58-10.21.3-14.84.06-16.23-.85-32.61-1.95-48.83-2.59-10.38-.41-20.77-.29-31.14-1.26-.41,6.92-5.77,11.27-10.82,15.15l6.39,36.8ZM238.71,116.47l-49.72-2.69c-1.62.19-2.74,4.42-3.65,6.04-.8,1.4-2.6,2.29-2.97,4.06l43.88,68.16,7.99-1.15,15.93-58.76c-5.95-4.1-10.23-8.13-11.45-15.65ZM153.64,121.69l-87.47,50.61c-1.33,2.73,6.55,3.15,8.37,3.26,17.38,1.08,36.52.58,54.05.58,1.09,0,2.07.44,3.13.57,2.78-4.11,3.83-7.51,8.15-10.44,11.5-7.8,25.56-1.53,28.72,11.66.44,1.83-.56,4.17,1.17,5.26,14.17,4.32,28,10.16,42.19,14.38,2.92.87,5.06,2.09,6.83-1.24l-43.58-68.73c-8.07,2.71-16.02.47-21.55-5.91Z"/>
+  </svg>
+  <h1>Hiring AI Talent<br>in Australia</h1>
+  <p class="subtitle">What the data says — and how to stand out</p>
+  <p class="date">February 2026 Employer Report<br>AI Jobs Australia</p>
+</div>
+
+<!-- PAGE 2: Intro + Market at a Glance -->
+<div class="content">
+  <div class="page-header">
+    <span class="brand">AI Jobs Australia</span>
+    <span class="report-title">February 2026 Employer Report</span>
+  </div>
+
+  <p class="intro">If you're hiring for AI, ML, or Data Science roles in Australia, here's what you're up against — and how to stand out. This report is drawn from real hiring activity and job seeker behaviour on AI Jobs Australia.</p>
+
+  <h2>The Market at a Glance</h2>
+
+  <p>The AI job market in Australia is competitive and accelerating. In the first half of February alone, we saw thousands of job searches but only a <strong>16% search-to-apply rate</strong>. Candidates are browsing heavily but being highly selective about where they apply.</p>
+
+  <div class="stat-highlight">
+    <strong>16%</strong> — that's the search-to-apply conversion rate. For every 6 job searches, only 1 results in an apply click. Your listing needs to earn that click.
+  </div>
+
+  <hr>
+
+  <h2><span class="section-num">1</span> Your Competition Is Growing</h2>
+
+  <p>New AI roles are being posted at a faster rate than January, with over 120 companies actively hiring. Financial services is leading the charge — the big banks and major insurers collectively account for over 10% of all listings. Tech companies and consulting firms round out the top employers.</p>
+
+  <div class="callout">
+    <div class="callout-title">Key Insight</div>
+    If you're competing for the same talent pool, you're up against well-resourced, well-known brands. Your listing needs to differentiate on factors beyond brand alone.
+  </div>
+
+  <hr>
+
+  <h2><span class="section-num">2</span> What Candidates Are Searching For</h2>
+
+  <p>The most searched terms tell you exactly what talent is looking for:</p>
+
+  <table>
+    <tr><th>Search Term</th><th>Insight</th></tr>
+    <tr><td><strong>"AI Engineer"</strong></td><td>The #1 most searched job title</td></tr>
+    <tr><td><strong>"Data Scientist" / "Data Science"</strong></td><td>Consistently high volume</td></tr>
+    <tr><td><strong>"Machine Learning"</strong></td><td>Strong and steady demand</td></tr>
+    <tr><td><strong>"Junior" / "Entry Level"</strong></td><td>A growing, undersupplied segment</td></tr>
+  </table>
+
+  <div class="action-box">
+    <strong>Action:</strong> Make sure your job title includes these keywords. A listing titled "Technical Specialist — Advanced Analytics" will get fewer views than "Data Scientist" or "ML Engineer". Candidates search for the role, not your internal job title.
+  </div>
+
+  <p>Several major employers are also being searched for by name — if your brand isn't one of them, your job listing is doing the heavy lifting alone.</p>
+
+  <hr>
+
+  <h2><span class="section-num">3</span> Salary: The Elephant in the Room</h2>
+
+  <div class="stat-highlight">
+    <strong>Under 15%</strong> of AI job listings disclose salary. Over 85% of employers are asking candidates to apply blind.
+  </div>
+
+  <p>Here's why that's a problem: candidates are increasingly filtering and self-selecting based on salary expectations. If you're not disclosing, you're losing applicants to those who are.</p>
+
+  <h3>What the Market Is Paying</h3>
+  <p>Among roles that do disclose salary:</p>
+
+  <table>
+    <tr><th>Category</th><th>Relative Salary</th></tr>
+    <tr><td>Machine Learning</td><td><strong>Highest</strong> — ~35% above overall average</td></tr>
+    <tr><td>AI Engineering</td><td>Above average</td></tr>
+    <tr><td>Software Development</td><td>Above average</td></tr>
+    <tr><td>Data Engineering</td><td>At average</td></tr>
+    <tr><td>Strategy &amp; Transformation</td><td>Slightly below average</td></tr>
+    <tr><td>AI Governance</td><td>Below average</td></tr>
+    <tr><td>Data Science</td><td>Lowest of the technical roles</td></tr>
+  </table>
+
+  <p>ML specialists command the highest salaries — significantly above the overall market average. If you're offering at or above market, <strong>say so in the listing</strong> — it's your strongest competitive advantage.</p>
+
+  <hr>
+
+  <h2><span class="section-num">4</span> The Remote Work Gap</h2>
+
+  <p>This is the biggest mismatch in the data:</p>
+
+  <div style="margin: 20px 0;">
+    <div class="mismatch-bar">
+      <span class="bar-label">Demand</span>
+      <div class="bar-track"><div class="bar-fill-demand" style="width: 25%">~25%</div></div>
+    </div>
+    <div class="mismatch-bar">
+      <span class="bar-label">Supply</span>
+      <div class="bar-track"><div class="bar-fill-supply" style="width: 10%">~10%</div></div>
+    </div>
+    <p style="text-align: center; font-size: 9pt; color: var(--text-muted); margin-top: 6px;">Candidates filtering for remote work vs. jobs offering remote work</p>
+  </div>
+
+  <p><strong>~25% of candidates specifically filter for remote work, but under 10% of jobs offer it.</strong> ~56% of jobs are hybrid — making hybrid the default, not a differentiator.</p>
+
+  <p>If your role can be done remotely, advertising it as such immediately puts you in a less competitive pool.</p>
+
+  <div class="callout">
+    <div class="callout-title">By Category</div>
+    <strong>Machine Learning</strong> roles are the most flexible — about a third are fully remote.<br>
+    <strong>Data Science</strong> roles skew the opposite — the majority are onsite.<br>
+    <strong>AI Governance</strong> and <strong>Product</strong> roles are almost entirely hybrid.
+  </div>
+
+  <hr>
+
+  <h2><span class="section-num">5</span> Where the Candidates Are</h2>
+
+  <table>
+    <tr><th>Location</th><th>Share of Searches</th></tr>
+    <tr><td>Victoria</td><td>~35%</td></tr>
+    <tr><td>New South Wales</td><td>~32%</td></tr>
+    <tr><td>Remote</td><td>~24%</td></tr>
+    <tr><td>Queensland</td><td>~4%</td></tr>
+    <tr><td>Other states</td><td>~5%</td></tr>
+  </table>
+
+  <p><strong>~70% of AI job seekers are in Victoria or New South Wales.</strong> If you're hiring outside these states, expect a smaller local talent pool — but significantly less competition for attention.</p>
+
+  <hr>
+
+  <h2><span class="section-num">6</span> What Makes Candidates Click "Apply"</h2>
+
+  <p>Analysing the most applied-to roles this month, clear patterns emerge:</p>
+
+  <div class="takeaway">
+    <h4>Listings that attract the most clicks share these traits:</h4>
+    <ul style="margin-top: 8px;">
+      <li>Clear, searchable job titles ("AI Engineer" not "Technical Specialist")</li>
+      <li>"Remote" or multi-city options listed prominently</li>
+      <li>Mission-driven or AI-native employers</li>
+      <li>Entry-level opportunities (massively undersupplied relative to demand)</li>
+    </ul>
+  </div>
+
+  <p>The top-performing listing this month received more than double the apply clicks of any other — it had a specific, clear title, a focused role description, and a recognisable employer brand.</p>
+
+  <hr>
+
+  <h2><span class="section-num">7</span> How Technical Is the Hiring Bar?</h2>
+
+  <p>Our AI analysis of interview difficulty across roles posted this month:</p>
+
+  <table>
+    <tr><th>Difficulty</th><th>Share of Roles</th></tr>
+    <tr><td>Easy</td><td>~3%</td></tr>
+    <tr><td>Medium</td><td>~30%</td></tr>
+    <tr><td><strong>Hard</strong></td><td><strong>~58%</strong></td></tr>
+    <tr><td>Very Hard</td><td>~10%</td></tr>
+  </table>
+
+  <div class="callout">
+    <div class="callout-title">Key Insight</div>
+    <strong>Two-thirds of AI roles have hard or very hard interview processes.</strong> If your hiring process is technically demanding, you're the norm — but be aware that candidates have multiple options. Slow, multi-round processes lose candidates to faster-moving competitors.
+  </div>
+
+  <hr>
+
+  <h2><span class="section-num">8</span> Career Growth Matters to Candidates</h2>
+
+  <p>Our analysis also looked at career progression signals across listings:</p>
+
+  <ul>
+    <li><strong>~97% of roles</strong> show medium or high promotion potential — candidates expect growth</li>
+    <li><strong>~28% of roles</strong> offer high autonomy — appealing for self-directed engineers</li>
+    <li><strong>Zero roles</strong> scored low on autonomy this month</li>
+  </ul>
+
+  <p>If your listing doesn't signal career growth or autonomy, you're at a disadvantage. Mention progression paths, learning budgets, or leadership opportunities in your job description.</p>
+
+  <hr>
+
+  <h2><span class="section-num">9</span> The Opportunity for Employers</h2>
+
+  <p>Based on this month's data, here are the highest-leverage moves:</p>
+
+  <div class="takeaway">
+    <h4>Disclose your salary</h4>
+    <p>Under 15% of listings show salary. Candidates increasingly expect it, and listings with salary information convert better. You don't need to give an exact number — a range works.</p>
+  </div>
+
+  <div class="takeaway">
+    <h4>Offer remote or genuine hybrid</h4>
+    <p>A quarter of candidates want remote, but under 10% of jobs offer it. Even partial remote flexibility puts you ahead of 90% of the market.</p>
+  </div>
+
+  <div class="takeaway">
+    <h4>Use searchable job titles</h4>
+    <p>"AI Engineer", "Data Scientist", "Machine Learning Engineer" — these are what candidates type into the search bar. Don't bury the role behind corporate jargon.</p>
+  </div>
+
+  <div class="takeaway">
+    <h4>Don't overlook junior talent</h4>
+    <p>"Junior" and "entry level" are among the most common search terms, yet almost no entry-level roles were posted this month. There's an undersupplied segment of eager candidates ready to be developed.</p>
+  </div>
+
+  <div class="takeaway">
+    <h4>Move fast</h4>
+    <p>Candidates have hundreds of active listings to choose from. The average AI role is hard to interview for — if your process takes 6+ weeks, you're likely losing finalists to faster offers.</p>
+  </div>
+
+  <div class="cta-box">
+    <h3>Hiring for AI talent?</h3>
+    <p>Post a job on <a href="https://www.aijobsaustralia.com.au/hire">AI Jobs Australia</a> to reach Australia's most engaged AI job seeker audience.</p>
+  </div>
+
+  <div class="footer">
+    <p>This report is compiled from anonymised, aggregated data from <a href="https://www.aijobsaustralia.com.au">AI Jobs Australia</a> — Australia's dedicated job board for AI, Machine Learning, and Data Science roles. Data covers February 2026.</p>
+    <p style="margin-top: 8px;"><em>Salary insights reflect disclosed annual salaries only and should be used as directional benchmarks. Sample sizes vary by category.</em></p>
+  </div>
+</div>
+
+</body>
+</html>

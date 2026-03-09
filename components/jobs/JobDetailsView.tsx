@@ -9,7 +9,10 @@ import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { HighlightedLocation } from "@/components/jobs/HighlightedLocation";
 import { trackEvent } from "@/lib/analytics";
-import { getCombinedJobContent, formatJobTypes } from "@/lib/jobs/content-utils";
+import {
+  getCombinedJobContent,
+  formatJobTypes,
+} from "@/lib/jobs/content-utils";
 import { AnalyseRoleModal } from "@/components/jobs/AnalyseRoleModal";
 
 interface Job {
@@ -82,7 +85,7 @@ const getTimeAgo = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
   const diffInMinutes = Math.floor(
-    (now.getTime() - date.getTime()) / (1000 * 60)
+    (now.getTime() - date.getTime()) / (1000 * 60),
   );
 
   // Less than 60 minutes - show minutes
@@ -109,7 +112,6 @@ const getTimeAgo = (dateString: string) => {
   }
   return `${diffInMonths} months ago`;
 };
-
 
 export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
   job,
@@ -149,27 +151,15 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
       ref={scrollContainerRef}
       className="lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] lg:overflow-y-auto"
       style={{
-        overscrollBehavior: 'contain'
+        overscrollBehavior: "contain",
       }}
     >
       <div className="border border-primary/50 bg-white m-2 lg:m-4 rounded-lg">
         {/* Job Header */}
         <div className="p-4 lg:p-6 border-b mx-2 lg:mx-4">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              {/* Company Logo - only show if exists */}
-              {job.companies?.logo_url && (
-                <div className="mb-4">
-                  <Image
-                    src={job.companies.logo_url}
-                    alt={job.companies.name || "Company logo"}
-                    width={64}
-                    height={64}
-                    className="w-16 h-16 rounded-lg object-contain"
-                  />
-                </div>
-              )}
-
+          {/* Top row: title+company left, logo right */}
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1 min-w-0">
               <h1 className="text-lg lg:text-2xl font-bold text-foreground mb-1">
                 {job.title}
               </h1>
@@ -190,50 +180,50 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                   </span>
                 )}
               </div>
-
-              <div className="flex flex-wrap items-center gap-4 text-sm text-foreground mb-3">
-                <div className="flex items-center gap-1">
-                  <HighlightedLocation
-                    location={job.location_display || job.location}
-                    selectedState={selectedState}
-                  />
-                </div>
-                <LocationTypeBadge locationType={job.location_type} />
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{formatJobTypes(job.job_type)}</span>
-                </div>
-              </div>
-
-              {job.show_salary !== false && formatSalary(job.salary_min, job.salary_max, job.salary_period) && (
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="font-semibold text-green-600 text-base lg:text-lg">
-                    {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
-                  </span>
-                </div>
-              )}
             </div>
 
-            {/* Heart icon aligned with job title */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSaveClick(job.id);
-              }}
-              className="p-2 self-start -mt-1"
-              aria-label={isJobSaved ? "Unsave job" : "Save job"}
-            >
-              <Heart
-                className={`w-5 h-5 ${
-                  isJobSaved
-                    ? "fill-red-500 text-red-500"
-                    : "text-muted-foreground"
-                }`}
-              />
-            </Button>
+            {/* Company Logo - top right */}
+            {job.companies?.logo_url && (
+              <div className="ml-3 shrink-0">
+                <Image
+                  src={job.companies.logo_url}
+                  alt={job.companies.name || "Company logo"}
+                  width={64}
+                  height={64}
+                  className="w-16 h-16 rounded-lg object-contain"
+                />
+              </div>
+            )}
           </div>
+
+          {/* Location + badges */}
+          <div className="flex flex-wrap items-center gap-4 text-sm text-foreground mb-3">
+            <div className="flex items-center gap-1">
+              <HighlightedLocation
+                location={job.location_display || job.location}
+                selectedState={selectedState}
+              />
+            </div>
+            <LocationTypeBadge locationType={job.location_type} />
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{formatJobTypes(job.job_type)}</span>
+            </div>
+          </div>
+
+          {/* Salary */}
+          {job.show_salary !== false &&
+            formatSalary(job.salary_min, job.salary_max, job.salary_period) && (
+              <div className="flex items-center gap-2 mb-4">
+                <span className="font-semibold text-green-600 text-base lg:text-lg">
+                  {formatSalary(
+                    job.salary_min,
+                    job.salary_max,
+                    job.salary_period,
+                  )}
+                </span>
+              </div>
+            )}
 
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
@@ -272,6 +262,24 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 </div>
               ) : (
                 <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSaveClick(job.id);
+                    }}
+                    className="p-2"
+                    aria-label={isJobSaved ? "Unsave job" : "Save job"}
+                  >
+                    <Heart
+                      className={`w-5 h-5 ${
+                        isJobSaved
+                          ? "fill-red-500 text-red-500"
+                          : "text-muted-foreground"
+                      }`}
+                    />
+                  </Button>
                   <Link
                     href={`/jobs/${job.id}`}
                     target="_blank"
@@ -297,7 +305,15 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
           {/* Job Description (combined with requirements for display) */}
           <div>
             <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
-              <div aria-label="Job description" dangerouslySetInnerHTML={{ __html: getCombinedJobContent(job.description, job.requirements) }} />
+              <div
+                aria-label="Job description"
+                dangerouslySetInnerHTML={{
+                  __html: getCombinedJobContent(
+                    job.description,
+                    job.requirements,
+                  ),
+                }}
+              />
             </div>
           </div>
 
@@ -310,7 +326,12 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
               {job.companies?.description && (
                 <div className="text-foreground leading-relaxed mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
-                  <div aria-label="Company description" dangerouslySetInnerHTML={{ __html: job.companies.description }} />
+                  <div
+                    aria-label="Company description"
+                    dangerouslySetInnerHTML={{
+                      __html: job.companies.description,
+                    }}
+                  />
                 </div>
               )}
 
@@ -335,7 +356,9 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
           <div className="border-t pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-base lg:text-lg mb-1">Ready to apply?</h3>
+                <h3 className="font-semibold text-base lg:text-lg mb-1">
+                  Ready to apply?
+                </h3>
                 {/* <p className="text-sm text-muted-foreground">
                   Expires in {getDaysUntilExpiry(job.expires_at)} days
                 </p> */}

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6 AI Career Paths You Haven't Considered</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #f0f0f0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .card {
+    width: 1080px;
+    height: 1080px;
+    background: linear-gradient(155deg, #0a1628 0%, #0f2040 50%, #162d54 100%);
+    padding: 64px 72px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(56, 120, 230, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: -150px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .brand {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .date-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 8px 18px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .title {
+    font-size: 40px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.15;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .title span {
+    background: linear-gradient(135deg, #5a9cf5, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 17px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .paths {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  .path-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .path-number {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #5a9cf5, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+
+  .path-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+
+  .path-stat {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 4px;
+  }
+
+  .path-stat strong {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 700;
+  }
+
+  .path-tag {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 4px 12px;
+    border-radius: 12px;
+    align-self: flex-start;
+  }
+
+  .path-tag.green {
+    color: rgba(74, 222, 128, 0.9);
+    background: rgba(74, 222, 128, 0.1);
+  }
+
+  .path-tag.blue {
+    color: rgba(96, 165, 250, 0.9);
+    background: rgba(96, 165, 250, 0.1);
+  }
+
+  .path-tag.purple {
+    color: rgba(167, 139, 250, 0.9);
+    background: rgba(167, 139, 250, 0.1);
+  }
+
+  .path-tag.amber {
+    color: rgba(251, 191, 36, 0.9);
+    background: rgba(251, 191, 36, 0.1);
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer-text {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.25);
+  }
+
+  .footer-url {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="brand">AI Jobs Australia</div>
+    <div class="date-badge">February 2026</div>
+  </div>
+
+  <div class="title">6 AI career paths <span>you haven't considered</span></div>
+  <div class="subtitle">Nearly half of AI jobs aren't in Data Science or Machine Learning</div>
+
+  <div class="paths">
+
+    <div class="path-card">
+      <div class="path-number">01</div>
+      <div class="path-name">AI Governance</div>
+      <div class="path-stat"><strong>20 roles</strong> this month</div>
+      <div class="path-stat">Risk, policy, compliance & ethics</div>
+      <span class="path-tag blue">Legal & risk background</span>
+    </div>
+
+    <div class="path-card">
+      <div class="path-number">02</div>
+      <div class="path-name">AI Automation</div>
+      <div class="path-stat"><strong>21 roles</strong> — highest volume</div>
+      <div class="path-stat">Lowest hard-interview rate (29%)</div>
+      <span class="path-tag green">Most accessible entry point</span>
+    </div>
+
+    <div class="path-card">
+      <div class="path-number">03</div>
+      <div class="path-name">AI Infrastructure</div>
+      <div class="path-stat"><strong>16 roles</strong> this month</div>
+      <div class="path-stat"><strong>63%</strong> high promotion signal</div>
+      <span class="path-tag purple">Best long-term growth</span>
+    </div>
+
+    <div class="path-card">
+      <div class="path-number">04</div>
+      <div class="path-name">AI Product</div>
+      <div class="path-stat"><strong>13 roles</strong> this month</div>
+      <div class="path-stat"><strong>46%</strong> high autonomy</div>
+      <span class="path-tag amber">Commercial + technical</span>
+    </div>
+
+    <div class="path-card">
+      <div class="path-number">05</div>
+      <div class="path-name">AI Strategy</div>
+      <div class="path-stat"><strong>19 roles</strong> this month</div>
+      <div class="path-stat">Change management meets AI</div>
+      <span class="path-tag blue">Consulting background</span>
+    </div>
+
+    <div class="path-card">
+      <div class="path-number">06</div>
+      <div class="path-name">Conversational Design</div>
+      <div class="path-stat">UX for chatbots & voice AI</div>
+      <div class="path-stat">Linguistics meets product</div>
+      <span class="path-tag purple">Growing demand</span>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="footer-text">Based on 297 AI job listings across 123+ companies</div>
+    <div class="footer-url">aijobsaustralia.com.au</div>
+  </div>
+</div>
+
+</body>
+</html>
