@@ -35,7 +35,7 @@ import { AJAIntelligenceModal } from "@/components/jobs/AJAIntelligenceModal";
 import { JobCard } from "@/components/jobs/JobCard";
 import { JobDetailsView } from "@/components/jobs/JobDetailsView";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { trackJobSearch, trackCategoryFilterClicked } from "@/lib/analytics";
+import { trackJobSearch, trackCategoryFilterClicked, trackJobViewed } from "@/lib/analytics";
 import { categorySlugToName } from "@/lib/categories/generator";
 import { appendUtmParams } from "@/lib/utils";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
@@ -1164,6 +1164,14 @@ function JobsContent() {
   const jobDetailsScrollRef = useRef<HTMLDivElement>(null);
 
   const handleJobClick = (job: Job) => {
+    trackJobViewed({
+      job_id: job.id,
+      job_title: job.title,
+      company: job.companies?.name || "Unknown",
+      location: job.location,
+      is_featured: job.is_featured,
+    });
+
     // Store scroll position for both mobile and desktop
     const currentScroll = window.scrollY;
     setScrollPosition(currentScroll);

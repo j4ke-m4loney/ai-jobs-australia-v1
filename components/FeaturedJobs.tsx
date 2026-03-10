@@ -9,6 +9,7 @@ import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { Sparkles } from "lucide-react";
 import { formatJobTypes } from "@/lib/jobs/content-utils";
+import { trackEvent } from "@/lib/analytics";
 import Image from "next/image";
 
 interface Company {
@@ -67,12 +68,21 @@ export default function FeaturedJobs() {
     }
   };
 
-  const handleJobClick = (jobId: string) => {
+  const handleJobClick = (job: FeaturedJob) => {
+    trackEvent("featured_job_clicked", {
+      job_id: job.id,
+      job_title: job.title,
+      company: job.companies?.name || "Unknown",
+      location: job.location,
+      location_type: job.location_type,
+      is_authenticated: !!user,
+    });
+
     if (!user) {
       router.push("/login");
       return;
     }
-    router.push(`/jobs/${jobId}`);
+    router.push(`/jobs/${job.id}`);
   };
 
 
@@ -133,11 +143,11 @@ export default function FeaturedJobs() {
               <Card
                 key={job.id}
                 className="w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] h-full transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border border-l-4 border-l-primary cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                onClick={() => handleJobClick(job.id)}
+                onClick={() => handleJobClick(job)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    handleJobClick(job.id);
+                    handleJobClick(job);
                   }
                 }}
                 role="button"

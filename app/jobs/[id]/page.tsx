@@ -155,6 +155,19 @@ export default function JobDetailPage() {
     }
   }, [id, user, router, fetchJob, checkApplicationStatus]);
 
+  // Track job page view once the job data has loaded
+  useEffect(() => {
+    if (job) {
+      trackEvent("job_detail_page_viewed", {
+        job_id: job.id,
+        job_title: job.title,
+        company: job.companies?.name || "Unknown",
+        location: job.location,
+        is_featured: job.is_featured,
+      });
+    }
+  }, [job?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleApply = async () => {
     if (!user) {
       toast.error("Please sign in to apply for jobs");
@@ -165,7 +178,7 @@ export default function JobDetailPage() {
     if (!job) return;
 
     // Track Apply button click
-    trackEvent("apply_button_clicked", {
+    trackEvent("job_detail_apply_clicked", {
       job_id: job.id,
       job_title: job.title,
       company: job.companies?.name || "Unknown",

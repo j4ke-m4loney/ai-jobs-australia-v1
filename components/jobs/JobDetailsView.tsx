@@ -285,6 +285,15 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-primary hover:underline font-medium"
+                    onClick={() => {
+                      trackEvent("view_job_page_clicked", {
+                        job_id: job.id,
+                        job_title: job.title,
+                        company: job.companies?.name || "Unknown",
+                        location: job.location,
+                        is_featured: job.is_featured,
+                      });
+                    }}
                   >
                     View
                   </Link>

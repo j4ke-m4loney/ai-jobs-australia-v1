@@ -9,6 +9,7 @@ import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { trackEvent } from "@/lib/analytics";
 
 interface Job {
   id: string;
@@ -74,6 +75,16 @@ export const RecentJobCard: React.FC<RecentJobCardProps> = ({ job }) => {
 
   const handleViewJob = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    trackEvent("job_card_clicked", {
+      job_id: job.id,
+      job_title: job.title,
+      company: job.companies?.name || "Unknown",
+      location: job.location,
+      is_featured: job.is_featured,
+      source: "recent_jobs",
+      is_authenticated: !!user,
+    });
 
     if (!user) {
       // Redirect to login with the job details page as the next destination
