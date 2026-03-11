@@ -283,6 +283,20 @@ function JobsContent() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Normalise any category value to a canonical kebab-case slug
+  const normaliseCategorySlug = useCallback((raw: string) => {
+    return raw
+      .toLowerCase()
+      .replace(/&/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+  }, []);
+
+  // Map from canonical slug → all raw DB variants (for query expansion)
+  const [categoryVariants, setCategoryVariants] = useState<Record<string, string[]>>({});
+
   // Fetch category counts on mount (lightweight - one column only)
   useEffect(() => {
     const fetchCategoryCounts = async () => {
@@ -291,15 +305,25 @@ function JobsContent() {
         .select("category")
         .eq("status", "approved");
       const counts: Record<string, number> = {};
+      const variants: Record<string, Set<string>> = {};
       data?.forEach((job) => {
         if (job.category) {
-          counts[job.category] = (counts[job.category] || 0) + 1;
+          const canonical = normaliseCategorySlug(job.category);
+          counts[canonical] = (counts[canonical] || 0) + 1;
+          if (!variants[canonical]) variants[canonical] = new Set();
+          variants[canonical].add(job.category);
         }
       });
       setCategoryCounts(counts);
+      // Convert Sets to arrays for state
+      const variantMap: Record<string, string[]> = {};
+      Object.entries(variants).forEach(([slug, rawSet]) => {
+        variantMap[slug] = [...rawSet];
+      });
+      setCategoryVariants(variantMap);
     };
     fetchCategoryCounts();
-  }, []);
+  }, [normaliseCategorySlug]);
 
   // Memoized filter dependencies to prevent unnecessary re-renders
   const filterDeps = useMemo(
@@ -315,6 +339,7 @@ function JobsContent() {
       dateSort,
       sortBy,
       currentPage,
+      categoryVariants: JSON.stringify(categoryVariants),
     }),
     [
       debouncedSearchTerm,
@@ -328,6 +353,7 @@ function JobsContent() {
       dateSort,
       sortBy,
       currentPage,
+      categoryVariants,
     ]
   );
 
@@ -460,7 +486,11 @@ function JobsContent() {
           }
         }
         if (selectedCategories.length > 0) {
-          query = query.in("category", selectedCategories);
+          // Expand canonical slugs to all raw DB variants for accurate filtering
+          const expandedCategories = selectedCategories.flatMap(
+            (slug) => categoryVariants[slug] || [slug]
+          );
+          query = query.in("category", expandedCategories);
         }
         if (selectedJobTypes.length > 0) {
           query = query.overlaps("job_type", selectedJobTypes);
@@ -608,7 +638,10 @@ function JobsContent() {
               }
             }
             if (selectedCategories.length > 0) {
-              companyQuery = companyQuery.in("category", selectedCategories);
+              const expandedCats = selectedCategories.flatMap(
+                (slug) => categoryVariants[slug] || [slug]
+              );
+              companyQuery = companyQuery.in("category", expandedCats);
             }
             if (selectedJobTypes.length > 0) {
               companyQuery = companyQuery.in("job_type", selectedJobTypes);
@@ -818,6 +851,7 @@ function JobsContent() {
       currentPage,
       JOBS_PER_PAGE,
       fetchSuggestions,
+      categoryVariants,
     ]
   );
 
@@ -1202,19 +1236,7 @@ function JobsContent() {
     if (max) return `Up to $${max.toLocaleString()}`;
   };
 
-  const getCategoryDisplay = (category: string) => {
-    const categories = {
-      ai: "Artificial Intelligence",
-      ml: "Machine Learning",
-      "data-science": "Data Science",
-      engineering: "Engineering",
-      research: "Research",
-    };
-    return (
-      categories[category as keyof typeof categories] ||
-      categorySlugToName(category)
-    );
-  };
+  const getCategoryDisplay = (category: string) => categorySlugToName(category);
 
   const clearAllFilters = () => {
     setSelectedCategories([]);
@@ -1360,7 +1382,17 @@ function JobsContent() {
                           All categories
                         </button>
                       )}
-                      {[...JOB_CATEGORIES]
+                      {(() => {
+                        // Merge hardcoded categories with any new DB-only categories
+                        // All counts are already normalised to canonical slugs
+                        const knownSlugs = new Set<string>(JOB_CATEGORIES.map((c) => c.value));
+                        const dbOnlyCategories = Object.keys(categoryCounts)
+                          .filter((slug) => !knownSlugs.has(slug))
+                          .map((slug) => ({ value: slug, label: categorySlugToName(slug) }));
+                        return [...JOB_CATEGORIES, ...dbOnlyCategories];
+                      })()
+                        // Only show categories that have approved jobs
+                        .filter((cat) => (categoryCounts[cat.value] || 0) > 0)
                         .sort((a, b) => a.label.localeCompare(b.label))
                         .map((cat) => {
                           const isChecked = selectedCategories.includes(cat.value);

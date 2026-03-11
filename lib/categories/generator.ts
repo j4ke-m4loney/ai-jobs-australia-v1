@@ -59,23 +59,26 @@ export async function getAllJobCategories(): Promise<Array<{ slug: string; name:
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  // Get all approved job titles
+  // Get all approved jobs with their stored category
   const { data: jobs, error } = await supabaseAdmin
     .from('jobs')
-    .select('title')
-    .eq('status', 'approved');
+    .select('category')
+    .eq('status', 'approved')
+    .not('category', 'is', null);
 
   if (error || !jobs) {
     console.error('Error fetching jobs for categories:', error);
     return [];
   }
 
-  // Extract categories and count occurrences
+  // Count occurrences using the stored category column, normalised to canonical slugs
   const categoryMap = new Map<string, number>();
 
   jobs.forEach(job => {
-    const slug = extractCategorySlug(job.title);
-    categoryMap.set(slug, (categoryMap.get(slug) || 0) + 1);
+    if (job.category) {
+      const slug = job.category.toLowerCase().replace(/&/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+      categoryMap.set(slug, (categoryMap.get(slug) || 0) + 1);
+    }
   });
 
   // Convert to array and sort by count (most popular first)
