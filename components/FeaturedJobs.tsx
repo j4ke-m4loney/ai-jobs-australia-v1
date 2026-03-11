@@ -158,7 +158,7 @@ export default function FeaturedJobs() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       {/* Job Title */}
-                      <h3 className="font-semibold text-lg line-clamp-2 text-foreground mb-2">
+                      <h3 className="font-semibold text-xl line-clamp-2 text-foreground mb-2">
                         {job.title}
                       </h3>
 
