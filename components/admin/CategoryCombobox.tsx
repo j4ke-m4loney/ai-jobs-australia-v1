@@ -42,11 +42,13 @@ export function CategoryCombobox({
   const [open, setOpen] = React.useState(false);
   const [searchValue, setSearchValue] = React.useState("");
 
-  // Merge passed categories with defaults, removing duplicates
+  // Merge passed categories with defaults, removing duplicates (case-insensitive)
   const allCategories = React.useMemo(() => {
     const merged = [...defaultCategories];
+    const existingValues = new Set(merged.map((c) => c.value.toLowerCase()));
     categories.forEach((cat) => {
-      if (!merged.some((c) => c.value === cat.value)) {
+      if (!existingValues.has(cat.value.toLowerCase())) {
+        existingValues.add(cat.value.toLowerCase());
         merged.push(cat);
       }
     });

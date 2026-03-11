@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { extractCategorySlug, categorySlugToName, getPopularCategories } from '@/lib/categories/generator';
+import { categorySlugToName, getPopularCategories } from '@/lib/categories/generator';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RecentJobCard } from '@/components/jobs/RecentJobCard';
@@ -128,9 +128,13 @@ async function getCategoryJobs(categorySlug: string, targetCount: number = 9): P
       : job.companies || null
   });
 
-  // Get primary category jobs first
+  // Normalise a raw category value to canonical slug for comparison
+  const normaliseSlug = (raw: string) =>
+    raw.toLowerCase().replace(/&/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+
+  // Get primary category jobs using the stored category column
   const primaryJobs = jobs
-    .filter(job => extractCategorySlug(job.title) === categorySlug)
+    .filter(job => job.category && normaliseSlug(job.category) === categorySlug)
     .map(transformJob);
 
   // If we have enough jobs, return them
@@ -142,8 +146,8 @@ async function getCategoryJobs(categorySlug: string, targetCount: number = 9): P
   const relatedCategories = getRelatedCategories(categorySlug);
   const relatedJobs = jobs
     .filter(job => {
-      const jobSlug = extractCategorySlug(job.title);
-      return relatedCategories.includes(jobSlug) &&
+      const jobCatSlug = job.category ? normaliseSlug(job.category) : '';
+      return relatedCategories.includes(jobCatSlug) &&
              !primaryJobs.some(pj => pj.id === job.id); // Avoid duplicates
     })
     .map(transformJob);

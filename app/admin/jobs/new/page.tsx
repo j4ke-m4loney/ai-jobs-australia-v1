@@ -219,8 +219,12 @@ export default function AdminNewJobPage() {
         .not('category', 'is', null);
 
       if (data) {
-        // Get unique categories and format them
-        const uniqueCategories = [...new Set(data.map(job => job.category).filter(Boolean))];
+        // Normalise all DB categories to canonical kebab-case slugs
+        const rawCategories = data.map(job => job.category).filter(Boolean);
+        const normalisedSlugs = rawCategories.map(cat =>
+          cat.toLowerCase().replace(/&/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-')
+        );
+        const uniqueCategories = [...new Set(normalisedSlugs)];
         const formattedCategories = uniqueCategories.map(cat => ({
           value: cat,
           label: cat.split('-').map((word: string) =>
@@ -363,7 +367,7 @@ export default function AdminNewJobPage() {
         requirements: formData.requirements || null,
         location_type: locationTypeMap[formData.locationType] || "onsite",
         job_type: formData.jobTypes,
-        category: adminOptions.category,
+        category: adminOptions.category.toLowerCase().replace(/&/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-'),
         salary_min: getSalaryMin(formData.payConfig),
         salary_max: getSalaryMax(formData.payConfig),
         show_salary: formData.payConfig.showPay,

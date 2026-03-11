@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       location: jobData.locationAddress,
       location_type: mapLocationType(jobData.locationType),
       job_type: [mapJobType(jobData.jobType)],
-      category: 'ai', // Default category, could be determined from title/description
+      category: 'machine-learning', // Default category, admin can re-categorise during review
       salary_min: getSalaryMin(jobData.payConfig),
       salary_max: getSalaryMax(jobData.payConfig),
       salary_period: jobData.payConfig.payPeriod || 'year',

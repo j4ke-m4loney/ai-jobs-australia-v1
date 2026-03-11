@@ -255,7 +255,7 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     location: jobFormData.locationAddress,
     location_type: mapLocationType(jobFormData.locationType),
     job_type: jobFormData.jobTypes.map(mapJobType),
-    category: 'ai',
+    category: 'machine-learning',
     salary_min: getSalaryMin(jobFormData.payConfig),
     salary_max: getSalaryMax(jobFormData.payConfig),
     salary_period: jobFormData.payConfig?.payPeriod || 'year',
