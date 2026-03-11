@@ -110,7 +110,7 @@ export const RecentJobCard: React.FC<RecentJobCardProps> = ({ job }) => {
               </Badge>
             )}
 
-            <h3 className="font-semibold text-lg line-clamp-2 text-foreground mb-2">
+            <h3 className="font-semibold text-xl line-clamp-2 text-foreground mb-2">
               {job.title}
             </h3>
 

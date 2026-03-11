@@ -114,7 +114,7 @@ export const JobCard: React.FC<JobCardProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-2">
-              <h3 className="font-semibold text-base line-clamp-2 text-foreground">
+              <h3 className="font-semibold text-lg line-clamp-2 text-foreground">
                 {job.title}
               </h3>
               {job.status === "pending" && (
