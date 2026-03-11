@@ -78,7 +78,11 @@ const PostJobLoginContent = () => {
     const { error } = await signUp(email, password, "", "employer");
 
     if (error) {
-      setError(error.message);
+      setError(
+        error.message?.toLowerCase().includes('rate limit')
+          ? 'There have been too many sign-up attempts this hour. Please wait a few minutes and try again.'
+          : error.message
+      );
     } else {
       setSignUpSuccess(true);
       toast({
@@ -104,7 +108,11 @@ const PostJobLoginContent = () => {
       setError(
         error.message?.includes("Email not confirmed")
           ? "Check your inbox to confirm this email"
-          : error.message
+          : error.message?.toLowerCase().includes('rate limit')
+            ? 'There have been too many sign-in attempts this hour. Please wait a few minutes and try again.'
+            : error.message === "Invalid login credentials"
+              ? 'Incorrect email or password. Please try again.'
+              : error.message
       );
       setLoading(false);
     } else {

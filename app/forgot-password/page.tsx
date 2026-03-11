@@ -38,7 +38,13 @@ export default function ForgotPasswordPage() {
     const { error } = await resetPassword(emailValue);
 
     if (error) {
-      setError(error.message);
+      setError(
+        error.message?.toLowerCase().includes('security purposes')
+          ? 'Please wait 60 seconds before requesting another password reset.'
+          : error.message?.toLowerCase().includes('rate limit')
+            ? 'There have been too many password reset attempts this hour. Please wait a few minutes and try again.'
+            : error.message
+      );
     } else {
       setEmail(emailValue);
       setSuccess(true);
