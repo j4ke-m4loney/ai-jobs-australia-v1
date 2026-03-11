@@ -83,7 +83,7 @@ export const SaveJobAuthModal = ({
     if (error) {
       setError(
         error.message?.includes("Email not confirmed")
-          ? "Check your inbox to confirm this email"
+          ? "Check your inbox to confirm this email. If you can't find it, check your spam or junk folder."
           : error.message?.toLowerCase().includes('rate limit')
             ? 'There have been too many sign-in attempts this hour. Please wait a few minutes and try again, or sign in with Google instead.'
             : error.message === "Invalid login credentials"
