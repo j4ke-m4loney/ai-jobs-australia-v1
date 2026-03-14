@@ -136,13 +136,13 @@ export default function FeaturedJobs() {
           </p> */}
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6 mb-8">
+        <div className={`grid md:grid-cols-2 ${jobs.length !== 4 ? 'lg:grid-cols-3' : ''} gap-6 mb-8`}>
           {jobs
             .filter((job) => job && job.title && job.id)
             .map((job) => (
               <Card
                 key={job.id}
-                className="w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] h-full transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border border-l-4 border-l-primary cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                className="h-full transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border border-l-4 border-l-primary cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 onClick={() => handleJobClick(job)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
