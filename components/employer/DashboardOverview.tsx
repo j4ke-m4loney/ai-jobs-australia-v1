@@ -34,8 +34,8 @@ export function DashboardOverview() {
             Dashboard Overview
           </h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(2)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
                 <div className="h-20 bg-muted rounded"></div>
@@ -178,7 +178,7 @@ export function DashboardOverview() {
       </div>
 
       {/* Key Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StatCard
           icon={Briefcase}
           title="Total Jobs"
@@ -192,7 +192,8 @@ export function DashboardOverview() {
           description="Currently accepting applications"
           variant={displayStats.activeJobs > 0 ? "success" : "default"}
         />
-        <StatCard
+        {/* TODO: Uncomment when internal applications are supported */}
+        {/* <StatCard
           icon={Users}
           title="Total Applications"
           value={displayStats.totalApplications}
@@ -204,13 +205,13 @@ export function DashboardOverview() {
           value={displayStats.pendingApplications}
           description="Awaiting your response"
           variant={displayStats.pendingApplications > 0 ? "warning" : "default"}
-        />
+        /> */}
       </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Applications */}
-        <Card className="lg:col-span-2">
+        {/* TODO: Uncomment when internal applications are supported */}
+        {/* <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Recent Applications</CardTitle>
             <CardDescription>
@@ -261,7 +262,7 @@ export function DashboardOverview() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Quick Actions */}
         <Card>
@@ -278,7 +279,8 @@ export function DashboardOverview() {
               <Briefcase className="w-4 h-4 mr-2" />
               Manage Jobs
             </Button>
-            <Button
+            {/* TODO: Uncomment when internal applications are supported */}
+            {/* <Button
               variant="outline"
               className="w-full justify-start"
               onClick={() => router.push("/employer/applications")}
@@ -290,7 +292,7 @@ export function DashboardOverview() {
                   {displayStats.pendingApplications}
                 </Badge>
               )}
-            </Button>
+            </Button> */}
             <Button
               variant="outline"
               className="w-full justify-start"

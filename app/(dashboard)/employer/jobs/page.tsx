@@ -218,7 +218,7 @@ const EmployerJobs = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
@@ -243,7 +243,8 @@ const EmployerJobs = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          {/* TODO: Uncomment when internal applications are supported */}
+          {/* <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Applications
@@ -256,7 +257,7 @@ const EmployerJobs = () => {
               </div>
               <p className="text-xs text-muted-foreground">Across all jobs</p>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* Coming Soon Notice for Views */}
@@ -334,7 +335,8 @@ const EmployerJobs = () => {
                     </div>
 
                     <div className="flex items-center justify-between md:gap-4">
-                      <div className="flex items-center gap-6">
+                      {/* TODO: Uncomment when internal applications are supported */}
+                      {/* <div className="flex items-center gap-6">
                         <div className="text-center">
                           <div className="text-lg font-semibold">
                             {job.applicationCount}
@@ -343,7 +345,7 @@ const EmployerJobs = () => {
                             Applications
                           </div>
                         </div>
-                      </div>
+                      </div> */}
 
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -364,7 +366,8 @@ const EmployerJobs = () => {
                             <Edit className="w-4 h-4 mr-2" />
                             Edit Job
                           </DropdownMenuItem>
-                          <DropdownMenuItem
+                          {/* TODO: Uncomment when internal applications are supported */}
+                          {/* <DropdownMenuItem
                             onClick={() =>
                               router.push(
                                 `/employer/applications?job=${job.id}`
@@ -373,7 +376,7 @@ const EmployerJobs = () => {
                           >
                             <Users className="w-4 h-4 mr-2" />
                             View Applications
-                          </DropdownMenuItem>
+                          </DropdownMenuItem> */}
                           <DropdownMenuItem 
                             className="text-destructive"
                             onClick={() => router.push(`/employer/jobs/${job.id}#archive`)}

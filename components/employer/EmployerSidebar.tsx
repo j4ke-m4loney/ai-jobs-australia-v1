@@ -40,11 +40,12 @@ const menuItems = [
     url: "/employer/jobs",
     icon: Briefcase,
   },
-  {
-    title: "Applications",
-    url: "/employer/applications",
-    icon: Users,
-  },
+  // TODO: Uncomment when internal applications are supported
+  // {
+  //   title: "Applications",
+  //   url: "/employer/applications",
+  //   icon: Users,
+  // },
   // Analytics feature - coming soon!
   // {
   //   title: "Analytics",
