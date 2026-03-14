@@ -1,21 +1,14 @@
 /**
- * Get the correct site URL based on environment
- * - Development: Always uses localhost:3000
- * - Production: Uses NEXT_PUBLIC_SITE_URL or NEXT_PUBLIC_VERCEL_URL
+ * Get the correct site URL based on environment.
  *
- * This ensures email confirmation links and OAuth redirects work correctly
- * in both local development and production environments
+ * - If NEXT_PUBLIC_SITE_URL is set, it is ALWAYS used — even in development.
+ *   This ensures outbound emails and webhooks never contain localhost URLs.
+ * - In the browser during development (no NEXT_PUBLIC_SITE_URL), falls back
+ *   to window.location.origin so local navigation still works.
  */
 export function getSiteUrl(): string {
-  // In development, always use localhost (prioritize over env vars)
-  if (process.env.NODE_ENV === 'development') {
-    // Use window.location.origin if in browser, otherwise localhost:3000
-    return typeof window !== 'undefined'
-      ? window.location.origin
-      : 'http://localhost:3000';
-  }
-
-  // Production: Check for explicitly configured production URL
+  // Always prefer the explicitly configured production URL.
+  // This prevents localhost URLs leaking into emails sent from local dev.
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
@@ -25,7 +18,7 @@ export function getSiteUrl(): string {
     return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
   }
 
-  // Final fallback
+  // Fallback: browser origin or localhost
   return typeof window !== 'undefined'
     ? window.location.origin
     : 'http://localhost:3000';

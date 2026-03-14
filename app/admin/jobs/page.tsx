@@ -79,6 +79,9 @@ interface Job {
   rejection_reason: string | null;
   admin_notes: string | null;
   payment_status?: string;
+  companies?: {
+    name: string;
+  } | null;
 }
 
 // Loading component for Suspense fallback
@@ -142,7 +145,7 @@ function AdminJobsContent() {
       let query = supabase
         .from("jobs")
         .select(
-          "id, title, company_name, location, location_type, job_type, salary_min, salary_max, status, is_featured, created_at, reviewed_at, rejection_reason, admin_notes",
+          "id, title, company_name, location, location_type, job_type, salary_min, salary_max, status, is_featured, created_at, reviewed_at, rejection_reason, admin_notes, company_id, companies(name)",
           { count: 'exact' }
         )
         .order("created_at", { ascending: false })
@@ -167,7 +170,11 @@ function AdminJobsContent() {
       const { data, error, count } = await query;
       if (error) throw error;
 
-      setJobs(data || []);
+      const normalized = (data || []).map((job: Record<string, unknown>) => ({
+        ...job,
+        companies: Array.isArray(job.companies) ? job.companies[0] ?? null : job.companies ?? null,
+      })) as Job[];
+      setJobs(normalized);
       setTotalCount(count || 0);
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -596,7 +603,7 @@ function AdminJobsContent() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Building className="h-4 w-4 text-muted-foreground" />
-                          {job.company_name}
+                          {job.companies?.name || job.company_name}
                         </div>
                       </TableCell>
                       <TableCell>

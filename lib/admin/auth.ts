@@ -64,31 +64,42 @@ export async function requireAdmin() {
 
 export async function getAdminStats() {
   try {
-    // Get stats directly from tables instead of using RPC function
-    const [jobsResult, usersResult, paymentsResult] = await Promise.all([
-      supabase.from('jobs').select('*', { count: 'exact' }),
-      supabase.from('profiles').select('*', { count: 'exact' }),
-      supabase.from('payments').select('pricing_tier, status, job_id').eq('status', 'succeeded')
+    // Use count queries to avoid Supabase's default 1000 row limit
+    const [
+      totalResult,
+      pendingResult,
+      approvedResult,
+      rejectedResult,
+      featuredResult,
+      expiredResult,
+      usersResult,
+      paidFeaturedResult,
+      paidStandardResult,
+      companiesResult,
+    ] = await Promise.all([
+      supabase.from('jobs').select('*', { count: 'exact', head: true }),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('is_featured', true),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'expired'),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'succeeded').eq('pricing_tier', 'featured'),
+      supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'succeeded').eq('pricing_tier', 'standard'),
+      supabase.from('companies').select('*', { count: 'exact', head: true }),
     ]);
 
-    const jobs = jobsResult.data || [];
-    const payments = paymentsResult.data || [];
-
-    // Count paid jobs by pricing tier
-    const paid_featured_jobs = payments.filter(p => p.pricing_tier === 'featured').length;
-    const paid_standard_jobs = payments.filter(p => p.pricing_tier === 'standard').length;
-
     const stats = {
-      total_jobs: jobs.length,
-      pending_approval: jobs.filter(j => j.status === 'pending_approval').length,
-      approved: jobs.filter(j => j.status === 'approved').length,
-      rejected: jobs.filter(j => j.status === 'rejected').length,
-      featured: jobs.filter(j => j.is_featured === true).length,
-      expired: jobs.filter(j => j.status === 'expired').length,
-      total_companies: [...new Set(jobs.map(j => j.company_name).filter(Boolean))].length,
+      total_jobs: totalResult.count || 0,
+      pending_approval: pendingResult.count || 0,
+      approved: approvedResult.count || 0,
+      rejected: rejectedResult.count || 0,
+      featured: featuredResult.count || 0,
+      expired: expiredResult.count || 0,
+      total_companies: companiesResult.count || 0,
       total_users: usersResult.count || 0,
-      paid_featured_jobs,
-      paid_standard_jobs
+      paid_featured_jobs: paidFeaturedResult.count || 0,
+      paid_standard_jobs: paidStandardResult.count || 0,
     };
 
     return stats;
