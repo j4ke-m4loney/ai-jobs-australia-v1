@@ -231,6 +231,11 @@ export default function JobDetailPage() {
       (now.getTime() - date.getTime()) / (1000 * 60)
     );
 
+    // Less than 1 minute - show "Just now"
+    if (diffInMinutes < 1) {
+      return "Just now";
+    }
+
     // Less than 60 minutes - show minutes
     if (diffInMinutes < 60) {
       return `${diffInMinutes}min ago`;

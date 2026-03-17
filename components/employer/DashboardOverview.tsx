@@ -144,6 +144,10 @@ export function DashboardOverview() {
       (now.getTime() - date.getTime()) / (1000 * 60)
     );
 
+    if (diffInMinutes < 1) {
+      return "Just now";
+    }
+
     if (diffInMinutes < 60) {
       return `${diffInMinutes} min ago`;
     } else if (diffInMinutes < 1440) {

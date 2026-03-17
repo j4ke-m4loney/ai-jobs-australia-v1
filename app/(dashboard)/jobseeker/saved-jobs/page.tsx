@@ -141,6 +141,10 @@ const JobSeekerSavedJobs = () => {
       (now.getTime() - date.getTime()) / (1000 * 60 * 60)
     );
 
+    if (diffInHours < 1) {
+      return "Just now";
+    }
+
     if (diffInHours < 24) {
       return `${diffInHours}h ago`;
     }
