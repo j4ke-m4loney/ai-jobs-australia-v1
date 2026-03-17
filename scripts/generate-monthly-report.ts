@@ -568,7 +568,6 @@ function generateReport(
   line(`- **${sb.newSeekersThisMonth}** new verified job seekers signed up`);
 
   heading('Month-over-Month Comparison');
-  const _prevMonthName = period.label.replace(/\d{4}/, '').trim();
   table(
     ['Metric', `Previous Month`, `${period.label}`, 'Change (daily avg)'],
     [

@@ -8,11 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Briefcase,
-  Users,
-  Clock,
   Plus,
   Building,
   Settings,
@@ -119,44 +116,6 @@ export function DashboardOverview() {
         </CardContent>
       </Card>
     );
-  };
-
-  const getStatusBadgeVariant = (
-    status: string
-  ): "default" | "destructive" | "outline" | "secondary" => {
-    switch (status) {
-      case "pending":
-        return "outline";
-      case "reviewed":
-      case "shortlisted":
-        return "secondary";
-      case "rejected":
-        return "destructive";
-      default:
-        return "default";
-    }
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60)
-    );
-
-    if (diffInMinutes < 1) {
-      return "Just now";
-    }
-
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} min ago`;
-    } else if (diffInMinutes < 1440) {
-      const hours = Math.floor(diffInMinutes / 60);
-      return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
-    } else {
-      const days = Math.floor(diffInMinutes / 1440);
-      return `${days} ${days === 1 ? "day" : "days"} ago`;
-    }
   };
 
   return (

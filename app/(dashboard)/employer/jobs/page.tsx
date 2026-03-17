@@ -23,7 +23,6 @@ import {
   DollarSign,
   Clock,
   Briefcase,
-  Users,
   Activity,
 } from "lucide-react";
 import {

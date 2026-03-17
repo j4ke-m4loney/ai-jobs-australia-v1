@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Briefcase,
-  Users,
   Building2,
   Settings,
   Plus,
