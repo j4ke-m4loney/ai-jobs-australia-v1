@@ -12,11 +12,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // Fetch all approved jobs
+  // Fetch all approved, non-expired jobs
   const { data: jobs, error: jobsError } = await supabase
     .from('jobs')
     .select('id, created_at, updated_at')
     .eq('status', 'approved')
+    .gte('expires_at', new Date().toISOString())
     .order('created_at', { ascending: false })
 
   if (jobsError) {

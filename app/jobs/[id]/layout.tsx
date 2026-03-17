@@ -1,10 +1,30 @@
+import { cache } from "react";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 // Server-side Supabase client for metadata generation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Cached per-request — deduplicates across generateMetadata, JobLayout, and JobStructuredData
+const getApprovedJob = cache(async (id: string) => {
+  const { data } = await supabase
+    .from("jobs")
+    .select(`
+      *,
+      companies (
+        name,
+        logo_url,
+        website
+      )
+    `)
+    .eq("id", id)
+    .eq("status", "approved")
+    .single();
+  return data;
+});
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -14,25 +34,10 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { id } = await params;
-    const { data: job } = await supabase
-      .from("jobs")
-      .select(`
-        *,
-        companies (
-          name,
-          logo_url,
-          website
-        )
-      `)
-      .eq("id", id)
-      .eq("status", "approved")
-      .single();
+    const job = await getApprovedJob(id);
 
     if (!job || !job.companies) {
-      return {
-        title: "Job Not Found | AI Jobs Australia",
-        description: "This job listing is no longer available.",
-      };
+      notFound();
     }
 
     const companyName = job.companies.name || "Company";
@@ -79,10 +84,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   } catch (error) {
     console.error("Error generating metadata:", error);
-    return {
-      title: "AI Jobs Australia",
-      description: "Find your dream AI career in Australia",
-    };
+    notFound();
   }
 }
 
@@ -120,19 +122,7 @@ function parseLocations(location: string): Array<{ locality: string; region: str
 
 // Server component to render structured data
 async function JobStructuredData({ id }: { id: string }) {
-  const { data: job } = await supabase
-    .from("jobs")
-    .select(`
-      *,
-      companies (
-        name,
-        logo_url,
-        website
-      )
-    `)
-    .eq("id", id)
-    .eq("status", "approved")
-    .single();
+  const job = await getApprovedJob(id);
 
   if (!job || !job.companies) return null;
 
@@ -226,6 +216,13 @@ async function JobStructuredData({ id }: { id: string }) {
 
 export default async function JobLayout({ children, params }: Props) {
   const { id } = await params;
+
+  // Check if job exists and is approved — return 404 if not
+  const job = await getApprovedJob(id);
+
+  if (!job) {
+    notFound();
+  }
 
   return (
     <>
