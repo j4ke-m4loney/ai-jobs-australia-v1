@@ -45,15 +45,15 @@ interface AJAIntelligenceModalProps {
 const testimonials = [
   {
     quote:
-      "The AI Focus Score saved me so much time. I stopped applying to roles that were barely AI-related and landed a proper ML Engineer role in 3 weeks.",
-    name: "Sarah M.",
-    role: "ML Engineer, Sydney",
+      "The CV match score showed me I was an 89% fit for a role I almost didn't apply for. As result I was shortlisted, and got an interview this week!",
+    name: "Pete M.",
+    role: "AI Engineer, Sydney",
     initials: "SM",
     color: "bg-purple-500",
   },
   {
     quote:
-      "Interview difficulty predictions were spot on. I knew exactly which roles needed more prep, and it made a huge difference to my confidence.",
+      "I used the cover letter generator for every application last month. Each one referenced my actual projects and was highly relevant to each job. Never writing one from scratch again.",
     name: "James T.",
     role: "Data Scientist, Melbourne",
     initials: "JT",
@@ -61,34 +61,34 @@ const testimonials = [
   },
   {
     quote:
-      "The 'Who It's NOT For' feature is honestly brilliant. Saved me from applying to a role that sounded great but was clearly not for someone at my level.",
+      "The match score is awesome, it flagged missing experience in SQL that I overlooked during the job application phase. ",
     name: "Priya K.",
-    role: "AI Research Engineer, Brisbane",
+    role: "AI Analyst, Brisbane",
     initials: "PK",
     color: "bg-emerald-500",
   },
   {
     quote:
-      "I love the role summaries — they cut through the corporate jargon and tell you what the job actually is. Worth every cent of the subscription.",
-    name: "Daniel W.",
-    role: "NLP Engineer, Perth",
+      "These covers actually sound like a real person, not AI. You can generate one in 10 seconds, tweak a few lines, and it sounds like me.",
+    name: "Devon W.",
+    role: "Data Scientist, Sydney",
     initials: "DW",
     color: "bg-orange-500",
   },
   {
     quote:
-      "Skills match told me exactly what I was missing for my dream role. I upskilled in two areas and got the offer. Absolute game changer.",
-    name: "Lisa C.",
-    role: "Computer Vision Engineer, Adelaide",
-    initials: "LC",
+      "The 'keywords to add' feature is really helpful for getting around ATS filters",
+    name: "Lenny U.",
+    role: "Computer Vision, NSW",
+    initials: "LU",
     color: "bg-pink-500",
   },
   {
     quote:
-      "The autonomy vs process insights helped me avoid another micromanagement nightmare. Finally found a role where I can actually build things independently.",
-    name: "Tom R.",
-    role: "Senior ML Engineer, Canberra",
-    initials: "TR",
+      "Knowing my match percentage before applying saved me from wasting time on roles where I had no chance. I only apply where I'm 60% or above.",
+    name: "Asitha R.",
+    role: "AI Adoption Lead, Melbourne",
+    initials: "AR",
     color: "bg-teal-500",
   },
 ];
@@ -114,22 +114,57 @@ export function AJAIntelligenceModal({
     }
   }, [isOpen, source]);
 
+  // Personalised features (top billing — these are the differentiators)
+  const personalisedFeatures = [
+    {
+      icon: Target,
+      title: "CV Match Score (0-100%)",
+      description:
+        "Upload your CV once and see how well you match every role. Find out your matched skills, gaps, and keywords to add",
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+      isNew: true,
+      sample: (
+        <span className="inline-flex items-center text-[11px] font-medium rounded-full px-1.5 py-0.5 bg-purple-100 text-purple-700">
+          87% match
+        </span>
+      ),
+    },
+    {
+      icon: FileText,
+      title: "Custom Cover Letters For Each Job",
+      description:
+        "One-click professionally tailored cover letters that don't sound like AI and reference your actual experience from your CV",
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+      isNew: true,
+      sample: (
+        <span className="text-[11px] italic text-blue-500/70 leading-tight line-clamp-1">
+          Personalised to your experience
+        </span>
+      ),
+    },
+  ];
+
+  // Job analysis features
   const features = [
     {
       icon: FileText,
       title: "Role Summaries",
-      description: "Plain English explanations of what the job actually involves",
+      description:
+        "Plain English explanations of what the job actually involves",
       color: "text-indigo-600",
       bg: "bg-indigo-50",
       sample: (
         <span className="text-[11px] italic text-indigo-500/70 leading-tight line-clamp-1">
-          &ldquo;Build ML pipelines for real-time fraud detection at scale&rdquo;
+          &ldquo;Build ML pipelines for real-time fraud detection at
+          scale&rdquo;
         </span>
       ),
     },
     {
       icon: TrendingUp,
-      title: "AI Focus Score",
+      title: "AI Focus Score (0-100%)",
       description: "See how AI/ML-focused each role really is (0–100%)",
       color: "text-blue-600",
       bg: "bg-blue-50",
@@ -207,7 +242,7 @@ export function AJAIntelligenceModal({
     {
       icon: Target,
       title: "Skills Match",
-      description: "See how your skills stack up against requirements",
+      description: "See how your profile skills stack up against requirements",
       color: "text-pink-600",
       bg: "bg-pink-50",
       sample: (
@@ -227,7 +262,7 @@ export function AJAIntelligenceModal({
 
   const prevTestimonial = useCallback(() => {
     setActiveTestimonial(
-      (prev) => (prev - 1 + testimonials.length) % testimonials.length
+      (prev) => (prev - 1 + testimonials.length) % testimonials.length,
     );
   }, []);
 
@@ -249,7 +284,9 @@ export function AJAIntelligenceModal({
 
     trackIntelligenceCheckoutClicked({
       billing_interval: billingInterval,
-      price: isAnnual ? pricing.annual.priceDisplay : pricing.monthly.priceDisplay,
+      price: isAnnual
+        ? pricing.annual.priceDisplay
+        : pricing.monthly.priceDisplay,
     });
 
     try {
@@ -294,7 +331,7 @@ export function AJAIntelligenceModal({
               </div>
               <div>
                 <DialogTitle className="text-xl font-bold text-white">
-                  AJA Intelligence
+                  Get Job Matched with AJA Intelligence
                 </DialogTitle>
                 <DialogDescription className="text-purple-100 text-sm">
                   Premium AI insights for smarter job hunting
@@ -303,24 +340,30 @@ export function AJAIntelligenceModal({
             </div>
           </DialogHeader>
           <p className="relative z-10 text-sm text-purple-100 leading-relaxed mt-2">
-            Every job listing is analysed by AI to give you insights that go
-            beyond the job ad. Stop guessing — start applying strategically.
+            Upload your CV and get personalised match scores, tailored cover
+            letters, and deep job analysis on every listing. Stop guessing and
+            start applying strategically.
           </p>
         </div>
 
         {/* Content */}
         <div className="px-6 pb-6 pt-5 space-y-6">
-          {/* Features Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            {features.map((feature) => (
+          {/* Personalised Features — Hero Section */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-purple-600">
+                Matched for Every Job from Your CV!
+              </span>
+            </div>
+            {personalisedFeatures.map((feature) => (
               <div
                 key={feature.title}
-                className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-muted/50 transition-colors"
+                className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-purple-50/50 to-blue-50/50 border border-purple-200/30"
               >
                 <div
-                  className={`w-8 h-8 rounded-lg ${feature.bg} flex items-center justify-center flex-shrink-0`}
+                  className={`w-9 h-9 rounded-lg ${feature.bg} flex items-center justify-center flex-shrink-0`}
                 >
-                  <feature.icon className={`w-4 h-4 ${feature.color}`} />
+                  <feature.icon className={`w-4.5 h-4.5 ${feature.color}`} />
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-medium text-foreground leading-tight">
@@ -330,14 +373,53 @@ export function AJAIntelligenceModal({
                     {feature.description}
                   </div>
                   {feature.sample && (
-                    <div className="mt-1.5 flex items-center gap-1.5 rounded-md bg-muted/60 border border-border/40 px-2 py-1">
-                      <span className="text-[10px] font-medium text-muted-foreground/60 uppercase shrink-0">e.g.</span>
+                    <div className="mt-1.5 flex items-center gap-1.5 rounded-md bg-white/80 border border-border/40 px-2 py-1">
+                      <span className="text-[10px] font-medium text-muted-foreground/60 uppercase shrink-0">
+                        e.g.
+                      </span>
                       {feature.sample}
                     </div>
                   )}
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Job Analysis Features Grid */}
+          <div className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Job analysis
+            </span>
+            <div className="grid grid-cols-2 gap-3">
+              {features.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div
+                    className={`w-8 h-8 rounded-lg ${feature.bg} flex items-center justify-center flex-shrink-0`}
+                  >
+                    <feature.icon className={`w-4 h-4 ${feature.color}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-foreground leading-tight">
+                      {feature.title}
+                    </div>
+                    <div className="text-xs text-muted-foreground leading-snug mt-0.5">
+                      {feature.description}
+                    </div>
+                    {feature.sample && (
+                      <div className="mt-1.5 flex items-center gap-1.5 rounded-md bg-muted/60 border border-border/40 px-2 py-1">
+                        <span className="text-[10px] font-medium text-muted-foreground/60 uppercase shrink-0">
+                          e.g.
+                        </span>
+                        {feature.sample}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Pricing Toggle */}
@@ -347,7 +429,9 @@ export function AJAIntelligenceModal({
                 type="button"
                 onClick={() => {
                   setBillingInterval("month");
-                  trackIntelligenceBillingToggle({ selected_interval: "month" });
+                  trackIntelligenceBillingToggle({
+                    selected_interval: "month",
+                  });
                 }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   !isAnnual
@@ -423,7 +507,9 @@ export function AJAIntelligenceModal({
           ) : (
             <Button
               onClick={() => {
-                trackIntelligenceSigninPrompt({ billing_interval: billingInterval });
+                trackIntelligenceSigninPrompt({
+                  billing_interval: billingInterval,
+                });
                 onClose();
                 window.location.href = "/login?redirect=/jobs";
               }}

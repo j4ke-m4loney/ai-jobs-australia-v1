@@ -72,6 +72,8 @@ export const JOBSEEKER_PRICING_CONFIG = {
       savingsPercent: 45,
     },
     features: [
+      'CV Match Score — personalised match % for every role',
+      'Cover Letter Generator — one-click tailored letters',
       'Role summaries in plain English',
       'AI Focus scores on all job listings',
       'Interview difficulty predictions',

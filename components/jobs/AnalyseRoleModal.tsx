@@ -21,6 +21,10 @@ import { WhoRoleIsNotFor } from "@/components/jobs/WhoRoleIsNotFor";
 import { AutonomyVsProcessScore } from "@/components/jobs/AutonomyVsProcessScore";
 import { PromotionLikelihoodScore } from "@/components/jobs/PromotionLikelihoodScore";
 import { SkillsMatchScore } from "@/components/jobs/SkillsMatchScore";
+import { MatchScoreCard } from "@/components/jobs/MatchScoreCard";
+import { CoverLetterModal } from "@/components/jobs/CoverLetterModal";
+import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
 
 // Skills match result interface
 interface SkillsMatchResult {
@@ -104,6 +108,9 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
   const [showInitialLoader, setShowInitialLoader] = useState(true);
   // 0 = none visible, 1 = first visible, 2 = first two visible, etc.
   const [visibleFeatures, setVisibleFeatures] = useState<number>(0);
+
+  // Cover letter modal state
+  const [coverLetterModalOpen, setCoverLetterModalOpen] = useState(false);
 
   // Skills match state
   const [skillsMatchResult, setSkillsMatchResult] = useState<SkillsMatchResult | null>(null);
@@ -208,8 +215,8 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
         setShowInitialLoader(false);
       }, 1000);
 
-      // Staggered feature reveals (starting after initial loader) - now 8 features
-      const featureDelays = [1200, 1800, 2400, 3000, 3600, 4200, 4800, 5400]; // ms from modal open
+      // Staggered feature reveals (starting after initial loader) - now 10 features
+      const featureDelays = [1200, 1800, 2400, 3000, 3600, 4200, 4800, 5400, 6000, 6600]; // ms from modal open
       const featureTimers = featureDelays.map((delay, index) =>
         setTimeout(() => setVisibleFeatures(index + 1), delay)
       );
@@ -265,8 +272,55 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
           ) : (
             // Staggered feature reveals
             <div className="space-y-4 animate-in fade-in duration-300">
-              {/* Feature 1: Role Summary */}
+              {/* Feature 1: CV Match Score (personalised) */}
               {visibleFeatures >= 1 ? (
+                <div className="animate-in fade-in duration-300">
+                  <MatchScoreCard jobId={job.id} autoLoad={true} />
+                </div>
+              ) : (
+                <FeatureLoadingPlaceholder label="Matching your CV to this role..." />
+              )}
+
+              {/* Feature 2: Cover Letter Generator */}
+              {visibleFeatures >= 2 ? (
+                <div className="animate-in fade-in duration-300">
+                  <div className="relative overflow-hidden rounded-xl border border-blue-200/40 bg-white/70 backdrop-blur-xl p-3 sm:p-5 shadow-lg">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-t-xl" />
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-sm text-slate-800">Cover Letter Generator</div>
+                          <div className="text-xs text-muted-foreground">Tailored to your CV and this role</div>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => setCoverLetterModalOpen(true)}
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs"
+                      >
+                        Generate
+                      </Button>
+                    </div>
+                  </div>
+                  {job && (
+                    <CoverLetterModal
+                      isOpen={coverLetterModalOpen}
+                      onClose={() => setCoverLetterModalOpen(false)}
+                      jobId={job.id}
+                      jobTitle={job.title}
+                      companyName={job.companies?.name}
+                    />
+                  )}
+                </div>
+              ) : (
+                <FeatureLoadingPlaceholder label="Preparing cover letter generator..." />
+              )}
+
+              {/* Feature 3: Role Summary */}
+              {visibleFeatures >= 3 ? (
                 <div className="animate-in fade-in duration-300">
                   <RoleSummary
                     oneLiner={job.role_summary_one_liner ?? null}
@@ -279,8 +333,8 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
                 <FeatureLoadingPlaceholder label="Analysing role summary..." />
               )}
 
-              {/* Feature 2: AI Focus Score */}
-              {visibleFeatures >= 2 ? (
+              {/* Feature 4: AI Focus Score */}
+              {visibleFeatures >= 4 ? (
                 <div className="animate-in fade-in duration-300">
                   <AIFocusScore
                     percentage={job.ai_focus_percentage ?? null}
@@ -293,8 +347,8 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
                 <FeatureLoadingPlaceholder label="Calculating AI focus..." />
               )}
 
-              {/* Feature 3: Interview Difficulty */}
-              {visibleFeatures >= 3 ? (
+              {/* Feature 5: Interview Difficulty */}
+              {visibleFeatures >= 5 ? (
                 <div className="animate-in fade-in duration-300">
                   <InterviewDifficultyScore
                     level={job.interview_difficulty_level ?? null}
@@ -307,8 +361,8 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
                 <FeatureLoadingPlaceholder label="Assessing interview difficulty..." />
               )}
 
-              {/* Feature 4: Who Role Is For */}
-              {visibleFeatures >= 4 ? (
+              {/* Feature 6: Who Role Is For */}
+              {visibleFeatures >= 6 ? (
                 <div className="animate-in fade-in duration-300">
                   <WhoRoleIsFor
                     bullets={job.who_role_is_for_bullets ?? null}
@@ -320,8 +374,8 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
                 <FeatureLoadingPlaceholder label="Identifying ideal candidates..." />
               )}
 
-              {/* Feature 5: Who Role Is NOT For */}
-              {visibleFeatures >= 5 ? (
+              {/* Feature 7: Who Role Is NOT For */}
+              {visibleFeatures >= 7 ? (
                 <div className="animate-in fade-in duration-300">
                   <WhoRoleIsNotFor
                     bullets={job.who_role_is_not_for_bullets ?? null}
@@ -333,8 +387,8 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
                 <FeatureLoadingPlaceholder label="Identifying mismatches..." />
               )}
 
-              {/* Feature 6: Autonomy vs Process */}
-              {visibleFeatures >= 6 ? (
+              {/* Feature 8: Autonomy vs Process */}
+              {visibleFeatures >= 8 ? (
                 <div className="animate-in fade-in duration-300">
                   <AutonomyVsProcessScore
                     autonomyLevel={job.autonomy_level ?? null}
@@ -348,8 +402,8 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
                 <FeatureLoadingPlaceholder label="Assessing autonomy vs process..." />
               )}
 
-              {/* Feature 7: Promotion Likelihood */}
-              {visibleFeatures >= 7 ? (
+              {/* Feature 9: Promotion Likelihood */}
+              {visibleFeatures >= 9 ? (
                 <div className="animate-in fade-in duration-300">
                   <PromotionLikelihoodScore
                     signal={job.promotion_likelihood_signal ?? null}
@@ -362,8 +416,8 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
                 <FeatureLoadingPlaceholder label="Assessing promotion likelihood..." />
               )}
 
-              {/* Feature 8: Skills Match (user-specific, computed on-demand) */}
-              {visibleFeatures >= 8 ? (
+              {/* Feature 10: Skills Match (user-specific, computed on-demand) */}
+              {visibleFeatures >= 10 ? (
                 <div className="animate-in fade-in duration-300">
                   <SkillsMatchScore
                     percentage={skillsMatchResult?.percentage ?? null}

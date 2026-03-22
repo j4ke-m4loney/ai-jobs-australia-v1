@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Clock, Heart, Sparkles } from "lucide-react";
+import { Clock, Heart, Sparkles, FileText } from "lucide-react";
 import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
@@ -14,6 +14,8 @@ import {
   formatJobTypes,
 } from "@/lib/jobs/content-utils";
 import { AnalyseRoleModal } from "@/components/jobs/AnalyseRoleModal";
+import { MatchScoreCard } from "@/components/jobs/MatchScoreCard";
+import { CoverLetterModal } from "@/components/jobs/CoverLetterModal";
 
 interface Job {
   id: string;
@@ -131,6 +133,7 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
   selectedState,
 }) => {
   const [analyseModalOpen, setAnalyseModalOpen] = useState(false);
+  const [coverLetterModalOpen, setCoverLetterModalOpen] = useState(false);
 
   const handleApplyClick = () => {
     // Track Apply button click
@@ -237,20 +240,29 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
               </div>
               {/* AJA Intelligence CTA */}
               {hasAIFocusAccess ? (
-                <button
-                  onClick={() => setAnalyseModalOpen(true)}
-                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:underline mt-1 font-medium"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  Analyse Role
-                </button>
+                <div className="flex items-center gap-3 mt-1">
+                  <button
+                    onClick={() => setAnalyseModalOpen(true)}
+                    className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 hover:underline font-medium"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Analyse Role
+                  </button>
+                  <button
+                    onClick={() => setCoverLetterModalOpen(true)}
+                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                  >
+                    <FileText className="w-3 h-3" />
+                    Cover Letter
+                  </button>
+                </div>
               ) : onIntelligenceCTAClick ? (
                 <button
                   onClick={onIntelligenceCTAClick}
                   className="flex items-center gap-1 text-xs text-primary hover:underline mt-1"
                 >
                   <Sparkles className="w-3 h-3" />
-                  Try AJA Intelligence
+                  How well do you match?
                 </button>
               ) : null}
             </div>
@@ -366,6 +378,11 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
             </div>
           )}
 
+          {/* CV Match Score — for Intelligence subscribers */}
+          {hasAIFocusAccess && (
+            <MatchScoreCard jobId={job.id} />
+          )}
+
           {/* Apply Section */}
           <div className="border-t pt-6">
             <div className="flex items-center justify-between">
@@ -394,13 +411,22 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
       {/* Analyse Role Modal for subscribers */}
       {hasAIFocusAccess && (
-        <AnalyseRoleModal
-          isOpen={analyseModalOpen}
-          onClose={() => setAnalyseModalOpen(false)}
-          job={job}
-          userSkills={userSkills}
-          source="jobs_page_sidebar"
-        />
+        <>
+          <AnalyseRoleModal
+            isOpen={analyseModalOpen}
+            onClose={() => setAnalyseModalOpen(false)}
+            job={job}
+            userSkills={userSkills}
+            source="jobs_page_sidebar"
+          />
+          <CoverLetterModal
+            isOpen={coverLetterModalOpen}
+            onClose={() => setCoverLetterModalOpen(false)}
+            jobId={job.id}
+            jobTitle={job.title}
+            companyName={job.companies?.name}
+          />
+        </>
       )}
     </div>
   );

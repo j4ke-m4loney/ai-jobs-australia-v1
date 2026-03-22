@@ -15,9 +15,30 @@ import {
   Zap,
   ArrowUpRight,
   Target,
+  Upload,
 } from "lucide-react";
+import Link from "next/link";
 import { useSubscription } from "@/hooks/useSubscription";
 import { trackIntelligenceSubscribed } from "@/lib/analytics";
+
+const personalisedFeatures = [
+  {
+    icon: Target,
+    title: "CV Match Score",
+    description: "See how your CV matches every role — skills, gaps, and keywords to add",
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+    isNew: true,
+  },
+  {
+    icon: FileText,
+    title: "Cover Letter Generator",
+    description: "One-click tailored cover letters using your CV and the job description",
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    isNew: true,
+  },
+];
 
 const features = [
   {
@@ -110,9 +131,33 @@ export default function SubscriptionSuccessPage() {
         </p>
       </div>
 
-      {/* How to use it */}
+      {/* Step 1: Upload CV */}
+      <div className="rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 mb-6">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+            <Upload className="w-5 h-5 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h2 className="font-semibold text-blue-900 mb-1">First: Upload your CV</h2>
+            <p className="text-sm text-blue-800 mb-3">
+              Your personalised features — <strong>CV Match Scores</strong> and the{" "}
+              <strong>Cover Letter Generator</strong> — need your CV to work. Upload it
+              once and every job listing will show how well you match, plus you can
+              generate tailored cover letters in one click.
+            </p>
+            <Link href="/jobseeker/documents">
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+                <Upload className="w-3.5 h-3.5" />
+                Upload Your CV
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Step 2: How to use it */}
       <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50 p-5 mb-8">
-        <h2 className="font-semibold text-sm text-purple-900 mb-3">How to use AJA Intelligence</h2>
+        <h2 className="font-semibold text-sm text-purple-900 mb-3">Then: Browse jobs with Intelligence</h2>
         <div className="flex items-start gap-4">
           <div className="flex-1 space-y-2 text-sm text-purple-800">
             <p>
@@ -121,28 +166,77 @@ export default function SubscriptionSuccessPage() {
                 <Sparkles className="w-3 h-3" />
                 Analyse Role
               </span>{" "}
-              link. Click it to open a full AI analysis of the role.
+              and{" "}
+              <span className="inline-flex items-center gap-1 font-medium text-blue-600">
+                <FileText className="w-3 h-3" />
+                Cover Letter
+              </span>{" "}
+              links. Click them to get personalised insights and a tailored cover letter.
             </p>
           </div>
           <div className="flex-shrink-0">
             <div className="rounded-lg border border-purple-200 bg-white px-4 py-3 shadow-sm">
               <div className="text-[10px] text-muted-foreground mb-1">Posted 2 days ago</div>
-              <button
-                className="flex items-center gap-1 text-xs text-purple-600 font-medium"
-                tabIndex={-1}
-                aria-hidden
-              >
-                <Sparkles className="w-3 h-3" />
-                Analyse Role
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  className="flex items-center gap-1 text-xs text-purple-600 font-medium"
+                  tabIndex={-1}
+                  aria-hidden
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Analyse Role
+                </button>
+                <button
+                  className="flex items-center gap-1 text-xs text-blue-600 font-medium"
+                  tabIndex={-1}
+                  aria-hidden
+                >
+                  <FileText className="w-3 h-3" />
+                  Cover Letter
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Features Grid */}
+      {/* Personalised Features */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Personalised to your CV</h2>
+          <span className="text-[10px] font-bold text-white bg-gradient-to-r from-purple-600 to-blue-600 px-1.5 py-0.5 rounded-full">NEW</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {personalisedFeatures.map((feature) => (
+            <div
+              key={feature.title}
+              className="flex items-start gap-3 p-3 rounded-lg border border-purple-200/50 bg-gradient-to-r from-purple-50/50 to-blue-50/50"
+            >
+              <div
+                className={`w-9 h-9 rounded-lg ${feature.bg} flex items-center justify-center flex-shrink-0`}
+              >
+                <feature.icon className={`w-4.5 h-4.5 ${feature.color}`} />
+              </div>
+              <div>
+                <div className="text-sm font-medium">{feature.title}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {feature.description}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground mt-2 ml-1">
+          Requires a CV upload.{" "}
+          <Link href="/jobseeker/documents" className="text-primary hover:underline font-medium">
+            Upload now →
+          </Link>
+        </p>
+      </div>
+
+      {/* Job Analysis Features Grid */}
       <div className="mb-8">
-        <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">What&apos;s included in your subscription</h2>
+        <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-4">Job analysis</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {features.map((feature) => (
             <div

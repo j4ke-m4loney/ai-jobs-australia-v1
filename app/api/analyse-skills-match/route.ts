@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { anthropic } from '@/lib/anthropic';
-import Anthropic from '@anthropic-ai/sdk';
 
 export interface SkillsMatchAnalysis {
   percentage: number;
@@ -10,21 +9,7 @@ export interface SkillsMatchAnalysis {
   confidence: 'high' | 'medium' | 'low';
 }
 
-const SYSTEM_PROMPT = `You are an expert career advisor analysing how well a candidate's skills match a job posting.
-
-You must return a JSON object with exactly this structure:
-{
-  "percentage": <number 0-100>,
-  "matched_skills": ["skill1", "skill2"],
-  "missing_skills": ["skill1", "skill2"],
-  "rationale": "<string 150-350 chars>",
-  "confidence": "<high|medium|low>"
-}
-
-CRITICAL REQUIREMENTS:
-1. Your rationale MUST be between 150-350 characters. Keep it SHORT and PUNCHY.
-2. ALWAYS write complete sentences. Never end mid-thought.
-3. Get to the point immediately - no filler phrases.
+const SYSTEM_PROMPT = `You are an expert career advisor analysing how well a candidate's skills match a job posting. Use the provided tool to submit your analysis.
 
 Scoring guidelines:
 - 80-100: Excellent match - candidate has most/all required skills
@@ -39,19 +24,56 @@ Skill matching rules:
 - Weight skills by importance - requirements mentioned first or emphasised are more critical
 - Only include skills in matched_skills if the candidate actually has them
 - Only include skills in missing_skills if they're clearly required by the job
+- Keep matched_skills and missing_skills to the most important 3-5 skills each
 
 Confidence levels:
 - high: Clear skill requirements in job posting, easy to match
 - medium: Some ambiguity in requirements or candidate skills
-- low: Vague job requirements or very limited candidate skills
+- low: Vague job requirements or very limited candidate skills`;
 
-Keep matched_skills and missing_skills to the most important 3-5 skills each.`;
+const skillsMatchTool = {
+  name: 'submit_skills_match' as const,
+  description: 'Submit the skills match analysis results',
+  input_schema: {
+    type: 'object' as const,
+    required: ['percentage', 'matched_skills', 'missing_skills', 'rationale', 'confidence'],
+    properties: {
+      percentage: {
+        type: 'number' as const,
+        description: 'Match score from 0-100',
+        minimum: 0,
+        maximum: 100,
+      },
+      matched_skills: {
+        type: 'array' as const,
+        items: { type: 'string' as const },
+        description: 'Skills the candidate has that match the JD (max 5)',
+        maxItems: 5,
+      },
+      missing_skills: {
+        type: 'array' as const,
+        items: { type: 'string' as const },
+        description: 'Key skills required by the JD that the candidate lacks (max 5)',
+        maxItems: 5,
+      },
+      rationale: {
+        type: 'string' as const,
+        description: 'Short, punchy rationale (150-350 chars). Complete sentences. Australian English.',
+        maxLength: 400,
+      },
+      confidence: {
+        type: 'string' as const,
+        enum: ['high', 'medium', 'low'],
+        description: 'Confidence level of the analysis',
+      },
+    },
+  },
+};
 
 export async function POST(request: NextRequest) {
   try {
     const { userSkills, jobTitle, jobDescription, jobRequirements } = await request.json();
 
-    // Validate input
     if (!userSkills || !Array.isArray(userSkills)) {
       return NextResponse.json(
         { error: 'userSkills must be an array' },
@@ -66,7 +88,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If user has no skills, return a specific response
     if (userSkills.length === 0) {
       return NextResponse.json({
         percentage: 0,
@@ -91,6 +112,8 @@ ${jobRequirements ? `Requirements:\n${jobRequirements}` : ''}
     const response = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
+      tools: [skillsMatchTool],
+      tool_choice: { type: 'tool', name: 'submit_skills_match' },
       messages: [
         {
           role: 'user',
@@ -106,59 +129,31 @@ ${jobContent}`,
       system: SYSTEM_PROMPT,
     });
 
-    // Check for truncation
-    if (response.stop_reason === 'max_tokens') {
-      console.error('Response truncated by max_tokens limit');
-      return NextResponse.json(
-        { error: 'Analysis response was truncated' },
-        { status: 500 }
-      );
-    }
-
-    // Extract the text content from the response
-    const textContent = response.content.find(
-      (block): block is Anthropic.TextBlock => block.type === 'text'
+    // Extract tool use result — guaranteed structured JSON
+    const toolUse = response.content.find(
+      (block) => block.type === 'tool_use' && block.name === 'submit_skills_match'
     );
-    if (!textContent || textContent.type !== 'text') {
+
+    if (!toolUse || toolUse.type !== 'tool_use') {
       return NextResponse.json(
-        { error: 'No text content in response' },
+        { error: 'No structured response from analysis' },
         { status: 500 }
       );
     }
 
-    // Parse the JSON response
-    const jsonMatch = textContent.text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error('Could not parse JSON from response:', textContent.text);
-      return NextResponse.json(
-        { error: 'Could not parse analysis response' },
-        { status: 500 }
-      );
-    }
+    const result = toolUse.input as SkillsMatchAnalysis;
 
-    const result = JSON.parse(jsonMatch[0]) as SkillsMatchAnalysis;
-
-    // Validate and sanitise the response
-    if (
-      typeof result.percentage !== 'number' ||
-      result.percentage < 0 ||
-      result.percentage > 100
-    ) {
+    // Validate and sanitise
+    if (typeof result.percentage !== 'number' || result.percentage < 0 || result.percentage > 100) {
       result.percentage = Math.max(0, Math.min(100, result.percentage || 0));
     }
 
-    if (!Array.isArray(result.matched_skills)) {
-      result.matched_skills = [];
-    }
-
-    if (!Array.isArray(result.missing_skills)) {
-      result.missing_skills = [];
-    }
+    if (!Array.isArray(result.matched_skills)) result.matched_skills = [];
+    if (!Array.isArray(result.missing_skills)) result.missing_skills = [];
 
     if (typeof result.rationale !== 'string') {
       result.rationale = 'Unable to generate analysis rationale.';
     } else if (result.rationale.length > 350) {
-      // Truncate at word boundary
       result.rationale = result.rationale.slice(0, 347).replace(/\s+\S*$/, '...');
     }
 
