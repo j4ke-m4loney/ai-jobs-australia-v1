@@ -18,6 +18,7 @@ import {
   Mail,
   Lightbulb,
   Compass,
+  Shield,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -168,6 +169,20 @@ const tools = [
       "10 AI career paths",
       "Australian salary data",
       "Personalised results",
+      "100% private",
+    ],
+  },
+  {
+    title: "AI Governance Readiness Assessment",
+    description:
+      "Assess your readiness for AI governance, ethics, and compliance roles. Get scored against Australia's AI Ethics Principles, risk frameworks, and regulatory requirements.",
+    icon: Shield,
+    href: "/tools/ai-governance-readiness-assessment",
+    badge: "New",
+    features: [
+      "Australian AI frameworks",
+      "6 governance dimensions",
+      "Learning pathways",
       "100% private",
     ],
   },
