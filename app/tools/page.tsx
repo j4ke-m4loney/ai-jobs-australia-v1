@@ -19,6 +19,7 @@ import {
   Lightbulb,
   Compass,
   Shield,
+  PenTool,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -183,6 +184,20 @@ const tools = [
       "Australian AI frameworks",
       "6 governance dimensions",
       "Learning pathways",
+      "100% private",
+    ],
+  },
+  {
+    title: "AI/ML Job Description Generator",
+    description:
+      "Generate structured, inclusive job descriptions for AI and ML roles. Get bias detection, salary benchmarking, and quality checks to attract top candidates.",
+    icon: PenTool,
+    href: "/tools/ai-ml-job-description-generator",
+    badge: "New",
+    features: [
+      "Bias-free language checks",
+      "Salary benchmarking",
+      "10 AI/ML role templates",
       "100% private",
     ],
   },
