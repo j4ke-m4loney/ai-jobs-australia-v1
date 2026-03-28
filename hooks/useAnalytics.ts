@@ -99,7 +99,8 @@ export function useAnalytics() {
                 applicant_id
               `)
               .in('job_id', batchIds)
-              .not('application_type', 'in', '("external","email")');
+              .not('application_type', 'in', '("external","email")')
+              .limit(10000);
 
             if (batchError) {
               console.error('Error fetching applications batch:', batchError);

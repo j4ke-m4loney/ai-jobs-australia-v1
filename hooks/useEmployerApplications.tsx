@@ -113,12 +113,14 @@ export const useEmployerApplications = (selectedJobId?: string) => {
               .from("job_applications")
               .select("job_id")
               .in("job_id", batchIds)
-              .not("application_type", "in", '("external","email")'),
+              .not("application_type", "in", '("external","email")')
+              .limit(10000),
             supabase
               .from("job_applications")
               .select("job_id")
               .in("job_id", batchIds)
-              .in("application_type", ["external", "email"]),
+              .in("application_type", ["external", "email"])
+              .limit(10000),
           ]);
 
           if (internalResult.error) {

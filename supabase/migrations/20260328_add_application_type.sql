@@ -14,5 +14,9 @@ ALTER TABLE job_applications DROP CONSTRAINT IF EXISTS job_applications_status_c
 ALTER TABLE job_applications ADD CONSTRAINT job_applications_status_check
   CHECK (status IN ('submitted', 'reviewing', 'shortlisted', 'interview', 'accepted', 'rejected', 'withdrawn', 'applied'));
 
--- 3. Refresh PostgREST schema cache
+-- 3. Index for efficient filtering by application_type in employer queries
+CREATE INDEX IF NOT EXISTS idx_job_applications_type
+  ON job_applications(job_id, application_type);
+
+-- 4. Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
