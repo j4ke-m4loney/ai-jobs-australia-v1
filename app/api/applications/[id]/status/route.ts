@@ -51,6 +51,7 @@ export async function PUT(
         status,
         applicant_id,
         job_id,
+        application_type,
         jobs (
           id,
           title,
@@ -66,6 +67,14 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Application not found' },
         { status: 404 }
+      );
+    }
+
+    // Reject status changes on external/email application records
+    if (application.application_type === 'external' || application.application_type === 'email') {
+      return NextResponse.json(
+        { error: 'Cannot update status of external applications' },
+        { status: 400 }
       );
     }
 

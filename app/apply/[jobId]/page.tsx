@@ -31,6 +31,7 @@ import { getCombinedJobContent, formatJobTypes } from "@/lib/jobs/content-utils"
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trackInternalApplicationStarted, trackApplicationSubmitted } from "@/lib/analytics";
+import { trackExternalApply } from "@/lib/applications/track-external-apply";
 
 interface Job {
   id: string;
@@ -516,10 +517,14 @@ export default function ApplyPage() {
                 company&apos;s website.
               </p>
               <Button
-                onClick={() =>
-                  job.application_url &&
-                  window.open(appendUtmParams(job.application_url, job.disable_utm_tracking), "_blank")
-                }
+                onClick={() => {
+                  if (job.application_url) {
+                    window.open(appendUtmParams(job.application_url, job.disable_utm_tracking), "_blank");
+                    if (user) {
+                      trackExternalApply(supabase, job.id, user.id, 'external');
+                    }
+                  }
+                }}
                 size="lg"
                 className="w-full bg-primary hover:bg-primary/90 text-white"
               >
@@ -542,10 +547,14 @@ export default function ApplyPage() {
                 This position requires you to apply via email.
               </p>
               <Button
-                onClick={() =>
-                  job.application_email &&
-                  (window.location.href = `mailto:${job.application_email}?subject=Application for ${job.title}`)
-                }
+                onClick={() => {
+                  if (job.application_email) {
+                    window.location.href = `mailto:${job.application_email}?subject=Application for ${job.title}`;
+                    if (user) {
+                      trackExternalApply(supabase, job.id, user.id, 'email');
+                    }
+                  }
+                }}
                 size="lg"
                 className="w-full bg-primary hover:bg-primary/90 text-white"
               >

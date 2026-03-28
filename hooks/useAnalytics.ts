@@ -6,6 +6,7 @@ export interface AnalyticsData {
   totalJobs: number;
   activeJobs: number;
   totalApplications: number;
+  totalApplyClicks: number;
   pendingApplications: number;
   reviewedApplications: number;
   recentApplications: Array<{
@@ -69,6 +70,7 @@ export function useAnalytics() {
           totalJobs,
           activeJobs,
           totalApplications: 0,
+          totalApplyClicks: 0,
           pendingApplications: 0,
           reviewedApplications: 0,
           recentApplications: []
@@ -96,7 +98,8 @@ export function useAnalytics() {
                 job_id,
                 applicant_id
               `)
-              .in('job_id', batchIds);
+              .in('job_id', batchIds)
+              .not('application_type', 'in', '("external","email")');
 
             if (batchError) {
               console.error('Error fetching applications batch:', batchError);
@@ -104,6 +107,19 @@ export function useAnalytics() {
               allApplications.push(...batchData);
             }
           }
+
+          // Count external/email apply clicks separately
+          let applyClicks = 0;
+          for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
+            const batchIds = jobIds.slice(i, i + BATCH_SIZE);
+            const { count } = await supabase
+              .from('job_applications')
+              .select('*', { count: 'exact', head: true })
+              .in('job_id', batchIds)
+              .in('application_type', ['external', 'email']);
+            applyClicks += count ?? 0;
+          }
+          analyticsData.totalApplyClicks = applyClicks;
 
           // Sort all applications by created_at descending (client-side)
           allApplications.sort((a, b) =>
@@ -191,6 +207,7 @@ export function useAnalytics() {
           totalJobs: 0,
           activeJobs: 0,
           totalApplications: 0,
+          totalApplyClicks: 0,
           pendingApplications: 0,
           reviewedApplications: 0,
           recentApplications: []

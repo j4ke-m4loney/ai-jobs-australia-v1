@@ -32,9 +32,9 @@ import {
   Search,
   ArrowUpDown,
   RefreshCw,
-  FileDown,
   Star,
   Eye,
+  ExternalLink,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -183,6 +183,9 @@ const EmployerApplications = () => {
   };
 
   const totalApplications = Object.values(statusCounts).reduce((a, b) => a + b, 0);
+  const selectedJob = jobs.find((j) => j.id === selectedJobId);
+  const isExternalJob = selectedJob?.application_method === "external" || selectedJob?.application_method === "email";
+  const externalClickCount = selectedJob?.external_click_count ?? 0;
 
   const handleStatusUpdate = async (
     applicationId: string,
@@ -269,48 +272,6 @@ const EmployerApplications = () => {
       await downloadCoverLetter(application.cover_letter_url, applicantName);
     } finally {
       setDownloadingCoverLetter(null);
-    }
-  };
-
-  const handleExportCSV = async () => {
-    if (!selectedJobId) return;
-
-    try {
-      const response = await fetch(
-        `/api/applications/export?jobId=${selectedJobId}${statusFilter !== "all" ? `&status=${statusFilter}` : ""}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Export failed");
-      }
-
-      // Extract filename from Content-Disposition header
-      const disposition = response.headers.get("Content-Disposition");
-      let filename = `applications-export-${new Date().toISOString().split("T")[0]}.csv`;
-      if (disposition) {
-        const match = disposition.match(/filename="?([^"]+)"?/);
-        if (match?.[1]) {
-          filename = match[1];
-        }
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast({ title: "Export Complete", description: "CSV file downloaded." });
-    } catch {
-      toast({
-        title: "Export Failed",
-        description: "Failed to export applications.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -567,7 +528,27 @@ const EmployerApplications = () => {
         {selectedJobId && !error && (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className={`grid grid-cols-2 sm:grid-cols-3 ${isExternalJob ? "lg:grid-cols-6" : "lg:grid-cols-5"} gap-4`}>
+              {isExternalJob && (
+                <Card className="border-sky-200 bg-sky-50/50">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Apply Clicks
+                    </CardTitle>
+                    <ExternalLink className="h-4 w-4 text-sky-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-sky-600">
+                      {externalClickCount}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {selectedJob?.application_method === "email"
+                        ? "Clicks to your email address"
+                        : "Clicks to your external ATS"}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -635,7 +616,7 @@ const EmployerApplications = () => {
               </Card>
             </div>
 
-            {/* Search, Sort, and Export Controls */}
+            {/* Search and Sort Controls */}
             <div className="space-y-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -666,16 +647,6 @@ const EmployerApplications = () => {
                     <SelectItem value="name-desc">Name Z-A</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button
-                  variant="outline"
-                  size="default"
-                  onClick={handleExportCSV}
-                  className="gap-2 flex-shrink-0"
-                >
-                  <FileDown className="w-4 h-4" />
-                  <span className="hidden sm:inline">Export CSV</span>
-                  <span className="sm:hidden">CSV</span>
-                </Button>
               </div>
             </div>
 

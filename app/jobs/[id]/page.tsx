@@ -27,6 +27,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { formatSalary } from "@/lib/salary-utils";
 import { AJAIntelligenceModal } from "@/components/jobs/AJAIntelligenceModal";
 import { getCombinedJobContent, formatJobTypes } from "@/lib/jobs/content-utils";
+import { trackExternalApply } from "@/lib/applications/track-external-apply";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
@@ -194,12 +195,16 @@ export default function JobDetailPage() {
     // If external application, open link
     if (job.application_method === "external" && job.application_url) {
       window.open(appendUtmParams(job.application_url, job.disable_utm_tracking), "_blank");
+      trackExternalApply(supabase, job.id, user.id, 'external');
+      setHasApplied(true);
       return;
     }
 
     // If email application, open email client
     if (job.application_method === "email" && job.application_email) {
       window.location.href = `mailto:${job.application_email}?subject=Application for ${job.title}`;
+      trackExternalApply(supabase, job.id, user.id, 'email');
+      setHasApplied(true);
       return;
     }
 
@@ -371,7 +376,11 @@ export default function JobDetailPage() {
                       Application Submitted
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      You&apos;ve already applied for this position
+                      Track it in your{" "}
+                      <a href="/jobseeker/applications" className="text-primary hover:underline">
+                        Applied Jobs
+                      </a>{" "}
+                      dashboard
                     </p>
                   </div>
                 ) : (

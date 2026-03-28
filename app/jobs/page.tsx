@@ -38,6 +38,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { trackJobSearch, trackCategoryFilterClicked, trackJobViewed } from "@/lib/analytics";
 import { categorySlugToName } from "@/lib/categories/generator";
 import { appendUtmParams } from "@/lib/utils";
+import { trackExternalApply } from "@/lib/applications/track-external-apply";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import { JOB_CATEGORIES } from "@/lib/job-import/categories";
 import { getLocationSearchTerms } from "@/lib/locations/search-terms";
@@ -1141,6 +1142,10 @@ function JobsContent() {
       selectedJob.application_url
     ) {
       window.open(appendUtmParams(selectedJob.application_url, selectedJob.disable_utm_tracking), "_blank");
+      if (user) {
+        trackExternalApply(supabase, selectedJob.id, user.id, 'external');
+        setHasApplied((prev) => ({ ...prev, [selectedJob.id]: true }));
+      }
       return;
     }
 
@@ -1150,6 +1155,10 @@ function JobsContent() {
       selectedJob.application_email
     ) {
       window.location.href = `mailto:${selectedJob.application_email}?subject=Application for ${selectedJob.title}`;
+      if (user) {
+        trackExternalApply(supabase, selectedJob.id, user.id, 'email');
+        setHasApplied((prev) => ({ ...prev, [selectedJob.id]: true }));
+      }
       return;
     }
 

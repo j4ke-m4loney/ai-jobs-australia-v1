@@ -274,7 +274,11 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                     Application Submitted
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    You&apos;ve applied for this position
+                    Track it in your{" "}
+                    <a href="/jobseeker/applications" className="text-primary hover:underline">
+                      Applied Jobs
+                    </a>{" "}
+                    dashboard
                   </div>
                 </div>
               ) : (

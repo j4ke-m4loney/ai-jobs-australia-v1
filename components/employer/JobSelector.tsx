@@ -30,6 +30,8 @@ interface Job {
   id: string;
   title: string;
   application_count: number;
+  external_click_count: number;
+  application_method?: string;
   status: string;
 }
 
@@ -52,6 +54,12 @@ export const JobSelector = ({
     (sum, job) => sum + job.application_count,
     0
   );
+  const totalExternalClicks = jobs.reduce(
+    (sum, job) => sum + job.external_click_count,
+    0
+  );
+  const isExternalJob = (job: Job) =>
+    job.application_method === "external" || job.application_method === "email";
 
   return (
     <Card>
@@ -66,9 +74,16 @@ export const JobSelector = ({
               Choose a job to view and manage its applications
             </CardDescription>
           </div>
-          <Badge variant="secondary" className="w-fit">
-            {totalApplications.toLocaleString()} Applications Across All Jobs
-          </Badge>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary" className="w-fit">
+              {totalApplications.toLocaleString()} Applications
+            </Badge>
+            {totalExternalClicks > 0 && (
+              <Badge variant="outline" className="w-fit text-sky-700 border-sky-200 bg-sky-50">
+                {totalExternalClicks.toLocaleString()} Apply Clicks
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -123,7 +138,9 @@ export const JobSelector = ({
                           </div>
                           <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-2">
                             <Badge variant="secondary" className="text-xs">
-                              {job.application_count} Applications
+                              {isExternalJob(job)
+                                ? `${job.external_click_count} Clicks`
+                                : `${job.application_count} Applications`}
                             </Badge>
                             <Badge
                               variant={
@@ -145,12 +162,21 @@ export const JobSelector = ({
 
           {selectedJob && (
             <div className="flex items-center gap-4 text-sm text-muted-foreground lg:flex-shrink-0">
-              <div className="flex items-center gap-1">
-                <span className="font-medium">
-                  {selectedJob.application_count.toLocaleString()}
-                </span>
-                <span>applications</span>
-              </div>
+              {isExternalJob(selectedJob) ? (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium text-sky-600">
+                    {selectedJob.external_click_count.toLocaleString()}
+                  </span>
+                  <span>apply clicks</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium">
+                    {selectedJob.application_count.toLocaleString()}
+                  </span>
+                  <span>applications</span>
+                </div>
+              )}
               <Badge
                 variant={
                   selectedJob.status === "approved" ? "default" : "secondary"

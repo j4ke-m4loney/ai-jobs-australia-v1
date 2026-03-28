@@ -33,6 +33,8 @@ export interface JobWithApplicationCount {
   id: string;
   title: string;
   application_count: number;
+  external_click_count: number;
+  application_method?: string;
   status: string;
 }
 
@@ -80,7 +82,7 @@ export const useEmployerApplications = (selectedJobId?: string) => {
     try {
       const { data: jobsData, error: jobsError } = await supabase
         .from("jobs")
-        .select("id, title, status, created_at")
+        .select("id, title, status, application_method, created_at")
         .eq("employer_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -92,42 +94,63 @@ export const useEmployerApplications = (selectedJobId?: string) => {
 
       const fetchedJobs = jobsData || [];
 
-      // Get application counts in batches
+      // Get application counts in batches (internal + external separately)
       const jobIds = fetchedJobs.map((job) => job.id);
-      let countsByJobId: Record<string, number> = {};
+      let internalCountsByJobId: Record<string, number> = {};
+      let externalCountsByJobId: Record<string, number> = {};
 
       if (jobIds.length > 0) {
         const BATCH_SIZE = 50;
-        const allApplicationData: { job_id: string }[] = [];
+        const allInternalData: { job_id: string }[] = [];
+        const allExternalData: { job_id: string }[] = [];
 
         for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
           const batchIds = jobIds.slice(i, i + BATCH_SIZE);
-          const { data: batchData, error: batchError } = await supabase
-            .from("job_applications")
-            .select("job_id")
-            .in("job_id", batchIds);
 
-          if (batchError) {
-            console.error("Error fetching application counts batch:", batchError);
-          } else if (batchData) {
-            allApplicationData.push(...batchData);
+          // Fetch internal applications and external clicks in parallel
+          const [internalResult, externalResult] = await Promise.all([
+            supabase
+              .from("job_applications")
+              .select("job_id")
+              .in("job_id", batchIds)
+              .not("application_type", "in", '("external","email")'),
+            supabase
+              .from("job_applications")
+              .select("job_id")
+              .in("job_id", batchIds)
+              .in("application_type", ["external", "email"]),
+          ]);
+
+          if (internalResult.error) {
+            console.error("Error fetching internal application counts:", internalResult.error);
+          } else if (internalResult.data) {
+            allInternalData.push(...internalResult.data);
+          }
+
+          if (externalResult.error) {
+            console.error("Error fetching external click counts:", externalResult.error);
+          } else if (externalResult.data) {
+            allExternalData.push(...externalResult.data);
           }
         }
 
-        countsByJobId = allApplicationData.reduce(
-          (acc, app) => {
+        const countByJobId = (data: { job_id: string }[]) =>
+          data.reduce((acc, app) => {
             acc[app.job_id] = (acc[app.job_id] || 0) + 1;
             return acc;
-          },
-          {} as Record<string, number>
-        );
+          }, {} as Record<string, number>);
+
+        internalCountsByJobId = countByJobId(allInternalData);
+        externalCountsByJobId = countByJobId(allExternalData);
       }
 
       const jobsWithCounts = fetchedJobs.map((job) => ({
         id: job.id,
         title: job.title,
         status: job.status,
-        application_count: countsByJobId[job.id] || 0,
+        application_method: job.application_method,
+        application_count: internalCountsByJobId[job.id] || 0,
+        external_click_count: externalCountsByJobId[job.id] || 0,
       }));
 
       setJobs(jobsWithCounts);

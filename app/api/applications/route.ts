@@ -436,10 +436,12 @@ export async function GET(request: NextRequest) {
       }
 
       // Get status counts for all statuses (for tab badges) - always unfiltered
+      // Exclude external/email application clicks from employer view
       const { data: allAppsForCounts } = await supabaseAdmin
         .from('job_applications')
         .select('status')
-        .eq('job_id', jobId);
+        .eq('job_id', jobId)
+        .not('application_type', 'in', '("external","email")');
 
       const statusCounts: Record<string, number> = {};
       (allAppsForCounts || []).forEach((app) => {
@@ -469,11 +471,12 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Build the paginated query
+      // Build the paginated query — exclude external/email clicks from employer view
       let query = supabaseAdmin
         .from('job_applications')
         .select('*')
-        .eq('job_id', jobId);
+        .eq('job_id', jobId)
+        .not('application_type', 'in', '("external","email")');
 
       // Apply status filter
       if (status && status !== 'all') {
@@ -489,7 +492,8 @@ export async function GET(request: NextRequest) {
       let countQuery = supabaseAdmin
         .from('job_applications')
         .select('id', { count: 'exact', head: true })
-        .eq('job_id', jobId);
+        .eq('job_id', jobId)
+        .not('application_type', 'in', '("external","email")');
 
       if (status && status !== 'all') {
         countQuery = countQuery.eq('status', status);
