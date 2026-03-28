@@ -16,6 +16,7 @@ import {
   Clock,
   Search,
   Calendar,
+  XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -23,10 +24,17 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { formatJobTypes } from "@/lib/jobs/content-utils";
 
+interface StatusHistoryEntry {
+  status: string;
+  timestamp: string;
+  note?: string | null;
+}
+
 interface Application {
   id: string;
   status: string;
   created_at: string;
+  status_history?: StatusHistoryEntry[];
   job: {
     id: string;
     title: string;
@@ -103,29 +111,69 @@ const JobSeekerApplications = () => {
     }
   }, [user]);
 
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+
   useEffect(() => {
     if (user) {
       fetchApplications();
     }
   }, [user, fetchApplications]);
 
+  const handleWithdraw = async (applicationId: string) => {
+    if (!user || withdrawingId) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to withdraw this application? This action cannot be undone."
+    );
+    if (!confirmed) return;
+
+    setWithdrawingId(applicationId);
+    try {
+      const response = await fetch(`/api/applications/${applicationId}/withdraw`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ applicantId: user.id }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to withdraw application");
+      }
+
+      // Update local state
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === applicationId ? { ...app, status: "withdrawn" } : app
+        )
+      );
+      toast.success("Application withdrawn successfully");
+    } catch (error) {
+      console.error("Error withdrawing application:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to withdraw application");
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
       submitted: "secondary",
-      reviewed: "default",
+      reviewing: "default",
       shortlisted: "default",
       interview: "default",
       accepted: "default",
       rejected: "destructive",
+      withdrawn: "secondary",
     };
 
     const colors: Record<string, string> = {
       submitted: "bg-blue-100 text-blue-800",
-      reviewed: "bg-yellow-100 text-yellow-800",
+      reviewing: "bg-yellow-100 text-yellow-800",
       shortlisted: "bg-purple-100 text-purple-800",
       interview: "bg-orange-100 text-orange-800",
       accepted: "bg-green-100 text-green-800",
       rejected: "bg-red-100 text-red-800",
+      withdrawn: "bg-gray-100 text-gray-800",
     };
 
     return (
@@ -201,7 +249,7 @@ const JobSeekerApplications = () => {
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-600">
-                      {statusCounts.reviewed || 0}
+                      {statusCounts.reviewing || 0}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Under Review
@@ -350,8 +398,49 @@ const JobSeekerApplications = () => {
                             >
                               View Job
                             </Button>
+                            {(application.status === "submitted" || application.status === "reviewing") && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleWithdraw(application.id)}
+                                disabled={withdrawingId === application.id}
+                              >
+                                <XCircle className="w-3 h-3 mr-1" />
+                                {withdrawingId === application.id ? "Withdrawing..." : "Withdraw"}
+                              </Button>
+                            )}
                           </div>
                         </div>
+
+                        {/* Status Timeline */}
+                        {application.status_history && application.status_history.length > 0 && (
+                          <div className="mt-4 pt-4 border-t">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">Status Timeline</p>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <div className="w-2 h-2 rounded-full bg-blue-400" />
+                                <span>Submitted</span>
+                                <span className="ml-auto">{new Date(application.created_at).toLocaleDateString()}</span>
+                              </div>
+                              {application.status_history.map((entry, idx) => (
+                                <div key={idx} className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <div className={`w-2 h-2 rounded-full ${
+                                    entry.status === "accepted" ? "bg-green-400" :
+                                    entry.status === "rejected" ? "bg-red-400" :
+                                    entry.status === "withdrawn" ? "bg-gray-400" :
+                                    entry.status === "shortlisted" ? "bg-purple-400" :
+                                    entry.status === "interview" ? "bg-orange-400" :
+                                    "bg-yellow-400"
+                                  }`} />
+                                  <span>{entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}</span>
+                                  {entry.note && <span className="italic">— {entry.note}</span>}
+                                  <span className="ml-auto">{new Date(entry.timestamp).toLocaleDateString()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                     ))}

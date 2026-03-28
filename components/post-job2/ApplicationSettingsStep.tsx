@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 // import { Switch } from "@/components/ui/switch"; // Commented out - restore when internal applications enabled
 import { JobFormData2 } from "@/types/job2";
-import { Mail, ExternalLink, Settings, Eye } from "lucide-react";
+import { Mail, ExternalLink, Settings, Eye, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
@@ -52,8 +52,12 @@ const applicationMethods = [
     icon: ExternalLink,
   },
   { value: "email", label: "Email applications", icon: Mail },
-  // Commented out - can be restored when AI Jobs Australia applications feature is enabled
-  // { value: "indeed", label: "AI Jobs Australia applications", icon: Settings },
+  {
+    value: "indeed",
+    label: "Apply through AI Jobs Australia",
+    icon: FileText,
+    description: "Candidates apply directly on our platform. Manage applications from your dashboard.",
+  },
 ];
 
 // Commented out - can be restored when hiring timeline feature is re-enabled
@@ -145,8 +149,13 @@ export default function ApplicationSettingsStep({
                         : "border-primary text-muted-foreground"
                     )}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{method.label}</span>
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">{method.label}</span>
+                      {"description" in method && method.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{method.description}</p>
+                      )}
+                    </div>
                   </button>
                 );
               })}

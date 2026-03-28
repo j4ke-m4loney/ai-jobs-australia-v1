@@ -260,7 +260,8 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
     salary_max: getSalaryMax(jobFormData.payConfig),
     salary_period: jobFormData.payConfig?.payPeriod || 'year',
     show_salary: jobFormData.payConfig.showPay,
-    application_method: jobFormData.applicationMethod === 'indeed' ? 'external' : jobFormData.applicationMethod,
+    // 'indeed' in the form maps to 'internal' in the DB
+    application_method: jobFormData.applicationMethod === 'indeed' ? 'internal' : jobFormData.applicationMethod,
     application_url: jobFormData.applicationMethod === 'indeed' ? null : jobFormData.applicationUrl,
     application_email: jobFormData.applicationMethod === 'email' ? jobFormData.applicationEmail : null,
     is_featured: isFeatured,
@@ -273,11 +274,29 @@ async function createJobFromPayment(payment: PaymentRecord, paymentSession: Paym
   };
 
   // Insert the job into the database
-  const { data: job, error: jobError } = await getSupabaseAdmin()
+  let job;
+  let jobError;
+
+  const result = await getSupabaseAdmin()
     .from('jobs')
     .insert(jobRecord)
     .select()
     .single();
+
+  // If insert fails due to 'internal' not being in the constraint yet, retry with 'external'
+  if (result.error && jobRecord.application_method === 'internal' && result.error.message?.includes('application_method')) {
+    console.log('Falling back application_method from internal to external (migration not yet run)');
+    const retryResult = await getSupabaseAdmin()
+      .from('jobs')
+      .insert({ ...jobRecord, application_method: 'external' })
+      .select()
+      .single();
+    job = retryResult.data;
+    jobError = retryResult.error;
+  } else {
+    job = result.data;
+    jobError = result.error;
+  }
 
   if (jobError) {
     console.error('Error creating job:', jobError);

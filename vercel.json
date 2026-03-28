@@ -11,6 +11,10 @@
     {
       "path": "/api/jobs/discover/extract",
       "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/flush-email-queue",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

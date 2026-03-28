@@ -205,6 +205,7 @@ const EmployerSettings = () => {
             if (preferences) {
               setNotificationSettings({
                 emailApplications: preferences.email_applications,
+                applicationNotificationFrequency: preferences.application_notification_frequency || 'immediate',
                 pushApplications: preferences.push_applications ?? true,
               });
             }
@@ -277,6 +278,7 @@ const EmployerSettings = () => {
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState({
     emailApplications: true,
+    applicationNotificationFrequency: "immediate" as string,
     pushApplications: true,
   });
   const [notificationPrefsLoaded, setNotificationPrefsLoaded] = useState(false);
@@ -379,6 +381,7 @@ const EmployerSettings = () => {
         body: JSON.stringify({
           userId: user.id,
           email_applications: notificationSettings.emailApplications,
+          application_notification_frequency: notificationSettings.applicationNotificationFrequency,
           push_applications: notificationSettings.pushApplications,
         })
       });
@@ -611,6 +614,32 @@ const EmployerSettings = () => {
                         }
                       />
                     </div>
+
+                    {notificationSettings.emailApplications && (
+                      <div className="ml-4 pl-4 border-l-2 border-muted">
+                        <Label htmlFor="notification-frequency" className="text-sm">
+                          Notification Frequency
+                        </Label>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Control how often you receive application notification emails
+                        </p>
+                        <select
+                          id="notification-frequency"
+                          value={notificationSettings.applicationNotificationFrequency}
+                          onChange={(e) =>
+                            setNotificationSettings({
+                              ...notificationSettings,
+                              applicationNotificationFrequency: e.target.value,
+                            })
+                          }
+                          className="w-full sm:w-[250px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          <option value="immediate">Send immediately</option>
+                          <option value="hourly">Hourly digest</option>
+                          <option value="daily">Daily digest (9:00 AM AEST)</option>
+                        </select>
+                      </div>
+                    )}
 
                     {/* TODO: Uncomment when job view tracking is implemented
                     <div className="flex items-center justify-between">

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -24,8 +25,16 @@ import {
   MapPin,
   Calendar,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Briefcase,
   Plus,
+  Search,
+  ArrowUpDown,
+  RefreshCw,
+  FileDown,
+  Star,
+  Eye,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -33,7 +42,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JobSelector } from "@/components/employer/JobSelector";
 import {
   useEmployerApplications,
@@ -41,6 +57,65 @@ import {
 } from "@/hooks/useEmployerApplications";
 import { useToast } from "@/hooks/use-toast";
 import { downloadResume, downloadCoverLetter } from "@/utils/documentDownload";
+
+const STATUS_TABS = [
+  { value: "all", label: "All" },
+  { value: "submitted", label: "New" },
+  { value: "reviewing", label: "Reviewing" },
+  { value: "shortlisted", label: "Shortlisted" },
+  { value: "interview", label: "Interview" },
+  { value: "rejected", label: "Rejected" },
+];
+
+function MobileStatusCarousel({
+  statusFilter,
+  onStatusChange,
+  totalApplications,
+  statusCounts,
+}: {
+  statusFilter: string;
+  onStatusChange: (value: string) => void;
+  totalApplications: number;
+  statusCounts: Record<string, number>;
+}) {
+  const getCount = (value: string) =>
+    value === "all" ? totalApplications : statusCounts[value] || 0;
+
+  const currentIndex = Math.max(0, STATUS_TABS.findIndex(t => t.value === statusFilter));
+  const current = STATUS_TABS[currentIndex];
+
+  return (
+    <>
+    <style>{`
+      @media (min-width: 768px) { .mobile-status-carousel { display: none !important; } }
+      @media (max-width: 767px) { .desktop-status-tabs { display: none !important; } }
+    `}</style>
+    <div className="mobile-status-carousel flex items-center justify-between bg-gray-100 rounded-lg p-2 mb-4">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onStatusChange(STATUS_TABS[currentIndex - 1].value)}
+        disabled={currentIndex <= 0}
+        className="h-8 w-8"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </Button>
+      <span className="text-sm font-medium text-foreground">
+        {current.label} ({getCount(current.value)})
+      </span>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onStatusChange(STATUS_TABS[currentIndex + 1].value)}
+        disabled={currentIndex >= STATUS_TABS.length - 1}
+        className="h-8 w-8"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </Button>
+    </div>
+    </>
+  );
+}
 
 const EmployerApplications = () => {
   const { toast } = useToast();
@@ -59,16 +134,45 @@ const EmployerApplications = () => {
     error,
     updateApplicationStatus,
     updateMultipleApplicationStatus,
+    refetch,
+    // Pagination
+    page,
+    setPage,
+    total,
+    totalPages,
+    pageSize,
+    // Filters
+    statusFilter,
+    setStatusFilter,
+    searchQuery,
+    setSearchQuery,
+    sortField,
+    setSortField,
+    sortOrder,
+    setSortOrder,
+    // Status counts
+    statusCounts,
+    // New application indicator
+    hasNewApplications,
+    dismissNewApplications,
   } = useEmployerApplications(selectedJobId);
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case "submitted":
+        return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 hover:text-blue-800 hover:border-blue-200";
       case "reviewing":
         return "bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100 hover:text-yellow-800 hover:border-yellow-200";
       case "shortlisted":
+        return "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100 hover:text-purple-800 hover:border-purple-200";
+      case "interview":
+        return "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-100 hover:text-orange-800 hover:border-orange-200";
+      case "accepted":
         return "bg-green-100 text-green-800 border-green-200 hover:bg-green-100 hover:text-green-800 hover:border-green-200";
       case "rejected":
         return "bg-red-100 text-red-800 border-red-200 hover:bg-red-100 hover:text-red-800 hover:border-red-200";
+      case "withdrawn":
+        return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-800 hover:border-gray-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-800 hover:border-gray-200";
     }
@@ -78,10 +182,7 @@ const EmployerApplications = () => {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  const filterApplications = (status: string) => {
-    if (status === "all") return applications;
-    return applications.filter((app) => app.status === status);
-  };
+  const totalApplications = Object.values(statusCounts).reduce((a, b) => a + b, 0);
 
   const handleStatusUpdate = async (
     applicationId: string,
@@ -91,7 +192,7 @@ const EmployerApplications = () => {
     if (success) {
       toast({
         title: "Status Updated",
-        description: `Application moved to ${newStatus}`,
+        description: `Application moved to ${capitalizeStatus(newStatus)}`,
       });
     } else {
       toast({
@@ -112,7 +213,7 @@ const EmployerApplications = () => {
     if (success) {
       toast({
         title: "Status Updated",
-        description: `${selectedApplications.length} applications moved to ${newStatus}`,
+        description: `${selectedApplications.length} applications moved to ${capitalizeStatus(newStatus)}`,
       });
       setSelectedApplications([]);
     } else {
@@ -132,7 +233,7 @@ const EmployerApplications = () => {
     );
   };
 
-  const selectAllApplications = (applications: JobApplication[]) => {
+  const selectAllApplications = () => {
     const allIds = applications.map((app) => app.id);
     setSelectedApplications((prev) =>
       prev.length === allIds.length ? [] : allIds
@@ -141,9 +242,9 @@ const EmployerApplications = () => {
 
   const handleDownloadResume = async (application: JobApplication) => {
     if (!application.resume_url || downloadingResume === application.id) return;
-    
+
     setDownloadingResume(application.id);
-    
+
     const applicantName = `${application.profiles?.first_name || ""} ${
       application.profiles?.last_name || ""
     }`.trim() || "Applicant";
@@ -157,9 +258,9 @@ const EmployerApplications = () => {
 
   const handleDownloadCoverLetter = async (application: JobApplication) => {
     if (!application.cover_letter_url || downloadingCoverLetter === application.id) return;
-    
+
     setDownloadingCoverLetter(application.id);
-    
+
     const applicantName = `${application.profiles?.first_name || ""} ${
       application.profiles?.last_name || ""
     }`.trim() || "Applicant";
@@ -169,6 +270,58 @@ const EmployerApplications = () => {
     } finally {
       setDownloadingCoverLetter(null);
     }
+  };
+
+  const handleExportCSV = async () => {
+    if (!selectedJobId) return;
+
+    try {
+      const response = await fetch(
+        `/api/applications/export?jobId=${selectedJobId}${statusFilter !== "all" ? `&status=${statusFilter}` : ""}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Export failed");
+      }
+
+      // Extract filename from Content-Disposition header
+      const disposition = response.headers.get("Content-Disposition");
+      let filename = `applications-export-${new Date().toISOString().split("T")[0]}.csv`;
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        if (match?.[1]) {
+          filename = match[1];
+        }
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({ title: "Export Complete", description: "CSV file downloaded." });
+    } catch {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export applications.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRefresh = () => {
+    dismissNewApplications();
+    refetch();
+  };
+
+  const handleTabChange = (value: string) => {
+    setStatusFilter(value);
+    setSelectedApplications([]);
   };
 
   const ApplicationCard = ({
@@ -186,6 +339,8 @@ const EmployerApplications = () => {
       `${application.profiles?.first_name || ""} ${
         application.profiles?.last_name || ""
       }`.trim() || "Unknown Applicant";
+
+    const isNew = !application.viewed_at;
 
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -216,6 +371,11 @@ const EmployerApplications = () => {
                   <h3 className="font-semibold text-base sm:text-lg truncate">
                     {applicantName}
                   </h3>
+                  {isNew && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500 text-white flex-shrink-0">
+                      New
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {application.job.title}
@@ -251,15 +411,6 @@ const EmployerApplications = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            {/* Commented out experience level display - not useful for employers */}
-            {/* <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-warning flex-shrink-0" />
-              <span className="text-xs sm:text-sm font-medium truncate">
-                {application.profiles?.experience_level ||
-                  "Experience level not specified"}
-              </span>
-            </div> */}
-
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               {application.resume_url && (
                 <Button
@@ -285,8 +436,7 @@ const EmployerApplications = () => {
                   <Download className="w-4 h-4 ml-2" />
                 </Button>
               )}
-              
-              {/* Show indicators when documents are not available */}
+
               {!application.resume_url && !application.cover_letter_url && (
                 <span className="text-xs text-muted-foreground">
                   No documents available
@@ -319,6 +469,20 @@ const EmployerApplications = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
+                      handleStatusUpdate(application.id, "interview")
+                    }
+                  >
+                    Move to Interview
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      handleStatusUpdate(application.id, "accepted")
+                    }
+                  >
+                    Move to Accepted
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
                       handleStatusUpdate(application.id, "rejected")
                     }
                   >
@@ -343,6 +507,25 @@ const EmployerApplications = () => {
           onJobSelect={setSelectedJobId}
           loading={loading}
         />
+
+        {/* New Applications Banner */}
+        {hasNewApplications && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-blue-700">
+              <Eye className="h-5 w-5" />
+              <span className="font-medium">New applications received</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              className="gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </Button>
+          </div>
+        )}
 
         {/* Error State */}
         {error && (
@@ -381,22 +564,34 @@ const EmployerApplications = () => {
           </Card>
         )}
 
-        {selectedJobId && !loading && !error && (
+        {selectedJobId && !error && (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Total Applications
+                    Total
                   </CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {applications.length}
+                    {totalApplications}
                   </div>
-                  <p className="text-xs text-muted-foreground">For this job</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    New
+                  </CardTitle>
+                  <Star className="h-4 w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {statusCounts.submitted || 0}
+                  </div>
                 </CardContent>
               </Card>
               <Card>
@@ -408,11 +603,8 @@ const EmployerApplications = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {filterApplications("reviewing").length}
+                    {statusCounts.reviewing || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Need attention
-                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -424,11 +616,8 @@ const EmployerApplications = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {filterApplications("shortlisted").length}
+                    {statusCounts.shortlisted || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Ready for interview
-                  </p>
                 </CardContent>
               </Card>
               <Card>
@@ -440,11 +629,54 @@ const EmployerApplications = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {filterApplications("rejected").length}
+                    {statusCounts.rejected || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground">Not a fit</p>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Search, Sort, and Export Controls */}
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by applicant name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Select
+                  value={`${sortField}-${sortOrder}`}
+                  onValueChange={(value) => {
+                    const [field, order] = value.split("-") as ["created_at" | "name", "asc" | "desc"];
+                    setSortField(field);
+                    setSortOrder(order);
+                  }}
+                >
+                  <SelectTrigger className="flex-1 sm:flex-none sm:w-[200px]">
+                    <ArrowUpDown className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="created_at-desc">Newest first</SelectItem>
+                    <SelectItem value="created_at-asc">Oldest first</SelectItem>
+                    <SelectItem value="name-asc">Name A-Z</SelectItem>
+                    <SelectItem value="name-desc">Name Z-A</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="default"
+                  onClick={handleExportCSV}
+                  className="gap-2 flex-shrink-0"
+                >
+                  <FileDown className="w-4 h-4" />
+                  <span className="hidden sm:inline">Export CSV</span>
+                  <span className="sm:hidden">CSV</span>
+                </Button>
+              </div>
             </div>
 
             {/* Applications List */}
@@ -455,6 +687,11 @@ const EmployerApplications = () => {
                     <CardTitle>Applications</CardTitle>
                     <CardDescription>
                       Review and manage candidate applications
+                      {total > 0 && (
+                        <span className="ml-1">
+                          — showing {((page - 1) * pageSize) + 1}-{Math.min(page * pageSize, total)} of {total}
+                        </span>
+                      )}
                     </CardDescription>
                   </div>
                   {selectedApplications.length > 0 && (
@@ -476,11 +713,19 @@ const EmployerApplications = () => {
                             Move to Reviewing
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() =>
-                              handleBulkStatusUpdate("shortlisted")
-                            }
+                            onClick={() => handleBulkStatusUpdate("shortlisted")}
                           >
                             Move to Shortlisted
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleBulkStatusUpdate("interview")}
+                          >
+                            Move to Interview
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleBulkStatusUpdate("accepted")}
+                          >
+                            Move to Accepted
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleBulkStatusUpdate("rejected")}
@@ -494,61 +739,90 @@ const EmployerApplications = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-gray-100">
+                <MobileStatusCarousel
+                  statusFilter={statusFilter}
+                  onStatusChange={handleTabChange}
+                  totalApplications={totalApplications}
+                  statusCounts={statusCounts}
+                />
+
+                <Tabs value={statusFilter} onValueChange={handleTabChange} className="w-full">
+                  {/* Desktop only: tab bar */}
+                  <TabsList className="desktop-status-tabs grid w-full grid-cols-6 bg-gray-100">
                     <TabsTrigger
                       value="all"
-                      className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
+                      className="text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
                     >
-                      All ({applications.length})
+                      All ({totalApplications})
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="submitted"
+                      className="text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
+                    >
+                      New ({statusCounts.submitted || 0})
                     </TabsTrigger>
                     <TabsTrigger
                       value="reviewing"
-                      className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
+                      className="text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
                     >
-                      {capitalizeStatus("reviewing")} (
-                      {filterApplications("reviewing").length})
+                      Reviewing ({statusCounts.reviewing || 0})
                     </TabsTrigger>
                     <TabsTrigger
                       value="shortlisted"
-                      className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
+                      className="text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
                     >
-                      {capitalizeStatus("shortlisted")} (
-                      {filterApplications("shortlisted").length})
+                      Shortlisted ({statusCounts.shortlisted || 0})
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="interview"
+                      className="text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
+                    >
+                      Interview ({statusCounts.interview || 0})
                     </TabsTrigger>
                     <TabsTrigger
                       value="rejected"
-                      className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
+                      className="text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-600"
                     >
-                      {capitalizeStatus("rejected")} (
-                      {filterApplications("rejected").length})
+                      Rejected ({statusCounts.rejected || 0})
                     </TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="all" className="mt-6">
-                    <div className="mb-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto"
-                        onClick={() => selectAllApplications(applications)}
-                      >
-                        {selectedApplications.length === applications.length
-                          ? "Deselect All"
-                          : "Select All"}
-                      </Button>
-                    </div>
-                    <div className="space-y-4">
-                      {applications.length === 0 ? (
-                        <div className="text-center py-12">
-                          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                          <h3 className="text-lg font-semibold mb-2">No Applications Yet</h3>
-                          <p className="text-muted-foreground">
-                            This job posting hasn&apos;t received any applications yet. Once candidates apply, you&apos;ll see them here.
-                          </p>
-                        </div>
-                      ) : (
-                        applications.map((application, index) => (
+                  {/* Single content area for all tabs since filtering is server-side */}
+                  <div className="mt-6">
+                    {applications.length > 0 && (
+                      <div className="mb-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto"
+                          onClick={selectAllApplications}
+                        >
+                          {selectedApplications.length === applications.length && applications.length > 0
+                            ? "Deselect All"
+                            : "Select All"}
+                        </Button>
+                      </div>
+                    )}
+
+                    {loading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    ) : applications.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">
+                          {searchQuery ? "No Matching Applications" : "No Applications Yet"}
+                        </h3>
+                        <p className="text-muted-foreground">
+                          {searchQuery
+                            ? `No applications match "${searchQuery}". Try a different search.`
+                            : "This job posting hasn\u2019t received any applications yet. Once candidates apply, you\u2019ll see them here."}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {applications.map((application, index) => (
                           <ApplicationCard
                             key={application.id}
                             application={application}
@@ -556,110 +830,43 @@ const EmployerApplications = () => {
                               application.id
                             )}
                             onToggleSelect={toggleApplicationSelection}
-                            applicationNumber={index + 1}
+                            applicationNumber={((page - 1) * pageSize) + index + 1}
                           />
-                        ))
-                      )}
-                    </div>
-                  </TabsContent>
+                        ))}
+                      </div>
+                    )}
 
-                  <TabsContent value="reviewing" className="mt-6">
-                    <div className="mb-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto"
-                        onClick={() =>
-                          selectAllApplications(filterApplications("reviewing"))
-                        }
-                      >
-                        {selectedApplications.length ===
-                          filterApplications("reviewing").length &&
-                        filterApplications("reviewing").length > 0
-                          ? "Deselect All"
-                          : "Select All"}
-                      </Button>
-                    </div>
-                    <div className="space-y-4">
-                      {filterApplications("reviewing").map((application, index) => (
-                        <ApplicationCard
-                          key={application.id}
-                          application={application}
-                          isSelected={selectedApplications.includes(
-                            application.id
-                          )}
-                          onToggleSelect={toggleApplicationSelection}
-                          applicationNumber={index + 1}
-                        />
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="shortlisted" className="mt-6">
-                    <div className="mb-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto"
-                        onClick={() =>
-                          selectAllApplications(
-                            filterApplications("shortlisted")
-                          )
-                        }
-                      >
-                        {selectedApplications.length ===
-                          filterApplications("shortlisted").length &&
-                        filterApplications("shortlisted").length > 0
-                          ? "Deselect All"
-                          : "Select All"}
-                      </Button>
-                    </div>
-                    <div className="space-y-4">
-                      {filterApplications("shortlisted").map((application, index) => (
-                        <ApplicationCard
-                          key={application.id}
-                          application={application}
-                          isSelected={selectedApplications.includes(
-                            application.id
-                          )}
-                          onToggleSelect={toggleApplicationSelection}
-                          applicationNumber={index + 1}
-                        />
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="rejected" className="mt-6">
-                    <div className="mb-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto"
-                        onClick={() =>
-                          selectAllApplications(filterApplications("rejected"))
-                        }
-                      >
-                        {selectedApplications.length ===
-                          filterApplications("rejected").length &&
-                        filterApplications("rejected").length > 0
-                          ? "Deselect All"
-                          : "Select All"}
-                      </Button>
-                    </div>
-                    <div className="space-y-4">
-                      {filterApplications("rejected").map((application, index) => (
-                        <ApplicationCard
-                          key={application.id}
-                          application={application}
-                          isSelected={selectedApplications.includes(
-                            application.id
-                          )}
-                          onToggleSelect={toggleApplicationSelection}
-                          applicationNumber={index + 1}
-                        />
-                      ))}
-                    </div>
-                  </TabsContent>
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">
+                          Page {page} of {totalPages}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(page - 1)}
+                            disabled={page <= 1}
+                            className="gap-1"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(page + 1)}
+                            disabled={page >= totalPages}
+                            className="gap-1"
+                          >
+                            Next
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </Tabs>
               </CardContent>
             </Card>

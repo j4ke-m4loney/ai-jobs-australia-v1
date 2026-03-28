@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AJA Email Previews</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #fff; padding: 40px 20px; }
+    h1 { text-align: center; font-size: 28px; margin-bottom: 8px; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 40px; font-size: 14px; }
+    .nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 40px; position: sticky; top: 0; background: #1a1a2e; padding: 16px 0; z-index: 10; border-bottom: 1px solid #333; }
+    .nav a { padding: 8px 16px; border-radius: 6px; background: #2a2a4a; color: #ccc; text-decoration: none; font-size: 13px; transition: all 0.2s; }
+    .nav a:hover { background: #3a3a6a; color: #fff; }
+    .email-section { max-width: 700px; margin: 0 auto 60px; }
+    .email-label { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    .email-meta { font-size: 13px; color: #888; margin-bottom: 16px; }
+    .email-meta span { background: #2a2a4a; padding: 2px 8px; border-radius: 4px; margin-right: 8px; }
+    .email-frame { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    hr { border: none; border-top: 1px solid #333; margin: 60px auto; max-width: 700px; }
+  </style>
+</head>
+<body>
+
+<h1>AI Jobs Australia - Email Previews</h1>
+<p class="subtitle">All transactional emails sent by the platform (with sample data)</p>
+
+<div class="nav">
+  <a href="#new-application">New Application</a>
+  <a href="#status-reviewing">Status: Reviewing</a>
+  <a href="#status-shortlisted">Status: Shortlisted</a>
+  <a href="#status-interview">Status: Interview</a>
+  <a href="#status-accepted">Status: Accepted</a>
+  <a href="#status-rejected">Status: Rejected</a>
+  <a href="#batched-applications">Batched Applications</a>
+  <a href="#daily-digest">Daily Digest</a>
+  <a href="#job-submitted">Job Submitted</a>
+  <a href="#job-approved">Job Approved</a>
+  <a href="#job-rejected">Job Rejected</a>
+  <a href="#job-resubmission">Job Resubmission</a>
+  <a href="#welcome">Welcome Email</a>
+  <a href="#contact-form">Contact Form</a>
+</div>
+
+<!-- 1. New Application Notification (to Employer) -->
+<div class="email-section" id="new-application">
+  <div class="email-label">1. New Application Notification</div>
+  <div class="email-meta"><span>To: Employer</span> <span>Trigger: Applicant submits application</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">New Job Application</p>
+          <p style="margin: 0 0 16px 0;">Hello Sarah Thompson,</p>
+          <p style="margin: 0 0 20px 0;">You have received a new application for your job posting.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #2563eb; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Applicant:</td><td style="padding: 8px 0; color: #333;">James Chen</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Email:</td><td style="padding: 8px 0;"><a href="#" style="color: #2563eb; text-decoration: none;">Not displayed</a></td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Applied:</td><td style="padding: 8px 0; color: #333;">28 March 2026</td></tr>
+            </table>
+          </div>
+          <div style="text-align: center;">
+            <a href="#" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block; font-size: 14px;">View Application</a>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">You're receiving this email because you have an active job posting on AI Jobs Australia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 2. Status Update: Reviewing -->
+<div class="email-section" id="status-reviewing">
+  <div class="email-label">2. Application Status: Reviewing</div>
+  <div class="email-meta"><span>To: Job Seeker</span> <span>Trigger: Employer moves to Reviewing</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Application Status Update</p>
+          <p style="margin: 0 0 16px 0;">Hello James Chen,</p>
+          <p style="margin: 0 0 20px 0;">Your application status has been updated.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #eab308; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Company:</td><td style="padding: 8px 0; color: #333;">TechCorp Australia</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Status:</td><td style="padding: 8px 0;"><span style="color: #eab308; font-weight: 600;">Reviewing</span></td></tr>
+            </table>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">You're receiving this email because you applied for a job on AI Jobs Australia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 3. Status Update: Shortlisted -->
+<div class="email-section" id="status-shortlisted">
+  <div class="email-label">3. Application Status: Shortlisted</div>
+  <div class="email-meta"><span>To: Job Seeker</span> <span>Trigger: Employer moves to Shortlisted</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Application Status Update</p>
+          <p style="margin: 0 0 16px 0;">Hello James Chen,</p>
+          <p style="margin: 0 0 20px 0;">Your application status has been updated.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #8b5cf6; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Company:</td><td style="padding: 8px 0; color: #333;">TechCorp Australia</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Status:</td><td style="padding: 8px 0;"><span style="color: #8b5cf6; font-weight: 600;">Shortlisted</span></td></tr>
+            </table>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">You're receiving this email because you applied for a job on AI Jobs Australia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 4. Status Update: Interview -->
+<div class="email-section" id="status-interview">
+  <div class="email-label">4. Application Status: Interview</div>
+  <div class="email-meta"><span>To: Job Seeker</span> <span>Trigger: Employer moves to Interview</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Application Status Update</p>
+          <p style="margin: 0 0 16px 0;">Hello James Chen,</p>
+          <p style="margin: 0 0 20px 0;">Your application status has been updated.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #f97316; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Company:</td><td style="padding: 8px 0; color: #333;">TechCorp Australia</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Status:</td><td style="padding: 8px 0;"><span style="color: #f97316; font-weight: 600;">Interview</span></td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Message:</td><td style="padding: 8px 0; color: #333;">We'd love to schedule an interview with you. Please check your email for calendar details.</td></tr>
+            </table>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">You're receiving this email because you applied for a job on AI Jobs Australia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 5. Status Update: Accepted -->
+<div class="email-section" id="status-accepted">
+  <div class="email-label">5. Application Status: Accepted</div>
+  <div class="email-meta"><span>To: Job Seeker</span> <span>Trigger: Employer moves to Accepted</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Application Status Update</p>
+          <p style="margin: 0 0 16px 0;">Hello James Chen,</p>
+          <p style="margin: 0 0 20px 0;">Your application status has been updated.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #10b981; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Company:</td><td style="padding: 8px 0; color: #333;">TechCorp Australia</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Status:</td><td style="padding: 8px 0;"><span style="color: #10b981; font-weight: 600;">Accepted</span></td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Message:</td><td style="padding: 8px 0; color: #333;">Congratulations! We're pleased to offer you the position. Our HR team will be in touch with next steps.</td></tr>
+            </table>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">You're receiving this email because you applied for a job on AI Jobs Australia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 6. Status Update: Rejected -->
+<div class="email-section" id="status-rejected">
+  <div class="email-label">6. Application Status: Rejected</div>
+  <div class="email-meta"><span>To: Job Seeker</span> <span>Trigger: Employer moves to Rejected</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Application Status Update</p>
+          <p style="margin: 0 0 16px 0;">Hello James Chen,</p>
+          <p style="margin: 0 0 20px 0;">Your application status has been updated.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #ef4444; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Company:</td><td style="padding: 8px 0; color: #333;">TechCorp Australia</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Status:</td><td style="padding: 8px 0;"><span style="color: #ef4444; font-weight: 600;">Rejected</span></td></tr>
+            </table>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">You're receiving this email because you applied for a job on AI Jobs Australia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 7. Batched Application Notification -->
+<div class="email-section" id="batched-applications">
+  <div class="email-label">7. Batched Application Notification</div>
+  <div class="email-meta"><span>To: Employer</span> <span>Trigger: 5+ apps received OR 1-hour timeout</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">5 New Applications</p>
+          <p style="margin: 0 0 16px 0;">Hello Sarah Thompson,</p>
+          <p style="margin: 0 0 20px 0;">You've received <strong>5 new applications</strong> for your job posting in the last hour.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #10b981; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <p style="margin: 0 0 8px 0; color: #666;">New Applicants:</p>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              <li style="padding: 6px 0; color: #333;">1. James Chen</li>
+              <li style="padding: 6px 0; color: #333;">2. Priya Sharma</li>
+              <li style="padding: 6px 0; color: #333;">3. Michael O'Brien</li>
+              <li style="padding: 6px 0; color: #333;">4. Li Wei Zhang</li>
+              <li style="padding: 6px 0; color: #333;">5. Emma Rodriguez</li>
+            </ul>
+          </div>
+          <p style="margin: 0 0 24px 0; color: #666; font-size: 13px;">Tip: Review applications quickly to maintain candidate engagement. The best candidates often have multiple opportunities.</p>
+          <div style="text-align: center;">
+            <a href="#" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block; font-size: 14px;">Review Applications</a>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">We group multiple applications to prevent inbox flooding. Adjust preferences in your dashboard settings.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 8. Daily Digest -->
+<div class="email-section" id="daily-digest">
+  <div class="email-label">8. Daily Application Digest</div>
+  <div class="email-meta"><span>To: Employer</span> <span>Trigger: Cron job (employer has daily frequency)</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Daily Application Digest</p>
+          <p style="margin: 0 0 16px 0;">Hello Sarah Thompson,</p>
+          <p style="margin: 0 0 20px 0;">Here's a summary of the <strong>12 applications</strong> received in the last 24 hours:</p>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+            <thead>
+              <tr style="background: #f9fafb;">
+                <th style="padding: 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #666; border-bottom: 2px solid #e5e5e5;">Job</th>
+                <th style="padding: 12px; text-align: center; font-size: 12px; text-transform: uppercase; color: #666; border-bottom: 2px solid #e5e5e5;">Applications</th>
+                <th style="padding: 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #666; border-bottom: 2px solid #e5e5e5;">Applicants</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: 500;">Senior ML Engineer</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: center; font-weight: 600; color: #2563eb;">7</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-size: 13px; color: #666;">James Chen, Priya Sharma, Michael O'Brien + 4 more</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: 500;">Data Scientist</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: center; font-weight: 600; color: #2563eb;">3</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-size: 13px; color: #666;">Anna Lee, David Kim, Sophie Park</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: 500;">AI Product Manager</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: center; font-weight: 600; color: #2563eb;">2</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-size: 13px; color: #666;">Tom Wilson, Rachel Nguyen</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="text-align: center;">
+            <a href="#" style="display: inline-block; background: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">Review Applications</a>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">You're receiving this daily digest because of your notification preferences. You can change this in your account settings.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 9. Job Submitted for Approval -->
+<div class="email-section" id="job-submitted">
+  <div class="email-label">9. Job Submitted for Approval</div>
+  <div class="email-meta"><span>To: Employer</span> <span>Trigger: After Stripe payment completes</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Job Submission Confirmed</p>
+          <p style="margin: 0 0 16px 0;">Hello Sarah Thompson,</p>
+          <p style="margin: 0 0 20px 0;">Thank you for posting a job with AI Jobs Australia. Your job posting has been submitted and is now in our review queue.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #2563eb; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Company:</td><td style="padding: 8px 0; color: #333;">TechCorp Australia</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Location:</td><td style="padding: 8px 0; color: #333;">Sydney, NSW</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Plan:</td><td style="padding: 8px 0; color: #333;">Featured</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Status:</td><td style="padding: 8px 0;"><span style="color: #f59e0b; font-weight: 600;">Pending Approval</span></td></tr>
+            </table>
+          </div>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">What Happens Next:</p>
+            <ul style="color: #555; margin: 0; padding-left: 20px;">
+              <li style="margin-bottom: 6px;">Our team will review your job posting within 24-48 hours</li>
+              <li style="margin-bottom: 6px;">We'll check for quality, compliance, and completeness</li>
+              <li style="margin-bottom: 6px;">You'll receive an email notification once approved</li>
+              <li style="margin-bottom: 0;">Your job will then go live on our platform</li>
+            </ul>
+          </div>
+          <div style="text-align: center;">
+            <a href="#" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block; font-size: 14px;">View Job Status</a>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">Need to make changes? You can edit your job posting in your dashboard while it's pending approval.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 10. Job Approved -->
+<div class="email-section" id="job-approved">
+  <div class="email-label">10. Job Approved by Admin</div>
+  <div class="email-meta"><span>To: Employer</span> <span>Trigger: Admin approves the job</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Job Status Update</p>
+          <p style="margin: 0 0 16px 0;">Hello Sarah Thompson,</p>
+          <p style="margin: 0 0 20px 0;">Your job posting status has been updated.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #10b981; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Status:</td><td style="padding: 8px 0;"><span style="color: #10b981; font-weight: 600;">Approved</span></td></tr>
+            </table>
+          </div>
+          <p style="margin: 0 0 24px 0;">Congratulations! Your job is now live and visible to job seekers.</p>
+          <div style="text-align: center;">
+            <a href="#" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block; font-size: 14px;">View in Dashboard</a>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">You're receiving this email because you have posted a job on AI Jobs Australia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 11. Job Rejected -->
+<div class="email-section" id="job-rejected">
+  <div class="email-label">11. Job Rejected by Admin</div>
+  <div class="email-meta"><span>To: Employer</span> <span>Trigger: Admin rejects the job</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Job Status Update</p>
+          <p style="margin: 0 0 16px 0;">Hello Sarah Thompson,</p>
+          <p style="margin: 0 0 20px 0;">Your job posting status has been updated.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #ef4444; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Status:</td><td style="padding: 8px 0;"><span style="color: #ef4444; font-weight: 600;">Rejected</span></td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Reason:</td><td style="padding: 8px 0; color: #333;">The job description does not contain enough detail about the role responsibilities and requirements.</td></tr>
+            </table>
+          </div>
+          <p style="margin: 0 0 24px 0;">Please review the feedback and make necessary changes before resubmitting.</p>
+          <div style="text-align: center;">
+            <a href="#" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block; font-size: 14px;">View in Dashboard</a>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">You're receiving this email because you have posted a job on AI Jobs Australia.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 12. Job Resubmission -->
+<div class="email-section" id="job-resubmission">
+  <div class="email-label">12. Job Resubmission Confirmation</div>
+  <div class="email-meta"><span>To: Employer</span> <span>Trigger: Employer edits and resubmits a job</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Job Changes Under Review</p>
+          <p style="margin: 0 0 16px 0;">Hello Sarah Thompson,</p>
+          <p style="margin: 0 0 20px 0;">Your recent changes to the job posting have been saved and are now under review.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #f59e0b; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Senior Machine Learning Engineer</p>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr><td style="padding: 8px 0; color: #666; width: 80px;">Company:</td><td style="padding: 8px 0; color: #333;">TechCorp Australia</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Location:</td><td style="padding: 8px 0; color: #333;">Sydney, NSW</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Changes:</td><td style="padding: 8px 0; color: #333;">Updated job description and requirements</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Status:</td><td style="padding: 8px 0;"><span style="color: #f59e0b; font-weight: 600;">Under Review</span></td></tr>
+            </table>
+          </div>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">What Happens Next:</p>
+            <ul style="color: #555; margin: 0; padding-left: 20px;">
+              <li style="margin-bottom: 6px;">Our team will review your changes within 24-48 hours</li>
+              <li style="margin-bottom: 6px;">We'll check for quality, compliance, and completeness</li>
+              <li style="margin-bottom: 6px;">You'll receive an email notification once approved</li>
+              <li style="margin-bottom: 0;">Your updated job will then go live on our platform</li>
+            </ul>
+            <p style="color: #666; margin: 16px 0 0 0; font-size: 13px;">Note: Minor changes like company info and application method are already live. Only significant content changes require review.</p>
+          </div>
+          <div style="text-align: center;">
+            <a href="#" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block; font-size: 14px;">View Job Status</a>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">Need to make more changes? You can continue editing in your dashboard while it's under review.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 13. Welcome Email -->
+<div class="email-section" id="welcome">
+  <div class="email-label">13. Job Seeker Welcome Email</div>
+  <div class="email-meta"><span>To: Job Seeker</span> <span>Trigger: First sign-up (one-time)</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px; font-size: 14px;">
+          <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Welcome to AI Jobs Australia!</p>
+          <p style="margin: 0 0 16px 0;">Hi James,</p>
+          <p style="margin: 0 0 16px 0;">Thank you for joining AI Jobs Australia. We're here to help you find your next opportunity in Australia's AI industry.</p>
+          <p style="margin: 0 0 24px 0;">Your account is ready. Complete your profile to get the most out of your experience.</p>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #2563eb; margin-bottom: 24px;">
+            <p style="margin: 0 0 12px 0; font-weight: 600; color: #333;">Complete Your Profile:</p>
+            <ul style="color: #555; margin: 0; padding-left: 20px;">
+              <li style="margin-bottom: 6px;">Add your full name</li>
+              <li style="margin-bottom: 6px;">Set your location</li>
+              <li style="margin-bottom: 6px;">List your AI skills</li>
+              <li style="margin-bottom: 6px;">Add a bio about your experience</li>
+              <li style="margin-bottom: 0;">Upload your resume (optional)</li>
+            </ul>
+          </div>
+          <div style="text-align: center; margin-bottom: 24px;">
+            <a href="#" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block; font-size: 14px;">Complete Your Profile</a>
+          </div>
+          <div style="text-align: center;">
+            <a href="#" style="color: #2563eb; text-decoration: none; font-size: 14px;">Browse Jobs &rarr;</a>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">Questions? Contact us at hello@aijobsaustralia.com.au</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<!-- 14. Contact Form -->
+<div class="email-section" id="contact-form">
+  <div class="email-label">14. Contact Form Submission</div>
+  <div class="email-meta"><span>To: hello@aijobsaustralia.com.au</span> <span>Trigger: User submits contact form</span></div>
+  <div class="email-frame">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+      <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+          <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+          <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+        </div>
+        <div style="padding: 30px;">
+          <p style="color: #666; font-size: 14px; margin: 0 0 20px 0;">Contact Form Submission</p>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px;">
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #eee; color: #666; width: 70px; vertical-align: top;">Name:</td><td style="padding: 10px 0; border-bottom: 1px solid #eee; color: #333;">James Chen</td></tr>
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #eee; color: #666; vertical-align: top;">Email:</td><td style="padding: 10px 0; border-bottom: 1px solid #eee;"><a href="#" style="color: #2563eb; text-decoration: none;">james.chen@example.com</a></td></tr>
+            <tr><td style="padding: 10px 0; border-bottom: 1px solid #eee; color: #666; vertical-align: top;">Subject:</td><td style="padding: 10px 0; border-bottom: 1px solid #eee; color: #333;">Question about job posting</td></tr>
+          </table>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border-left: 3px solid #2563eb; font-size: 14px;">
+            <p style="margin: 0 0 8px 0; font-weight: 600; color: #333;">Message:</p>
+            <p style="white-space: pre-wrap; margin: 0; color: #555;">Hi there, I was wondering if there are any opportunities for junior ML engineers in Melbourne? I'm about to graduate and would love to know more about the market. Thanks!</p>
+          </div>
+        </div>
+        <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+          <p style="margin: 0;">Reply directly to this email to respond to James.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

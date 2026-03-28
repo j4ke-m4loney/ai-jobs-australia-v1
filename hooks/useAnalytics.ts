@@ -38,16 +38,28 @@ export function useAnalytics() {
         setLoading(true);
         setError(null);
         
-        // Fetch job statistics
-        const { data: jobs, error: jobsError } = await supabase
-          .from('jobs')
-          .select('id, status, title')
-          .eq('employer_id', user.id);
+        // Get accurate counts using head: true (bypasses Supabase 1000 row limit)
+        const [totalCountResult, activeCountResult, jobsResult] = await Promise.all([
+          supabase
+            .from('jobs')
+            .select('*', { count: 'exact', head: true })
+            .eq('employer_id', user.id),
+          supabase
+            .from('jobs')
+            .select('*', { count: 'exact', head: true })
+            .eq('employer_id', user.id)
+            .eq('status', 'approved'),
+          supabase
+            .from('jobs')
+            .select('id, status, title')
+            .eq('employer_id', user.id),
+        ]);
 
-        if (jobsError) throw jobsError;
+        if (jobsResult.error) throw jobsResult.error;
 
-        const totalJobs = jobs?.length || 0;
-        const activeJobs = jobs?.filter(job => job.status === 'approved').length || 0;
+        const totalJobs = totalCountResult.count ?? 0;
+        const activeJobs = activeCountResult.count ?? 0;
+        const jobs = jobsResult.data;
 
         // Get all job IDs for this employer
         const jobIds = jobs?.map(job => job.id) || [];

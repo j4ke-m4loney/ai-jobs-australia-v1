@@ -34,8 +34,8 @@ export async function PUT(
       );
     }
 
-    // Validate status
-    const validStatuses = ['submitted', 'reviewing', 'shortlisted', 'rejected', 'accepted'];
+    // Validate status - canonical set for application lifecycle
+    const validStatuses = ['submitted', 'reviewing', 'shortlisted', 'interview', 'accepted', 'rejected', 'withdrawn'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
         { error: 'Invalid status value' },
@@ -69,13 +69,35 @@ export async function PUT(
       );
     }
 
+    // Build update payload - include status_history if the column exists
+    const updatePayload: Record<string, unknown> = {
+      status,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Try to include status_history (will be ignored gracefully if column doesn't exist yet)
+    const historyEntry = {
+      status,
+      timestamp: new Date().toISOString(),
+      note: statusMessage || null,
+    };
+
+    // Fetch existing history if column exists
+    const { data: historyData } = await supabaseAdmin
+      .from('job_applications')
+      .select('status_history')
+      .eq('id', applicationId)
+      .single();
+
+    if (historyData && 'status_history' in historyData) {
+      const existingHistory = (historyData.status_history as unknown[]) || [];
+      updatePayload.status_history = [...existingHistory, historyEntry];
+    }
+
     // Update the application status
     const { data: updatedApplication, error: updateError } = await supabaseAdmin
       .from('job_applications')
-      .update({
-        status,
-        updated_at: new Date().toISOString()
-      })
+      .update(updatePayload)
       .eq('id', applicationId)
       .select()
       .single();

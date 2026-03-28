@@ -24,6 +24,8 @@ import {
   Clock,
   Briefcase,
   Activity,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,6 +63,8 @@ interface JobStats {
   totalApplications: number;
 }
 
+const JOBS_PER_PAGE = 30;
+
 const EmployerJobs = () => {
   const router = useRouter();
   const { user } = useAuth();
@@ -72,10 +76,27 @@ const EmployerJobs = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const fetchJobsAndStats = useCallback(async () => {
     try {
-      // Fetch all jobs for this employer
+      // Get accurate counts using head: true (bypasses Supabase 1000 row limit)
+      const [totalCountResult, activeCountResult] = await Promise.all([
+        supabase
+          .from("jobs")
+          .select("*", { count: "exact", head: true })
+          .eq("employer_id", user?.id),
+        supabase
+          .from("jobs")
+          .select("*", { count: "exact", head: true })
+          .eq("employer_id", user?.id)
+          .eq("status", "approved"),
+      ]);
+
+      const totalJobs = totalCountResult.count ?? 0;
+      const activeJobs = activeCountResult.count ?? 0;
+
+      // Fetch the current page of jobs for display
       const { data: jobsData, error: jobsError } = await supabase
         .from("jobs")
         .select("*")
@@ -88,59 +109,16 @@ const EmployerJobs = () => {
 
       const fetchedJobs = jobsData || [];
 
-      // Get application counts for all jobs in batched queries to avoid URL length limits
-      const jobIds = fetchedJobs.map((job) => job.id);
-      let countsByJobId: Record<string, number> = {};
-
-      if (jobIds.length > 0) {
-        // Process in batches of 50 to avoid URL length limits
-        const BATCH_SIZE = 50;
-        const allApplicationData: { job_id: string }[] = [];
-
-        for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
-          const batchIds = jobIds.slice(i, i + BATCH_SIZE);
-          const { data: batchData, error: batchError } = await supabase
-            .from("job_applications")
-            .select("job_id")
-            .in("job_id", batchIds);
-
-          if (batchError) {
-            console.error("Error fetching application counts batch:", batchError);
-          } else if (batchData) {
-            allApplicationData.push(...batchData);
-          }
-        }
-
-        // Count applications per job client-side
-        countsByJobId = allApplicationData.reduce(
-          (acc, app) => {
-            acc[app.job_id] = (acc[app.job_id] || 0) + 1;
-            return acc;
-          },
-          {} as Record<string, number>
-        );
-      }
-
       const jobsWithApplicationCounts = fetchedJobs.map((job) => ({
         ...job,
-        applicationCount: countsByJobId[job.id] || 0,
+        applicationCount: 0,
       }));
-
-      // Calculate statistics
-      const totalJobs = jobsWithApplicationCounts.length;
-      const activeJobs = jobsWithApplicationCounts.filter(
-        (job) => job.status === "approved"
-      ).length;
-      const totalApplications = jobsWithApplicationCounts.reduce(
-        (sum, job) => sum + job.applicationCount,
-        0
-      );
 
       setJobs(jobsWithApplicationCounts);
       setStats({
         totalJobs,
         activeJobs,
-        totalApplications,
+        totalApplications: 0,
       });
     } catch (error) {
       console.error("Error fetching jobs:", error);
@@ -217,7 +195,7 @@ const EmployerJobs = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
@@ -299,59 +277,46 @@ const EmployerJobs = () => {
                   </Button>
                 </div>
               ) : (
-                jobs.map((job) => (
+                jobs.slice((page - 1) * JOBS_PER_PAGE, page * JOBS_PER_PAGE).map((job) => (
                   <div
                     key={job.id}
-                    className="flex flex-col md:flex-row md:items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-start justify-between gap-2 p-3 md:p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                        <h3 className="font-semibold text-lg truncate">
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex flex-wrap items-center gap-1.5 md:gap-3 mb-1.5">
+                        <h3 className="font-semibold text-sm md:text-lg leading-tight break-words">
                           {job.title}
                         </h3>
                         <Badge
-                          className={`${getStatusColor(job.status)} w-fit`}
+                          className={`${getStatusColor(job.status)} w-fit text-[10px] md:text-xs`}
                         >
                           {job.status}
                         </Badge>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs md:text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4 flex-shrink-0" />
-                          <span className="truncate">{job.location}</span>
+                          <MapPin className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+                          <span className="truncate max-w-[160px] md:max-w-none">{job.location}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <DollarSign className="w-4 h-4 flex-shrink-0" />
-                          <span className="truncate">
+                          <DollarSign className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+                          <span className="truncate max-w-[160px] md:max-w-none">
                             {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4 flex-shrink-0" />
-                          <span>{formatJobTypes(job.job_type)}</span>
+                          <Clock className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+                          <span className="truncate max-w-[120px] md:max-w-none">{formatJobTypes(job.job_type)}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between md:gap-4">
-                      {/* TODO: Uncomment when internal applications are supported */}
-                      {/* <div className="flex items-center gap-6">
-                        <div className="text-center">
-                          <div className="text-lg font-semibold">
-                            {job.applicationCount}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            Applications
-                          </div>
-                        </div>
-                      </div> */}
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="flex-shrink-0 h-8 w-8 p-0">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             onClick={() => router.push(`/employer/jobs/${job.id}`)}
@@ -384,9 +349,42 @@ const EmployerJobs = () => {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </div>
                   </div>
                 ))
+              )}
+
+              {/* Pagination Controls */}
+              {jobs.length > JOBS_PER_PAGE && (
+                <div className="pt-4 border-t space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(page - 1)}
+                      disabled={page <= 1}
+                      className="gap-1"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Previous
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Page {page} of {Math.ceil(jobs.length / JOBS_PER_PAGE)}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(page + 1)}
+                      disabled={page >= Math.ceil(jobs.length / JOBS_PER_PAGE)}
+                      className="gap-1"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Showing {((page - 1) * JOBS_PER_PAGE) + 1}–{Math.min(page * JOBS_PER_PAGE, jobs.length)} of {jobs.length} jobs
+                  </p>
+                </div>
               )}
             </div>
           </CardContent>

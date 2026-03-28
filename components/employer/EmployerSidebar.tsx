@@ -9,6 +9,7 @@ import {
   Settings,
   Plus,
   LogOut,
+  Users,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,12 +40,11 @@ const menuItems = [
     url: "/employer/jobs",
     icon: Briefcase,
   },
-  // TODO: Uncomment when internal applications are supported
-  // {
-  //   title: "Applications",
-  //   url: "/employer/applications",
-  //   icon: Users,
-  // },
+  {
+    title: "Applications",
+    url: "/employer/applications",
+    icon: Users,
+  },
   // Analytics feature - coming soon!
   // {
   //   title: "Analytics",

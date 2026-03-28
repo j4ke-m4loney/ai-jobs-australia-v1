@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -10,15 +10,16 @@ export interface JobApplication {
   applicant_id: string;
   status: string;
   created_at: string;
+  updated_at?: string;
   resume_url?: string;
   cover_letter_url?: string;
+  viewed_at?: string | null;
   job: {
     id: string;
     title: string;
     company_id?: string;
   };
   profiles: {
-    id: string;
     first_name?: string;
     last_name?: string;
     phone?: string;
@@ -35,26 +36,51 @@ export interface JobWithApplicationCount {
   status: string;
 }
 
+export interface PaginationState {
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
 export const useEmployerApplications = (selectedJobId?: string) => {
   const { user } = useAuth();
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [jobs, setJobs] = useState<JobWithApplicationCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const [hasNewApplications, setHasNewApplications] = useState(false);
 
-  const fetchJobs = async () => {
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(30);
+  const [total, setTotal] = useState(0);
+
+  // Filters
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [sortField, setSortField] = useState<"created_at" | "name">("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Track if this is the initial load
+  const isInitialLoad = useRef(true);
+
+  // Debounce search input (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const fetchJobs = useCallback(async () => {
     if (!user) return;
 
     try {
-      // Fetch real jobs for this employer with application counts
       const { data: jobsData, error: jobsError } = await supabase
         .from("jobs")
-        .select(`
-          id,
-          title,
-          status,
-          created_at
-        `)
+        .select("id, title, status, created_at")
         .eq("employer_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -66,12 +92,11 @@ export const useEmployerApplications = (selectedJobId?: string) => {
 
       const fetchedJobs = jobsData || [];
 
-      // Get application counts for all jobs in batched queries to avoid URL length limits
+      // Get application counts in batches
       const jobIds = fetchedJobs.map((job) => job.id);
       let countsByJobId: Record<string, number> = {};
 
       if (jobIds.length > 0) {
-        // Process in batches of 50 to avoid URL length limits
         const BATCH_SIZE = 50;
         const allApplicationData: { job_id: string }[] = [];
 
@@ -89,7 +114,6 @@ export const useEmployerApplications = (selectedJobId?: string) => {
           }
         }
 
-        // Count applications per job client-side
         countsByJobId = allApplicationData.reduce(
           (acc, app) => {
             acc[app.job_id] = (acc[app.job_id] || 0) + 1;
@@ -107,206 +131,81 @@ export const useEmployerApplications = (selectedJobId?: string) => {
       }));
 
       setJobs(jobsWithCounts);
-    } catch (error) {
-      console.error("Error in fetchJobs:", error);
+    } catch (err) {
+      console.error("Error in fetchJobs:", err);
       setError("Failed to load jobs");
     }
-  };
+  }, [user]);
 
-  const fetchApplications = async () => {
-    if (!user) return;
+  const fetchApplications = useCallback(async () => {
+    if (!user || !selectedJobId) {
+      setApplications([]);
+      setTotal(0);
+      setStatusCounts({});
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
-      
-      // First get the job IDs for this employer
-      const { data: employerJobs, error: employerJobsError } = await supabase
-        .from("jobs")
-        .select("id")
-        .eq("employer_id", user.id);
+      setError(null);
 
-      if (employerJobsError) {
-        console.error("Error fetching employer jobs:", employerJobsError);
-        setError("Failed to load employer jobs");
-        return;
-      }
-
-      const jobIds = employerJobs?.map(job => job.id) || [];
-
-      if (jobIds.length === 0) {
-        // No jobs posted yet, so no applications
-        setApplications([]);
-        setLoading(false);
-        return;
-      }
-
-      // First get basic applications data - batch to avoid URL length limits
-      type RawAppData = {
-        id: string;
-        job_id: string;
-        applicant_id: string;
-        status: string | null;
-        created_at: string;
-        resume_url: string | null;
-        cover_letter_url: string | null;
-      };
-      let applicationsData: RawAppData[] = [];
-
-      // If a specific job is selected, query just that job (no batching needed)
-      if (selectedJobId) {
-        const { data, error: applicationsError } = await supabase
-          .from("job_applications")
-          .select(`
-            id,
-            job_id,
-            applicant_id,
-            status,
-            created_at,
-            resume_url,
-            cover_letter_url
-          `)
-          .eq("job_id", selectedJobId)
-          .order("created_at", { ascending: false });
-
-        if (applicationsError) {
-          console.error("Error fetching applications:", applicationsError);
-          console.error("Error details:", {
-            message: applicationsError.message,
-            details: applicationsError.details,
-            hint: applicationsError.hint,
-            code: applicationsError.code
-          });
-          setError(`Failed to load applications: ${applicationsError.message}`);
-          return;
-        }
-        applicationsData = data || [];
-      } else {
-        // Batch queries in chunks of 50 to avoid URL length limits
-        const BATCH_SIZE = 50;
-        for (let i = 0; i < jobIds.length; i += BATCH_SIZE) {
-          const batchIds = jobIds.slice(i, i + BATCH_SIZE);
-          const { data: batchData, error: batchError } = await supabase
-            .from("job_applications")
-            .select(`
-              id,
-              job_id,
-              applicant_id,
-              status,
-              created_at,
-              resume_url,
-              cover_letter_url
-            `)
-            .in("job_id", batchIds);
-
-          if (batchError) {
-            console.error("Error fetching applications batch:", batchError);
-          } else if (batchData) {
-            applicationsData.push(...batchData);
-          }
-        }
-
-        // Sort all applications by created_at descending (client-side)
-        applicationsData.sort((a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      }
-
-      // Debug: Log resume URLs to understand the format
-      console.log("=== Applications Debug ===");
-      if (applicationsData) {
-        applicationsData.forEach((app, index) => {
-          console.log(`Application ${index + 1}:`, {
-            id: app.id,
-            resume_url: app.resume_url,
-            cover_letter_url: app.cover_letter_url
-          });
-        });
-      }
-
-      if (!applicationsData || applicationsData.length === 0) {
-        setApplications([]);
-        setLoading(false);
-        return;
-      }
-
-      // Get job details for applications
-      const applicationJobIds = [...new Set(applicationsData.map(app => app.job_id))];
-      const { data: jobsData, error: jobsError } = await supabase
-        .from("jobs")
-        .select("id, title, company_id")
-        .in("id", applicationJobIds);
-
-      if (jobsError) {
-        console.error("Error fetching job details:", jobsError);
-      }
-
-      // Get applicant profiles
-      const applicantIds = [...new Set(applicationsData.map(app => app.applicant_id))];
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          user_id,
-          first_name,
-          last_name,
-          phone,
-          location,
-          experience_level
-        `)
-        .in("user_id", applicantIds);
-
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-      }
-
-      // Create lookup maps
-      const jobsMap = new Map();
-      (jobsData || []).forEach(job => {
-        jobsMap.set(job.id, job);
+      const params = new URLSearchParams({
+        userId: user.id,
+        type: "employer",
+        jobId: selectedJobId,
+        page: String(page),
+        pageSize: String(pageSize),
+        sort: sortField,
+        order: sortOrder,
       });
 
-      const profilesMap = new Map();
-      (profilesData || []).forEach(profile => {
-        profilesMap.set(profile.user_id, profile);
-      });
+      if (statusFilter && statusFilter !== "all") {
+        params.set("status", statusFilter);
+      }
 
-      // Transform the data to match the expected interface
-      const transformedApplications: JobApplication[] = applicationsData.map((app) => ({
-        id: app.id,
-        job_id: app.job_id,
-        applicant_id: app.applicant_id,
-        status: app.status || "pending",
-        created_at: app.created_at,
-        resume_url: app.resume_url ?? undefined,
-        cover_letter_url: app.cover_letter_url ?? undefined,
-        job: {
-          id: app.job_id,
-          title: jobsMap.get(app.job_id)?.title || "Unknown Job",
-          company_id: jobsMap.get(app.job_id)?.company_id,
-        },
-        profiles: profilesMap.get(app.applicant_id) || null,
-      }));
+      if (debouncedSearch.trim()) {
+        params.set("search", debouncedSearch.trim());
+      }
 
-      setApplications(transformedApplications);
-    } catch (error) {
-      console.error("Error in fetchApplications:", error);
+      const response = await fetch(`/api/applications?${params.toString()}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch applications");
+      }
+
+      const data = await response.json();
+
+      setApplications(data.applications || []);
+      setTotal(data.total || 0);
+      setStatusCounts(data.statusCounts || {});
+      setHasNewApplications(false);
+    } catch (err) {
+      console.error("Error in fetchApplications:", err);
       setError("Failed to load applications");
     } finally {
       setLoading(false);
+      isInitialLoad.current = false;
     }
-  };
+  }, [user, selectedJobId, page, pageSize, statusFilter, debouncedSearch, sortField, sortOrder]);
 
   const updateApplicationStatus = async (
     applicationId: string,
-    newStatus: string
+    newStatus: string,
+    statusMessage?: string
   ) => {
     try {
-      const { error } = await supabase
-        .from("job_applications")
-        .update({ status: newStatus })
-        .eq("id", applicationId);
+      const response = await fetch(`/api/applications/${applicationId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, statusMessage }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update status");
+      }
 
       // Update local state
       setApplications((prev) =>
@@ -314,6 +213,17 @@ export const useEmployerApplications = (selectedJobId?: string) => {
           app.id === applicationId ? { ...app, status: newStatus } : app
         )
       );
+
+      // Update status counts locally
+      setStatusCounts((prev) => {
+        const oldStatus = applications.find((a) => a.id === applicationId)?.status;
+        const updated = { ...prev };
+        if (oldStatus && updated[oldStatus]) {
+          updated[oldStatus] = Math.max(0, updated[oldStatus] - 1);
+        }
+        updated[newStatus] = (updated[newStatus] || 0) + 1;
+        return updated;
+      });
 
       return true;
     } catch (err) {
@@ -324,15 +234,23 @@ export const useEmployerApplications = (selectedJobId?: string) => {
 
   const updateMultipleApplicationStatus = async (
     applicationIds: string[],
-    newStatus: string
+    newStatus: string,
+    statusMessage?: string
   ) => {
     try {
-      const { error } = await supabase
-        .from("job_applications")
-        .update({ status: newStatus })
-        .in("id", applicationIds);
+      const results = await Promise.allSettled(
+        applicationIds.map((id) =>
+          fetch(`/api/applications/${id}/status`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus, statusMessage }),
+          })
+        )
+      );
 
-      if (error) throw error;
+      const allSucceeded = results.every(
+        (r) => r.status === "fulfilled" && r.value.ok
+      );
 
       // Update local state
       setApplications((prev) =>
@@ -341,42 +259,51 @@ export const useEmployerApplications = (selectedJobId?: string) => {
         )
       );
 
-      return true;
+      // Refetch to get accurate counts
+      fetchApplications();
+
+      return allSucceeded;
     } catch (err) {
       console.error("Error updating multiple application status:", err);
       return false;
     }
   };
 
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, debouncedSearch, sortField, sortOrder, selectedJobId]);
+
+  // Fetch jobs on mount
   useEffect(() => {
     if (user) {
       fetchJobs();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, fetchJobs]);
 
+  // Fetch applications when dependencies change
   useEffect(() => {
     if (user) {
       fetchApplications();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, selectedJobId]);
+  }, [user, fetchApplications]);
 
-  // Set up real-time subscription
+  // Real-time subscription - show toast instead of auto-refetch
   useEffect(() => {
-    if (!user) return;
+    if (!user || !selectedJobId) return;
 
     const channel = supabase
       .channel("job_applications_changes")
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
           schema: "public",
           table: "job_applications",
+          filter: `job_id=eq.${selectedJobId}`,
         },
         () => {
-          fetchApplications();
+          setHasNewApplications(true);
         }
       )
       .subscribe();
@@ -384,8 +311,9 @@ export const useEmployerApplications = (selectedJobId?: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedJobId]);
+
+  const totalPages = Math.ceil(total / pageSize);
 
   return {
     applications,
@@ -395,5 +323,25 @@ export const useEmployerApplications = (selectedJobId?: string) => {
     updateApplicationStatus,
     updateMultipleApplicationStatus,
     refetch: fetchApplications,
+    // Pagination
+    page,
+    setPage,
+    pageSize,
+    total,
+    totalPages,
+    // Filters
+    statusFilter,
+    setStatusFilter,
+    searchQuery,
+    setSearchQuery,
+    sortField,
+    setSortField,
+    sortOrder,
+    setSortOrder,
+    // Status counts for tab badges
+    statusCounts,
+    // New application indicator
+    hasNewApplications,
+    dismissNewApplications: () => setHasNewApplications(false),
   };
 };

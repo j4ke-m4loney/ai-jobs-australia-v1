@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { emailService } from '@/lib/email/postmark-service';
 import { getSiteUrl } from '@/lib/utils/get-site-url';
+import { processOverdueBatches } from '@/lib/email/process-email-queue';
 
 // Helper function to create Supabase admin client (avoids build-time initialization)
 function getSupabaseAdmin() {
@@ -24,111 +25,7 @@ interface EmailBatchingParams {
   applicationId: string;
 }
 
-/**
- * Process any overdue email batches before handling new application
- * This is "lazy processing" - we check for overdue batches when new apps arrive
- */
-async function processOverdueBatches(): Promise<void> {
-  try {
-    // Find all unprocessed queue entries that are overdue (scheduled_for <= now)
-    const { data: overdueQueues } = await getSupabaseAdmin()
-      .from('email_notification_queue')
-      .select(`
-        id,
-        job_id,
-        employer_id,
-        application_ids,
-        applicant_names,
-        created_at,
-        scheduled_for
-      `)
-      .eq('processed', false)
-      .lte('scheduled_for', new Date().toISOString())
-      .order('created_at', { ascending: true });
-
-    if (!overdueQueues || overdueQueues.length === 0) {
-      return; // No overdue batches
-    }
-
-    console.log(`📧 Processing ${overdueQueues.length} overdue email batches (lazy processing)`);
-
-    // Fetch job titles separately to avoid TypeScript foreign key issues
-    const jobIds = [...new Set(overdueQueues.map(q => q.job_id))];
-    const { data: jobs } = await getSupabaseAdmin()
-      .from('jobs')
-      .select('id, title')
-      .in('id', jobIds);
-
-    // Create a lookup map for job titles
-    const jobTitleMap = new Map();
-    (jobs || []).forEach(job => {
-      jobTitleMap.set(job.id, job.title);
-    });
-
-    // Process each overdue batch
-    for (const queue of overdueQueues) {
-      try {
-        // Get employer details
-        const { data: employerUserData } = await getSupabaseAdmin()
-          .auth.admin.getUserById(queue.employer_id);
-
-        const employerEmail = employerUserData?.user?.email;
-        if (!employerEmail) continue;
-
-        // Get employer profile for name
-        const { data: employerProfile } = await getSupabaseAdmin()
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('user_id', queue.employer_id)
-          .single();
-
-        const employerName = employerProfile?.first_name && employerProfile?.last_name
-          ? `${employerProfile.first_name} ${employerProfile.last_name}`.trim()
-          : employerProfile?.first_name || employerProfile?.last_name || 'Employer';
-
-        // Calculate time frame for the email
-        const queueAge = Math.round((new Date().getTime() - new Date(queue.created_at).getTime()) / (1000 * 60));
-        const timeFrame = queueAge < 120 ? 'in the last hour' : `in the last ${Math.round(queueAge / 60)} hours`;
-
-        // Send the batched email
-        const jobTitle = jobTitleMap.get(queue.job_id) || 'Job Post';
-        const emailSent = await emailService.sendBatchedApplicationNotification({
-          employerName,
-          employerEmail,
-          jobTitle,
-          jobId: queue.job_id,
-          applicationCount: queue.application_ids.length,
-          applicantNames: queue.applicant_names,
-          timeFrame,
-          dashboardUrl: `${getSiteUrl()}/employer/applications`
-        });
-
-        if (emailSent) {
-          // Mark queue as processed
-          await getSupabaseAdmin()
-            .from('email_notification_queue')
-            .update({ processed: true })
-            .eq('id', queue.id);
-
-          // Update email tracking
-          await getSupabaseAdmin()
-            .from('job_email_tracking')
-            .upsert({
-              job_id: queue.job_id,
-              last_email_sent: new Date().toISOString(),
-              application_count_since_last: 0
-            });
-
-          console.log(`✅ Processed overdue batch for job ${queue.job_id}: ${queue.application_ids.length} applications`);
-        }
-      } catch (batchError) {
-        console.error(`❌ Error processing overdue batch ${queue.id}:`, batchError);
-      }
-    }
-  } catch (error) {
-    console.error('❌ Error in lazy processing of overdue batches:', error);
-  }
-}
+// processOverdueBatches is imported from @/lib/email/process-email-queue
 
 /**
  * Handles volume-based email batching for application notifications
@@ -307,7 +204,7 @@ export async function POST(request: NextRequest) {
       jobId,
       applicantId,
       resumeUrl,
-      coverLetterUrl
+      coverLetterUrl,
     } = await request.json();
 
     console.log('📝 Application API - Creating application:', {
@@ -384,7 +281,7 @@ export async function POST(request: NextRequest) {
         applicant_id: applicantId,
         resume_url: resumeUrl,
         cover_letter_url: coverLetterUrl,
-        status: 'submitted'
+        status: 'submitted',
       })
       .select()
       .single();
@@ -406,29 +303,20 @@ export async function POST(request: NextRequest) {
     const employerEmail = employerUserData?.user?.email;
 
     // Check employer's notification preferences
-    const { data: employerPrefs, error: prefsError } = await getSupabaseAdmin()
+    // Use select('*') for backward compatibility — application_notification_frequency may not exist yet
+    const { data: employerPrefs } = await getSupabaseAdmin()
       .from('user_notification_preferences')
-      .select('email_applications')
+      .select('*')
       .eq('user_id', jobData.employer_id)
       .single();
 
-    // Log preference check for debugging
-    console.log('📧 Notification preferences check:', {
-      employerId: jobData.employer_id,
-      prefsFound: !!employerPrefs,
-      prefsError: prefsError?.message,
-      emailApplications: employerPrefs?.email_applications
-    });
+    // Determine notification frequency: immediate, hourly, daily, or off
+    const notificationFrequency = employerPrefs?.application_notification_frequency || 'immediate';
 
     // Send email notification to employer if they have the preference enabled (default: true)
-    // If no preferences found (null), default to sending emails (true)
-    const shouldSendEmail = !employerPrefs || employerPrefs.email_applications !== false;
-
-    console.log('📧 Email notification decision:', {
-      shouldSendEmail,
-      hasEmployerEmail: !!employerEmail,
-      employerUserError: employerUserError?.message
-    });
+    // If frequency is 'off', skip entirely
+    const shouldSendEmail = notificationFrequency !== 'off' &&
+      (!employerPrefs || employerPrefs.email_applications !== false);
 
     if (shouldSendEmail && !employerUserError && employerEmail) {
       try {
@@ -447,21 +335,37 @@ export async function POST(request: NextRequest) {
           ? `${applicantData.first_name} ${applicantData.last_name}`.trim()
           : applicantData?.first_name || applicantData?.last_name || 'Job Seeker';
 
-        // First, process any overdue batches (lazy processing)
+        // First, process any overdue batches (lazy processing - belt and suspenders with cron)
         await processOverdueBatches();
 
-        // Then handle the current application with batching logic
-        await handleEmailBatching({
-          jobId: jobData.id,
-          employerId: jobData.employer_id,
-          employerName,
-          employerEmail,
-          jobTitle: jobData.title,
-          applicantName,
-          applicationId: application.id
-        });
-
-        console.log('✅ Application notification handled with batching logic');
+        if (notificationFrequency === 'immediate') {
+          // Send immediate notification
+          await emailService.sendJobApplicationNotification({
+            employerName,
+            employerEmail,
+            jobTitle: jobData.title,
+            jobId: jobData.id,
+            applicantName,
+            applicantEmail: 'Not displayed',
+            applicationDate: new Date().toLocaleDateString('en-AU', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+            dashboardUrl: `${getSiteUrl()}/employer/applications`
+          });
+        } else {
+          // For 'hourly' and 'daily' - use batching logic
+          await handleEmailBatching({
+            jobId: jobData.id,
+            employerId: jobData.employer_id,
+            employerName,
+            employerEmail,
+            jobTitle: jobData.title,
+            applicantName,
+            applicationId: application.id
+          });
+        }
       } catch (emailError) {
         console.error('❌ Failed to handle application notification:', emailError);
         // Don't fail the request if email fails - application was created successfully
@@ -498,8 +402,12 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const jobId = searchParams.get('jobId');
     const type = searchParams.get('type'); // 'employer' or 'applicant'
-
-    console.log('📋 Applications API - GET request:', { userId, jobId, type });
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('pageSize') || '20', 10)));
+    const status = searchParams.get('status'); // filter by status
+    const search = searchParams.get('search'); // search by applicant name
+    const sort = searchParams.get('sort') || 'created_at'; // created_at or name
+    const order = searchParams.get('order') || 'desc'; // asc or desc
 
     if (!userId) {
       return NextResponse.json(
@@ -508,7 +416,162 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let query = getSupabaseAdmin().from('job_applications').select(`
+    const supabaseAdmin = getSupabaseAdmin();
+
+    if (type === 'employer' && jobId) {
+      // Employer viewing applications for a specific job - paginated with search/sort
+      // First verify this employer owns the job
+      const { data: jobData, error: jobError } = await supabaseAdmin
+        .from('jobs')
+        .select('id, employer_id')
+        .eq('id', jobId)
+        .eq('employer_id', userId)
+        .single();
+
+      if (jobError || !jobData) {
+        return NextResponse.json(
+          { error: 'Job not found or access denied' },
+          { status: 404 }
+        );
+      }
+
+      // Get status counts for all statuses (for tab badges) - always unfiltered
+      const { data: allAppsForCounts } = await supabaseAdmin
+        .from('job_applications')
+        .select('status')
+        .eq('job_id', jobId);
+
+      const statusCounts: Record<string, number> = {};
+      (allAppsForCounts || []).forEach((app) => {
+        statusCounts[app.status] = (statusCounts[app.status] || 0) + 1;
+      });
+
+      // If search is provided, we need to find matching applicant IDs first
+      let matchingApplicantIds: string[] | null = null;
+      if (search && search.trim()) {
+        const searchTerm = search.trim();
+        const { data: matchingProfiles } = await supabaseAdmin
+          .from('profiles')
+          .select('user_id')
+          .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+
+        matchingApplicantIds = (matchingProfiles || []).map((p) => p.user_id);
+
+        if (matchingApplicantIds.length === 0) {
+          // No matching profiles - return empty results
+          return NextResponse.json({
+            applications: [],
+            total: 0,
+            page,
+            pageSize,
+            statusCounts,
+          });
+        }
+      }
+
+      // Build the paginated query
+      let query = supabaseAdmin
+        .from('job_applications')
+        .select('*')
+        .eq('job_id', jobId);
+
+      // Apply status filter
+      if (status && status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      // Apply search filter (matching applicant IDs)
+      if (matchingApplicantIds) {
+        query = query.in('applicant_id', matchingApplicantIds);
+      }
+
+      // Get filtered count before pagination
+      let countQuery = supabaseAdmin
+        .from('job_applications')
+        .select('id', { count: 'exact', head: true })
+        .eq('job_id', jobId);
+
+      if (status && status !== 'all') {
+        countQuery = countQuery.eq('status', status);
+      }
+      if (matchingApplicantIds) {
+        countQuery = countQuery.in('applicant_id', matchingApplicantIds);
+      }
+
+      const { count: filteredTotal } = await countQuery;
+
+      // Apply sorting
+      if (sort === 'created_at') {
+        query = query.order('created_at', { ascending: order === 'asc' });
+      } else {
+        // For name sorting we still sort by created_at server-side; name sorting happens after profile join
+        query = query.order('created_at', { ascending: order === 'asc' });
+      }
+
+      // Apply pagination
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data: applications, error: appsError } = await query;
+
+      if (appsError) {
+        console.error('Failed to fetch applications:', appsError);
+        return NextResponse.json(
+          { error: 'Failed to fetch applications' },
+          { status: 500 }
+        );
+      }
+
+      // Fetch profiles for the applicants on this page
+      const applicantIds = [...new Set((applications || []).map((a) => a.applicant_id))];
+      const profilesMap: Record<string, { first_name?: string; last_name?: string; phone?: string; location?: string; experience_level?: string; user_id: string }> = {};
+
+      if (applicantIds.length > 0) {
+        const { data: profiles } = await supabaseAdmin
+          .from('profiles')
+          .select('user_id, first_name, last_name, phone, location, experience_level')
+          .in('user_id', applicantIds);
+
+        (profiles || []).forEach((p) => {
+          profilesMap[p.user_id] = p;
+        });
+      }
+
+      // Fetch job title
+      const { data: job } = await supabaseAdmin
+        .from('jobs')
+        .select('id, title, company_id')
+        .eq('id', jobId)
+        .single();
+
+      // Combine applications with profiles
+      const enrichedApplications = (applications || []).map((app) => ({
+        ...app,
+        job: job ? { id: job.id, title: job.title, company_id: job.company_id } : { id: jobId, title: 'Unknown Job' },
+        profiles: profilesMap[app.applicant_id] || null,
+      }));
+
+      // If sorting by name, sort client-side after enrichment
+      if (sort === 'name') {
+        enrichedApplications.sort((a, b) => {
+          const nameA = `${a.profiles?.first_name || ''} ${a.profiles?.last_name || ''}`.trim().toLowerCase();
+          const nameB = `${b.profiles?.first_name || ''} ${b.profiles?.last_name || ''}`.trim().toLowerCase();
+          return order === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        });
+      }
+
+      return NextResponse.json({
+        applications: enrichedApplications,
+        total: filteredTotal ?? 0,
+        page,
+        pageSize,
+        statusCounts,
+      });
+    }
+
+    // Fallback: non-paginated query for applicant view or legacy employer view
+    let query = supabaseAdmin.from('job_applications').select(`
       id,
       status,
       created_at,
@@ -525,10 +588,8 @@ export async function GET(request: NextRequest) {
     `);
 
     if (type === 'employer') {
-      // Get applications for jobs posted by this employer
       query = query.eq('jobs.employer_id', userId);
     } else {
-      // Get applications made by this user
       query = query.eq('applicant_id', userId);
     }
 
@@ -539,14 +600,12 @@ export async function GET(request: NextRequest) {
     const { data: applications, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Failed to fetch applications:', error);
+      console.error('Failed to fetch applications:', error);
       return NextResponse.json(
         { error: 'Failed to fetch applications' },
         { status: 500 }
       );
     }
-
-    console.log(`✅ Retrieved ${applications?.length || 0} applications`);
 
     return NextResponse.json({
       applications: applications || []

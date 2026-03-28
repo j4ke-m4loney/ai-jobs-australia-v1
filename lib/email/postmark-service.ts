@@ -58,7 +58,7 @@ export interface ApplicationStatusEmailData {
   applicantEmail: string;
   jobTitle: string;
   companyName: string;
-  status: "viewed" | "accepted" | "rejected";
+  status: "submitted" | "reviewing" | "shortlisted" | "interview" | "accepted" | "rejected" | "withdrawn";
   statusMessage?: string;
 }
 
@@ -102,6 +102,14 @@ export interface BatchedApplicationEmailData {
   applicationCount: number;
   applicantNames: string[];
   timeFrame: string;
+  dashboardUrl: string;
+}
+
+export interface DailyApplicationDigestData {
+  employerName: string;
+  employerEmail: string;
+  jobSummaries: { jobTitle: string; applicationCount: number; applicantNames: string[] }[];
+  totalApplications: number;
   dashboardUrl: string;
 }
 
@@ -479,24 +487,33 @@ export class PostmarkEmailService {
 
   private getStatusUpdateSubject(status: string, jobTitle: string): string {
     switch (status) {
-      case "viewed":
-        return `Application Viewed: ${jobTitle}`;
+      case "reviewing":
+        return `Application Under Review: ${jobTitle}`;
+      case "shortlisted":
+        return `Great News! You've Been Shortlisted: ${jobTitle}`;
+      case "interview":
+        return `Interview Stage: ${jobTitle}`;
       case "accepted":
         return `Congratulations! Application Accepted: ${jobTitle}`;
       case "rejected":
         return `Application Update: ${jobTitle}`;
+      case "withdrawn":
+        return `Application Withdrawn: ${jobTitle}`;
       default:
         return `Application Status Update: ${jobTitle}`;
     }
   }
 
   private getStatusUpdateHtml(data: ApplicationStatusEmailData): string {
-    const statusColor =
-      data.status === "accepted"
-        ? "#10b981"
-        : data.status === "rejected"
-        ? "#ef4444"
-        : "#6b7280";
+    const statusColors: Record<string, string> = {
+      reviewing: "#eab308",
+      shortlisted: "#8b5cf6",
+      interview: "#f97316",
+      accepted: "#10b981",
+      rejected: "#ef4444",
+      withdrawn: "#6b7280",
+    };
+    const statusColor = statusColors[data.status] || "#6b7280";
 
     return `
       <!DOCTYPE html>
@@ -1204,6 +1221,93 @@ export class PostmarkEmailService {
       AI Jobs Australia
       Your gateway to AI careers in Australia
     `;
+  }
+
+  /**
+   * Send daily digest email summarising all applications received in the last 24 hours
+   */
+  async sendDailyApplicationDigest(
+    data: DailyApplicationDigestData
+  ): Promise<boolean> {
+    if (!isEmailServiceAvailable()) {
+      return false;
+    }
+
+    try {
+      const jobRows = data.jobSummaries
+        .map(
+          (s) =>
+            `<tr>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: 500;">${s.jobTitle}</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; text-align: center; font-weight: 600; color: #2563eb;">${s.applicationCount}</td>
+              <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-size: 13px; color: #666;">${s.applicantNames.slice(0, 3).join(", ")}${s.applicantNames.length > 3 ? ` + ${s.applicantNames.length - 3} more` : ""}</td>
+            </tr>`
+        )
+        .join("");
+
+      const htmlBody = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Daily Application Digest - AI Jobs Australia</title>
+          </head>
+          <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+            <div style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              <div style="padding: 24px 30px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+                <img src="https://aijobsaustralia.com.au/aja-email-192.png" alt="AI Jobs Australia" style="height: 36px; width: auto; vertical-align: middle;" />
+                <span style="font-size: 18px; font-weight: 600; color: #333; margin-left: 12px; vertical-align: middle;">AI Jobs Australia</span>
+              </div>
+
+              <div style="padding: 30px; font-size: 14px;">
+                <p style="color: #666; margin: 0 0 20px 0; text-align: center;">Daily Application Digest</p>
+
+                <p style="margin: 0 0 16px 0;">Hello ${data.employerName},</p>
+                <p style="margin: 0 0 20px 0;">Here's a summary of the <strong>${data.totalApplications} application${data.totalApplications !== 1 ? "s" : ""}</strong> received in the last 24 hours:</p>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+                  <thead>
+                    <tr style="background: #f9fafb;">
+                      <th style="padding: 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #666; border-bottom: 2px solid #e5e5e5;">Job</th>
+                      <th style="padding: 12px; text-align: center; font-size: 12px; text-transform: uppercase; color: #666; border-bottom: 2px solid #e5e5e5;">Applications</th>
+                      <th style="padding: 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #666; border-bottom: 2px solid #e5e5e5;">Applicants</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${jobRows}
+                  </tbody>
+                </table>
+
+                <div style="text-align: center;">
+                  <a href="${data.dashboardUrl}" style="display: inline-block; background: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">Review Applications</a>
+                </div>
+              </div>
+
+              <div style="padding: 20px 30px; background: #f9fafb; border-top: 1px solid #e5e5e5; font-size: 12px; color: #666;">
+                <p style="margin: 0;">You're receiving this daily digest because of your notification preferences. You can change this in your account settings.</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+
+      await postmarkClient!.sendEmail({
+        From: "AI Jobs Australia <noreply@aijobsaustralia.com.au>",
+        To: data.employerEmail,
+        Subject: `Daily Digest: ${data.totalApplications} new application${data.totalApplications !== 1 ? "s" : ""} received`,
+        HtmlBody: htmlBody,
+        TextBody: `Daily Application Digest\n\nHello ${data.employerName},\n\nYou received ${data.totalApplications} application(s) in the last 24 hours.\n\n${data.jobSummaries.map((s) => `${s.jobTitle}: ${s.applicationCount} application(s)`).join("\n")}\n\nReview applications: ${data.dashboardUrl}`,
+        Tag: "daily-digest",
+        TrackOpens: true,
+        TrackLinks: Models.LinkTrackingOptions.HtmlAndText,
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Failed to send daily application digest:", error);
+      return false;
+    }
   }
 }
 
