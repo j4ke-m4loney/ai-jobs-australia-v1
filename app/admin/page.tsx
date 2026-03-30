@@ -22,6 +22,7 @@ import {
   Plus,
   Crown,
   CreditCard,
+  CalendarDays,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ interface AdminStats {
   total_users: number;
   paid_featured_jobs: number;
   paid_standard_jobs: number;
+  jobs_this_month: number;
 }
 
 export default function AdminDashboard() {
@@ -59,88 +61,115 @@ export default function AdminDashboard() {
     }
   };
 
-  const statCards = [
+  const statSections = [
     {
-      title: "Total Jobs",
-      value: stats?.total_jobs || 0,
-      icon: Briefcase,
-      color: "text-blue-600",
-      bgColor: "bg-blue-100",
+      label: "Jobs Overview",
+      cards: [
+        {
+          title: "Total Jobs",
+          value: stats?.total_jobs || 0,
+          icon: Briefcase,
+          color: "text-blue-600",
+          bgColor: "bg-blue-100",
+        },
+        {
+          title: `Jobs Added (${new Date().toLocaleString('default', { month: 'long' })})`,
+          value: stats?.jobs_this_month || 0,
+          icon: CalendarDays,
+          color: "text-teal-600",
+          bgColor: "bg-teal-100",
+        },
+        {
+          title: "Approved Jobs",
+          value: stats?.approved || 0,
+          icon: CheckCircle,
+          color: "text-green-600",
+          bgColor: "bg-green-100",
+        },
+        {
+          title: "Expired Jobs",
+          value: stats?.expired || 0,
+          icon: TrendingUp,
+          color: "text-orange-600",
+          bgColor: "bg-orange-100",
+        },
+      ],
     },
     {
-      title: "Pending Approval",
-      value: stats?.pending_approval || 0,
-      icon: Clock,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-100",
-      action: {
-        label: "Review",
-        href: "/admin/jobs?status=pending_approval",
-      },
+      label: "Users & Companies",
+      cards: [
+        {
+          title: "Total Users",
+          value: stats?.total_users || 0,
+          icon: Users,
+          color: "text-indigo-600",
+          bgColor: "bg-indigo-100",
+        },
+        {
+          title: "Companies",
+          value: stats?.total_companies || 0,
+          icon: Building,
+          color: "text-gray-600",
+          bgColor: "bg-gray-100",
+        },
+      ],
     },
     {
-      title: "Approved Jobs",
-      value: stats?.approved || 0,
-      icon: CheckCircle,
-      color: "text-green-600",
-      bgColor: "bg-green-100",
+      label: "Moderation",
+      cards: [
+        {
+          title: "Pending Approval",
+          value: stats?.pending_approval || 0,
+          icon: Clock,
+          color: "text-yellow-600",
+          bgColor: "bg-yellow-100",
+          action: {
+            label: "Review",
+            href: "/admin/jobs?status=pending_approval",
+          },
+        },
+        {
+          title: "Rejected Jobs",
+          value: stats?.rejected || 0,
+          icon: XCircle,
+          color: "text-red-600",
+          bgColor: "bg-red-100",
+        },
+      ],
     },
     {
-      title: "Rejected Jobs",
-      value: stats?.rejected || 0,
-      icon: XCircle,
-      color: "text-red-600",
-      bgColor: "bg-red-100",
-    },
-    {
-      title: "Featured Jobs",
-      value: stats?.featured || 0,
-      icon: Star,
-      color: "text-purple-600",
-      bgColor: "bg-purple-100",
-    },
-    {
-      title: "Total Users",
-      value: stats?.total_users || 0,
-      icon: Users,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-100",
-    },
-    {
-      title: "Companies",
-      value: stats?.total_companies || 0,
-      icon: Building,
-      color: "text-gray-600",
-      bgColor: "bg-gray-100",
-    },
-    {
-      title: "Expired Jobs",
-      value: stats?.expired || 0,
-      icon: TrendingUp,
-      color: "text-orange-600",
-      bgColor: "bg-orange-100",
-    },
-    {
-      title: "Paid Featured",
-      value: stats?.paid_featured_jobs || 0,
-      icon: Crown,
-      color: "text-amber-600",
-      bgColor: "bg-amber-100",
-      action: {
-        label: "View",
-        href: "/admin/jobs?payment_tier=featured",
-      },
-    },
-    {
-      title: "Paid Standard",
-      value: stats?.paid_standard_jobs || 0,
-      icon: CreditCard,
-      color: "text-cyan-600",
-      bgColor: "bg-cyan-100",
-      action: {
-        label: "View",
-        href: "/admin/jobs?payment_tier=standard",
-      },
+      label: "Featured & Paid",
+      cards: [
+        {
+          title: "Featured Jobs",
+          value: stats?.featured || 0,
+          icon: Star,
+          color: "text-purple-600",
+          bgColor: "bg-purple-100",
+        },
+        {
+          title: "Paid Featured",
+          value: stats?.paid_featured_jobs || 0,
+          icon: Crown,
+          color: "text-amber-600",
+          bgColor: "bg-amber-100",
+          action: {
+            label: "View",
+            href: "/admin/jobs?payment_tier=featured",
+          },
+        },
+        {
+          title: "Paid Standard",
+          value: stats?.paid_standard_jobs || 0,
+          icon: CreditCard,
+          color: "text-cyan-600",
+          bgColor: "bg-cyan-100",
+          action: {
+            label: "View",
+            href: "/admin/jobs?payment_tier=standard",
+          },
+        },
+      ],
     },
   ];
 
@@ -157,45 +186,61 @@ export default function AdminDashboard() {
 
         {/* Stats Grid */}
         {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[...Array(10)].map((_, i) => (
-              <Card key={i}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    <div className="h-8 w-16 bg-muted animate-pulse rounded" />
-                  </div>
-                </CardContent>
-              </Card>
+          <div className="space-y-6">
+            {[4, 2, 2, 3].map((count, sectionIdx) => (
+              <div key={sectionIdx}>
+                <div className="h-5 w-32 bg-muted animate-pulse rounded mb-3" />
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {[...Array(count)].map((_, i) => (
+                    <Card key={i}>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {statCards.map((stat) => (
-              <Card key={stat.title} className="hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {stat.title}
-                  </CardTitle>
-                  <div className={cn("p-2 rounded-lg", stat.bgColor)}>
-                    <stat.icon className={cn("h-4 w-4", stat.color)} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  {stat.action && (
-                    <Link href={stat.action.href}>
-                      <Button variant="link" size="sm" className="px-0 mt-1">
-                        {stat.action.label} →
-                      </Button>
-                    </Link>
-                  )}
-                </CardContent>
-              </Card>
+          <div className="space-y-6">
+            {statSections.map((section) => (
+              <div key={section.label}>
+                <h2 className="text-sm font-medium text-muted-foreground mb-3">
+                  {section.label}
+                </h2>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {section.cards.map((stat) => (
+                    <Card key={stat.title} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          {stat.title}
+                        </CardTitle>
+                        <div className={cn("p-2 rounded-lg", stat.bgColor)}>
+                          <stat.icon className={cn("h-4 w-4", stat.color)} />
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{stat.value}</div>
+                        {stat.action && (
+                          <Link href={stat.action.href}>
+                            <Button variant="link" size="sm" className="px-0 mt-1">
+                              {stat.action.label} →
+                            </Button>
+                          </Link>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}

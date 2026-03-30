@@ -65,6 +65,10 @@ export async function requireAdmin() {
 export async function getAdminStats() {
   try {
     // Use count queries to avoid Supabase's default 1000 row limit
+    // First day of the current month in ISO format
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
     const [
       totalResult,
       pendingResult,
@@ -76,6 +80,7 @@ export async function getAdminStats() {
       paidFeaturedResult,
       paidStandardResult,
       companiesResult,
+      jobsThisMonthResult,
     ] = await Promise.all([
       supabase.from('jobs').select('*', { count: 'exact', head: true }),
       supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
@@ -87,6 +92,7 @@ export async function getAdminStats() {
       supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'succeeded').eq('pricing_tier', 'featured'),
       supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'succeeded').eq('pricing_tier', 'standard'),
       supabase.from('companies').select('*', { count: 'exact', head: true }),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', firstOfMonth),
     ]);
 
     const stats = {
@@ -100,6 +106,7 @@ export async function getAdminStats() {
       total_users: usersResult.count || 0,
       paid_featured_jobs: paidFeaturedResult.count || 0,
       paid_standard_jobs: paidStandardResult.count || 0,
+      jobs_this_month: jobsThisMonthResult.count || 0,
     };
 
     return stats;
