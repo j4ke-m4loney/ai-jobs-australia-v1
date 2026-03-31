@@ -20,6 +20,7 @@ import {
   Compass,
   Shield,
   PenTool,
+  ArrowLeftRight,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -53,7 +54,7 @@ const tools = [
       "Optimise your resume for AI and ML roles. Get instant feedback on keyword coverage, ATS compatibility, and actionable suggestions.",
     icon: FileText,
     href: "/tools/ai-jobs-resume-keyword-analyser",
-    badge: "Popular",
+    badge: null,
     features: [
       "ATS compatibility check",
       "Keyword analysis",
@@ -67,7 +68,7 @@ const tools = [
       "Paste any job description to extract required skills, experience level, salary hints, and spot potential red flags before you apply.",
     icon: FileSearch,
     href: "/tools/ai-job-description-decoder",
-    badge: "New",
+    badge: null,
     features: [
       "Skills extraction",
       "Red flag detection",
@@ -151,7 +152,7 @@ const tools = [
       "Get personalised portfolio project ideas for ML Engineers, Data Scientists, MLOps Engineers, and more. Includes tech stacks, datasets, and interview prep tips.",
     icon: Lightbulb,
     href: "/tools/ai-portfolio-project-generator",
-    badge: "New",
+    badge: null,
     features: [
       "Role-specific ideas",
       "Tech stack & datasets",
@@ -165,7 +166,7 @@ const tools = [
       "Discover which AI career path suits you best. Answer 12 quick questions to get personalised recommendations with Australian salary data and demand levels across 10 AI career paths.",
     icon: Compass,
     href: "/tools/ai-career-path-quiz",
-    badge: "New",
+    badge: null,
     features: [
       "10 AI career paths",
       "Australian salary data",
@@ -179,11 +180,25 @@ const tools = [
       "Assess your readiness for AI governance, ethics, and compliance roles. Get scored against Australia's AI Ethics Principles, risk frameworks, and regulatory requirements.",
     icon: Shield,
     href: "/tools/ai-governance-readiness-assessment",
-    badge: "New",
+    badge: null,
     features: [
       "Australian AI frameworks",
       "6 governance dimensions",
       "Learning pathways",
+      "100% private",
+    ],
+  },
+  {
+    title: "AI Role Comparison Tool",
+    description:
+      "Compare two AI career paths side by side. See salary differences, skill overlap, day-to-day work, career progression, and pros & cons for 10 AI roles in the Australian market.",
+    icon: ArrowLeftRight,
+    href: "/tools/ai-role-comparison",
+    badge: "New",
+    features: [
+      "10 AI roles to compare",
+      "Salary & skills overlap",
+      "Career progression paths",
       "100% private",
     ],
   },
@@ -193,7 +208,7 @@ const tools = [
       "Generate structured, inclusive job descriptions for AI and ML roles. Get bias detection, salary benchmarking, and quality checks to attract top candidates.",
     icon: PenTool,
     href: "/tools/ai-ml-job-description-generator",
-    badge: "New",
+    badge: null,
     features: [
       "Bias-free language checks",
       "Salary benchmarking",
