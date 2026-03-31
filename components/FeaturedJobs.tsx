@@ -98,9 +98,9 @@ export default function FeaturedJobs() {
               </h2>
             </div>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
             {[...Array(6)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
+              <Card key={i} className="animate-pulse lg:col-span-2">
                 <CardContent className="p-5">
                   <div className="space-y-3">
                     <div className="h-4 bg-muted rounded w-3/4"></div>
@@ -136,13 +136,17 @@ export default function FeaturedJobs() {
           </p> */}
         </div>
 
-        <div className={`grid md:grid-cols-2 ${jobs.length !== 4 ? 'lg:grid-cols-3' : ''} gap-6 mb-8`}>
-          {jobs
-            .filter((job) => job && job.title && job.id)
-            .map((job) => (
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${jobs.length === 4 ? '' : 'lg:grid-cols-6'} gap-6 mb-8`}>
+          {(() => {
+            const filteredJobs = jobs.filter((job) => job && job.title && job.id);
+            const remainder = filteredJobs.length % 3;
+            return filteredJobs.map((job, index) => {
+              const isLastRow = remainder > 0 && index >= filteredJobs.length - remainder;
+              const colSpan = isLastRow ? 'lg:col-span-3' : 'lg:col-span-2';
+              return (
               <Card
                 key={job.id}
-                className="h-full transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border border-l-4 border-l-primary cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                className={`${jobs.length === 4 ? '' : colSpan} transition-all duration-200 hover:shadow-lg border border-primary/50 hover:bg-muted/30 hover:border-border border-l-4 border-l-primary cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2`}
                 onClick={() => handleJobClick(job)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -238,7 +242,9 @@ export default function FeaturedJobs() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            });
+          })()}
         </div>
       </div>
     </section>
