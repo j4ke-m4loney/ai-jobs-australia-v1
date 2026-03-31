@@ -349,7 +349,7 @@ export async function extractJobData(
     : `Extract job listing data from this text:\n\n${text}`;
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-sonnet-4-5-20250929',
     max_tokens: 4096,
     tools: [EXTRACT_JOB_TOOL],
     tool_choice: { type: 'tool', name: 'extract_job_data' },
