@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FeaturedJobs from "@/components/FeaturedJobs";
 import RecentJobs from "@/components/RecentJobs";
+import { BrowseByCategory } from "@/components/BrowseByCategory";
 import HomepageSocialProof from "@/components/HomepageSocialProof";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Search, Users, CheckCircle, Zap, X, ArrowRight } from "lucide-react";
@@ -295,38 +296,15 @@ const HomePage = () => {
           <FeaturedJobs />
         </ErrorBoundary>
 
+        {/* Browse by Category */}
+        <ErrorBoundary>
+          <BrowseByCategory />
+        </ErrorBoundary>
+
         {/* Recent AI Jobs */}
         <ErrorBoundary>
           <RecentJobs />
         </ErrorBoundary>
-
-        {/* Job Categories - Commented out for now */}
-        {/* <section className="py-16 bg-muted/30">
-          <div className="container mx-auto px-4">
-            <h2 className="text-foreground text-3xl font-bold text-center mb-12">
-              Browse by Category
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {categories.map((category) => {
-                const Icon = category.icon;
-                return (
-                  <Card
-                    key={category.name}
-                    className="!shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all cursor-pointer group"
-                  >
-                    <CardContent className="p-6 text-center">
-                      <Icon className="w-12 h-12 text-primary mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                      <h3 className="font-semibold mb-2">{category.name}</h3>
-                      <p className="text-muted-foreground">
-                        {category.count} jobs available
-                      </p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        </section> */}
 
         {/* Value Proposition Comparison Section */}
         <section className="py-20 bg-gradient-to-br from-background via-muted/30 to-primary-light/20">

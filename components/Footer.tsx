@@ -100,6 +100,14 @@ const Footer = () => {
                     Software Engineer Jobs
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href="/categories"
+                    className="hover:text-background transition-smooth font-medium"
+                  >
+                    Browse All Categories
+                  </Link>
+                </li>
               </ul>
             </nav>
 

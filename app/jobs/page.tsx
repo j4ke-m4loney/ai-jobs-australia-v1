@@ -905,24 +905,25 @@ function JobsContent() {
     if (!initialized.current && shouldSyncFromUrl.current) {
       const urlSearch = searchParams.get("search") || "";
       const urlLocation = searchParams.get("location") || "all";
+      const urlCategory = searchParams.get("category") || "";
 
       setSearchTerm(urlSearch);
       setSelectedState(urlLocation);
+      if (urlCategory) {
+        setSelectedCategories(urlCategory.split(","));
+        setShowFilters(true);
+        setShowOptions(false);
+      }
 
       shouldSyncFromUrl.current = false;
       initialized.current = true;
-
-      // Use a micro-task to ensure initialization is complete before filter effect runs
-      setTimeout(() => {
-        fetchJobs();
-      }, 0);
+      // Reset previous filter deps so the filter effect will trigger a
+      // fetch on the next render with the updated state (e.g. category from URL)
+      previousFilterDepsRef.current = "";
     } else if (!initialized.current && !loading) {
       // No URL params to sync, just mark as initialized
       initialized.current = true;
-      // Use a micro-task to ensure initialization is complete before job fetching
-      setTimeout(() => {
-        fetchJobs();
-      }, 0);
+      previousFilterDepsRef.current = "";
     }
   }, [loading, user, router, searchParams, fetchJobs]);
 
