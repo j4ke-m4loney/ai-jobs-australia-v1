@@ -267,64 +267,58 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
               ) : null}
             </div>
 
-            <div className="flex items-center gap-3">
-              {hasApplied ? (
-                <div className="text-center py-2 px-4">
-                  <div className="text-sm font-medium text-green-600">
-                    Application Submitted
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Track it in your{" "}
-                    <a href="/jobseeker/applications" className="text-primary hover:underline">
-                      Applied Jobs
-                    </a>{" "}
-                    dashboard
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSaveClick(job.id);
-                    }}
-                    className="p-2"
-                    aria-label={isJobSaved ? "Unsave job" : "Save job"}
-                  >
-                    <Heart
-                      className={`w-5 h-5 ${
-                        isJobSaved
-                          ? "fill-red-500 text-red-500"
-                          : "text-muted-foreground"
-                      }`}
-                    />
-                  </Button>
-                  <Link
-                    href={`/jobs/${job.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline font-medium"
-                    onClick={() => {
-                      trackEvent("view_job_page_clicked", {
-                        job_id: job.id,
-                        job_title: job.title,
-                        company: job.companies?.name || "Unknown",
-                        location: job.location,
-                        is_featured: job.is_featured,
-                      });
-                    }}
-                  >
-                    View
-                  </Link>
-                  <Button
-                    onClick={handleApplyClick}
-                    className="bg-primary hover:bg-primary/90 text-white px-6"
-                  >
-                    Apply
-                  </Button>
-                </>
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSaveClick(job.id);
+                  }}
+                  className="p-2"
+                  aria-label={isJobSaved ? "Unsave job" : "Save job"}
+                >
+                  <Heart
+                    className={`w-5 h-5 ${
+                      isJobSaved
+                        ? "fill-red-500 text-red-500"
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                </Button>
+                <Link
+                  href={`/jobs/${job.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary hover:underline font-medium"
+                  onClick={() => {
+                    trackEvent("view_job_page_clicked", {
+                      job_id: job.id,
+                      job_title: job.title,
+                      company: job.companies?.name || "Unknown",
+                      location: job.location,
+                      is_featured: job.is_featured,
+                    });
+                  }}
+                >
+                  View
+                </Link>
+                <Button
+                  onClick={handleApplyClick}
+                  className="bg-primary hover:bg-primary/90 text-white px-6"
+                >
+                  Apply
+                </Button>
+              </div>
+              {hasApplied && (
+                <p className="text-xs text-muted-foreground text-right">
+                  <span className="font-medium text-green-600">Applied</span>
+                  {" · "}
+                  <a href="/jobseeker/applications" className="text-primary hover:underline">
+                    Track application
+                  </a>
+                </p>
               )}
             </div>
           </div>
@@ -399,16 +393,23 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 </p> */}
               </div>
 
-              {!hasApplied && (
-                <Button
-                  onClick={handleApplyClick}
-                  size="lg"
-                  className="bg-primary hover:bg-primary/90 text-white px-8"
-                >
-                  Apply
-                </Button>
-              )}
+              <Button
+                onClick={handleApplyClick}
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-white px-8"
+              >
+                Apply
+              </Button>
             </div>
+            {hasApplied && (
+              <p className="mt-2 text-xs text-muted-foreground text-right">
+                <span className="font-medium text-green-600">Applied</span>
+                {" · "}
+                <a href="/jobseeker/applications" className="text-primary hover:underline">
+                  Track application
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </div>

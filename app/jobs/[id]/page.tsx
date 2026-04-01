@@ -17,7 +17,6 @@ import {
   Clock,
   Building2,
   Briefcase,
-  Users,
   Heart,
   Sparkles,
 } from "lucide-react";
@@ -367,59 +366,49 @@ export default function JobDetailPage() {
                 <CardTitle>Apply for this job</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {hasApplied ? (
-                  <div className="text-center py-4">
-                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
-                    </div>
-                    <p className="font-medium text-foreground mb-1">
-                      Application Submitted
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Track it in your{" "}
-                      <a href="/jobseeker/applications" className="text-primary hover:underline">
-                        Applied Jobs
-                      </a>{" "}
-                      dashboard
-                    </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-muted-foreground" />
+                    <span>Posted {getTimeAgo(job.created_at)}</span>
                   </div>
-                ) : (
-                  <>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <span>Posted {getTimeAgo(job.created_at)}</span>
-                      </div>
-                    </div>
+                </div>
 
-                    <Separator />
+                <Separator />
 
-                    <div className="space-y-3">
-                      <Button
-                        onClick={handleApply}
-                        className="w-full gap-2"
-                        disabled={applying}
-                      >
-                        {applying ? "Applying..." : "Apply"}
-                      </Button>
+                <div className="space-y-3">
+                  <Button
+                    onClick={handleApply}
+                    className="w-full gap-2"
+                    disabled={applying}
+                  >
+                    {applying ? "Applying..." : "Apply"}
+                  </Button>
 
-                      <Button
-                        variant="outline"
-                        onClick={() => toggleSaveJob(job.id)}
-                        className="w-full gap-2"
-                      >
-                        <Heart
-                          className={`w-4 h-4 ${
-                            isJobSaved(job.id)
-                              ? "fill-red-500 text-red-500"
-                              : "text-muted-foreground"
-                          }`}
-                        />
-                        {isJobSaved(job.id) ? "Remove from Saved" : "Save Job"}
-                      </Button>
-                    </div>
-                  </>
-                )}
+                  <Button
+                    variant="outline"
+                    onClick={() => toggleSaveJob(job.id)}
+                    className="w-full gap-2"
+                  >
+                    <Heart
+                      className={`w-4 h-4 ${
+                        isJobSaved(job.id)
+                          ? "fill-red-500 text-red-500"
+                          : "text-muted-foreground"
+                      }`}
+                    />
+                    {isJobSaved(job.id) ? "Remove from Saved" : "Save Job"}
+                  </Button>
+
+                  {hasApplied && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      <span className="font-medium text-green-600">Applied</span>
+                      {" · "}
+                      <a href="/jobseeker/applications" className="text-primary hover:underline">
+                        Track application
+                      </a>
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
