@@ -23,6 +23,7 @@ import {
   Crown,
   CreditCard,
   CalendarDays,
+  CalendarClock,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ interface AdminStats {
   paid_standard_jobs: number;
   jobs_this_month: number;
   jobs_last_month: number;
+  jobs_today: number;
 }
 
 export default function AdminDashboard() {
@@ -72,6 +74,13 @@ export default function AdminDashboard() {
           icon: Briefcase,
           color: "text-blue-600",
           bgColor: "bg-blue-100",
+        },
+        {
+          title: "Jobs Added Today",
+          value: stats?.jobs_today || 0,
+          icon: CalendarClock,
+          color: "text-emerald-600",
+          bgColor: "bg-emerald-100",
         },
         {
           title: `Jobs Added (${new Date().toLocaleString('default', { month: 'long' })})`,
@@ -195,7 +204,7 @@ export default function AdminDashboard() {
         {/* Stats Grid */}
         {isLoading ? (
           <div className="space-y-6">
-            {[5, 2, 2, 3].map((count, sectionIdx) => (
+            {[6, 2, 2, 3].map((count, sectionIdx) => (
               <div key={sectionIdx}>
                 <div className="h-5 w-32 bg-muted animate-pulse rounded mb-3" />
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

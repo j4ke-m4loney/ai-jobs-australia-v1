@@ -70,6 +70,13 @@ export async function getAdminStats() {
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
+    // Start of today in Melbourne time (AEST/AEDT)
+    const melbourneNow = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Melbourne' }));
+    const startOfTodayMelbourne = new Date(melbourneNow.getFullYear(), melbourneNow.getMonth(), melbourneNow.getDate());
+    // Convert back to UTC for the Supabase query
+    const melbourneOffsetMs = now.getTime() - melbourneNow.getTime();
+    const startOfTodayUTC = new Date(startOfTodayMelbourne.getTime() + melbourneOffsetMs).toISOString();
+
     const [
       totalResult,
       pendingResult,
@@ -83,6 +90,7 @@ export async function getAdminStats() {
       companiesResult,
       jobsThisMonthResult,
       jobsLastMonthResult,
+      jobsTodayResult,
     ] = await Promise.all([
       supabase.from('jobs').select('*', { count: 'exact', head: true }),
       supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
@@ -94,8 +102,9 @@ export async function getAdminStats() {
       supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'succeeded').eq('pricing_tier', 'featured'),
       supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'succeeded').eq('pricing_tier', 'standard'),
       supabase.from('companies').select('*', { count: 'exact', head: true }),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', firstOfMonth),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', firstOfLastMonth).lt('created_at', firstOfMonth),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'approved').gte('created_at', firstOfMonth),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'approved').gte('created_at', firstOfLastMonth).lt('created_at', firstOfMonth),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'approved').gte('created_at', startOfTodayUTC),
     ]);
 
     const stats = {
@@ -111,6 +120,7 @@ export async function getAdminStats() {
       paid_standard_jobs: paidStandardResult.count || 0,
       jobs_this_month: jobsThisMonthResult.count || 0,
       jobs_last_month: jobsLastMonthResult.count || 0,
+      jobs_today: jobsTodayResult.count || 0,
     };
 
     return stats;
