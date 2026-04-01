@@ -234,6 +234,12 @@ export default function SavedJobDetailPage() {
   const handleSubmitApplication = async () => {
     if (!user || !job) return;
 
+    // Guard: don't allow internal applications on non-internal jobs
+    if (job.application_method === "email" || job.application_method === "external") {
+      toast.error("This job does not accept internal applications");
+      return;
+    }
+
     if (!selectedResume) {
       toast.error("Please select or upload a resume");
       return;
@@ -307,11 +313,19 @@ export default function SavedJobDetailPage() {
   const handleApply = () => {
     if (!job) return;
 
-    // Check if it's an external application
+    // External: open URL or fallback to email
     if (job.application_method === "external") {
       if (job.application_url) {
         window.open(appendUtmParams(job.application_url, job.disable_utm_tracking), "_blank");
       } else if (job.application_email) {
+        window.open(`mailto:${job.application_email}`);
+      }
+      return;
+    }
+
+    // Email: open mailto link
+    if (job.application_method === "email") {
+      if (job.application_email) {
         window.open(`mailto:${job.application_email}`);
       }
       return;
@@ -401,8 +415,8 @@ export default function SavedJobDetailPage() {
           
           <div className="lg:col-span-1">
 
-        {/* Application Section */}
-        {applicationSubmitted ? (
+        {/* Application Section — only show for internal applications */}
+        {job.application_method && job.application_method !== 'internal' ? null : applicationSubmitted ? (
           <Card>
             <CardContent className="p-8">
               <div className="text-center space-y-6">

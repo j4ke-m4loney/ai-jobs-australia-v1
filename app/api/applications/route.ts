@@ -228,7 +228,8 @@ export async function POST(request: NextRequest) {
         id,
         title,
         company_name,
-        employer_id
+        employer_id,
+        application_method
       `)
       .eq('id', jobId)
       .single();
@@ -238,6 +239,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Job not found' },
         { status: 404 }
+      );
+    }
+
+    // Reject internal applications for jobs configured as email or external
+    if (jobData.application_method === 'email' || jobData.application_method === 'external') {
+      return NextResponse.json(
+        { error: 'This job does not accept internal applications' },
+        { status: 400 }
       );
     }
 

@@ -207,7 +207,13 @@ export default function JobDetailPage() {
       return;
     }
 
-    // Internal application (future feature)
+    // Guard: don't allow internal applications on non-internal jobs
+    if (job.application_method === "external" || job.application_method === "email") {
+      toast.error("This job does not accept internal applications");
+      return;
+    }
+
+    // Internal application
     setApplying(true);
     try {
       const { error } = await supabase.from("job_applications").insert({
