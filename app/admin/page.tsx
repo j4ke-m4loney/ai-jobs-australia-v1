@@ -40,6 +40,7 @@ interface AdminStats {
   paid_featured_jobs: number;
   paid_standard_jobs: number;
   jobs_this_month: number;
+  jobs_last_month: number;
 }
 
 export default function AdminDashboard() {
@@ -78,6 +79,13 @@ export default function AdminDashboard() {
           icon: CalendarDays,
           color: "text-teal-600",
           bgColor: "bg-teal-100",
+        },
+        {
+          title: `Jobs Added (${new Date(new Date().getFullYear(), new Date().getMonth() - 1).toLocaleString('default', { month: 'long' })})`,
+          value: stats?.jobs_last_month || 0,
+          icon: CalendarDays,
+          color: "text-slate-600",
+          bgColor: "bg-slate-100",
         },
         {
           title: "Approved Jobs",
@@ -187,7 +195,7 @@ export default function AdminDashboard() {
         {/* Stats Grid */}
         {isLoading ? (
           <div className="space-y-6">
-            {[4, 2, 2, 3].map((count, sectionIdx) => (
+            {[5, 2, 2, 3].map((count, sectionIdx) => (
               <div key={sectionIdx}>
                 <div className="h-5 w-32 bg-muted animate-pulse rounded mb-3" />
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

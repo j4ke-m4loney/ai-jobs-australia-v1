@@ -68,6 +68,7 @@ export async function getAdminStats() {
     // First day of the current month in ISO format
     const now = new Date();
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
     const [
       totalResult,
@@ -81,6 +82,7 @@ export async function getAdminStats() {
       paidStandardResult,
       companiesResult,
       jobsThisMonthResult,
+      jobsLastMonthResult,
     ] = await Promise.all([
       supabase.from('jobs').select('*', { count: 'exact', head: true }),
       supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
@@ -93,6 +95,7 @@ export async function getAdminStats() {
       supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'succeeded').eq('pricing_tier', 'standard'),
       supabase.from('companies').select('*', { count: 'exact', head: true }),
       supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', firstOfMonth),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', firstOfLastMonth).lt('created_at', firstOfMonth),
     ]);
 
     const stats = {
@@ -107,6 +110,7 @@ export async function getAdminStats() {
       paid_featured_jobs: paidFeaturedResult.count || 0,
       paid_standard_jobs: paidStandardResult.count || 0,
       jobs_this_month: jobsThisMonthResult.count || 0,
+      jobs_last_month: jobsLastMonthResult.count || 0,
     };
 
     return stats;
