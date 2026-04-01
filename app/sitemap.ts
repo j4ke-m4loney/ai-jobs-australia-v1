@@ -12,10 +12,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // Fetch all approved, non-expired jobs
+  // Fetch all approved, non-expired jobs (include company_id for company page filtering)
   const { data: jobs, error: jobsError } = await supabase
     .from('jobs')
-    .select('id, created_at, updated_at')
+    .select('id, created_at, updated_at, company_id')
     .eq('status', 'approved')
     .gte('expires_at', new Date().toISOString())
     .order('created_at', { ascending: false })
@@ -35,11 +35,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching blog posts for sitemap:', blogError)
   }
 
-  // Fetch all companies with jobs
-  const { data: companies, error: companiesError } = await supabase
-    .from('companies')
-    .select('id, created_at, updated_at')
-    .order('created_at', { ascending: false })
+  // Only include companies that have at least one active job
+  const activeCompanyIds = [...new Set(jobs?.map(j => j.company_id).filter(Boolean) ?? [])]
+  const { data: companies, error: companiesError } = activeCompanyIds.length > 0
+    ? await supabase
+        .from('companies')
+        .select('id, created_at, updated_at')
+        .in('id', activeCompanyIds)
+        .order('created_at', { ascending: false })
+    : { data: [], error: null }
 
   if (companiesError) {
     console.error('Error fetching companies for sitemap:', companiesError)

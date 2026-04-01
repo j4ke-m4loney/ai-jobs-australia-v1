@@ -43,30 +43,37 @@ export function extractLocationSlug(
 }
 
 /**
+ * Map of known city slugs to proper display names.
+ */
+const KNOWN_CITY_NAMES: Record<string, string> = {
+  'sydney': 'Sydney',
+  'melbourne': 'Melbourne',
+  'brisbane': 'Brisbane',
+  'perth': 'Perth',
+  'adelaide': 'Adelaide',
+  'canberra': 'Canberra',
+  'gold-coast': 'Gold Coast',
+  'newcastle': 'Newcastle',
+  'wollongong': 'Wollongong',
+  'geelong': 'Geelong',
+  'hobart': 'Hobart',
+  'darwin': 'Darwin',
+  'cairns': 'Cairns',
+  'townsville': 'Townsville',
+  'remote': 'Remote',
+  'australia': 'Australia',
+};
+
+// Minimum number of approved jobs required for a location to appear in the
+// sitemap and browse UI. Prevents one-off junk slugs from polluting SEO
+// while still allowing new locations to grow organically.
+const MIN_JOBS_FOR_SITEMAP = 2;
+
+/**
  * Generates a human-readable location name from slug
  */
 export function locationSlugToName(slug: string): string {
-  // Map of known city slugs to proper names
-  const cityMap: Record<string, string> = {
-    'sydney': 'Sydney',
-    'melbourne': 'Melbourne',
-    'brisbane': 'Brisbane',
-    'perth': 'Perth',
-    'adelaide': 'Adelaide',
-    'canberra': 'Canberra',
-    'gold-coast': 'Gold Coast',
-    'newcastle': 'Newcastle',
-    'wollongong': 'Wollongong',
-    'geelong': 'Geelong',
-    'hobart': 'Hobart',
-    'darwin': 'Darwin',
-    'cairns': 'Cairns',
-    'townsville': 'Townsville',
-    'remote': 'Remote',
-    'australia': 'Australia',
-  };
-
-  return cityMap[slug] || slug
+  return KNOWN_CITY_NAMES[slug] || slug
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
@@ -134,8 +141,10 @@ export async function getAllJobLocations(): Promise<Array<{
     });
   });
 
-  // Convert to array and sort by count (most popular first)
+  // Convert to array, filter out locations with too few jobs (prevents junk
+  // slugs from one-off bad data polluting the sitemap), and sort by count
   const locations = Array.from(locationMap.entries())
+    .filter(([, data]) => data.count >= MIN_JOBS_FOR_SITEMAP)
     .map(([slug, data]) => ({
       slug,
       name: locationSlugToName(slug),

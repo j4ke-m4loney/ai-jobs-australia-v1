@@ -22,6 +22,7 @@ const getApprovedJob = cache(async (id: string) => {
     `)
     .eq("id", id)
     .eq("status", "approved")
+    .gte("expires_at", new Date().toISOString())
     .single();
   return data;
 });

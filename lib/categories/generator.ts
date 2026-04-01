@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { VALID_CATEGORY_SLUGS } from '@/lib/job-import/categories';
 
 /**
  * Extracts and normalizes job category from job title
@@ -72,12 +73,16 @@ export async function getAllJobCategories(): Promise<Array<{ slug: string; name:
   }
 
   // Count occurrences using the stored category column, normalised to canonical slugs
+  const validSlugs = new Set(VALID_CATEGORY_SLUGS);
   const categoryMap = new Map<string, number>();
 
   jobs.forEach(job => {
     if (job.category) {
       const slug = job.category.toLowerCase().replace(/&/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
-      categoryMap.set(slug, (categoryMap.get(slug) || 0) + 1);
+      // Only include categories from the canonical list
+      if (validSlugs.has(slug)) {
+        categoryMap.set(slug, (categoryMap.get(slug) || 0) + 1);
+      }
     }
   });
 
