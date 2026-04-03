@@ -304,12 +304,14 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 >
                   View
                 </Link>
-                <Button
-                  onClick={handleApplyClick}
-                  className="bg-primary hover:bg-primary/90 text-white px-6"
-                >
-                  Apply
-                </Button>
+                {!(hasApplied && job.application_method === 'internal') && (
+                  <Button
+                    onClick={handleApplyClick}
+                    className="bg-primary hover:bg-primary/90 text-white px-6"
+                  >
+                    Apply
+                  </Button>
+                )}
               </div>
               {hasApplied && (
                 <p className="text-xs text-muted-foreground text-right">
@@ -383,32 +385,31 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
           {/* Apply Section */}
           <div className="border-t pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-base lg:text-lg mb-1">
-                  Ready to apply?
-                </h3>
-                {/* <p className="text-sm text-muted-foreground">
-                  Expires in {getDaysUntilExpiry(job.expires_at)} days
-                </p> */}
+            {hasApplied && job.application_method === 'internal' ? (
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-green-600">Applied</span>
+                  {" · "}
+                  <a href="/jobseeker/applications" className="text-primary hover:underline">
+                    Track application
+                  </a>
+                </p>
               </div>
-
-              <Button
-                onClick={handleApplyClick}
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-white px-8"
-              >
-                Apply
-              </Button>
-            </div>
-            {hasApplied && (
-              <p className="mt-2 text-xs text-muted-foreground text-right">
-                <span className="font-medium text-green-600">Applied</span>
-                {" · "}
-                <a href="/jobseeker/applications" className="text-primary hover:underline">
-                  Track application
-                </a>
-              </p>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-base lg:text-lg mb-1">
+                    Ready to apply?
+                  </h3>
+                </div>
+                <Button
+                  onClick={handleApplyClick}
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-white px-8"
+                >
+                  Apply
+                </Button>
+              </div>
             )}
           </div>
         </div>

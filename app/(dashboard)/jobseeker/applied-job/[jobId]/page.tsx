@@ -65,8 +65,6 @@ export default function AppliedJobDetailPage() {
   const [job, setJob] = useState<Job | null>(null);
   const [application, setApplication] = useState<Application | null>(null);
   const [jobLoading, setJobLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
-
   // Fetch job and application details
   const fetchJobAndApplicationDetails = useCallback(async () => {
     if (!jobId || !user) return;
@@ -128,36 +126,6 @@ export default function AppliedJobDetailPage() {
       fetchJobAndApplicationDetails();
     }
   }, [jobId, user, fetchJobAndApplicationDetails]);
-
-  const handleDeleteApplication = async () => {
-    if (!application || !job) return;
-
-    // Show confirmation dialog
-    const confirmed = window.confirm(
-      `Are you sure you want to remove "${job.title}" from your applications view? This will not affect your actual job application with the employer.`
-    );
-
-    if (!confirmed) return;
-
-    setDeleting(true);
-
-    try {
-      const { error } = await supabase
-        .from("job_applications")
-        .delete()
-        .eq("id", application.id);
-
-      if (error) throw error;
-
-      toast.success("Application removed from your view");
-      router.push("/jobseeker/applications");
-    } catch (error) {
-      console.error("Error deleting application:", error);
-      toast.error("Failed to remove application");
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   // Handlers for JobDetailsView component
   const handleApply = () => {
@@ -259,18 +227,9 @@ export default function AppliedJobDetailPage() {
             {/* Application Status and Actions */}
             <Card className="mb-4">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Application Status
-                  </span>
-                  <button
-                    onClick={handleDeleteApplication}
-                    disabled={deleting}
-                    className="text-red-600 hover:text-red-800 text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {deleting ? "Deleting..." : "Delete"}
-                  </button>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Application Status
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -299,12 +258,6 @@ export default function AppliedJobDetailPage() {
                   >
                     Browse More Jobs
                   </Button>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <p>
-                    <strong>Note:</strong> Removing this application from your view will not affect 
-                    your actual job application status with the employer.
-                  </p>
                 </div>
               </CardContent>
             </Card>

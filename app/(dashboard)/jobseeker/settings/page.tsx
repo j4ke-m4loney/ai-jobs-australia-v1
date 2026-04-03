@@ -25,10 +25,7 @@ import { Mail, Bell } from "lucide-react";
 
 const settingsSchema = z.object({
   email: z.string().email("Invalid email address"),
-  notifications_new_jobs: z.boolean(),
   notifications_application_updates: z.boolean(),
-  notifications_job_expiry: z.boolean(),
-  notifications_rejection_feedback: z.boolean(),
 });
 
 type SettingsFormData = z.infer<typeof settingsSchema>;
@@ -43,10 +40,7 @@ const JobSeekerSettings = () => {
     resolver: zodResolver(settingsSchema),
     defaultValues: {
       email: "",
-      notifications_new_jobs: true,
       notifications_application_updates: true,
-      notifications_job_expiry: false,
-      notifications_rejection_feedback: false,
     },
   });
 
@@ -60,10 +54,7 @@ const JobSeekerSettings = () => {
 
       // Load notification preferences from database
       let notificationPrefs = {
-        notifications_new_jobs: true,
         notifications_application_updates: true,
-        notifications_job_expiry: false,
-        notifications_rejection_feedback: false,
       };
 
       try {
@@ -72,10 +63,7 @@ const JobSeekerSettings = () => {
           const { preferences } = await prefsResponse.json();
           if (preferences) {
             notificationPrefs = {
-              notifications_new_jobs: preferences.email_new_jobs ?? true,
               notifications_application_updates: preferences.email_application_updates ?? true,
-              notifications_job_expiry: false, // Not implemented yet
-              notifications_rejection_feedback: preferences.email_promotions ?? false,
             };
           }
         }
@@ -127,15 +115,8 @@ const JobSeekerSettings = () => {
           },
           body: JSON.stringify({
             userId: user?.id,
-            // Employer preferences are null for job seekers
-            email_applications: null,
-            email_job_views: null,
-            email_weekly_reports: null,
             // Job seeker preferences
-            email_new_jobs: data.notifications_new_jobs,
-            email_similar_jobs: false, // Not implemented in UI yet
             email_application_updates: data.notifications_application_updates,
-            email_promotions: data.notifications_rejection_feedback, // Using rejection feedback as promotions for now
           }),
         });
 
@@ -230,24 +211,6 @@ const JobSeekerSettings = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <label className="text-base font-medium">
-                      New Job Opportunities
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified when new jobs matching your profile are
-                      posted
-                    </p>
-                  </div>
-                  <Switch
-                    checked={form.watch("notifications_new_jobs")}
-                    onCheckedChange={(checked) =>
-                      form.setValue("notifications_new_jobs", checked)
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <label className="text-base font-medium">
                       Application Updates
                     </label>
                     <p className="text-sm text-muted-foreground">
@@ -266,41 +229,6 @@ const JobSeekerSettings = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <label className="text-base font-medium">
-                      Job Expiry Alerts
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified when job listings you&apos;re interested in are
-                      about to expire
-                    </p>
-                  </div>
-                  <Switch
-                    checked={form.watch("notifications_job_expiry")}
-                    onCheckedChange={(checked) =>
-                      form.setValue("notifications_job_expiry", checked)
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <label className="text-base font-medium">
-                      Rejection Feedback
-                    </label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified if you&apos;re unlikely to progress (marked as
-                      unlikely by employer)
-                    </p>
-                  </div>
-                  <Switch
-                    checked={form.watch("notifications_rejection_feedback")}
-                    onCheckedChange={(checked) =>
-                      form.setValue("notifications_rejection_feedback", checked)
-                    }
-                  />
-                </div>
 
                 {/* <div className="pt-4 border-t">
                   <div className="flex items-start gap-3 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
