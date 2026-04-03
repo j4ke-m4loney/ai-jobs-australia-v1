@@ -76,8 +76,9 @@ export async function POST(request: NextRequest) {
 
     // Build the verification URL that will log the admin in as the employer
     // The callback route uses token_hash for OTP verification
+    // We pass user_type=employer so the callback redirects to the employer dashboard
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const loginUrl = `${siteUrl}/auth/callback?token_hash=${hashedToken}&token=${hashedToken}&type=magiclink`;
+    const loginUrl = `${siteUrl}/auth/callback?token_hash=${hashedToken}&token=${hashedToken}&type=magiclink&redirect=/employer/applications`;
 
     return NextResponse.json({
       success: true,

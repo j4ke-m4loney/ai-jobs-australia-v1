@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   const tokenHash = requestUrl.searchParams.get('token_hash');
   const code = requestUrl.searchParams.get('code');
   const popup = requestUrl.searchParams.get('popup'); // 'true' or null
+  const redirectParam = requestUrl.searchParams.get('redirect'); // Custom redirect path (e.g., admin impersonation)
 
   // Extract userType from query parameter (e.g., ?user_type=job_seeker)
   const userTypeParam = requestUrl.searchParams.get('user_type');
@@ -99,9 +100,12 @@ export async function GET(request: NextRequest) {
           allUserData: data.session.user
         });
 
-        // Redirect based on user type after successful email confirmation
+        // Redirect based on custom redirect param, user type, or default
         let redirectUrl: string;
-        if (userType === 'employer') {
+        if (redirectParam) {
+          redirectUrl = `${requestUrl.origin}${redirectParam}`;
+          console.log('🔀 Custom redirect to:', redirectUrl);
+        } else if (userType === 'employer') {
           redirectUrl = `${requestUrl.origin}/employer/settings?verified=true`;
           console.log('🏢 Redirecting employer to:', redirectUrl);
         } else {
