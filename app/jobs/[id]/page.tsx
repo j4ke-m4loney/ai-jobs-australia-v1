@@ -32,6 +32,7 @@ import Footer from "@/components/Footer";
 import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import { trackEvent } from "@/lib/analytics";
 import { appendUtmParams } from "@/lib/utils";
+import { getTimeAgo } from "@/lib/date-utils";
 
 interface Job {
   id: string;
@@ -91,7 +92,6 @@ export default function JobDetailPage() {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasApplied, setHasApplied] = useState(false);
-  const [applying, setApplying] = useState(false);
   const [intelligenceModalOpen, setIntelligenceModalOpen] = useState(false);
   const [analyseModalOpen, setAnalyseModalOpen] = useState(false);
 
@@ -213,62 +213,8 @@ export default function JobDetailPage() {
       return;
     }
 
-    // Internal application
-    setApplying(true);
-    try {
-      const { error } = await supabase.from("job_applications").insert({
-        job_id: job.id,
-        applicant_id: user.id,
-        status: "submitted",
-      });
-
-      if (error) throw error;
-
-      setHasApplied(true);
-      toast.success("Application submitted successfully!");
-    } catch (error) {
-      console.error("Error submitting application:", error);
-      toast.error("Failed to submit application");
-    } finally {
-      setApplying(false);
-    }
-  };
-
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60)
-    );
-
-    // Less than 1 minute - show "Just now"
-    if (diffInMinutes < 1) {
-      return "Just now";
-    }
-
-    // Less than 60 minutes - show minutes
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes}min ago`;
-    }
-
-    // Less than 24 hours - show hours
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    }
-
-    // Less than 30 days - show days
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays <= 30) {
-      return `${diffInDays}d ago`;
-    }
-
-    // Show months
-    const diffInMonths = Math.floor(diffInDays / 30);
-    if (diffInMonths === 1) {
-      return "1 month ago";
-    }
-    return `${diffInMonths} months ago`;
+    // Internal application — redirect to full apply page with resume/cover letter form
+    router.push(`/apply/${job.id}`);
   };
 
   if (loading) {
@@ -385,9 +331,8 @@ export default function JobDetailPage() {
                   <Button
                     onClick={handleApply}
                     className="w-full gap-2"
-                    disabled={applying}
                   >
-                    {applying ? "Applying..." : "Apply"}
+                    Apply
                   </Button>
 
                   <Button
@@ -418,9 +363,9 @@ export default function JobDetailPage() {
               </CardContent>
             </Card>
 
-            {/* AJA Intelligence Card - only show to authenticated users */}
+            {/* AJA Intelligence Card - only show to authenticated users, hidden on mobile */}
             {user && (
-              <Card>
+              <Card className="hidden lg:block">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-purple-500" />

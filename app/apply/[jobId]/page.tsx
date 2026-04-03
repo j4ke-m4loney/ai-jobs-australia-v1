@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,17 +11,18 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
+import { LocationTypeBadge } from "@/components/ui/LocationTypeBadge";
 import {
   MapPin,
-  Building,
+  Building2,
+  Briefcase,
   Clock,
   DollarSign,
   Upload,
   FileText,
   ArrowLeft,
   Check,
-  BookOpen,
-  Info,
   ExternalLink,
   Mail,
 } from "lucide-react";
@@ -32,6 +33,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trackInternalApplicationStarted, trackApplicationSubmitted } from "@/lib/analytics";
 import { trackExternalApply } from "@/lib/applications/track-external-apply";
+import { getTimeAgo } from "@/lib/date-utils";
 
 interface Job {
   id: string;
@@ -87,6 +89,22 @@ export default function ApplyPage() {
   const [userDocuments, setUserDocuments] = useState<UserDocument[]>([]);
   const [hasApplied, setHasApplied] = useState(false);
   const [checkingApplication, setCheckingApplication] = useState(false);
+
+  const [formVisible, setFormVisible] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // Hide sticky mobile button when the application form is in view
+  useEffect(() => {
+    const el = formRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setFormVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [job]);
 
   // Form state
   const [selectedResume, setSelectedResume] = useState<string>("");
@@ -360,17 +378,6 @@ export default function ApplyPage() {
     }
   };
 
-  const getCategoryDisplay = (category: string) => {
-    const categories = {
-      ai: "Artificial Intelligence",
-      ml: "Machine Learning",
-      "data-science": "Data Science",
-      engineering: "Engineering",
-      research: "Research",
-    };
-    return categories[category as keyof typeof categories] || category;
-  };
-
   if (loading || jobLoading) {
     return (
       <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
@@ -391,11 +398,14 @@ export default function ApplyPage() {
     (doc) => doc.document_type === "cover_letter"
   );
 
+  // Determine if this is an internal application (needs full form below grid)
+  const isInternal = !job.application_method || job.application_method === "internal";
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <Header />
 
-      <div className="container mx-auto px-4 py-8 mt-16 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 mt-16">
         {/* Back Button */}
         <Button
           variant="ghost"
@@ -406,419 +416,436 @@ export default function ApplyPage() {
           Back to Jobs
         </Button>
 
-        {/* Job Summary */}
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              {job.companies?.logo_url && (
-                <Image
-                  src={job.companies.logo_url}
-                  alt={job.companies?.name || "Company logo"}
-                  width={64}
-                  height={64}
-                  className="w-16 h-16 rounded-lg object-contain"
-                />
-              )}
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  {job.is_featured && (
-                    <Badge className="bg-gradient-hero text-white">
-                      Featured
-                    </Badge>
-                  )}
-                  <Badge variant="outline" className="text-xs">
-                    {getCategoryDisplay(job.category)}
-                  </Badge>
-                </div>
-
-                <h1 className="text-2xl font-bold text-foreground mb-2">
-                  {job.title}
-                </h1>
-
-                <div className="text-lg font-medium text-muted-foreground mb-3">
-                  {job.companies?.name || "Company"}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {job.location} ({job.location_type})
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{formatJobTypes(job.job_type)}</span>
-                  </div>
-                </div>
-
-                {job.show_salary !== false &&
-                  formatSalary(job.salary_min, job.salary_max, job.salary_period) && (
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-green-600" />
-                      <span className="font-semibold text-green-600 text-lg">
-                        {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
-                      </span>
-                    </div>
-                  )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Job Details */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Info className="w-5 h-5" />
-              Job Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Job Description (combined with requirements for display) */}
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Job Details
-              </h3>
-              <div className="prose max-w-none text-muted-foreground leading-relaxed">
-                <div dangerouslySetInnerHTML={{ __html: getCombinedJobContent(job.description, job.requirements) }} />
-              </div>
-            </div>
-
-            {/* Company Info Section */}
-            {job.companies?.description && (
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Building className="w-5 h-5" />
-                  About the Company
-                </h3>
-                <div className="space-y-3">
-                  <p className="text-muted-foreground">
-                    {job.companies.description}
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Application Form - Conditional based on application method */}
-        {job.application_method === "external" ? (
-          // External Application - Redirect to company website
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ExternalLink className="w-5 h-5" />
-                Ready to Apply?
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                This position requires you to apply directly on the
-                company&apos;s website.
-              </p>
-              <Button
-                onClick={() => {
-                  if (job.application_url) {
-                    window.open(appendUtmParams(job.application_url, job.disable_utm_tracking), "_blank");
-                    if (user) {
-                      trackExternalApply(supabase, job.id, user.id, 'external');
-                    }
-                  }
-                }}
-                size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-white"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Apply Now
-              </Button>
-            </CardContent>
-          </Card>
-        ) : job.application_method === "email" ? (
-          // Email Application - Open mailto link
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="w-5 h-5" />
-                Apply via Email
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                This position requires you to apply via email.
-              </p>
-              <Button
-                onClick={() => {
-                  if (job.application_email) {
-                    window.location.href = `mailto:${job.application_email}?subject=Application for ${job.title}`;
-                    if (user) {
-                      trackExternalApply(supabase, job.id, user.id, 'email');
-                    }
-                  }
-                }}
-                size="lg"
-                className="w-full bg-primary hover:bg-primary/90 text-white"
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Apply via Email
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          // Internal Application - Full application form
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Submit Your Application
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Resume Section */}
-              <div>
-                <Label className="text-base font-semibold">Resume *</Label>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Select an existing resume or upload a new one
-                </p>
-
-                <div className="space-y-3">
-                  {resumes.length > 0 && (
-                    <div className="space-y-2">
-                      {resumes.map((resume) => (
-                        <div
-                          key={resume.id}
-                          className="flex items-center space-x-2"
-                        >
-                          <input
-                            type="radio"
-                            id={`resume-${resume.id}`}
-                            name="resume"
-                            value={resume.id}
-                            checked={selectedResume === resume.id}
-                            onChange={(e) => setSelectedResume(e.target.value)}
-                            className="text-primary"
-                          />
-                          <Label
-                            htmlFor={`resume-${resume.id}`}
-                            className="flex-1 cursor-pointer"
-                          >
-                            {resume.file_name}
-                            {resume.is_default && (
-                              <Badge
-                                variant="secondary"
-                                className="ml-2 text-xs"
-                              >
-                                Default
-                              </Badge>
-                            )}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div>
-                    <input
-                      type="file"
-                      id="resume-upload"
-                      accept=".pdf,.doc,.docx"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleFileUpload(file, "resume");
-                      }}
-                      className="hidden"
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Job Header + Description */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Job Header Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  {job.companies?.logo_url && (
+                    <Image
+                      src={job.companies.logo_url}
+                      alt={job.companies?.name || "Company logo"}
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 rounded-lg object-contain"
                     />
-                    <Label htmlFor="resume-upload">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="cursor-pointer"
-                        disabled={uploadingResume}
-                        asChild
-                      >
-                        <span>
-                          <Upload className="w-4 h-4 mr-2" />
-                          {uploadingResume
-                            ? "Uploading..."
-                            : "Upload New Resume"}
-                        </span>
-                      </Button>
-                    </Label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Cover Letter Section */}
-              <div>
-                <Label className="text-base font-semibold">
-                  Cover Letter (Optional)
-                </Label>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Select an existing cover letter or upload a new one
-                </p>
-
-                <div className="space-y-3">
-                  {coverLetters.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id="no-cover-letter"
-                          name="cover-letter"
-                          value=""
-                          checked={selectedCoverLetter === ""}
-                          onChange={() => setSelectedCoverLetter("")}
-                          className="text-primary"
-                        />
-                        <Label
-                          htmlFor="no-cover-letter"
-                          className="cursor-pointer"
-                        >
-                          No cover letter
-                        </Label>
+                  )}
+                  <div className="flex-1">
+                    <CardTitle className="text-2xl mb-2">{job.title}</CardTitle>
+                    <div className="flex items-center gap-2 text-muted-foreground mb-3">
+                      <Building2 className="w-4 h-4" />
+                      <span className="font-medium">{job.companies?.name || "Unknown Company"}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {job.location}
                       </div>
-
-                      {coverLetters.map((coverLetter) => (
-                        <div
-                          key={coverLetter.id}
-                          className="flex items-center space-x-2"
-                        >
-                          <input
-                            type="radio"
-                            id={`cover-letter-${coverLetter.id}`}
-                            name="cover-letter"
-                            value={coverLetter.id}
-                            checked={selectedCoverLetter === coverLetter.id}
-                            onChange={(e) =>
-                              setSelectedCoverLetter(e.target.value)
-                            }
-                            className="text-primary"
-                          />
-                          <Label
-                            htmlFor={`cover-letter-${coverLetter.id}`}
-                            className="flex-1 cursor-pointer"
-                          >
-                            {coverLetter.file_name}
-                            {coverLetter.is_default && (
-                              <Badge
-                                variant="secondary"
-                                className="ml-2 text-xs"
-                              >
-                                Default
-                              </Badge>
-                            )}
-                          </Label>
-                        </div>
-                      ))}
+                      <LocationTypeBadge locationType={job.location_type} />
+                      <div className="flex items-center gap-1">
+                        <Briefcase className="w-4 h-4" />
+                        <span>{formatJobTypes(job.job_type)}</span>
+                      </div>
+                      {job.show_salary !== false &&
+                        (job.salary_min || job.salary_max) && (
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-4 h-4" />
+                            {formatSalary(job.salary_min, job.salary_max, job.salary_period)}
+                          </div>
+                        )}
                     </div>
-                  )}
-
-                  <div>
-                    <input
-                      type="file"
-                      id="cover-letter-upload"
-                      accept=".pdf,.doc,.docx"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleFileUpload(file, "cover_letter");
-                      }}
-                      className="hidden"
-                    />
-                    <Label htmlFor="cover-letter-upload">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="cursor-pointer"
-                        disabled={uploadingCoverLetter}
-                        asChild
-                      >
-                        <span>
-                          <Upload className="w-4 h-4 mr-2" />
-                          {uploadingCoverLetter
-                            ? "Uploading..."
-                            : "Upload New Cover Letter"}
-                        </span>
-                      </Button>
-                    </Label>
                   </div>
                 </div>
-              </div>
+              </CardHeader>
+            </Card>
 
-              {/* Employer Questions */}
-              {job.employer_questions &&
-                Array.isArray(job.employer_questions) &&
-                job.employer_questions.length > 0 && (
-                  <div>
-                    <Label className="text-base font-semibold">
-                      Additional Questions
-                    </Label>
-                    <div className="space-y-4 mt-3">
-                      {job.employer_questions.map((question, index: number) => (
-                        <div key={question.id}>
-                          <Label htmlFor={`question-${question.id}`}>
-                            {index + 1}. {question.question}
-                            {question.required && (
-                              <span className="text-red-500 ml-1">*</span>
-                            )}
-                          </Label>
-                          <Textarea
-                            id={`question-${question.id}`}
-                            value={questionAnswers[question.id] || ""}
-                            onChange={(e) =>
-                              setQuestionAnswers((prev) => ({
-                                ...prev,
-                                [question.id]: e.target.value,
-                              }))
-                            }
-                            className="mt-1"
-                            rows={3}
-                            placeholder="Enter your answer..."
-                          />
-                        </div>
-                      ))}
-                    </div>
+            {/* Job Description Card */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-foreground leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mb-2 [&_p]:mb-4 [&_strong]:font-semibold">
+                  <div dangerouslySetInnerHTML={{ __html: getCombinedJobContent(job.description, job.requirements) }} />
+                </div>
+
+                {/* Company Info Section */}
+                {job.companies?.description && (
+                  <div className="border-t pt-6 mt-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                      <Building2 className="w-5 h-5" />
+                      About the Company
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {job.companies.description}
+                    </p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
 
-              {/* Submit Button */}
-              <div className="pt-6 border-t">
-                <Button
-                  onClick={handleSubmitApplication}
-                  disabled={
-                    submitting ||
-                    !selectedResume ||
-                    hasApplied ||
-                    checkingApplication
-                  }
-                  size="lg"
-                  className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50"
-                >
-                  {checkingApplication ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Checking Application Status...
-                    </>
-                  ) : submitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Submitting Application...
-                    </>
-                  ) : hasApplied ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Already Applied
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Submit Application
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            {/* Internal Application Form - Same width as description */}
+            {isInternal && (
+              <Card id="application-form" ref={formRef}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Submit Your Application
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Resume Section */}
+                  <div>
+                    <Label className="text-base font-semibold">Resume *</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Select an existing resume or upload a new one
+                    </p>
+
+                    <div className="space-y-3">
+                      {resumes.length > 0 && (
+                        <div className="space-y-2">
+                          {resumes.map((resume) => (
+                            <div
+                              key={resume.id}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="radio"
+                                id={`resume-${resume.id}`}
+                                name="resume"
+                                value={resume.id}
+                                checked={selectedResume === resume.id}
+                                onChange={(e) => setSelectedResume(e.target.value)}
+                                className="text-primary"
+                              />
+                              <Label
+                                htmlFor={`resume-${resume.id}`}
+                                className="flex-1 cursor-pointer"
+                              >
+                                {resume.file_name}
+                                {resume.is_default && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-2 text-xs"
+                                  >
+                                    Default
+                                  </Badge>
+                                )}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div>
+                        <input
+                          type="file"
+                          id="resume-upload"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, "resume");
+                          }}
+                          className="hidden"
+                        />
+                        <Label htmlFor="resume-upload">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="cursor-pointer"
+                            disabled={uploadingResume}
+                            asChild
+                          >
+                            <span>
+                              <Upload className="w-4 h-4 mr-2" />
+                              {uploadingResume
+                                ? "Uploading..."
+                                : "Upload New Resume"}
+                            </span>
+                          </Button>
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cover Letter Section */}
+                  <div>
+                    <Label className="text-base font-semibold">
+                      Cover Letter (Optional)
+                    </Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Select an existing cover letter or upload a new one
+                    </p>
+
+                    <div className="space-y-3">
+                      {coverLetters.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="no-cover-letter"
+                              name="cover-letter"
+                              value=""
+                              checked={selectedCoverLetter === ""}
+                              onChange={() => setSelectedCoverLetter("")}
+                              className="text-primary"
+                            />
+                            <Label
+                              htmlFor="no-cover-letter"
+                              className="cursor-pointer"
+                            >
+                              No cover letter
+                            </Label>
+                          </div>
+
+                          {coverLetters.map((coverLetter) => (
+                            <div
+                              key={coverLetter.id}
+                              className="flex items-center space-x-2"
+                            >
+                              <input
+                                type="radio"
+                                id={`cover-letter-${coverLetter.id}`}
+                                name="cover-letter"
+                                value={coverLetter.id}
+                                checked={selectedCoverLetter === coverLetter.id}
+                                onChange={(e) =>
+                                  setSelectedCoverLetter(e.target.value)
+                                }
+                                className="text-primary"
+                              />
+                              <Label
+                                htmlFor={`cover-letter-${coverLetter.id}`}
+                                className="flex-1 cursor-pointer"
+                              >
+                                {coverLetter.file_name}
+                                {coverLetter.is_default && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="ml-2 text-xs"
+                                  >
+                                    Default
+                                  </Badge>
+                                )}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div>
+                        <input
+                          type="file"
+                          id="cover-letter-upload"
+                          accept=".pdf,.doc,.docx"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, "cover_letter");
+                          }}
+                          className="hidden"
+                        />
+                        <Label htmlFor="cover-letter-upload">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="cursor-pointer"
+                            disabled={uploadingCoverLetter}
+                            asChild
+                          >
+                            <span>
+                              <Upload className="w-4 h-4 mr-2" />
+                              {uploadingCoverLetter
+                                ? "Uploading..."
+                                : "Upload New Cover Letter"}
+                            </span>
+                          </Button>
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Employer Questions */}
+                  {job.employer_questions &&
+                    Array.isArray(job.employer_questions) &&
+                    job.employer_questions.length > 0 && (
+                      <div>
+                        <Label className="text-base font-semibold">
+                          Additional Questions
+                        </Label>
+                        <div className="space-y-4 mt-3">
+                          {job.employer_questions.map((question, index: number) => (
+                            <div key={question.id}>
+                              <Label htmlFor={`question-${question.id}`}>
+                                {index + 1}. {question.question}
+                                {question.required && (
+                                  <span className="text-red-500 ml-1">*</span>
+                                )}
+                              </Label>
+                              <Textarea
+                                id={`question-${question.id}`}
+                                value={questionAnswers[question.id] || ""}
+                                onChange={(e) =>
+                                  setQuestionAnswers((prev) => ({
+                                    ...prev,
+                                    [question.id]: e.target.value,
+                                  }))
+                                }
+                                className="mt-1"
+                                rows={3}
+                                placeholder="Enter your answer..."
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Submit Button */}
+                  <div className="pt-6 border-t">
+                    <Button
+                      onClick={handleSubmitApplication}
+                      disabled={
+                        submitting ||
+                        !selectedResume ||
+                        hasApplied ||
+                        checkingApplication
+                      }
+                      size="lg"
+                      className="w-full bg-primary hover:bg-primary/90 text-white disabled:opacity-50"
+                    >
+                      {checkingApplication ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Checking Application Status...
+                        </>
+                      ) : submitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Submitting Application...
+                        </>
+                      ) : hasApplied ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Already Applied
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          Submit Application
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column: Application Sidebar - hidden on mobile, sticky on desktop, hides when form is in view */}
+          <div className="hidden lg:block space-y-6">
+            <div className={`lg:sticky lg:top-24 transition-opacity duration-200 ${isInternal && formVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Apply for this job</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <span>Posted {getTimeAgo(job.created_at)}</span>
+                </div>
+
+                <Separator />
+
+                {job.application_method === "external" ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      This position requires you to apply directly on the company&apos;s website.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        if (job.application_url) {
+                          window.open(appendUtmParams(job.application_url, job.disable_utm_tracking), "_blank");
+                          if (user) {
+                            trackExternalApply(supabase, job.id, user.id, 'external');
+                          }
+                        }
+                      }}
+                      className="w-full gap-2"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Apply on Company Site
+                    </Button>
+                  </div>
+                ) : job.application_method === "email" ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      This position requires you to apply via email.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        if (job.application_email) {
+                          window.location.href = `mailto:${job.application_email}?subject=Application for ${job.title}`;
+                          if (user) {
+                            trackExternalApply(supabase, job.id, user.id, 'email');
+                          }
+                        }
+                      }}
+                      className="w-full gap-2"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Apply via Email
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {hasApplied ? (
+                      <p className="text-sm text-center">
+                        <span className="font-medium text-green-600">Applied</span>
+                        {" · "}
+                        <a href="/jobseeker/applications" className="text-primary hover:underline">
+                          Track application
+                        </a>
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-sm text-muted-foreground">
+                          Complete the application form below to apply.
+                        </p>
+                        <Button
+                          onClick={() => {
+                            document.getElementById("application-form")?.scrollIntoView({ behavior: "smooth" });
+                          }}
+                          className="w-full gap-2"
+                        >
+                          <FileText className="w-4 h-4" />
+                          Apply Now
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            </div>
+          </div>
+        </div>
+
       </div>
+
+      {/* Sticky mobile apply button - hides when form is in view */}
+      {isInternal && !hasApplied && !formVisible && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t shadow-lg lg:hidden z-50">
+          <Button
+            onClick={() => {
+              document.getElementById("application-form")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="w-full gap-2"
+            size="lg"
+          >
+            <FileText className="w-4 h-4" />
+            Apply Now
+          </Button>
+        </div>
+      )}
 
       <Footer />
     </div>
