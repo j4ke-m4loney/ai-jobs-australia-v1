@@ -64,6 +64,11 @@ const navigation = [
     icon: Building,
   },
   {
+    name: "Impersonate",
+    href: "/admin/impersonate",
+    icon: Shield,
+  },
+  {
     name: "Settings",
     href: "/admin/settings",
     icon: Settings,
