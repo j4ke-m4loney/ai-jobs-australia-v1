@@ -48,10 +48,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate a magic link without sending an email
+    // The action_link returned goes through Supabase's own verification endpoint
+    // which handles token validation and then redirects to our site
     const { data: linkData, error: linkError } = await supabaseAdmin
       .auth.admin.generateLink({
         type: 'magiclink',
         email: targetEmail,
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.aijobsaustralia.com.au'}/employer/applications`,
+        },
       });
 
     if (linkError || !linkData) {
@@ -62,27 +67,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // The generated link points to Supabase's domain by default.
-    // We need to extract the token and build our own callback URL.
-    const properties = linkData.properties;
-    const hashedToken = properties?.hashed_token;
+    // Use the action_link directly — it goes through Supabase's verify endpoint
+    // which validates the token, creates a session, and redirects to our redirectTo URL
+    const actionLink = linkData.properties?.action_link;
 
-    if (!hashedToken) {
+    if (!actionLink) {
+      console.error('No action_link in response:', linkData);
       return NextResponse.json(
-        { error: 'Failed to generate token' },
+        { error: 'Failed to generate login link' },
         { status: 500 }
       );
     }
 
-    // Build the verification URL that will log the admin in as the employer
-    // The callback route uses token_hash for OTP verification
-    // We pass user_type=employer so the callback redirects to the employer dashboard
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const loginUrl = `${siteUrl}/auth/callback?token_hash=${hashedToken}&token=${hashedToken}&type=magiclink&redirect=/employer/applications`;
-
     return NextResponse.json({
       success: true,
-      loginUrl,
+      loginUrl: actionLink,
       employerEmail: targetEmail,
     });
   } catch (error) {
