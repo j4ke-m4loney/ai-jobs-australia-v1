@@ -16,7 +16,6 @@ import {
   Clock,
   Search,
   Calendar,
-  XCircle,
   ExternalLink,
   Mail,
   ChevronLeft,
@@ -121,49 +120,11 @@ const JobSeekerApplications = () => {
     }
   }, [user]);
 
-  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
-
   useEffect(() => {
     if (user) {
       fetchApplications();
     }
   }, [user, fetchApplications]);
-
-  const handleWithdraw = async (applicationId: string) => {
-    if (!user || withdrawingId) return;
-
-    const confirmed = window.confirm(
-      "Are you sure you want to withdraw this application? This action cannot be undone."
-    );
-    if (!confirmed) return;
-
-    setWithdrawingId(applicationId);
-    try {
-      const response = await fetch(`/api/applications/${applicationId}/withdraw`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ applicantId: user.id }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to withdraw application");
-      }
-
-      // Update local state
-      setApplications((prev) =>
-        prev.map((app) =>
-          app.id === applicationId ? { ...app, status: "withdrawn" } : app
-        )
-      );
-      toast.success("Application withdrawn successfully");
-    } catch (error) {
-      console.error("Error withdrawing application:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to withdraw application");
-    } finally {
-      setWithdrawingId(null);
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
@@ -447,18 +408,6 @@ const JobSeekerApplications = () => {
                                 Visit Application
                               </Button>
                             )}
-                            {!isExternalApplication(application) && (application.status === "submitted" || application.status === "reviewing") && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => handleWithdraw(application.id)}
-                                disabled={withdrawingId === application.id}
-                              >
-                                <XCircle className="w-3 h-3 mr-1" />
-                                {withdrawingId === application.id ? "Withdrawing..." : "Withdraw"}
-                              </Button>
-                            )}
                           </div>
                         </div>
 
@@ -482,18 +431,6 @@ const JobSeekerApplications = () => {
                             >
                               <ExternalLink className="w-3 h-3 mr-1" />
                               Visit Application
-                            </Button>
-                          )}
-                          {!isExternalApplication(application) && (application.status === "submitted" || application.status === "reviewing") && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex-1 text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => handleWithdraw(application.id)}
-                              disabled={withdrawingId === application.id}
-                            >
-                              <XCircle className="w-3 h-3 mr-1" />
-                              {withdrawingId === application.id ? "..." : "Withdraw"}
                             </Button>
                           )}
                         </div>
