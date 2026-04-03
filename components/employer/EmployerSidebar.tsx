@@ -51,11 +51,12 @@ const menuItems = [
   //   url: "/employer/analytics",
   //   icon: BarChart3,
   // },
-  {
-    title: "Company Profile",
-    url: "/employer/company-profile",
-    icon: Building2,
-  },
+  // Company Profile - not yet implemented
+  // {
+  //   title: "Company Profile",
+  //   url: "/employer/company-profile",
+  //   icon: Building2,
+  // },
   {
     title: "Settings",
     url: "/employer/settings",

@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Users,
@@ -289,12 +288,10 @@ const EmployerApplications = () => {
     application,
     isSelected,
     onToggleSelect,
-    applicationNumber,
   }: {
     application: JobApplication;
     isSelected: boolean;
     onToggleSelect: (id: string) => void;
-    applicationNumber?: number;
   }) => {
     const applicantName =
       `${application.profiles?.first_name || ""} ${
@@ -313,22 +310,8 @@ const EmployerApplications = () => {
                 onCheckedChange={() => onToggleSelect(application.id)}
                 className="flex-shrink-0"
               />
-              <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
-                <AvatarFallback>
-                  {applicantName
-                    .split(" ")
-                    .map((n: string) => n[0])
-                    .join("")
-                    .toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  {applicationNumber && (
-                    <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium bg-blue-100 text-blue-800 rounded-full flex-shrink-0">
-                      {applicationNumber}
-                    </span>
-                  )}
                   <h3 className="font-semibold text-base sm:text-lg truncate">
                     {applicantName}
                   </h3>
@@ -350,7 +333,7 @@ const EmployerApplications = () => {
             </Badge>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-4 text-xs sm:text-sm">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4 text-xs sm:text-sm">
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <span className="truncate">
@@ -793,7 +776,7 @@ const EmployerApplications = () => {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {applications.map((application, index) => (
+                        {applications.map((application) => (
                           <ApplicationCard
                             key={application.id}
                             application={application}
@@ -801,7 +784,6 @@ const EmployerApplications = () => {
                               application.id
                             )}
                             onToggleSelect={toggleApplicationSelection}
-                            applicationNumber={((page - 1) * pageSize) + index + 1}
                           />
                         ))}
                       </div>
