@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import {
   Briefcase,
   Plus,
-  Building,
   Settings,
   Activity,
   AlertCircle,
@@ -259,14 +258,6 @@ export function DashboardOverview() {
             <Button
               variant="outline"
               className="w-full justify-start"
-              onClick={() => router.push("/employer/company-profile")}
-            >
-              <Building className="w-4 h-4 mr-2" />
-              Company Profile
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
               onClick={() => router.push("/employer/settings")}
             >
               <Settings className="w-4 h-4 mr-2" />
@@ -290,12 +281,6 @@ export function DashboardOverview() {
               <h4 className="font-medium text-sm">Post Your First Job</h4>
               <p className="text-xs text-muted-foreground">
                 Create a compelling job listing to attract top talent
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Complete Company Profile</h4>
-              <p className="text-xs text-muted-foreground">
-                Add company details to build trust with candidates
               </p>
             </div>
             <div className="space-y-2">

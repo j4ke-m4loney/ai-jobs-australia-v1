@@ -68,7 +68,8 @@ export interface BillingPlan {
   popular?: boolean;
 }
 
-// Map job2 pricing to legacy billing format for backward compatibility
+// IMPORTANT: Features must stay in sync with PRICING_TIERS in types/job2.ts
+// If you change features here, update job2.ts too (and vice versa).
 export const BILLING_PLANS: Record<string, BillingPlan> = {
   standard: {
     id: 'standard',
@@ -80,7 +81,6 @@ export const BILLING_PLANS: Record<string, BillingPlan> = {
       '30-day listing',
       'Basic search ranking',
       'Standard support',
-      'Job analytics',
     ],
   },
   featured: {
@@ -94,23 +94,22 @@ export const BILLING_PLANS: Record<string, BillingPlan> = {
       '30-day featured listing',
       'Top search ranking',
       'Homepage feature',
+      'Newsletter feature',
       'Priority support',
-      'Advanced analytics',
       'Social media promotion',
     ],
   },
   annual: {
     id: 'annual',
-    name: 'Annual Plan',
-    price: 999,
-    price_display: '$999',
-    description: 'Unlimited postings for 1 year',
+    name: 'Enterprise Unlimited',
+    price: 0,
+    price_display: 'Contact Us',
+    description: 'Unlimited postings for your organization',
     features: [
       'Unlimited job postings',
       'All featured benefits',
       'Dedicated account manager',
       'Custom branding',
-      'API access',
       'Priority placement',
     ],
   },

@@ -9,9 +9,8 @@ import { useProfile } from "@/contexts/ProfileContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { JobPurchase, PaymentMethod, BILLING_PLANS } from "@/types/billing";
+import { JobPurchase, BILLING_PLANS } from "@/types/billing";
 import { EmployerLayout } from "@/components/employer/EmployerLayout";
-import { AddPaymentMethodModal } from "@/components/billing/AddPaymentMethodModal";
 import {
   Card,
   CardContent,
@@ -23,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   Form,
   FormControl,
@@ -82,7 +80,6 @@ const EmployerSettings = () => {
   
   // Billing state
   const [jobPurchases, setJobPurchases] = useState<JobPurchase[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [billingLoading, setBillingLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<string>('standard');
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -95,7 +92,6 @@ const EmployerSettings = () => {
     newEmail: string;
     formData: ProfileFormData;
   } | null>(null);
-  const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
 
   // Initialize form with profile data
   const form = useForm<ProfileFormData>({
@@ -146,10 +142,7 @@ const EmployerSettings = () => {
 
         // Load job purchases and payment methods
         try {
-          const [paymentHistoryResponse, paymentMethodsResponse] = await Promise.all([
-            fetch(`/api/billing/payment-history?userId=${user.id}`),
-            fetch(`/api/billing/payment-methods?userId=${user.id}`)
-          ]);
+          const paymentHistoryResponse = await fetch(`/api/billing/payment-history?userId=${user.id}`);
 
           if (paymentHistoryResponse.ok) {
             const paymentData = await paymentHistoryResponse.json();
@@ -178,18 +171,9 @@ const EmployerSettings = () => {
             console.error('Failed to fetch payment history for settings page');
             setJobPurchases([]);
           }
-
-          if (paymentMethodsResponse.ok) {
-            const paymentMethodsData = await paymentMethodsResponse.json();
-            setPaymentMethods(paymentMethodsData.paymentMethods || []);
-          } else {
-            console.error('Failed to fetch payment methods for settings page');
-            setPaymentMethods([]);
-          }
         } catch (error) {
           console.error('Error fetching billing data for settings page:', error);
           setJobPurchases([]);
-          setPaymentMethods([]);
         }
 
         // Load notification preferences
@@ -401,51 +385,6 @@ const EmployerSettings = () => {
   };
 
 
-
-  // Payment method handlers
-  const handleAddPaymentMethod = () => {
-    setShowAddPaymentModal(true);
-  };
-
-  const handlePaymentMethodAdded = async () => {
-    // Refresh billing data after adding a payment method
-    if (!user) return;
-
-    try {
-      const response = await fetch(`/api/billing/payment-methods?userId=${user.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setPaymentMethods(data.paymentMethods || []);
-        toast.success("Payment method added successfully!");
-      }
-    } catch (error) {
-      console.error("Error refreshing payment methods:", error);
-    }
-  };
-
-  const handleDeletePaymentMethod = async (paymentMethodId: string) => {
-    if (!user || !confirm("Are you sure you want to remove this payment method?")) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `/api/billing/payment-methods?paymentMethodId=${paymentMethodId}&userId=${user.id}`,
-        { method: "DELETE" }
-      );
-
-      if (response.ok) {
-        setPaymentMethods(prev => prev.filter(pm => pm.id !== paymentMethodId));
-        toast.success("Payment method removed successfully!");
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Failed to remove payment method");
-      }
-    } catch (error) {
-      console.error("Error deleting payment method:", error);
-      toast.error("Failed to remove payment method");
-    }
-  };
 
   return (
     <EmployerLayout title="Settings">
@@ -685,6 +624,7 @@ const EmployerSettings = () => {
                   </div>
                 </div>
 
+                {/* Push Notifications - not yet implemented
                 <Separator />
 
                 <div>
@@ -711,7 +651,6 @@ const EmployerSettings = () => {
                       />
                     </div>
 
-                    {/* TODO: Uncomment when direct messaging system is implemented
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="push-messages">Direct Messages</Label>
@@ -730,9 +669,9 @@ const EmployerSettings = () => {
                         }
                       />
                     </div>
-                    */}
                   </div>
                 </div>
+                */}
 
                 <div className="pt-6 border-t">
                   <Button
@@ -983,13 +922,25 @@ const EmployerSettings = () => {
                             </li>
                           ))}
                         </ul>
-                        <Button
-                          className="w-full"
-                          variant={selectedPlan === plan.id ? "default" : "outline"}
-                          onClick={() => handlePostJob(plan.id)}
-                        >
-                          Post Job - {plan.price_display}
-                        </Button>
+                        {plan.id === 'annual' ? (
+                          <Button
+                            className="w-full"
+                            variant="outline"
+                            asChild
+                          >
+                            <a href="mailto:hello@aijobsaustralia.com.au">
+                              Contact Us for Pricing
+                            </a>
+                          </Button>
+                        ) : (
+                          <Button
+                            className="w-full"
+                            variant={selectedPlan === plan.id ? "default" : "outline"}
+                            onClick={() => handlePostJob(plan.id)}
+                          >
+                            Post Job - {plan.price_display}
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -997,66 +948,6 @@ const EmployerSettings = () => {
                 </Card>
               )}
 
-              {/* Payment Method */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Payment Method</CardTitle>
-                  <CardDescription>
-                    Manage your payment information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {paymentMethods.length > 0 ? (
-                    <div className="space-y-4">
-                      {paymentMethods.map((method) => (
-                        <div key={method.id} className="p-4 border rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
-                                <CreditCard className="w-4 h-4 text-blue-600" />
-                              </div>
-                              <div>
-                                <p className="font-medium">
-                                  •••• •••• •••• {method.card_last_four}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {method.card_brand} • Expires {method.card_exp_month}/{method.card_exp_year}
-                                </p>
-                              </div>
-                              {method.is_default && (
-                                <Badge variant="secondary">Default</Badge>
-                              )}
-                            </div>
-                            <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
-                                Update
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeletePaymentMethod(method.id)}
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No payment method</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Add a payment method to upgrade your plan
-                      </p>
-                      <Button variant="outline" onClick={handleAddPaymentMethod}>
-                        Add Payment Method
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
         </Tabs>
@@ -1092,15 +983,6 @@ const EmployerSettings = () => {
 
         {/* Danger Zone */}
 
-        {/* Add Payment Method Modal */}
-        {user && (
-          <AddPaymentMethodModal
-            isOpen={showAddPaymentModal}
-            onClose={() => setShowAddPaymentModal(false)}
-            onSuccess={handlePaymentMethodAdded}
-            userId={user.id}
-          />
-        )}
       </div>
     </EmployerLayout>
   );

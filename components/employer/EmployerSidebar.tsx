@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
   Briefcase,
   Building2,
   Settings,
   Plus,
   LogOut,
   Users,
+  ChevronUp,
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,17 +24,24 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import { toast } from "sonner";
 
 const menuItems = [
-  {
-    title: "Dashboard",
-    url: "/employer",
-    icon: LayoutDashboard,
-  },
+  // Dashboard - commented out, redundant for now
+  // {
+  //   title: "Dashboard",
+  //   url: "/employer",
+  //   icon: LayoutDashboard,
+  // },
   {
     title: "Job Management",
     url: "/employer/jobs",
@@ -150,45 +157,38 @@ export function EmployerSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-border p-4">
-        {!collapsed ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-hero rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
-                  {profile?.first_name?.[0] ||
-                    user?.user_metadata?.first_name?.[0] ||
-                    user?.email?.[0]?.toUpperCase() ||
-                    "E"}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate capitalize">
-                  {profile?.first_name 
-                    ? `${profile.first_name} ${profile.last_name || ''}`.trim()
-                    : user?.user_metadata?.first_name || "Employer"}
-                </p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">
-                  {user?.email}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-2 w-full px-2 py-1 text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 rounded-md transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 w-full px-2 py-2 text-left hover:bg-sidebar-accent/50 rounded-md transition-colors">
+              {!collapsed ? (
+                <>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-sidebar-foreground truncate capitalize">
+                      {profile?.first_name
+                        ? `${profile.first_name} ${profile.last_name || ''}`.trim()
+                        : user?.user_metadata?.first_name || "Employer"}
+                    </p>
+                    <p className="text-xs text-sidebar-foreground/60 truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+                  <ChevronUp className="w-4 h-4 text-sidebar-foreground/60 flex-shrink-0" />
+                </>
+              ) : (
+                <LogOut className="w-4 h-4 text-sidebar-foreground mx-auto" />
+              )}
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleSignOut}
-            className="w-8 h-8 mx-auto flex items-center justify-center hover:bg-sidebar-accent/50 rounded-md transition-colors"
-            title="Sign Out"
-          >
-            <LogOut className="w-4 h-4 text-sidebar-foreground" />
-          </button>
-        )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start" className="w-56">
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              className="cursor-pointer bg-black text-white hover:!bg-white hover:!text-black focus:!bg-white focus:!text-black"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
