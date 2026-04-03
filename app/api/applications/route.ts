@@ -22,6 +22,7 @@ interface EmailBatchingParams {
   employerEmail: string;
   jobTitle: string;
   applicantName: string;
+  applicantEmail: string;
   applicationId: string;
 }
 
@@ -40,6 +41,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
     employerEmail,
     jobTitle,
     applicantName,
+    applicantEmail,
     applicationId
   } = params;
 
@@ -62,7 +64,7 @@ async function handleEmailBatching(params: EmailBatchingParams): Promise<void> {
       jobTitle,
       jobId,
       applicantName,
-      applicantEmail: 'Not displayed', // We removed email display for privacy
+      applicantEmail,
       applicationDate: now.toLocaleDateString('en-AU', {
         year: 'numeric',
         month: 'long',
@@ -265,7 +267,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Note: We no longer fetch applicant email for privacy reasons
+    // Fetch applicant email for employer notification
+    const { data: applicantUserData } = await getSupabaseAdmin()
+      .auth.admin.getUserById(applicantId);
+    const applicantEmail = applicantUserData?.user?.email || 'Not available';
 
     // Check if application already exists
     const { data: existingApplication } = await getSupabaseAdmin()
@@ -355,7 +360,7 @@ export async function POST(request: NextRequest) {
             jobTitle: jobData.title,
             jobId: jobData.id,
             applicantName,
-            applicantEmail: 'Not displayed',
+            applicantEmail,
             applicationDate: new Date().toLocaleDateString('en-AU', {
               year: 'numeric',
               month: 'long',
@@ -372,6 +377,7 @@ export async function POST(request: NextRequest) {
             employerEmail,
             jobTitle: jobData.title,
             applicantName,
+            applicantEmail,
             applicationId: application.id
           });
         }

@@ -56,7 +56,10 @@ export async function PUT(
           id,
           title,
           company_name,
-          employer_id
+          employer_id,
+          companies (
+            name
+          )
         )
       `)
       .eq('id', applicationId)
@@ -156,7 +159,7 @@ export async function PUT(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           jobTitle: (application.jobs as any)?.title,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          companyName: (application.jobs as any)?.company_name,
+          companyName: (application.jobs as any)?.company_name || (application.jobs as any)?.companies?.name || 'Unknown',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           status: status as any,
           statusMessage
