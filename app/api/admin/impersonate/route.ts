@@ -35,11 +35,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify the target user exists and is an employer
-    const { data: targetUser } = await supabaseAdmin
-      .auth.admin.listUsers();
+    // Verify the target user exists
+    // listUsers paginates (server may cap perPage at 1000), so loop through pages
+    let employer = null;
+    let page = 1;
+    while (!employer) {
+      const { data, error } = await supabaseAdmin
+        .auth.admin.listUsers({ page, perPage: 1000 });
 
-    const employer = targetUser?.users?.find(u => u.email === targetEmail);
+      if (error || !data?.users?.length) break;
+      employer = data.users.find(u => u.email === targetEmail) ?? null;
+      if (data.users.length < 1000) break;
+      page++;
+    }
+
     if (!employer) {
       return NextResponse.json(
         { error: 'User not found' },
