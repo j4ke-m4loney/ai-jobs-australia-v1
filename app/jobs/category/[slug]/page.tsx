@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { categorySlugToName, getPopularCategories } from '@/lib/categories/generator';
+import { VALID_CATEGORY_SLUGS } from '@/lib/job-import/categories';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RecentJobCard } from '@/components/jobs/RecentJobCard';
@@ -53,6 +54,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   return {
     title: `${categoryName} Jobs in Australia | AI Jobs Australia`,
     description: `Find the latest ${categoryName} jobs in Australia. Browse AI and machine learning opportunities from top companies. Apply for ${categoryName} positions today.`,
+    alternates: {
+      canonical: `https://www.aijobsaustralia.com.au/jobs/category/${slug}`,
+    },
     openGraph: {
       title: `${categoryName} Jobs in Australia`,
       description: `Browse ${categoryName} opportunities in AI and machine learning`,
@@ -159,13 +163,15 @@ async function getCategoryJobs(categorySlug: string, targetCount: number = 9): P
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
+
+  // Permanently redirect non-canonical category slugs to /jobs
+  // (clears ~499 stale Google-indexed URLs that were generating 404s)
+  if (!(VALID_CATEGORY_SLUGS as readonly string[]).includes(slug)) {
+    permanentRedirect('/jobs');
+  }
+
   const categoryName = categorySlugToName(slug);
   const allJobs = await getCategoryJobs(slug);
-
-  // Show 404 if category has no jobs
-  if (allJobs.length === 0) {
-    notFound();
-  }
 
   // Split jobs: first 9 public, rest behind signup
   const publicJobs = allJobs.slice(0, 9);

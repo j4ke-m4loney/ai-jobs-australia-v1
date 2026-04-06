@@ -53,6 +53,9 @@ export async function generateMetadata({ params }: LocationPageProps): Promise<M
   return {
     title: `AI Jobs in ${cityName} | AI Jobs Australia`,
     description: `Find the latest AI and machine learning jobs in ${cityName}, Australia. Browse ${cityName} opportunities from top companies. Apply for AI, ML, and data science positions in ${cityName} today.`,
+    alternates: {
+      canonical: `https://www.aijobsaustralia.com.au/jobs/location/${city}`,
+    },
     openGraph: {
       title: `AI Jobs in ${cityName}`,
       description: `Browse AI and machine learning opportunities in ${cityName}`,

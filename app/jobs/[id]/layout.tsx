@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 // Server-side Supabase client for metadata generation
@@ -9,7 +9,8 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Cached per-request — deduplicates across generateMetadata, JobLayout, and JobStructuredData
-const getApprovedJob = cache(async (id: string) => {
+// Fetches approved jobs regardless of expiry so we can distinguish "expired" from "not found"
+const getJobById = cache(async (id: string) => {
   const { data } = await supabase
     .from("jobs")
     .select(`
@@ -22,10 +23,13 @@ const getApprovedJob = cache(async (id: string) => {
     `)
     .eq("id", id)
     .eq("status", "approved")
-    .gte("expires_at", new Date().toISOString())
     .single();
   return data;
 });
+
+function isExpired(job: { expires_at: string }): boolean {
+  return new Date(job.expires_at) < new Date();
+}
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -35,10 +39,15 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { id } = await params;
-    const job = await getApprovedJob(id);
+    const job = await getJobById(id);
 
     if (!job || !job.companies) {
       notFound();
+    }
+
+    // Redirect expired jobs to /jobs instead of 404ing
+    if (isExpired(job)) {
+      permanentRedirect("/jobs");
     }
 
     const companyName = job.companies.name || "Company";
@@ -58,6 +67,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: `${jobTitle} | AI Jobs Australia`,
       description: cleanDescription,
+      alternates: {
+        canonical: `https://www.aijobsaustralia.com.au/jobs/${id}`,
+      },
       openGraph: {
         title: jobTitle,
         description: cleanDescription,
@@ -123,9 +135,9 @@ function parseLocations(location: string): Array<{ locality: string; region: str
 
 // Server component to render structured data
 async function JobStructuredData({ id }: { id: string }) {
-  const job = await getApprovedJob(id);
+  const job = await getJobById(id);
 
-  if (!job || !job.companies) return null;
+  if (!job || !job.companies || isExpired(job)) return null;
 
   // Strip HTML for description
   const cleanDescription = job.description
@@ -219,10 +231,15 @@ export default async function JobLayout({ children, params }: Props) {
   const { id } = await params;
 
   // Check if job exists and is approved — return 404 if not
-  const job = await getApprovedJob(id);
+  const job = await getJobById(id);
 
   if (!job) {
     notFound();
+  }
+
+  // Redirect expired jobs to /jobs instead of 404ing (tells Google to stop crawling)
+  if (isExpired(job)) {
+    permanentRedirect("/jobs");
   }
 
   return (

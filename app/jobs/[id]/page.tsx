@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
-import Head from "next/head";
 import {
   MapPin,
   DollarSign,
@@ -112,6 +111,7 @@ export default function JobDetailPage() {
         `)
         .eq("id", id)
         .eq("status", "approved")
+        .gte("expires_at", new Date().toISOString())
         .single();
 
       if (error) throw error;
@@ -246,9 +246,6 @@ export default function JobDetailPage() {
 
   return (
     <>
-      <Head>
-        <link rel="canonical" href={`https://www.aijobsaustralia.com.au/jobs/${id}`} />
-      </Head>
       <div className="min-h-screen bg-gradient-subtle">
         <Header />
 
