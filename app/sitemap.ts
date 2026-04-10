@@ -1,10 +1,41 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
+import { readdirSync, statSync } from 'fs'
+import { join } from 'path'
 import { getAllJobCategories } from '@/lib/categories/generator'
 import { getAllJobLocations } from '@/lib/locations/generator'
 import { getAllCategoryLocationCombos } from '@/lib/categories/cross-generator'
 
 const BASE_URL = 'https://www.aijobsaustralia.com.au'
+
+/**
+ * Auto-discovers tool pages from /app/tools/[slug]/page.tsx.
+ * Any new tool directory with a page.tsx is automatically included.
+ */
+function discoverToolPages(): MetadataRoute.Sitemap {
+  const toolsDir = join(process.cwd(), 'app', 'tools')
+  try {
+    const entries = readdirSync(toolsDir)
+    return entries
+      .filter(entry => {
+        // Only include subdirectories that contain a page.tsx
+        const entryPath = join(toolsDir, entry)
+        return (
+          statSync(entryPath).isDirectory() &&
+          statSync(join(entryPath, 'page.tsx')).isFile()
+        )
+      })
+      .map(slug => ({
+        url: `${BASE_URL}/tools/${slug}`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: 0.7,
+      }))
+  } catch {
+    console.warn('[sitemap] Could not discover tool pages, returning empty array')
+    return []
+  }
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Create Supabase client inside function to avoid build-time initialization
@@ -100,78 +131,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
-    {
-      url: `${BASE_URL}/tools/ai-jobs-resume-keyword-analyser`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-ml-salary-calculator`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-interview-question-generator`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-job-description-decoder`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-skills-gap-analyser`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-cover-letter-analyser`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-linkedin-profile-optimiser`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-ml-job-description-generator`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-portfolio-project-generator`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-career-path-quiz`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-role-comparison`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: `${BASE_URL}/tools/ai-governance-readiness-assessment`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
+    // Tool pages are auto-discovered from the filesystem so new tools
+    // are included in the sitemap without manual updates.
+    ...discoverToolPages(),
     {
       url: `${BASE_URL}/companies`,
       lastModified: new Date(),
