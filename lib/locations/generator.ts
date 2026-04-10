@@ -1,10 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Australian state/territory abbreviations used to strip trailing state codes
+// from location strings (e.g. "Sydney NSW" → "Sydney", "Melbourne VIC" → "Melbourne")
+const STATE_ABBRS = new Set(['nsw', 'vic', 'qld', 'wa', 'sa', 'tas', 'act', 'nt']);
+
 /**
- * Extracts and normalizes location from location string
+ * Strips a trailing Australian state abbreviation from a location string.
+ * "Sydney NSW" → "Sydney", "North Sydney NSW" → "North Sydney",
+ * "Melbourne" → "Melbourne" (no change)
+ */
+function stripTrailingState(location: string): string {
+  const parts = location.trim().split(/\s+/);
+  if (parts.length >= 2 && STATE_ABBRS.has(parts[parts.length - 1].toLowerCase())) {
+    return parts.slice(0, -1).join(' ');
+  }
+  return location;
+}
+
+/**
+ * Extracts and normalizes location from location string.
+ *
+ * Handles multi-location strings ("Sydney NSW | Melbourne VIC" → "sydney"),
+ * strips trailing state abbreviations, and normalises to a URL-safe slug.
+ *
  * Examples:
  * - "Melbourne, VIC" → "melbourne"
  * - "Sydney NSW" → "sydney"
+ * - "Sydney NSW | Melbourne VIC" → "sydney"
+ * - "North Sydney NSW" → "north-sydney"
  * - "Remote" → "remote"
  *
  * Note: suburb and state parameters are optional and may be null if the
@@ -18,7 +41,8 @@ export function extractLocationSlug(
 ): string {
   // Prefer structured suburb data if available
   if (suburb && suburb.trim()) {
-    return suburb
+    const stripped = stripTrailingState(suburb);
+    return stripped
       .toLowerCase()
       .trim()
       .replace(/\s+/g, '-')
@@ -27,12 +51,17 @@ export function extractLocationSlug(
       .replace(/^-|-$/g, '');
   }
 
-  // Parse from location string
-  // "Melbourne, VIC" → "melbourne"
-  // "Sydney NSW" → "sydney"
-  const normalized = location
-    .toLowerCase()
+  // Take first location before pipe or slash separators (multi-location strings)
+  const firstLocation = location
+    .split(/[|/]/)[0]
     .split(',')[0] // Take first part before comma
+    .trim();
+
+  // Strip trailing state abbreviation ("Sydney NSW" → "Sydney")
+  const withoutState = stripTrailingState(firstLocation);
+
+  const normalized = withoutState
+    .toLowerCase()
     .trim()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')

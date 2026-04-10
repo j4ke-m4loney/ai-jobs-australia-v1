@@ -1,11 +1,46 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { extractLocationSlug, locationSlugToName, getPopularLocations } from '@/lib/locations/generator';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RecentJobCard } from '@/components/jobs/RecentJobCard';
 import { SignupOrViewAllCard } from '@/components/jobs/SignupOrViewAllCard';
+
+// Map of old state-appended slugs to their canonical form.
+// These were previously indexed by Google before the location parser
+// was updated to strip trailing state abbreviations.
+const LEGACY_SLUG_REDIRECTS: Record<string, string> = {
+  // Major cities
+  'sydney-nsw': 'sydney',
+  'melbourne-vic': 'melbourne',
+  'brisbane-qld': 'brisbane',
+  'perth-wa': 'perth',
+  'adelaide-sa': 'adelaide',
+  'canberra-act': 'canberra',
+  'gold-coast-qld': 'gold-coast',
+  'newcastle-nsw': 'newcastle',
+  'hobart-tas': 'hobart',
+  'darwin-nt': 'darwin',
+  // Suburbs
+  'sydney-cbd-nsw': 'sydney-cbd',
+  'north-sydney-nsw': 'north-sydney',
+  'parramatta-nsw': 'parramatta',
+  'surry-hills-nsw': 'surry-hills',
+  'barangaroo-nsw': 'barangaroo',
+  'bella-vista-nsw': 'bella-vista',
+  'broadway-nsw': 'broadway',
+  'macquarie-park-nsw': 'macquarie-park',
+  'richmond-vic': 'richmond',
+  'cremorne-vic': 'cremorne',
+  'parkville-vic': 'parkville',
+  'mulgrave-vic': 'mulgrave',
+  // Multi-location slugs (old parser didn't split on |)
+  'melbourne-vic-sydney-nsw': 'melbourne',
+  'sydney-nsw-melbourne-vic': 'sydney',
+  'sydney-nsw-brisbane-qld-melbourne-vic': 'sydney',
+  'melbourne-vic-sydney-nsw-brisbane-qld': 'melbourne',
+};
 
 interface Job {
   id: string;
@@ -48,13 +83,15 @@ export async function generateStaticParams() {
 // Generate metadata for SEO
 export async function generateMetadata({ params }: LocationPageProps): Promise<Metadata> {
   const { city } = await params;
-  const cityName = locationSlugToName(city);
+  // Use canonical slug for metadata if this is a legacy URL
+  const resolvedCity = LEGACY_SLUG_REDIRECTS[city] || city;
+  const cityName = locationSlugToName(resolvedCity);
 
   return {
     title: `AI Jobs in ${cityName} | AI Jobs Australia`,
     description: `Find the latest AI and machine learning jobs in ${cityName}, Australia. Browse ${cityName} opportunities from top companies. Apply for AI, ML, and data science positions in ${cityName} today.`,
     alternates: {
-      canonical: `https://www.aijobsaustralia.com.au/jobs/location/${city}`,
+      canonical: `https://www.aijobsaustralia.com.au/jobs/location/${resolvedCity}`,
     },
     openGraph: {
       title: `AI Jobs in ${cityName}`,
@@ -139,6 +176,13 @@ async function getLocationJobs(citySlug: string): Promise<Job[]> {
 
 export default async function LocationPage({ params }: LocationPageProps) {
   const { city } = await params;
+
+  // Redirect old state-appended slugs (e.g. /jobs/location/sydney-nsw → /jobs/location/sydney)
+  const canonicalSlug = LEGACY_SLUG_REDIRECTS[city];
+  if (canonicalSlug) {
+    permanentRedirect(`/jobs/location/${canonicalSlug}`);
+  }
+
   const cityName = locationSlugToName(city);
   const allJobs = await getLocationJobs(city);
 

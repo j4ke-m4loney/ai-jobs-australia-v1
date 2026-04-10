@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 import { createClient } from '@supabase/supabase-js'
 import { getAllJobCategories } from '@/lib/categories/generator'
 import { getAllJobLocations } from '@/lib/locations/generator'
+import { getAllCategoryLocationCombos } from '@/lib/categories/cross-generator'
 
 const BASE_URL = 'https://www.aijobsaustralia.com.au'
 
@@ -124,9 +125,57 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
-      url: `${BASE_URL}/tools/ai-skills-gap-analyzer`,
+      url: `${BASE_URL}/tools/ai-skills-gap-analyser`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-cover-letter-analyser`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-linkedin-profile-optimiser`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-ml-job-description-generator`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-portfolio-project-generator`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-career-path-quiz`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-role-comparison`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/tools/ai-governance-readiness-assessment`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/companies`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
       priority: 0.7,
     },
     {
@@ -179,5 +228,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.85, // High priority for local SEO
   }))
 
-  return [...staticPages, ...categoryPages, ...locationPages, ...jobPages, ...companyPages, ...blogPages]
+  // Category × Location cross pages (only combos with 6+ jobs)
+  const crossCombos = await getAllCategoryLocationCombos()
+  const crossPages: MetadataRoute.Sitemap = crossCombos.map((combo) => ({
+    url: `${BASE_URL}/jobs/category/${combo.categorySlug}/${combo.locationSlug}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }))
+
+  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...jobPages, ...companyPages, ...blogPages]
 }
