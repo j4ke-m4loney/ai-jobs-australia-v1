@@ -60,6 +60,7 @@ interface Job {
   salary_period?: string;
   show_salary?: boolean;
   is_featured: boolean;
+  featured_order?: number | null;
   created_at: string;
   expires_at: string;
   application_method: string;
@@ -401,6 +402,7 @@ function JobsContent() {
           salary_period,
           show_salary,
           is_featured,
+          featured_order,
           created_at,
           expires_at,
           application_method,
@@ -419,6 +421,7 @@ function JobsContent() {
         )
         .eq("status", "approved")
         .order("is_featured", { ascending: false })
+        .order("featured_order", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: false })
         .limit(5);
 
@@ -551,11 +554,13 @@ function JobsContent() {
           case "featured":
             query = query
               .order("is_featured", { ascending: false })
+              .order("featured_order", { ascending: true, nullsFirst: false })
               .order("created_at", { ascending: false });
             break;
           default:
             query = query
               .order("is_featured", { ascending: false })
+              .order("featured_order", { ascending: true, nullsFirst: false })
               .order("created_at", { ascending: false });
         }
 
@@ -772,6 +777,11 @@ function JobsContent() {
                 }
                 if (a.is_featured && !b.is_featured) return -1;
                 if (!a.is_featured && b.is_featured) return 1;
+                if (a.is_featured && b.is_featured) {
+                  const orderA = a.featured_order ?? Infinity;
+                  const orderB = b.featured_order ?? Infinity;
+                  if (orderA !== orderB) return orderA - orderB;
+                }
                 return (
                   new Date(b.created_at).getTime() -
                   new Date(a.created_at).getTime()
@@ -792,6 +802,11 @@ function JobsContent() {
                 }
                 if (a.is_featured && !b.is_featured) return -1;
                 if (!a.is_featured && b.is_featured) return 1;
+                if (a.is_featured && b.is_featured) {
+                  const orderA = a.featured_order ?? Infinity;
+                  const orderB = b.featured_order ?? Infinity;
+                  if (orderA !== orderB) return orderA - orderB;
+                }
                 return (
                   new Date(b.created_at).getTime() -
                   new Date(a.created_at).getTime()
