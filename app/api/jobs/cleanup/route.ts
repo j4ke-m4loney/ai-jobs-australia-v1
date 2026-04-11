@@ -5,6 +5,7 @@ import { checkJobUrl } from "@/lib/job-cleanup/url-checker";
 const BATCH_SIZE = 50; // Process 50 jobs per cron run
 const MIN_CHECK_INTERVAL_HOURS = 24; // Re-check jobs daily
 const MAX_JOB_AGE_DAYS = 60; // Auto-expire jobs older than this
+const REVIEW_GRACE_PERIOD_DAYS = 20; // Don't flag jobs for review if posted within this many days
 
 // This endpoint should be called by a cron job to clean up expired or invalid jobs
 // Add ?dryRun=true to preview what would be expired without making changes
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
       batchSize: BATCH_SIZE,
       minCheckIntervalHours: MIN_CHECK_INTERVAL_HOURS,
       maxJobAgeDays: MAX_JOB_AGE_DAYS,
+      reviewGracePeriodDays: REVIEW_GRACE_PERIOD_DAYS,
     });
 
     // Step 0a: Expire paid (non-admin) jobs past their expires_at date (30-day paid listing)
@@ -144,7 +146,7 @@ export async function GET(request: NextRequest) {
     const { data: jobs, error: fetchError } = await supabaseAdmin
       .from("jobs")
       .select(
-        "id, title, application_url, last_checked_at, check_count, employer_id"
+        "id, title, application_url, last_checked_at, check_count, employer_id, created_at"
       )
       .eq("status", "approved")
       .not("application_url", "is", null)
@@ -230,13 +232,27 @@ export async function GET(request: NextRequest) {
           );
 
         } else if (result.decision === "needs_review") {
-          updateData.status = "needs_review";
-          updateData.check_failure_reason =
-            result.errorMessage || result.evidence?.join(", ");
-          stats.needsReview++;
-          console.log(
-            `[JobCleanup] Flagging for review: ${job.id} - ${job.title}`
+          // Don't flag recently posted jobs for review — many ATS systems
+          // return 403/errors to automated requests even for valid listings
+          const jobAgeDays = Math.floor(
+            (Date.now() - new Date(job.created_at).getTime()) /
+              (1000 * 60 * 60 * 24)
           );
+
+          if (jobAgeDays < REVIEW_GRACE_PERIOD_DAYS) {
+            console.log(
+              `[JobCleanup] Skipping review flag for recent job (${jobAgeDays} days old): ${job.id} - ${job.title}`
+            );
+            stats.keptActive++;
+          } else {
+            updateData.status = "needs_review";
+            updateData.check_failure_reason =
+              result.errorMessage || result.evidence?.join(", ");
+            stats.needsReview++;
+            console.log(
+              `[JobCleanup] Flagging for review: ${job.id} - ${job.title}`
+            );
+          }
         } else {
           // keep_active
           stats.keptActive++;
