@@ -111,7 +111,6 @@ export default function JobDetailPage() {
         `)
         .eq("id", id)
         .eq("status", "approved")
-        .gte("expires_at", new Date().toISOString())
         .single();
 
       if (error) throw error;

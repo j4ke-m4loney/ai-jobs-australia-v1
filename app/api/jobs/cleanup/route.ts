@@ -2,19 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkJobUrl } from "@/lib/job-cleanup/url-checker";
 
-const BATCH_SIZE = 25; // Process 100 jobs per cron run (temporarily increased for restoration)
-const MIN_CHECK_INTERVAL_HOURS = 48; // Don't re-check jobs more than every 2 days
+const BATCH_SIZE = 50; // Process 50 jobs per cron run
+const MIN_CHECK_INTERVAL_HOURS = 24; // Re-check jobs daily
+const MAX_JOB_AGE_DAYS = 60; // Auto-expire jobs older than this
 
 // This endpoint should be called by a cron job to clean up expired or invalid jobs
+// Add ?dryRun=true to preview what would be expired without making changes
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
+  const dryRun = request.nextUrl.searchParams.get("dryRun") === "true";
 
   try {
     // Verify the request is from a cron job (Vercel Cron sends an authorization header)
+    // Skip auth check in dry-run mode for local testing
     const authHeader = request.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!dryRun && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -29,6 +33,9 @@ export async function GET(request: NextRequest) {
     );
 
     const stats = {
+      dryRun,
+      paidExpired: 0,
+      ageExpired: 0,
       checked: 0,
       expired: 0,
       needsReview: 0,
@@ -38,12 +45,100 @@ export async function GET(request: NextRequest) {
 
     console.log("[JobCleanup] Starting cleanup run", {
       timestamp: now,
+      dryRun,
       batchSize: BATCH_SIZE,
       minCheckIntervalHours: MIN_CHECK_INTERVAL_HOURS,
+      maxJobAgeDays: MAX_JOB_AGE_DAYS,
     });
 
-    // NOTE: We do NOT auto-expire based on expires_at date
-    // URL check is the source of truth - jobs stay active as long as URL is valid
+    // Step 0a: Expire paid (non-admin) jobs past their expires_at date (30-day paid listing)
+    const { data: paidExpiredJobs, error: paidError } = dryRun
+      ? await supabaseAdmin
+          .from("jobs")
+          .select("id, title, expires_at, employer_id")
+          .eq("status", "approved")
+          .neq("posted_by_admin", true)
+          .lt("expires_at", now)
+      : await supabaseAdmin
+          .from("jobs")
+          .update({
+            status: "expired",
+            expired_evidence: "Auto-expired: paid listing past expires_at",
+          })
+          .eq("status", "approved")
+          .neq("posted_by_admin", true)
+          .lt("expires_at", now)
+          .select("id");
+
+    if (paidError) {
+      console.error("[JobCleanup] Error in paid job expiry:", paidError);
+      stats.errors++;
+    } else {
+      stats.paidExpired = paidExpiredJobs?.length || 0;
+      if (stats.paidExpired > 0) {
+        console.log(
+          `[JobCleanup] ${dryRun ? "Would expire" : "Expired"} ${stats.paidExpired} paid jobs past their expires_at date`
+        );
+      }
+    }
+
+    // Step 0b: Auto-expire all remaining jobs older than MAX_JOB_AGE_DAYS (60 days)
+    const ageCutoff = new Date(
+      Date.now() - MAX_JOB_AGE_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
+
+    const { data: agedOutJobs, error: ageError } = dryRun
+      ? await supabaseAdmin
+          .from("jobs")
+          .select("id, title, created_at, application_url, employer_id")
+          .eq("status", "approved")
+          .lt("created_at", ageCutoff)
+      : await supabaseAdmin
+          .from("jobs")
+          .update({
+            status: "expired",
+            expired_evidence: `Auto-expired: older than ${MAX_JOB_AGE_DAYS} days`,
+          })
+          .eq("status", "approved")
+          .lt("created_at", ageCutoff)
+          .select("id");
+
+    if (ageError) {
+      console.error("[JobCleanup] Error in age-based expiry:", ageError);
+      stats.errors++;
+    } else {
+      stats.ageExpired = agedOutJobs?.length || 0;
+      if (stats.ageExpired > 0) {
+        console.log(
+          `[JobCleanup] ${dryRun ? "Would expire" : "Expired"} ${stats.ageExpired} jobs older than ${MAX_JOB_AGE_DAYS} days`
+        );
+      }
+    }
+
+    if (dryRun) {
+      const duration = Date.now() - startTime;
+      return NextResponse.json({
+        message: "DRY RUN — no changes made",
+        stats,
+        ageExpiry: {
+          cutoffDate: ageCutoff,
+          jobsThatWouldExpire: stats.ageExpired,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          jobs: agedOutJobs?.map((j: any) => ({
+            id: j.id,
+            title: j.title,
+            ageDays: Math.floor(
+              (Date.now() - new Date(j.created_at).getTime()) /
+                (1000 * 60 * 60 * 24)
+            ),
+            hasUrl: !!j.application_url,
+            employerId: j.employer_id,
+          })),
+        },
+        timestamp: now,
+        duration,
+      });
+    }
 
     // Step 1: Get approved jobs that need URL checking
     const { data: jobs, error: fetchError } = await supabaseAdmin

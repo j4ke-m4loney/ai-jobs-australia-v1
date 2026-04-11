@@ -17,12 +17,28 @@ export const EXPIRED_PATTERNS: ExpiredPattern[] = [
   { phrase: 'this posting is no longer active', confidence: 'high', category: 'expired' },
   { phrase: 'applications are closed', confidence: 'high', category: 'closed' },
 
+  // High confidence - ATS-specific patterns
+  { phrase: 'this role is no longer available', confidence: 'high', category: 'removed' },
+  { phrase: 'this job has expired', confidence: 'high', category: 'expired' },
+  { phrase: 'this requisition is no longer active', confidence: 'high', category: 'expired' },
+  { phrase: 'sorry, this position has been closed', confidence: 'high', category: 'closed' },
+  { phrase: 'this job listing has expired', confidence: 'high', category: 'expired' },
+  { phrase: 'this vacancy has been filled', confidence: 'high', category: 'filled' },
+  { phrase: 'the application period for this job has ended', confidence: 'high', category: 'expired' },
+  { phrase: 'this job ad has expired', confidence: 'high', category: 'expired' },
+  { phrase: 'this position is no longer open', confidence: 'high', category: 'closed' },
+  { phrase: 'this job is no longer active', confidence: 'high', category: 'expired' },
+  { phrase: 'this opportunity is no longer available', confidence: 'high', category: 'removed' },
+
   // Medium confidence
   { phrase: 'position filled', confidence: 'medium', category: 'filled' },
   { phrase: 'applications closed', confidence: 'medium', category: 'closed' },
   { phrase: 'not currently hiring', confidence: 'medium', category: 'closed' },
   { phrase: 'no longer hiring', confidence: 'medium', category: 'closed' },
   { phrase: 'job posting closed', confidence: 'medium', category: 'closed' },
+  { phrase: 'explore other opportunities', confidence: 'medium', category: 'removed' },
+  { phrase: 'view other open positions', confidence: 'medium', category: 'removed' },
+  { phrase: 'this job may have been removed', confidence: 'medium', category: 'removed' },
 
   // Low confidence - may need review
   { phrase: 'temporarily unavailable', confidence: 'low', category: 'removed' },

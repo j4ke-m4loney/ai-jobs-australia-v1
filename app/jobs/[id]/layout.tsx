@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 // Server-side Supabase client for metadata generation
@@ -27,10 +27,6 @@ const getJobById = cache(async (id: string) => {
   return data;
 });
 
-function isExpired(job: { expires_at: string }): boolean {
-  return new Date(job.expires_at) < new Date();
-}
-
 interface Props {
   params: Promise<{ id: string }>;
   children: React.ReactNode;
@@ -43,11 +39,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!job || !job.companies) {
       notFound();
-    }
-
-    // Redirect expired jobs to /jobs instead of 404ing
-    if (isExpired(job)) {
-      permanentRedirect("/jobs");
     }
 
     const companyName = job.companies.name || "Company";
@@ -137,7 +128,7 @@ function parseLocations(location: string): Array<{ locality: string; region: str
 async function JobStructuredData({ id }: { id: string }) {
   const job = await getJobById(id);
 
-  if (!job || !job.companies || isExpired(job)) return null;
+  if (!job || !job.companies) return null;
 
   // Strip HTML for description
   const cleanDescription = job.description
@@ -235,11 +226,6 @@ export default async function JobLayout({ children, params }: Props) {
 
   if (!job) {
     notFound();
-  }
-
-  // Redirect expired jobs to /jobs instead of 404ing (tells Google to stop crawling)
-  if (isExpired(job)) {
-    permanentRedirect("/jobs");
   }
 
   return (

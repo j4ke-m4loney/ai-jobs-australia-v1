@@ -2,12 +2,69 @@ import * as cheerio from 'cheerio';
 import { detectExpiredIndicators, HTTP_ERROR_CODES } from './expired-patterns';
 
 export interface CheckResult {
-  method: 'http' | 'html_scan' | 'error';
+  method: 'http' | 'html_scan' | 'redirect' | 'error';
   decision: 'keep_active' | 'mark_expired' | 'needs_review';
   statusCode?: number;
   evidence?: string[];
   errorMessage?: string;
   responseTimeMs: number;
+}
+
+/**
+ * Detect if a URL was redirected to a generic careers/jobs page,
+ * which is how most ATS platforms handle expired job listings.
+ * Returns true if the redirect indicates the specific job is gone.
+ */
+function isGenericRedirect(originalUrl: string, finalUrl: string): boolean {
+  if (!finalUrl || originalUrl === finalUrl) return false;
+
+  try {
+    const original = new URL(originalUrl);
+    const final = new URL(finalUrl);
+
+    // Different domain entirely — likely a redirect to a parent company page
+    if (original.hostname !== final.hostname) return true;
+
+    const originalPath = original.pathname.replace(/\/$/, '');
+    const finalPath = final.pathname.replace(/\/$/, '');
+
+    // Same path — not a redirect away from the job
+    if (originalPath === finalPath) return false;
+
+    // Check if the final URL is a shortened/parent version of the original
+    // e.g. /jobs/12345 → /jobs, /careers/role/abc → /careers
+    const originalSegments = originalPath.split('/').filter(Boolean);
+    const finalSegments = finalPath.split('/').filter(Boolean);
+
+    // Final URL has fewer path segments — likely redirected to a listing page
+    if (finalSegments.length < originalSegments.length) {
+      // Common generic career page patterns
+      const genericPaths = [
+        '/jobs', '/careers', '/opportunities', '/positions',
+        '/search', '/openings', '/vacancies',
+      ];
+      const finalLower = finalPath.toLowerCase();
+      if (genericPaths.some(p => finalLower === p || finalLower.startsWith(p + '/'))) {
+        return true;
+      }
+    }
+
+    // ATS-specific redirect patterns
+    const finalLower = finalPath.toLowerCase();
+
+    // Workday: redirects to myworkdayjobs search page
+    if (final.hostname.includes('myworkday') && finalSegments.length <= 3) return true;
+
+    // Lever: /jobs/uuid → /jobs or /
+    if (final.hostname.includes('lever.co') && (finalLower === '/jobs' || finalLower === '')) return true;
+
+    // SmartRecruiters: /jobs/uuid → /jobs or company page
+    if (final.hostname.includes('smartrecruiters') && finalSegments.length < originalSegments.length) return true;
+
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 export async function checkJobUrl(
@@ -79,7 +136,18 @@ export async function checkJobUrl(
       };
     }
 
-    // Step 2: If status is OK and HTML scan requested, fetch content
+    // Step 2: Check for redirects to generic careers pages (common ATS behaviour)
+    if (response.ok && response.url && isGenericRedirect(url, response.url)) {
+      return {
+        method: 'redirect',
+        decision: 'mark_expired',
+        statusCode: response.status,
+        evidence: [`Redirected to generic page: ${response.url}`],
+        responseTimeMs: Date.now() - startTime,
+      };
+    }
+
+    // Step 3: If status is OK and HTML scan requested, fetch content
     if (attemptHtmlScan && response.ok) {
       // Fetch HTML content if not already fetched
       let html: string;
