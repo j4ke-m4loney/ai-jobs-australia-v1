@@ -102,9 +102,9 @@ export async function getAdminStats() {
       supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'succeeded').eq('pricing_tier', 'featured'),
       supabase.from('payments').select('*', { count: 'exact', head: true }).eq('status', 'succeeded').eq('pricing_tier', 'standard'),
       supabase.from('companies').select('*', { count: 'exact', head: true }),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'approved').gte('created_at', firstOfMonth),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'approved').gte('created_at', firstOfLastMonth).lt('created_at', firstOfMonth),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'approved').gte('created_at', startOfTodayUTC),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', firstOfMonth),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', firstOfLastMonth).lt('created_at', firstOfMonth),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', startOfTodayUTC),
     ]);
 
     const stats = {
