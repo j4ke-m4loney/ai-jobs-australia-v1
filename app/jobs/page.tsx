@@ -24,6 +24,7 @@ import {
   SlidersHorizontal,
   X,
   Heart,
+  Check,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -1796,37 +1797,38 @@ function JobsContent() {
                           setSortBy("relevance");
                           setShowSortDropdown(false);
                         }}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors ${
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2 ${
                           sortBy === "relevance" ? "bg-muted font-medium" : ""
                         }`}
                       >
+                        <Check className={`w-3.5 h-3.5 ${sortBy === "relevance" ? "opacity-100" : "opacity-0"}`} />
                         Relevance
                       </button>
                       <button
                         onClick={() => {
-                          if (sortBy === "date") {
-                            // Toggle between newest and oldest
-                            setDateSort(
-                              dateSort === "newest" ? "oldest" : "newest"
-                            );
-                          } else {
-                            setSortBy("date");
-                            setDateSort("newest");
-                          }
+                          setSortBy("date");
+                          setDateSort("newest");
                           setShowSortDropdown(false);
                         }}
-                        className={`w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors ${
-                          sortBy === "date" ? "bg-muted font-medium" : ""
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2 ${
+                          sortBy === "date" && dateSort === "newest" ? "bg-muted font-medium" : ""
                         }`}
                       >
-                        Date{" "}
-                        {sortBy === "date"
-                          ? `(${
-                              dateSort === "newest"
-                                ? "Newest first"
-                                : "Oldest first"
-                            })`
-                          : ""}
+                        <Check className={`w-3.5 h-3.5 ${sortBy === "date" && dateSort === "newest" ? "opacity-100" : "opacity-0"}`} />
+                        Date (Newest first)
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortBy("date");
+                          setDateSort("oldest");
+                          setShowSortDropdown(false);
+                        }}
+                        className={`w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2 ${
+                          sortBy === "date" && dateSort === "oldest" ? "bg-muted font-medium" : ""
+                        }`}
+                      >
+                        <Check className={`w-3.5 h-3.5 ${sortBy === "date" && dateSort === "oldest" ? "opacity-100" : "opacity-0"}`} />
+                        Date (Oldest first)
                       </button>
                     </div>
                   </div>
