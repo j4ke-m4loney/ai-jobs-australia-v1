@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { Metadata } from 'next';
 import { permanentRedirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
@@ -51,15 +52,24 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const { slug } = await params;
   const categoryName = categorySlugToName(slug);
 
+  if (!(VALID_CATEGORY_SLUGS as readonly string[]).includes(slug)) {
+    return {};
+  }
+
+  const jobs = await getCategoryJobs(slug);
+  const count = jobs.length;
+
   return {
-    title: `${categoryName} Jobs in Australia | AI Jobs Australia`,
-    description: `Find the latest ${categoryName} jobs in Australia. Browse AI and machine learning opportunities from top companies. Apply for ${categoryName} positions today.`,
+    title: count > 0
+      ? `${count} ${categoryName} Jobs in Australia | AI Jobs Australia`
+      : `${categoryName} Jobs in Australia | AI Jobs Australia`,
+    description: `Browse ${count > 0 ? count + ' ' : ''}${categoryName} jobs in Australia. Find the latest ${categoryName} opportunities from top companies. New ${categoryName} positions added daily.`,
     alternates: {
       canonical: `https://www.aijobsaustralia.com.au/jobs/category/${slug}`,
     },
     openGraph: {
-      title: `${categoryName} Jobs in Australia`,
-      description: `Browse ${categoryName} opportunities in AI and machine learning`,
+      title: count > 0 ? `${count} ${categoryName} Jobs in Australia` : `${categoryName} Jobs in Australia`,
+      description: `Browse ${categoryName} opportunities in AI and Machine Learning`,
       type: 'website',
     },
   };
@@ -79,7 +89,7 @@ function getRelatedCategories(categorySlug: string): string[] {
   return relatedMap[categorySlug] || ['ai-engineer', 'machine-learning-engineer', 'data-scientist'];
 }
 
-async function getCategoryJobs(categorySlug: string, targetCount: number = 9): Promise<Job[]> {
+const getCategoryJobs = cache(async function getCategoryJobs(categorySlug: string, targetCount: number = 9): Promise<Job[]> {
   // Check for required env vars - return empty array if missing (allows build to proceed)
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.warn('[getCategoryJobs] Missing Supabase env vars, returning empty array');
@@ -159,7 +169,7 @@ async function getCategoryJobs(categorySlug: string, targetCount: number = 9): P
   // Combine and return exactly targetCount jobs
   const allJobs = [...primaryJobs, ...relatedJobs];
   return allJobs.slice(0, targetCount);
-}
+});
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;

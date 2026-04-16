@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
@@ -87,21 +88,26 @@ export async function generateMetadata({ params }: LocationPageProps): Promise<M
   const resolvedCity = LEGACY_SLUG_REDIRECTS[city] || city;
   const cityName = locationSlugToName(resolvedCity);
 
+  const jobs = await getLocationJobs(resolvedCity);
+  const count = jobs.length;
+
   return {
-    title: `AI Jobs in ${cityName} | AI Jobs Australia`,
-    description: `Find the latest AI and machine learning jobs in ${cityName}, Australia. Browse ${cityName} opportunities from top companies. Apply for AI, ML, and data science positions in ${cityName} today.`,
+    title: count > 0
+      ? `${count} AI Jobs in ${cityName} | AI Jobs Australia`
+      : `AI Jobs in ${cityName} | AI Jobs Australia`,
+    description: `Browse ${count > 0 ? count + ' ' : ''}AI and Machine Learning jobs in ${cityName}, Australia. Find the latest AI, ML, and Data Science opportunities from top companies in ${cityName}. New positions added daily.`,
     alternates: {
       canonical: `https://www.aijobsaustralia.com.au/jobs/location/${resolvedCity}`,
     },
     openGraph: {
-      title: `AI Jobs in ${cityName}`,
-      description: `Browse AI and machine learning opportunities in ${cityName}`,
+      title: count > 0 ? `${count} AI Jobs in ${cityName}` : `AI Jobs in ${cityName}`,
+      description: `Browse AI and Machine Learning opportunities in ${cityName}`,
       type: 'website',
     },
   };
 }
 
-async function getLocationJobs(citySlug: string): Promise<Job[]> {
+const getLocationJobs = cache(async function getLocationJobs(citySlug: string): Promise<Job[]> {
   // Check for required env vars - return empty array if missing (allows build to proceed)
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.warn('[getLocationJobs] Missing Supabase env vars, returning empty array');
@@ -172,7 +178,7 @@ async function getLocationJobs(citySlug: string): Promise<Job[]> {
     .map(transformJob);
 
   return locationJobs;
-}
+});
 
 export default async function LocationPage({ params }: LocationPageProps) {
   const { city } = await params;
