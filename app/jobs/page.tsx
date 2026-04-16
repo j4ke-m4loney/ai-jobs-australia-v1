@@ -272,6 +272,8 @@ function JobsContent() {
   const shouldSyncFromUrl = useRef(true);
   const initialized = useRef(false);
   const previousSearchParamsRef = useRef<string>("");
+  // Broad match flag — set from ?match=broad URL param (used by /jobs/search/[slug] redirect)
+  const broadMatchRef = useRef(false);
 
   // Refs for stable filter effect - prevents unnecessary re-fetches
   const previousFilterDepsRef = useRef<string>("");
@@ -468,9 +470,13 @@ function JobsContent() {
         // Only show approved jobs in public listing
         query = query.eq("status", "approved");
 
-        // Apply filters with title search (working solution)
+        // Apply filters with title search (broad match includes description)
         if (effectiveSearchTerm) {
-          query = query.ilike("title", `%${effectiveSearchTerm}%`);
+          if (broadMatchRef.current) {
+            query = query.or(`title.ilike.%${effectiveSearchTerm}%,description.ilike.%${effectiveSearchTerm}%`);
+          } else {
+            query = query.ilike("title", `%${effectiveSearchTerm}%`);
+          }
         }
         if (effectiveLocationTerm && effectiveLocationTerm !== "all") {
           if (effectiveLocationTerm === "remote") {
@@ -817,9 +823,9 @@ function JobsContent() {
         }
 
         // Update total jobs count after merging company search results
-        // Only override the database count when we have a search term (company search adds extra results)
-        if (effectiveSearchTerm && effectiveSearchTerm.trim()) {
-          setTotalJobs(jobsData.length);
+        // Only override the database count when company search actually added extra results
+        if (effectiveSearchTerm && effectiveSearchTerm.trim() && jobsData.length > (data?.length ?? 0)) {
+          setTotalJobs((totalCount ?? 0) + (jobsData.length - (data?.length ?? 0)));
         }
 
         // Track search event with PostHog
@@ -893,8 +899,9 @@ function JobsContent() {
   }, []); // Only run once after initial mount to prevent hydration mismatch
 
   // Auto-select first job when jobs are loaded (desktop only)
+  // Skip when arriving from search landing pages — let users click to explore
   useEffect(() => {
-    if (jobs.length > 0 && !selectedJob && !isMobile) {
+    if (jobs.length > 0 && !selectedJob && !isMobile && !broadMatchRef.current) {
       setSelectedJob(jobs[0]);
     }
   }, [jobs, selectedJob, isMobile]);
@@ -922,6 +929,7 @@ function JobsContent() {
       const urlSearch = searchParams.get("search") || "";
       const urlLocation = searchParams.get("location") || "all";
       const urlCategory = searchParams.get("category") || "";
+      broadMatchRef.current = searchParams.get("match") === "broad";
 
       setSearchTerm(urlSearch);
       setSelectedState(urlLocation);
@@ -987,6 +995,20 @@ function JobsContent() {
       }
     }
   }, [filterDeps, user, loading]);
+
+  // Clean up internal-only URL params once jobs have loaded
+  const urlCleanedRef = useRef(false);
+  useEffect(() => {
+    if (initialized.current && !jobsLoading && !urlCleanedRef.current && jobs.length > 0) {
+      urlCleanedRef.current = true;
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("match")) {
+        params.delete("match");
+        const cleanUrl = params.toString() ? `/jobs?${params}` : "/jobs";
+        window.history.replaceState({}, "", cleanUrl);
+      }
+    }
+  }, [jobsLoading, jobs.length]);
 
   // Reset to page 1 when filters change
   useEffect(() => {

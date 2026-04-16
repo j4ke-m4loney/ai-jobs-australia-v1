@@ -5,6 +5,7 @@ import { join } from 'path'
 import { getAllJobCategories } from '@/lib/categories/generator'
 import { getAllJobLocations } from '@/lib/locations/generator'
 import { getAllCategoryLocationCombos } from '@/lib/categories/cross-generator'
+import { getAllSearchKeywords } from '@/lib/search/generator'
 
 const BASE_URL = 'https://www.aijobsaustralia.com.au'
 
@@ -198,5 +199,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...jobPages, ...companyPages, ...blogPages]
+  // Search keyword pages (SEO landing pages for job title searches)
+  const searchKeywords = await getAllSearchKeywords()
+  const searchPages: MetadataRoute.Sitemap = searchKeywords.map((kw) => ({
+    url: `${BASE_URL}/jobs/search/${kw.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.85,
+  }))
+
+  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...searchPages, ...jobPages, ...companyPages, ...blogPages]
 }
