@@ -43,6 +43,7 @@ interface AdminStats {
   jobs_this_month: number;
   jobs_last_month: number;
   jobs_today: number;
+  jobs_this_week: number;
 }
 
 export default function AdminDashboard() {
@@ -81,6 +82,13 @@ export default function AdminDashboard() {
           icon: CalendarClock,
           color: "text-emerald-600",
           bgColor: "bg-emerald-100",
+        },
+        {
+          title: "Jobs Added This Week",
+          value: stats?.jobs_this_week || 0,
+          icon: CalendarDays,
+          color: "text-violet-600",
+          bgColor: "bg-violet-100",
         },
         {
           title: `Jobs Added (${new Date().toLocaleString('default', { month: 'long' })})`,

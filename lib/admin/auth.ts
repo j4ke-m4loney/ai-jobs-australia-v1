@@ -77,6 +77,12 @@ export async function getAdminStats() {
     const melbourneOffsetMs = now.getTime() - melbourneNow.getTime();
     const startOfTodayUTC = new Date(startOfTodayMelbourne.getTime() + melbourneOffsetMs).toISOString();
 
+    // Start of this week (Monday) in Melbourne time
+    const dayOfWeek = melbourneNow.getDay(); // 0=Sun, 1=Mon, ...
+    const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const startOfWeekMelbourne = new Date(melbourneNow.getFullYear(), melbourneNow.getMonth(), melbourneNow.getDate() - daysSinceMonday);
+    const startOfWeekUTC = new Date(startOfWeekMelbourne.getTime() + melbourneOffsetMs).toISOString();
+
     const [
       totalResult,
       pendingResult,
@@ -91,6 +97,7 @@ export async function getAdminStats() {
       jobsThisMonthResult,
       jobsLastMonthResult,
       jobsTodayResult,
+      jobsThisWeekResult,
     ] = await Promise.all([
       supabase.from('jobs').select('*', { count: 'exact', head: true }),
       supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
@@ -105,6 +112,7 @@ export async function getAdminStats() {
       supabase.from('jobs').select('*', { count: 'exact', head: true }).in('status', ['approved', 'expired']).gte('created_at', firstOfMonth),
       supabase.from('jobs').select('*', { count: 'exact', head: true }).in('status', ['approved', 'expired']).gte('created_at', firstOfLastMonth).lt('created_at', firstOfMonth),
       supabase.from('jobs').select('*', { count: 'exact', head: true }).in('status', ['approved', 'expired']).gte('created_at', startOfTodayUTC),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).in('status', ['approved', 'expired']).gte('created_at', startOfWeekUTC),
     ]);
 
     const stats = {
@@ -121,6 +129,7 @@ export async function getAdminStats() {
       jobs_this_month: jobsThisMonthResult.count || 0,
       jobs_last_month: jobsLastMonthResult.count || 0,
       jobs_today: jobsTodayResult.count || 0,
+      jobs_this_week: jobsThisWeekResult.count || 0,
     };
 
     return stats;
