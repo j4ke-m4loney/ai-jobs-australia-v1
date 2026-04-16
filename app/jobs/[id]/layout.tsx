@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 
 // Server-side Supabase client for metadata generation
@@ -9,7 +10,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Cached per-request — deduplicates across generateMetadata, JobLayout, and JobStructuredData
-// Fetches approved jobs regardless of expiry so we can distinguish "expired" from "not found"
+// Fetches job regardless of status so we can distinguish "expired" from "not found"
 const getJobById = cache(async (id: string) => {
   const { data } = await supabase
     .from("jobs")
@@ -22,7 +23,6 @@ const getJobById = cache(async (id: string) => {
       )
     `)
     .eq("id", id)
-    .eq("status", "approved")
     .single();
   return data;
 });
@@ -39,6 +39,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     if (!job || !job.companies) {
       notFound();
+    }
+
+    // Expired job — return noindex so Google de-indexes the page
+    if (job.status !== "approved") {
+      return {
+        title: `This Role Has Expired | AI Jobs Australia`,
+        robots: { index: false, follow: true },
+      };
     }
 
     const companyName = job.companies.name || "Company";
@@ -218,14 +226,59 @@ async function JobStructuredData({ id }: { id: string }) {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ExpiredJobPage({ job }: { job: any }) {
+  const companyName = job.companies?.name;
+
+  return (
+    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4">
+      <div className="text-center max-w-md">
+        <h1 className="text-2xl font-bold text-foreground mb-2">
+          This role has expired
+        </h1>
+        <p className="text-muted-foreground mb-1">
+          <span className="font-medium">{job.title}</span>
+          {companyName && (
+            <> at <span className="font-medium">{companyName}</span></>
+          )}
+        </p>
+        <p className="text-muted-foreground mb-6">
+          This position is no longer accepting applications.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            href="/jobs"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Browse All Jobs
+          </Link>
+          {job.category && (
+            <Link
+              href={`/jobs/category/${job.category}`}
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-6 py-2.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+            >
+              Similar Roles
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default async function JobLayout({ children, params }: Props) {
   const { id } = await params;
 
-  // Check if job exists and is approved — return 404 if not
   const job = await getJobById(id);
 
+  // Job doesn't exist at all — genuine 404
   if (!job) {
     notFound();
+  }
+
+  // Job exists but is expired — show expired page with noindex (set in generateMetadata)
+  if (job.status !== "approved") {
+    return <ExpiredJobPage job={job} />;
   }
 
   return (
