@@ -396,6 +396,225 @@ export const AU_SUBURBS: readonly AuSuburb[] = [
   { slug: 'parap', state: 'nt', displayName: 'Parap' },
   { slug: 'alice-springs', state: 'nt', displayName: 'Alice Springs' },
   { slug: 'katherine', state: 'nt', displayName: 'Katherine' },
+
+  // ════════════════════════════════════════════════════════════════
+  // Local Government Areas (LGAs) / Council Areas
+  // ════════════════════════════════════════════════════════════════
+  // Councils are a distinct search intent from suburbs — people look
+  // for jobs in "City of Yarra" or "Sutherland Shire" as a geographic
+  // grouping, not the individual suburbs within them. Listed here as
+  // additional entries so /jobs/search/<keyword>-city-of-yarra-vic
+  // resolves and redirects to the state search.
+  // ────────────────────────────────────────────────────────────────
+
+  // ────────────────────────────────────────────────────────────────
+  // Victoria — Metro Melbourne LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'city-of-melbourne', state: 'vic', displayName: 'City of Melbourne' },
+  { slug: 'city-of-yarra', state: 'vic', displayName: 'City of Yarra' },
+  { slug: 'city-of-port-phillip', state: 'vic', displayName: 'City of Port Phillip' },
+  { slug: 'city-of-stonnington', state: 'vic', displayName: 'City of Stonnington' },
+  { slug: 'city-of-glen-eira', state: 'vic', displayName: 'City of Glen Eira' },
+  { slug: 'city-of-bayside', state: 'vic', displayName: 'City of Bayside' },
+  { slug: 'city-of-kingston', state: 'vic', displayName: 'City of Kingston' },
+  { slug: 'city-of-boroondara', state: 'vic', displayName: 'City of Boroondara' },
+  { slug: 'city-of-whitehorse', state: 'vic', displayName: 'City of Whitehorse' },
+  { slug: 'city-of-monash', state: 'vic', displayName: 'City of Monash' },
+  { slug: 'city-of-knox', state: 'vic', displayName: 'City of Knox' },
+  { slug: 'city-of-maroondah', state: 'vic', displayName: 'City of Maroondah' },
+  { slug: 'city-of-manningham', state: 'vic', displayName: 'City of Manningham' },
+  { slug: 'city-of-banyule', state: 'vic', displayName: 'City of Banyule' },
+  { slug: 'city-of-darebin', state: 'vic', displayName: 'City of Darebin' },
+  { slug: 'city-of-merri-bek', state: 'vic', displayName: 'City of Merri-bek' },
+  { slug: 'city-of-moonee-valley', state: 'vic', displayName: 'City of Moonee Valley' },
+  { slug: 'city-of-hume', state: 'vic', displayName: 'City of Hume' },
+  { slug: 'city-of-whittlesea', state: 'vic', displayName: 'City of Whittlesea' },
+  { slug: 'shire-of-nillumbik', state: 'vic', displayName: 'Shire of Nillumbik' },
+  { slug: 'yarra-ranges-shire', state: 'vic', displayName: 'Yarra Ranges Shire' },
+  { slug: 'city-of-casey', state: 'vic', displayName: 'City of Casey' },
+  { slug: 'cardinia-shire', state: 'vic', displayName: 'Cardinia Shire' },
+  { slug: 'city-of-greater-dandenong', state: 'vic', displayName: 'City of Greater Dandenong' },
+  { slug: 'city-of-frankston', state: 'vic', displayName: 'City of Frankston' },
+  { slug: 'mornington-peninsula-shire', state: 'vic', displayName: 'Mornington Peninsula Shire' },
+  { slug: 'city-of-brimbank', state: 'vic', displayName: 'City of Brimbank' },
+  { slug: 'city-of-hobsons-bay', state: 'vic', displayName: 'City of Hobsons Bay' },
+  { slug: 'city-of-maribyrnong', state: 'vic', displayName: 'City of Maribyrnong' },
+  { slug: 'city-of-melton', state: 'vic', displayName: 'City of Melton' },
+  { slug: 'city-of-wyndham', state: 'vic', displayName: 'City of Wyndham' },
+
+  // ────────────────────────────────────────────────────────────────
+  // Victoria — Regional LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'city-of-greater-geelong', state: 'vic', displayName: 'City of Greater Geelong' },
+  { slug: 'city-of-ballarat', state: 'vic', displayName: 'City of Ballarat' },
+  { slug: 'city-of-greater-bendigo', state: 'vic', displayName: 'City of Greater Bendigo' },
+  { slug: 'city-of-greater-shepparton', state: 'vic', displayName: 'City of Greater Shepparton' },
+  { slug: 'city-of-warrnambool', state: 'vic', displayName: 'City of Warrnambool' },
+  { slug: 'latrobe-city', state: 'vic', displayName: 'Latrobe City' },
+  { slug: 'city-of-wodonga', state: 'vic', displayName: 'City of Wodonga' },
+  { slug: 'mildura-rural-city', state: 'vic', displayName: 'Mildura Rural City' },
+  { slug: 'surf-coast-shire', state: 'vic', displayName: 'Surf Coast Shire' },
+
+  // ────────────────────────────────────────────────────────────────
+  // New South Wales — Sydney Metro LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'city-of-sydney', state: 'nsw', displayName: 'City of Sydney' },
+  { slug: 'inner-west-council', state: 'nsw', displayName: 'Inner West Council' },
+  { slug: 'city-of-canada-bay', state: 'nsw', displayName: 'City of Canada Bay' },
+  { slug: 'waverley-council', state: 'nsw', displayName: 'Waverley Council' },
+  { slug: 'woollahra-council', state: 'nsw', displayName: 'Woollahra Council' },
+  { slug: 'randwick-city', state: 'nsw', displayName: 'Randwick City' },
+  { slug: 'bayside-council', state: 'nsw', displayName: 'Bayside Council' },
+  { slug: 'georges-river-council', state: 'nsw', displayName: 'Georges River Council' },
+  { slug: 'sutherland-shire', state: 'nsw', displayName: 'Sutherland Shire' },
+  { slug: 'city-of-canterbury-bankstown', state: 'nsw', displayName: 'City of Canterbury-Bankstown' },
+  { slug: 'cumberland-city', state: 'nsw', displayName: 'Cumberland City' },
+  { slug: 'city-of-parramatta', state: 'nsw', displayName: 'City of Parramatta' },
+  { slug: 'the-hills-shire', state: 'nsw', displayName: 'The Hills Shire' },
+  { slug: 'hornsby-shire', state: 'nsw', displayName: 'Hornsby Shire' },
+  { slug: 'ku-ring-gai-council', state: 'nsw', displayName: 'Ku-ring-gai Council' },
+  { slug: 'city-of-willoughby', state: 'nsw', displayName: 'City of Willoughby' },
+  { slug: 'north-sydney-council', state: 'nsw', displayName: 'North Sydney Council' },
+  { slug: 'mosman-council', state: 'nsw', displayName: 'Mosman Council' },
+  { slug: 'northern-beaches-council', state: 'nsw', displayName: 'Northern Beaches Council' },
+  { slug: 'lane-cove-council', state: 'nsw', displayName: 'Lane Cove Council' },
+  { slug: 'city-of-ryde', state: 'nsw', displayName: 'City of Ryde' },
+  { slug: 'strathfield-council', state: 'nsw', displayName: 'Strathfield Council' },
+  { slug: 'burwood-council', state: 'nsw', displayName: 'Burwood Council' },
+  { slug: 'campbelltown-city', state: 'nsw', displayName: 'Campbelltown City' },
+  { slug: 'camden-council', state: 'nsw', displayName: 'Camden Council' },
+  { slug: 'city-of-liverpool', state: 'nsw', displayName: 'City of Liverpool' },
+  { slug: 'city-of-fairfield', state: 'nsw', displayName: 'City of Fairfield' },
+  { slug: 'city-of-blacktown', state: 'nsw', displayName: 'City of Blacktown' },
+  { slug: 'city-of-penrith', state: 'nsw', displayName: 'City of Penrith' },
+  { slug: 'hawkesbury-city', state: 'nsw', displayName: 'Hawkesbury City' },
+  { slug: 'blue-mountains-city', state: 'nsw', displayName: 'Blue Mountains City' },
+  { slug: 'city-of-hunters-hill', state: 'nsw', displayName: 'City of Hunters Hill' },
+
+  // ────────────────────────────────────────────────────────────────
+  // New South Wales — Regional LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'city-of-newcastle', state: 'nsw', displayName: 'City of Newcastle' },
+  { slug: 'city-of-lake-macquarie', state: 'nsw', displayName: 'City of Lake Macquarie' },
+  { slug: 'central-coast-council', state: 'nsw', displayName: 'Central Coast Council' },
+  { slug: 'city-of-wollongong', state: 'nsw', displayName: 'City of Wollongong' },
+  { slug: 'shellharbour-city', state: 'nsw', displayName: 'Shellharbour City' },
+  { slug: 'kiama-municipal', state: 'nsw', displayName: 'Kiama Municipal' },
+  { slug: 'shoalhaven-city', state: 'nsw', displayName: 'Shoalhaven City' },
+  { slug: 'tweed-shire', state: 'nsw', displayName: 'Tweed Shire' },
+  { slug: 'byron-shire', state: 'nsw', displayName: 'Byron Shire' },
+  { slug: 'ballina-shire', state: 'nsw', displayName: 'Ballina Shire' },
+  { slug: 'port-macquarie-hastings', state: 'nsw', displayName: 'Port Macquarie-Hastings' },
+  { slug: 'coffs-harbour-city', state: 'nsw', displayName: 'Coffs Harbour City' },
+  { slug: 'city-of-albury', state: 'nsw', displayName: 'City of Albury' },
+  { slug: 'city-of-wagga-wagga', state: 'nsw', displayName: 'City of Wagga Wagga' },
+
+  // ────────────────────────────────────────────────────────────────
+  // Queensland — Southeast QLD LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'brisbane-city', state: 'qld', displayName: 'Brisbane City' },
+  { slug: 'city-of-gold-coast', state: 'qld', displayName: 'City of Gold Coast' },
+  { slug: 'city-of-logan', state: 'qld', displayName: 'City of Logan' },
+  { slug: 'city-of-ipswich', state: 'qld', displayName: 'City of Ipswich' },
+  { slug: 'moreton-bay-region', state: 'qld', displayName: 'Moreton Bay Region' },
+  { slug: 'redland-city', state: 'qld', displayName: 'Redland City' },
+  { slug: 'sunshine-coast-region', state: 'qld', displayName: 'Sunshine Coast Region' },
+  { slug: 'noosa-shire', state: 'qld', displayName: 'Noosa Shire' },
+  { slug: 'scenic-rim-regional', state: 'qld', displayName: 'Scenic Rim Regional' },
+  { slug: 'lockyer-valley-regional', state: 'qld', displayName: 'Lockyer Valley Regional' },
+  { slug: 'somerset-regional', state: 'qld', displayName: 'Somerset Regional' },
+
+  // ────────────────────────────────────────────────────────────────
+  // Queensland — Regional LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'toowoomba-regional', state: 'qld', displayName: 'Toowoomba Regional' },
+  { slug: 'cairns-regional', state: 'qld', displayName: 'Cairns Regional' },
+  { slug: 'townsville-city', state: 'qld', displayName: 'Townsville City' },
+  { slug: 'mackay-regional', state: 'qld', displayName: 'Mackay Regional' },
+  { slug: 'rockhampton-regional', state: 'qld', displayName: 'Rockhampton Regional' },
+  { slug: 'gladstone-regional', state: 'qld', displayName: 'Gladstone Regional' },
+  { slug: 'bundaberg-regional', state: 'qld', displayName: 'Bundaberg Regional' },
+  { slug: 'fraser-coast-regional', state: 'qld', displayName: 'Fraser Coast Regional' },
+  { slug: 'livingstone-shire', state: 'qld', displayName: 'Livingstone Shire' },
+  { slug: 'isaac-regional', state: 'qld', displayName: 'Isaac Regional' },
+  { slug: 'central-highlands-regional', state: 'qld', displayName: 'Central Highlands Regional' },
+  { slug: 'whitsunday-regional', state: 'qld', displayName: 'Whitsunday Regional' },
+  { slug: 'tablelands-regional', state: 'qld', displayName: 'Tablelands Regional' },
+  { slug: 'douglas-shire', state: 'qld', displayName: 'Douglas Shire' },
+
+  // ────────────────────────────────────────────────────────────────
+  // Western Australia — Perth Metro LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'city-of-perth', state: 'wa', displayName: 'City of Perth' },
+  { slug: 'city-of-fremantle', state: 'wa', displayName: 'City of Fremantle' },
+  { slug: 'city-of-vincent', state: 'wa', displayName: 'City of Vincent' },
+  { slug: 'city-of-subiaco', state: 'wa', displayName: 'City of Subiaco' },
+  { slug: 'town-of-victoria-park', state: 'wa', displayName: 'Town of Victoria Park' },
+  { slug: 'city-of-stirling', state: 'wa', displayName: 'City of Stirling' },
+  { slug: 'town-of-cambridge', state: 'wa', displayName: 'Town of Cambridge' },
+  { slug: 'city-of-nedlands', state: 'wa', displayName: 'City of Nedlands' },
+  { slug: 'city-of-claremont', state: 'wa', displayName: 'City of Claremont' },
+  { slug: 'town-of-cottesloe', state: 'wa', displayName: 'Town of Cottesloe' },
+  { slug: 'city-of-melville', state: 'wa', displayName: 'City of Melville' },
+  { slug: 'city-of-canning', state: 'wa', displayName: 'City of Canning' },
+  { slug: 'city-of-gosnells', state: 'wa', displayName: 'City of Gosnells' },
+  { slug: 'city-of-armadale', state: 'wa', displayName: 'City of Armadale' },
+  { slug: 'city-of-rockingham', state: 'wa', displayName: 'City of Rockingham' },
+  { slug: 'city-of-mandurah', state: 'wa', displayName: 'City of Mandurah' },
+  { slug: 'city-of-cockburn', state: 'wa', displayName: 'City of Cockburn' },
+  { slug: 'city-of-kwinana', state: 'wa', displayName: 'City of Kwinana' },
+  { slug: 'city-of-joondalup', state: 'wa', displayName: 'City of Joondalup' },
+  { slug: 'city-of-wanneroo', state: 'wa', displayName: 'City of Wanneroo' },
+  { slug: 'city-of-swan', state: 'wa', displayName: 'City of Swan' },
+  { slug: 'city-of-bayswater', state: 'wa', displayName: 'City of Bayswater' },
+  { slug: 'city-of-belmont', state: 'wa', displayName: 'City of Belmont' },
+  { slug: 'city-of-kalamunda', state: 'wa', displayName: 'City of Kalamunda' },
+
+  // ────────────────────────────────────────────────────────────────
+  // Western Australia — Regional LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'city-of-bunbury', state: 'wa', displayName: 'City of Bunbury' },
+  { slug: 'city-of-busselton', state: 'wa', displayName: 'City of Busselton' },
+  { slug: 'city-of-albany', state: 'wa', displayName: 'City of Albany' },
+  { slug: 'city-of-greater-geraldton', state: 'wa', displayName: 'City of Greater Geraldton' },
+
+  // ────────────────────────────────────────────────────────────────
+  // South Australia — LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'city-of-adelaide', state: 'sa', displayName: 'City of Adelaide' },
+  { slug: 'city-of-unley', state: 'sa', displayName: 'City of Unley' },
+  { slug: 'city-of-burnside', state: 'sa', displayName: 'City of Burnside' },
+  { slug: 'city-of-prospect', state: 'sa', displayName: 'City of Prospect' },
+  { slug: 'city-of-mitcham', state: 'sa', displayName: 'City of Mitcham' },
+  { slug: 'city-of-marion', state: 'sa', displayName: 'City of Marion' },
+  { slug: 'city-of-holdfast-bay', state: 'sa', displayName: 'City of Holdfast Bay' },
+  { slug: 'city-of-onkaparinga', state: 'sa', displayName: 'City of Onkaparinga' },
+  { slug: 'city-of-tea-tree-gully', state: 'sa', displayName: 'City of Tea Tree Gully' },
+  { slug: 'city-of-salisbury', state: 'sa', displayName: 'City of Salisbury' },
+  { slug: 'city-of-playford', state: 'sa', displayName: 'City of Playford' },
+  { slug: 'city-of-port-adelaide-enfield', state: 'sa', displayName: 'City of Port Adelaide Enfield' },
+  { slug: 'city-of-west-torrens', state: 'sa', displayName: 'City of West Torrens' },
+  { slug: 'city-of-charles-sturt', state: 'sa', displayName: 'City of Charles Sturt' },
+  { slug: 'city-of-norwood-payneham-st-peters', state: 'sa', displayName: 'City of Norwood Payneham & St Peters' },
+  { slug: 'city-of-mount-gambier', state: 'sa', displayName: 'City of Mount Gambier' },
+  { slug: 'whyalla-city', state: 'sa', displayName: 'Whyalla City' },
+
+  // ────────────────────────────────────────────────────────────────
+  // Tasmania — LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'city-of-hobart', state: 'tas', displayName: 'City of Hobart' },
+  { slug: 'city-of-glenorchy', state: 'tas', displayName: 'City of Glenorchy' },
+  { slug: 'city-of-clarence', state: 'tas', displayName: 'City of Clarence' },
+  { slug: 'kingborough-council', state: 'tas', displayName: 'Kingborough Council' },
+  { slug: 'city-of-launceston', state: 'tas', displayName: 'City of Launceston' },
+  { slug: 'devonport-city', state: 'tas', displayName: 'Devonport City' },
+  { slug: 'burnie-city', state: 'tas', displayName: 'Burnie City' },
+
+  // ────────────────────────────────────────────────────────────────
+  // Northern Territory — LGAs
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'city-of-darwin', state: 'nt', displayName: 'City of Darwin' },
+  { slug: 'city-of-palmerston', state: 'nt', displayName: 'City of Palmerston' },
 ];
 
 /**
