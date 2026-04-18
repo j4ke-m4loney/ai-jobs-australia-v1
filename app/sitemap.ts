@@ -90,27 +90,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching blog posts for sitemap:', blogError)
   }
 
-  // Only include companies that have at least one active (approved) job.
-  // Expired-only companies don't need their own sitemap entry.
-  const activeCompanyIds = [
-    ...new Set(
-      jobs
-        ?.filter(j => j.status === 'approved')
-        .map(j => j.company_id)
-        .filter(Boolean) ?? []
-    ),
-  ]
-  const { data: companies, error: companiesError } = activeCompanyIds.length > 0
-    ? await supabase
-        .from('companies')
-        .select('id, created_at, updated_at')
-        .in('id', activeCompanyIds)
-        .order('created_at', { ascending: false })
-    : { data: [], error: null }
-
-  if (companiesError) {
-    console.error('Error fetching companies for sitemap:', companiesError)
-  }
+  // Company profile pages (/company/<uuid>) are noindex — they're opaque
+  // UUIDs that duplicate content already indexed at /jobs/<id>, so we don't
+  // advertise them in the sitemap. The layout at /app/company/[id]/layout.tsx
+  // carries the matching noindex meta tag.
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
@@ -198,14 +181,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }) || []
 
-  // Company pages
-  const companyPages: MetadataRoute.Sitemap = companies?.map((company) => ({
-    url: `${BASE_URL}/company/${company.id}`,
-    lastModified: company.updated_at ? new Date(company.updated_at) : new Date(company.created_at),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  })) || []
-
   // Blog post pages
   const blogPages: MetadataRoute.Sitemap = blogPosts?.map((post) => ({
     url: `${BASE_URL}/blog/${post.slug}`,
@@ -250,5 +225,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.85,
   }))
 
-  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...searchPages, ...jobPages, ...companyPages, ...blogPages]
+  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...searchPages, ...jobPages, ...blogPages]
 }
