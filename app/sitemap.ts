@@ -49,14 +49,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // "expired" UI treatment (no JobPosting structured data, disabled apply
   // button) so we retain their SEO equity and referral traffic. Rejected,
   // pending, and needs_review jobs are excluded — they 404 at the page layer.
-  const { data: jobs, error: jobsError } = await supabase
-    .from('jobs')
-    .select('id, created_at, updated_at, company_id, status')
-    .in('status', ['approved', 'expired'])
-    .order('created_at', { ascending: false })
+  //
+  // Paginated because PostgREST caps a single response at ~1,000 rows by
+  // default — without this loop the sitemap silently truncated after the
+  // most recent 1,000 jobs, leaving ~1,800 expired URLs off the map.
+  type SitemapJob = {
+    id: string
+    created_at: string
+    updated_at: string | null
+    company_id: string | null
+    status: string
+  }
+  const JOB_BATCH_SIZE = 1000
+  const jobs: SitemapJob[] = []
+  for (let offset = 0; ; offset += JOB_BATCH_SIZE) {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('id, created_at, updated_at, company_id, status')
+      .in('status', ['approved', 'expired'])
+      .order('created_at', { ascending: false })
+      .range(offset, offset + JOB_BATCH_SIZE - 1)
 
-  if (jobsError) {
-    console.error('Error fetching jobs for sitemap:', jobsError)
+    if (error) {
+      console.error('Error fetching jobs for sitemap:', error)
+      break
+    }
+    if (!data || data.length === 0) break
+    jobs.push(...(data as SitemapJob[]))
+    if (data.length < JOB_BATCH_SIZE) break
   }
 
   // Fetch all published blog posts
