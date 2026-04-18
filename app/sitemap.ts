@@ -45,11 +45,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // Fetch all approved jobs (status is the single source of truth for visibility)
+  // Fetch approved + expired jobs. Expired jobs stay indexed with a clear
+  // "expired" UI treatment (no JobPosting structured data, disabled apply
+  // button) so we retain their SEO equity and referral traffic. Rejected,
+  // pending, and needs_review jobs are excluded — they 404 at the page layer.
   const { data: jobs, error: jobsError } = await supabase
     .from('jobs')
-    .select('id, created_at, updated_at, company_id')
-    .eq('status', 'approved')
+    .select('id, created_at, updated_at, company_id, status')
+    .in('status', ['approved', 'expired'])
     .order('created_at', { ascending: false })
 
   if (jobsError) {
@@ -67,8 +70,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching blog posts for sitemap:', blogError)
   }
 
-  // Only include companies that have at least one active job
-  const activeCompanyIds = [...new Set(jobs?.map(j => j.company_id).filter(Boolean) ?? [])]
+  // Only include companies that have at least one active (approved) job.
+  // Expired-only companies don't need their own sitemap entry.
+  const activeCompanyIds = [
+    ...new Set(
+      jobs
+        ?.filter(j => j.status === 'approved')
+        .map(j => j.company_id)
+        .filter(Boolean) ?? []
+    ),
+  ]
   const { data: companies, error: companiesError } = activeCompanyIds.length > 0
     ? await supabase
         .from('companies')
@@ -148,13 +159,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Job pages
-  const jobPages: MetadataRoute.Sitemap = jobs?.map((job) => ({
-    url: `${BASE_URL}/jobs/${job.id}`,
-    lastModified: job.updated_at ? new Date(job.updated_at) : new Date(job.created_at),
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  })) || []
+  // Job pages. For expired jobs we set lastModified to now so Google recrawls
+  // them promptly and picks up the new indexable expired treatment (they used
+  // to carry a noindex header, which de-indexed ~1,800 pages — we want them
+  // back in the index).
+  const now = new Date()
+  const jobPages: MetadataRoute.Sitemap = jobs?.map((job) => {
+    const isExpired = job.status === 'expired'
+    return {
+      url: `${BASE_URL}/jobs/${job.id}`,
+      lastModified: isExpired
+        ? now
+        : job.updated_at
+          ? new Date(job.updated_at)
+          : new Date(job.created_at),
+      changeFrequency: isExpired ? ('monthly' as const) : ('weekly' as const),
+      priority: isExpired ? 0.4 : 0.8,
+    }
+  }) || []
 
   // Company pages
   const companyPages: MetadataRoute.Sitemap = companies?.map((company) => ({

@@ -197,7 +197,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{categoryName} Jobs in Australia</h1>
           <p className="text-xl text-muted-foreground">
-            {allJobs.length} {categoryName.toLowerCase()} {allJobs.length === 1 ? 'position' : 'positions'} available
+            {allJobs.length} {categoryName} {allJobs.length === 1 ? 'position' : 'positions'} available
           </p>
         </div>
 

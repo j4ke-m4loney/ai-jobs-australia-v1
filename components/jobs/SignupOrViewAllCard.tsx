@@ -69,7 +69,7 @@ export const SignupOrViewAllCard: React.FC<SignupOrViewAllCardProps> = ({
           <p className="text-xl text-muted-foreground mb-8">
             {isLocation
               ? `View all available positions in ${displayName} and apply with one click`
-              : `Browse all ${displayName.toLowerCase()} opportunities and find your perfect match`
+              : `Browse all ${displayName} opportunities and find your perfect match`
             }
           </p>
 
@@ -119,7 +119,7 @@ export const SignupOrViewAllCard: React.FC<SignupOrViewAllCardProps> = ({
             <p className="text-xl text-muted-foreground mb-8">
               {isLocation
                 ? `Create a free account to access all ${displayName} positions and get instant job alerts`
-                : `Create a free account to access all ${displayName.toLowerCase()} positions and get instant job alerts`
+                : `Create a free account to access all ${displayName} positions and get instant job alerts`
               }
             </p>
           </>
@@ -131,7 +131,7 @@ export const SignupOrViewAllCard: React.FC<SignupOrViewAllCardProps> = ({
             <p className="text-xl text-muted-foreground mb-8">
               {isLocation
                 ? `Create a free account and be the first to know when new positions are posted in ${displayName}`
-                : `Create a free account and be the first to know when new ${displayName.toLowerCase()} positions are posted`
+                : `Create a free account and be the first to know when new ${displayName} positions are posted`
               }
             </p>
           </>
@@ -158,7 +158,7 @@ export const SignupOrViewAllCard: React.FC<SignupOrViewAllCardProps> = ({
             <p className="text-sm text-muted-foreground">
               {isLocation
                 ? `Get notified when new jobs are posted in ${displayName}`
-                : `Get notified when new ${displayName.toLowerCase()} jobs are posted`
+                : `Get notified when new ${displayName} jobs are posted`
               }
             </p>
           </div>

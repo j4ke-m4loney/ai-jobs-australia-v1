@@ -1,8 +1,12 @@
 import { cache } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+
+// Statuses that have a public, indexable detail page.
+// Everything else (pending, rejected, needs_review, draft) returns a 404 so it
+// never accumulates in Google's index.
+const PUBLIC_STATUSES = new Set(["approved", "expired"]);
 
 // Server-side Supabase client for metadata generation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -37,31 +41,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { id } = await params;
     const job = await getJobById(id);
 
-    if (!job || !job.companies) {
+    if (!job) {
       notFound();
     }
 
-    // Expired job — return noindex so Google de-indexes the page
-    if (job.status !== "approved") {
-      return {
-        title: `This Role Has Expired | AI Jobs Australia`,
-        robots: { index: false, follow: true },
-      };
+    // Jobs that aren't publicly visible (pending, rejected, needs_review) —
+    // 404 via notFound() so Google drops them from its index.
+    if (!PUBLIC_STATUSES.has(job.status)) {
+      notFound();
     }
 
-    const companyName = job.companies.name || "Company";
-    const jobTitle = `${job.title} at ${companyName}`;
+    // Jobs may have a missing `companies` relation (company deleted, never
+    // linked, or orphaned after admin cleanup) — render the page anyway with
+    // "Company" as a safe fallback rather than 404'ing. Losing the company
+    // name is better than losing the SEO value of the whole page.
+    const isExpired = job.status === "expired";
+    const companyName = job.companies?.name || "Company";
+    const jobTitle = isExpired
+      ? `${job.title} at ${companyName} (Expired)`
+      : `${job.title} at ${companyName}`;
 
     // Strip HTML tags and truncate description
-    const cleanDescription = job.description
+    const cleanDescription = (job.description || "")
       .replace(/<[^>]*>/g, "")
       .replace(/\s+/g, " ")
       .trim()
       .substring(0, 160);
 
     // Use company logo if available, otherwise fall back to site OG image
-    const ogImageUrl = job.companies.logo_url || "https://www.aijobsaustralia.com.au/og-image-temp.png";
-    const twitterImageUrl = job.companies.logo_url || "https://www.aijobsaustralia.com.au/twitter-card.png";
+    const ogImageUrl = job.companies?.logo_url || "https://www.aijobsaustralia.com.au/og-image-temp.png";
+    const twitterImageUrl = job.companies?.logo_url || "https://www.aijobsaustralia.com.au/twitter-card.png";
 
     return {
       title: `${jobTitle} | AI Jobs Australia`,
@@ -132,11 +141,14 @@ function parseLocations(location: string): Array<{ locality: string; region: str
   });
 }
 
-// Server component to render structured data
+// Server component to render structured data.
+// Per Google's job posting guidelines, expired postings must NOT include
+// JobPosting structured data — otherwise the listing is flagged as a violation.
 async function JobStructuredData({ id }: { id: string }) {
   const job = await getJobById(id);
 
   if (!job || !job.companies) return null;
+  if (job.status !== "approved") return null;
 
   // Strip HTML for description
   const cleanDescription = job.description
@@ -226,46 +238,6 @@ async function JobStructuredData({ id }: { id: string }) {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ExpiredJobPage({ job }: { job: any }) {
-  const companyName = job.companies?.name;
-
-  return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <h1 className="text-2xl font-bold text-foreground mb-2">
-          This role has expired
-        </h1>
-        <p className="text-muted-foreground mb-1">
-          <span className="font-medium">{job.title}</span>
-          {companyName && (
-            <> at <span className="font-medium">{companyName}</span></>
-          )}
-        </p>
-        <p className="text-muted-foreground mb-6">
-          This position is no longer accepting applications.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link
-            href="/jobs"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Browse All Jobs
-          </Link>
-          {job.category && (
-            <Link
-              href={`/jobs/category/${job.category}`}
-              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-6 py-2.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-            >
-              Similar Roles
-            </Link>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default async function JobLayout({ children, params }: Props) {
   const { id } = await params;
 
@@ -276,9 +248,11 @@ export default async function JobLayout({ children, params }: Props) {
     notFound();
   }
 
-  // Job exists but is expired — show expired page with noindex (set in generateMetadata)
-  if (job.status !== "approved") {
-    return <ExpiredJobPage job={job} />;
+  // Non-public statuses (pending, rejected, needs_review) 404 so they never
+  // show up in search. Approved + expired pass through to the client page;
+  // the expired state is handled there (badge + disabled apply button).
+  if (!PUBLIC_STATUSES.has(job.status)) {
+    notFound();
   }
 
   return (

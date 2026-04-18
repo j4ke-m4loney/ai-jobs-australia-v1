@@ -67,6 +67,9 @@ export default function SavedJobDetailPage() {
     if (!jobId) return;
 
     setJobLoading(true);
+    // Include expired jobs so users can still view saved roles that have
+    // since closed — JobDetailsView renders the expired badge and disables
+    // the apply button.
     const { data, error } = await supabase
       .from("jobs")
       .select(`
@@ -80,7 +83,7 @@ export default function SavedJobDetailPage() {
         )
       `)
       .eq("id", jobId)
-      .eq("status", "approved")
+      .in("status", ["approved", "expired"])
       .single();
 
     if (error) {
@@ -114,6 +117,11 @@ export default function SavedJobDetailPage() {
 
   const handleApply = () => {
     if (!job || !user) return;
+
+    if (job.status !== "approved") {
+      toast.error("This role is no longer accepting applications");
+      return;
+    }
 
     // External: open URL or fallback to email
     if (job.application_method === "external") {

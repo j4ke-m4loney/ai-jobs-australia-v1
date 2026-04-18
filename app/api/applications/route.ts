@@ -231,7 +231,8 @@ export async function POST(request: NextRequest) {
         title,
         company_name,
         employer_id,
-        application_method
+        application_method,
+        status
       `)
       .eq('id', jobId)
       .single();
@@ -241,6 +242,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Job not found' },
         { status: 404 }
+      );
+    }
+
+    // Reject applications for jobs that are no longer accepting applications
+    // (expired, rejected, pending, needs_review, etc.)
+    if (jobData.status !== 'approved') {
+      return NextResponse.json(
+        { error: 'This role is no longer accepting applications' },
+        { status: 400 }
       );
     }
 

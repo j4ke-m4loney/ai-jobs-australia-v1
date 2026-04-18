@@ -62,8 +62,8 @@ export async function generateMetadata({ params }: CrossPageProps): Promise<Meta
     : `${categoryName} Jobs in ${cityName} | AI Jobs Australia`;
 
   const description = city === 'remote'
-    ? `Find remote ${categoryName} jobs in Australia. Browse work-from-home ${categoryName.toLowerCase()} opportunities from top companies. Apply today.`
-    : `Find ${categoryName} jobs in ${cityName}, Australia. Browse ${categoryName.toLowerCase()} opportunities from top companies in ${cityName}. Apply today.`;
+    ? `Find remote ${categoryName} jobs in Australia. Browse work-from-home ${categoryName} opportunities from top companies. Apply today.`
+    : `Find ${categoryName} jobs in ${cityName}, Australia. Browse ${categoryName} opportunities from top companies in ${cityName}. Apply today.`;
 
   return {
     title,
@@ -179,14 +179,14 @@ export default async function CategoryLocationPage({ params }: CrossPageProps) {
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-4">{pageTitle}</h1>
             <p className="text-xl text-muted-foreground">
-              No {categoryName.toLowerCase()} positions currently available in {cityName}.
+              No {categoryName} positions currently available in {cityName}.
             </p>
           </div>
 
           <div className="max-w-2xl mx-auto text-center py-12">
             <p className="text-lg text-muted-foreground mb-8">
               New roles are added daily. Browse related opportunities or sign up
-              to get notified when {categoryName.toLowerCase()} jobs are posted in {cityName}.
+              to get notified when {categoryName} jobs are posted in {cityName}.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -210,7 +210,7 @@ export default async function CategoryLocationPage({ params }: CrossPageProps) {
             <div className="border rounded-lg p-6 bg-muted/50">
               <h2 className="text-lg font-semibold mb-2">Get Notified</h2>
               <p className="text-sm text-muted-foreground mb-4">
-                Create a free account and we&apos;ll alert you when new {categoryName.toLowerCase()} roles
+                Create a free account and we&apos;ll alert you when new {categoryName} roles
                 are posted in {cityName}.
               </p>
               <Link
@@ -230,7 +230,7 @@ export default async function CategoryLocationPage({ params }: CrossPageProps) {
                 '@context': 'https://schema.org',
                 '@type': 'JobPostingCollection',
                 'name': pageTitle,
-                'description': `Find ${categoryName.toLowerCase()} jobs in ${cityName}, Australia`,
+                'description': `Find ${categoryName} jobs in ${cityName}, Australia`,
                 'numberOfItems': 0,
               }),
             }}
@@ -267,7 +267,7 @@ export default async function CategoryLocationPage({ params }: CrossPageProps) {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{pageTitle}</h1>
           <p className="text-xl text-muted-foreground">
-            {allJobs.length} {categoryName.toLowerCase()} {allJobs.length === 1 ? 'position' : 'positions'} available in {cityName}
+            {allJobs.length} {categoryName} {allJobs.length === 1 ? 'position' : 'positions'} available in {cityName}
           </p>
         </div>
 
@@ -308,7 +308,7 @@ export default async function CategoryLocationPage({ params }: CrossPageProps) {
               '@context': 'https://schema.org',
               '@type': 'JobPostingCollection',
               'name': pageTitle,
-              'description': `Find ${categoryName.toLowerCase()} jobs in ${cityName}, Australia`,
+              'description': `Find ${categoryName} jobs in ${cityName}, Australia`,
               'numberOfItems': allJobs.length,
             }),
           }}

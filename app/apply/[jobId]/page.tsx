@@ -142,23 +142,34 @@ export default function ApplyPage() {
       `
       )
       .eq("id", jobId)
-      .eq("status", "approved")
       .single();
 
-    if (error) {
+    if (error || !data) {
       console.error("Error fetching job:", error);
       toast.error("Failed to load job details");
       router.push("/jobs");
-    } else {
-      setJob(data as Job);
-
-      // Track internal application started
-      trackInternalApplicationStarted({
-        job_id: data.id,
-        job_title: data.title,
-        company: data.companies?.name || "Unknown",
-      });
+      setJobLoading(false);
+      return;
     }
+
+    // Expired or otherwise non-applyable — send them to the detail page so
+    // they see the expired state and similar-roles link rather than a silent
+    // bounce back to the listings.
+    if (data.status !== "approved") {
+      toast.info("This role is no longer accepting applications");
+      router.push(`/jobs/${jobId}`);
+      setJobLoading(false);
+      return;
+    }
+
+    setJob(data as Job);
+
+    // Track internal application started
+    trackInternalApplicationStarted({
+      job_id: data.id,
+      job_title: data.title,
+      company: data.companies?.name || "Unknown",
+    });
     setJobLoading(false);
   }, [jobId, router]);
 

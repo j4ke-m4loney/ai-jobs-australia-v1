@@ -8,8 +8,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
+import Link from "next/link";
 import {
   MapPin,
   DollarSign,
@@ -25,6 +27,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { formatSalary } from "@/lib/salary-utils";
 import { AJAIntelligenceModal } from "@/components/jobs/AJAIntelligenceModal";
 import { getCombinedJobContent, formatJobTypes } from "@/lib/jobs/content-utils";
+import { getSimilarRolesUrl } from "@/lib/jobs/similar-roles-url";
 import { trackExternalApply } from "@/lib/applications/track-external-apply";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -38,6 +41,7 @@ interface Job {
   title: string;
   description: string;
   requirements: string | null;
+  status: "pending" | "approved" | "rejected" | "expired";
   location: string;
   location_type: string;
   job_type: string[];
@@ -97,6 +101,11 @@ export default function JobDetailPage() {
   // Define callback functions first
   const fetchJob = useCallback(async () => {
     try {
+      // Fetch approved + expired jobs — expired jobs stay indexable with a
+      // disabled apply state so we don't lose SEO equity when roles close.
+      // The layout already 404s for pending/rejected/needs_review, so if the
+      // client-fetched job ever comes back with one of those statuses we'll
+      // also redirect below as a safety net.
       const { data, error } = await supabase
         .from("jobs")
         .select(`
@@ -110,7 +119,7 @@ export default function JobDetailPage() {
           )
         `)
         .eq("id", id)
-        .eq("status", "approved")
+        .in("status", ["approved", "expired"])
         .single();
 
       if (error) throw error;
@@ -175,6 +184,11 @@ export default function JobDetailPage() {
     }
 
     if (!job) return;
+
+    if (job.status !== "approved") {
+      toast.error("This role is no longer accepting applications");
+      return;
+    }
 
     // Track Apply button click
     trackEvent("job_detail_apply_clicked", {
@@ -243,6 +257,8 @@ export default function JobDetailPage() {
     );
   }
 
+  const isExpired = job.status === "expired";
+
   return (
     <>
       <div className="min-h-screen bg-gradient-subtle">
@@ -266,7 +282,28 @@ export default function JobDetailPage() {
                     />
                   )}
                   <div className="flex-1">
-                    <CardTitle className="text-2xl mb-2">{job.title}</CardTitle>
+                    <div className="flex items-start gap-3 flex-wrap mb-2">
+                      <CardTitle className="text-2xl">{job.title}</CardTitle>
+                      {isExpired && (
+                        <Badge
+                          variant="destructive"
+                          className="uppercase tracking-wide text-xs mt-1"
+                        >
+                          Expired
+                        </Badge>
+                      )}
+                    </div>
+                    {isExpired && (
+                      <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900">
+                        This role has expired and is no longer accepting applications.{" "}
+                        <Link
+                          href={getSimilarRolesUrl(job)}
+                          className="font-medium underline hover:no-underline"
+                        >
+                          Browse similar roles →
+                        </Link>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-muted-foreground mb-3">
                       <Building2 className="w-4 h-4" />
                       <span className="font-medium">{job.companies?.name || "Unknown Company"}</span>
@@ -324,12 +361,22 @@ export default function JobDetailPage() {
                 <Separator />
 
                 <div className="space-y-3">
-                  <Button
-                    onClick={handleApply}
-                    className="w-full gap-2"
-                  >
-                    Apply
-                  </Button>
+                  {isExpired ? (
+                    <div
+                      aria-disabled="true"
+                      className="w-full inline-flex items-center justify-center rounded-md bg-blue-100 text-blue-700 px-4 py-2 text-sm font-medium cursor-not-allowed select-none"
+                      title="This role is expired"
+                    >
+                      This role is expired
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={handleApply}
+                      className="w-full gap-2"
+                    >
+                      Apply
+                    </Button>
+                  )}
 
                   <Button
                     variant="outline"

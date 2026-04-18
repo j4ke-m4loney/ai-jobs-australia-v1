@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Clock, Heart, Sparkles, FileText } from "lucide-react";
 import Image from "next/image";
 import { formatSalary } from "@/lib/salary-utils";
@@ -13,6 +14,7 @@ import {
   getCombinedJobContent,
   formatJobTypes,
 } from "@/lib/jobs/content-utils";
+import { getSimilarRolesUrl } from "@/lib/jobs/similar-roles-url";
 import { AnalyseRoleModal } from "@/components/jobs/AnalyseRoleModal";
 import { MatchScoreCard } from "@/components/jobs/MatchScoreCard";
 import { CoverLetterModal } from "@/components/jobs/CoverLetterModal";
@@ -135,7 +137,11 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
   const [analyseModalOpen, setAnalyseModalOpen] = useState(false);
   const [coverLetterModalOpen, setCoverLetterModalOpen] = useState(false);
 
+  const isExpired = job.status === "expired";
+
   const handleApplyClick = () => {
+    if (isExpired) return;
+
     // Track Apply button click
     trackEvent("apply_button_clicked", {
       job_id: job.id,
@@ -168,9 +174,31 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
           {/* Top row: title+company left, logo right */}
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg lg:text-2xl font-bold text-foreground mb-1">
-                {job.title}
-              </h1>
+              <div className="flex items-start gap-2 flex-wrap mb-1">
+                <h1 className="text-lg lg:text-2xl font-bold text-foreground">
+                  {job.title}
+                </h1>
+                {isExpired && (
+                  <Badge
+                    variant="destructive"
+                    className="uppercase tracking-wide text-xs mt-1"
+                  >
+                    Expired
+                  </Badge>
+                )}
+              </div>
+
+              {isExpired && (
+                <div className="mb-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs lg:text-sm text-red-900">
+                  This role has expired and is no longer accepting applications.{" "}
+                  <Link
+                    href={getSimilarRolesUrl(job)}
+                    className="font-medium underline hover:no-underline"
+                  >
+                    Browse similar roles →
+                  </Link>
+                </div>
+              )}
 
               <div className="flex items-center gap-2 text-foreground mb-2">
                 {job.companies?.website ? (
@@ -304,16 +332,26 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                 >
                   View
                 </Link>
-                {!(hasApplied && job.application_method === 'internal') && (
-                  <Button
-                    onClick={handleApplyClick}
-                    className="bg-primary hover:bg-primary/90 text-white px-6"
+                {isExpired ? (
+                  <div
+                    aria-disabled="true"
+                    className="inline-flex items-center justify-center rounded-md bg-blue-100 text-blue-700 px-6 py-2 text-sm font-medium cursor-not-allowed select-none"
+                    title="This role is expired"
                   >
-                    Apply
-                  </Button>
+                    This role is expired
+                  </div>
+                ) : (
+                  !(hasApplied && job.application_method === 'internal') && (
+                    <Button
+                      onClick={handleApplyClick}
+                      className="bg-primary hover:bg-primary/90 text-white px-6"
+                    >
+                      Apply
+                    </Button>
+                  )
                 )}
               </div>
-              {hasApplied && (
+              {hasApplied && !isExpired && (
                 <p className="text-xs text-muted-foreground text-right">
                   <span className="font-medium text-green-600">Applied</span>
                   {" · "}
@@ -400,16 +438,26 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
                   >
                     View
                   </Link>
-                  {!(hasApplied && job.application_method === 'internal') && (
-                    <Button
-                      onClick={handleApplyClick}
-                      className="bg-primary hover:bg-primary/90 text-white px-6"
+                  {isExpired ? (
+                    <div
+                      aria-disabled="true"
+                      className="inline-flex items-center justify-center rounded-md bg-blue-100 text-blue-700 px-6 py-2 text-sm font-medium cursor-not-allowed select-none"
+                      title="This role is expired"
                     >
-                      Apply
-                    </Button>
+                      This role is expired
+                    </div>
+                  ) : (
+                    !(hasApplied && job.application_method === 'internal') && (
+                      <Button
+                        onClick={handleApplyClick}
+                        className="bg-primary hover:bg-primary/90 text-white px-6"
+                      >
+                        Apply
+                      </Button>
+                    )
                   )}
                 </div>
-                {hasApplied && (
+                {hasApplied && !isExpired && (
                   <p className="text-xs text-muted-foreground">
                     <span className="font-medium text-green-600">Applied</span>
                     {" · "}
@@ -482,7 +530,28 @@ export const JobDetailsView: React.FC<JobDetailsViewProps> = ({
 
           {/* Apply Section */}
           <div className="border-t pt-6">
-            {hasApplied && job.application_method === 'internal' ? (
+            {isExpired ? (
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h3 className="font-semibold text-base lg:text-lg mb-1">
+                    This role has expired
+                  </h3>
+                  <Link
+                    href={getSimilarRolesUrl(job)}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Browse similar roles →
+                  </Link>
+                </div>
+                <div
+                  aria-disabled="true"
+                  className="inline-flex items-center justify-center rounded-md bg-blue-100 text-blue-700 px-8 py-3 text-base font-medium cursor-not-allowed select-none"
+                  title="This role is expired"
+                >
+                  This role is expired
+                </div>
+              </div>
+            ) : hasApplied && job.application_method === 'internal' ? (
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-green-600">Applied</span>

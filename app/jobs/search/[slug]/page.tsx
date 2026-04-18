@@ -97,7 +97,7 @@ export default async function SearchPage({ params }: SearchPageProps) {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{displayName} Jobs in Australia</h1>
           <p className="text-xl text-muted-foreground">
-            {allJobs.length} {displayName.toLowerCase()} {allJobs.length === 1 ? 'position' : 'positions'} available
+            {allJobs.length} {displayName} {allJobs.length === 1 ? 'position' : 'positions'} available
           </p>
         </div>
 
