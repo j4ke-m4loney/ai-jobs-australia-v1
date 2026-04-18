@@ -5,6 +5,7 @@ import { categorySlugToName } from '@/lib/categories/generator';
 import { extractLocationSlug, locationSlugToName } from '@/lib/locations/generator';
 import { VALID_CATEGORY_SLUGS } from '@/lib/job-import/categories';
 import { getAllCategoryLocationCombos } from '@/lib/categories/cross-generator';
+import { legacyCategorySlugToRedirect } from '@/lib/search/generator';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RecentJobCard } from '@/components/jobs/RecentJobCard';
@@ -156,10 +157,12 @@ async function getCrossJobs(categorySlug: string, citySlug: string): Promise<Job
 export default async function CategoryLocationPage({ params }: CrossPageProps) {
   const { slug, city } = await params;
 
-  // Redirect invalid category slugs
+  // Redirect invalid category slugs — delegates to the same ladder used
+  // by the single-slug category page: strip location suffixes, try to map
+  // to a curated search keyword, else fall back to /jobs?search=<query>.
   if (!(VALID_CATEGORY_SLUGS as readonly string[]).includes(slug)) {
     const { permanentRedirect } = await import('next/navigation');
-    permanentRedirect('/jobs');
+    permanentRedirect(legacyCategorySlugToRedirect(slug));
   }
 
   const categoryName = categorySlugToName(slug);

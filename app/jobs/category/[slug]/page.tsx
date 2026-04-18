@@ -4,6 +4,7 @@ import { permanentRedirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { categorySlugToName, getPopularCategories } from '@/lib/categories/generator';
 import { VALID_CATEGORY_SLUGS } from '@/lib/job-import/categories';
+import { legacyCategorySlugToRedirect } from '@/lib/search/generator';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RecentJobCard } from '@/components/jobs/RecentJobCard';
@@ -174,10 +175,14 @@ const getCategoryJobs = cache(async function getCategoryJobs(categorySlug: strin
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
 
-  // Permanently redirect non-canonical category slugs to /jobs
-  // (clears ~499 stale Google-indexed URLs that were generating 404s)
+  // Permanently redirect non-canonical category slugs. The helper strips
+  // trailing location segments ("-sydney", "-nsw") then either matches a
+  // curated search keyword ("/jobs/search/ai-engineer") or falls back to
+  // a pre-filtered listing ("/jobs?search=forward+deployed+engineer") so
+  // the visitor's original intent is preserved and Google doesn't classify
+  // the redirect as a soft-404.
   if (!(VALID_CATEGORY_SLUGS as readonly string[]).includes(slug)) {
-    permanentRedirect('/jobs');
+    permanentRedirect(legacyCategorySlugToRedirect(slug));
   }
 
   const categoryName = categorySlugToName(slug);

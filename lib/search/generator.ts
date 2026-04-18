@@ -57,6 +57,76 @@ export function isValidSearchSlug(slug: string): boolean {
 }
 
 /**
+ * Australian location-related segments that commonly appear as suffixes on
+ * legacy category slugs (e.g. "ai-engineer-sydney", "machine-learning-nsw").
+ * Stripped before we try to match the slug to a curated search keyword.
+ */
+const LEGACY_LOCATION_SUFFIX_SEGMENTS = new Set([
+  // Single-word cities
+  "sydney", "melbourne", "brisbane", "perth", "adelaide", "canberra",
+  "newcastle", "wollongong", "geelong", "hobart", "darwin", "cairns",
+  "townsville", "remote", "australia",
+  // State abbreviations
+  "nsw", "vic", "qld", "wa", "sa", "tas", "act", "nt",
+]);
+
+function stripTrailingLocationSegments(slug: string): string {
+  // Multi-segment city names first ("gold-coast") so they're removed whole
+  const cleaned = slug.replace(/-gold-coast$/, "");
+  const parts = cleaned.split("-");
+  while (
+    parts.length > 1 &&
+    LEGACY_LOCATION_SUFFIX_SEGMENTS.has(parts[parts.length - 1])
+  ) {
+    parts.pop();
+  }
+  return parts.join("-");
+}
+
+/**
+ * Maps a legacy (non-canonical) category slug to the best redirect target.
+ *
+ * Before slug canonicalisation, Google indexed ~499 URLs like
+ * `/jobs/category/ai-engineer-sydney`, `/jobs/category/gen-ai-architect`,
+ * `/jobs/category/forward-deployed-engineer-sydney`. All of those hit the
+ * "invalid category slug" branch and need a redirect target that:
+ *
+ *   a) is semantically relevant (avoids Google classifying the redirect as
+ *      a soft-404 and dropping link equity), and
+ *   b) preserves the visitor's original intent.
+ *
+ * The ladder:
+ *   1. Strip known Australian location suffixes ("-sydney", "-nsw", etc.)
+ *   2. If what remains matches a curated search keyword as a dash-bounded
+ *      substring, redirect to `/jobs/search/<slug>` (the SEO landing page).
+ *   3. Otherwise redirect to `/jobs?search=<query>` so the /jobs listing
+ *      opens pre-filtered on the visitor's original search intent.
+ *   4. Empty slug → `/jobs`.
+ */
+export function legacyCategorySlugToRedirect(legacySlug: string): string {
+  if (!legacySlug) return "/jobs";
+
+  const cleaned = stripTrailingLocationSegments(legacySlug);
+  if (!cleaned) return "/jobs";
+
+  // Longest first so "machine-learning" wins over a shorter sub-match
+  const sorted = [...CURATED_SEARCH_KEYWORDS].sort(
+    (a, b) => b.slug.length - a.slug.length,
+  );
+  for (const { slug } of sorted) {
+    const escaped = slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(`(^|-)${escaped}($|-)`);
+    if (pattern.test(cleaned)) {
+      return `/jobs/search/${slug}`;
+    }
+  }
+
+  const query = cleaned.replace(/-/g, " ").trim();
+  if (!query) return "/jobs";
+  return `/jobs?search=${encodeURIComponent(query)}`;
+}
+
+/**
  * Get the display name for a search slug.
  */
 export function searchSlugToDisplayName(slug: string): string {
