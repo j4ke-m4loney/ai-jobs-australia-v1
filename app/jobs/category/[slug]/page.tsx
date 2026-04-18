@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { Metadata } from 'next';
+import Link from 'next/link';
 import { permanentRedirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { categorySlugToName, getPopularCategories } from '@/lib/categories/generator';
@@ -57,8 +58,11 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     return {};
   }
 
-  const jobs = await getCategoryJobs(slug);
-  const count = jobs.length;
+  // Use the true primary-category count (not displayJobs.length, which is
+  // capped at 9 and would put "9 Machine Learning Jobs" in the <title> even
+  // when there are 71 matching jobs).
+  const { primaryCount } = await getCategoryJobs(slug);
+  const count = primaryCount;
 
   return {
     title: count > 0
@@ -90,11 +94,25 @@ function getRelatedCategories(categorySlug: string): string[] {
   return relatedMap[categorySlug] || ['ai-engineer', 'machine-learning-engineer', 'data-scientist'];
 }
 
-const getCategoryJobs = cache(async function getCategoryJobs(categorySlug: string, targetCount: number = 9): Promise<Job[]> {
+interface CategoryJobsResult {
+  /** Up to `targetCount` jobs — primary category first, filled with related
+   *  categories if needed so the page never looks empty. */
+  displayJobs: Job[];
+  /** True count of approved jobs matching this exact category. Used for the
+   *  subtitle + metadata (a "0 of X" count is fine) rather than the length
+   *  of `displayJobs`, which is capped at `targetCount` and would otherwise
+   *  show "9 positions available" even when there are 71. */
+  primaryCount: number;
+}
+
+const getCategoryJobs = cache(async function getCategoryJobs(
+  categorySlug: string,
+  targetCount: number = 9,
+): Promise<CategoryJobsResult> {
   // Check for required env vars - return empty array if missing (allows build to proceed)
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.warn('[getCategoryJobs] Missing Supabase env vars, returning empty array');
-    return [];
+    return { displayJobs: [], primaryCount: 0 };
   }
 
   const supabaseAdmin = createClient(
@@ -127,7 +145,7 @@ const getCategoryJobs = cache(async function getCategoryJobs(categorySlug: strin
       .range(offset, offset + BATCH - 1);
     if (error) {
       console.error('Error fetching jobs:', error);
-      break;
+      return { displayJobs: [], primaryCount: 0 };
     }
     if (!data || data.length === 0) break;
     jobs.push(...data);
@@ -161,13 +179,15 @@ const getCategoryJobs = cache(async function getCategoryJobs(categorySlug: strin
   const primaryJobs = jobs
     .filter(job => job.category && normaliseSlug(job.category) === categorySlug)
     .map(transformJob);
+  const primaryCount = primaryJobs.length;
 
   // If we have enough jobs, return them
-  if (primaryJobs.length >= targetCount) {
-    return primaryJobs.slice(0, targetCount);
+  if (primaryCount >= targetCount) {
+    return { displayJobs: primaryJobs.slice(0, targetCount), primaryCount };
   }
 
-  // Otherwise, fill with related category jobs
+  // Otherwise, fill with related category jobs so the page still looks
+  // populated. primaryCount stays accurate regardless of fill logic.
   const relatedCategories = getRelatedCategories(categorySlug);
   const relatedJobs = jobs
     .filter(job => {
@@ -177,9 +197,8 @@ const getCategoryJobs = cache(async function getCategoryJobs(categorySlug: strin
     })
     .map(transformJob);
 
-  // Combine and return exactly targetCount jobs
   const allJobs = [...primaryJobs, ...relatedJobs];
-  return allJobs.slice(0, targetCount);
+  return { displayJobs: allJobs.slice(0, targetCount), primaryCount };
 });
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
@@ -196,11 +215,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   }
 
   const categoryName = categorySlugToName(slug);
-  const allJobs = await getCategoryJobs(slug);
+  const { displayJobs, primaryCount } = await getCategoryJobs(slug);
 
   // Split jobs: first 9 public, rest behind signup
-  const publicJobs = allJobs.slice(0, 9);
-  const hiddenJobsCount = Math.max(0, allJobs.length - 9);
+  const publicJobs = displayJobs.slice(0, 9);
+  const hiddenJobsCount = Math.max(0, primaryCount - publicJobs.length);
 
 
   return (
@@ -212,8 +231,16 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{categoryName} Jobs in Australia</h1>
           <p className="text-xl text-muted-foreground">
-            {allJobs.length} {categoryName} {allJobs.length === 1 ? 'position' : 'positions'} available
+            {primaryCount} {categoryName} {primaryCount === 1 ? 'position' : 'positions'} available
           </p>
+          {primaryCount > publicJobs.length && (
+            <Link
+              href={`/jobs?category=${slug}`}
+              className="inline-flex items-center gap-1 mt-3 text-primary hover:underline font-medium"
+            >
+              View all {primaryCount} {categoryName} jobs →
+            </Link>
+          )}
         </div>
 
         {/* Job Listings - Public (First 9) with gradient fade-out */}
@@ -252,7 +279,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               '@type': 'JobPostingCollection',
               'name': `${categoryName} Jobs in Australia`,
               'description': `Find ${categoryName} jobs in Australia on AI Jobs Australia`,
-              'numberOfItems': allJobs.length,
+              'numberOfItems': primaryCount,
             }),
           }}
         />
