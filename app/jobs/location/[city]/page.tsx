@@ -2,7 +2,13 @@ import { cache } from 'react';
 import { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { extractLocationSlug, locationSlugToName, getPopularLocations } from '@/lib/locations/generator';
+import {
+  locationSlugToName,
+  getPopularLocations,
+  getStateBySlug,
+  jobLocationMatchesState,
+  canonicalLocationSlug,
+} from '@/lib/locations/generator';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RecentJobCard } from '@/components/jobs/RecentJobCard';
@@ -12,7 +18,7 @@ import { SignupOrViewAllCard } from '@/components/jobs/SignupOrViewAllCard';
 // These were previously indexed by Google before the location parser
 // was updated to strip trailing state abbreviations.
 const LEGACY_SLUG_REDIRECTS: Record<string, string> = {
-  // Major cities
+  // Major cities — strip trailing state abbrs
   'sydney-nsw': 'sydney',
   'melbourne-vic': 'melbourne',
   'brisbane-qld': 'brisbane',
@@ -23,24 +29,65 @@ const LEGACY_SLUG_REDIRECTS: Record<string, string> = {
   'newcastle-nsw': 'newcastle',
   'hobart-tas': 'hobart',
   'darwin-nt': 'darwin',
-  // Suburbs
-  'sydney-cbd-nsw': 'sydney-cbd',
-  'north-sydney-nsw': 'north-sydney',
+  // Business districts kept as standalone pages — strip state abbr only
   'parramatta-nsw': 'parramatta',
-  'surry-hills-nsw': 'surry-hills',
-  'barangaroo-nsw': 'barangaroo',
-  'bella-vista-nsw': 'bella-vista',
-  'broadway-nsw': 'broadway',
-  'macquarie-park-nsw': 'macquarie-park',
-  'richmond-vic': 'richmond',
-  'cremorne-vic': 'cremorne',
-  'parkville-vic': 'parkville',
-  'mulgrave-vic': 'mulgrave',
+  'north-sydney-nsw': 'north-sydney',
+  // Small Sydney suburbs — 308 single-hop to Sydney so consolidated SEO
+  // equity funnels into the main city page instead of a thin suburb page.
+  'surry-hills':         'sydney',
+  'surry-hills-nsw':     'sydney',
+  'chatswood':           'sydney',
+  'chatswood-nsw':       'sydney',
+  'north-ryde':          'sydney',
+  'north-ryde-nsw':      'sydney',
+  'st-leonards':         'sydney',
+  'st-leonards-nsw':     'sydney',
+  'eveleigh':            'sydney',
+  'eveleigh-nsw':        'sydney',
+  'kensington':          'sydney',
+  'kensington-nsw':      'sydney',
+  'barangaroo':          'sydney',
+  'barangaroo-nsw':      'sydney',
+  'bella-vista':         'sydney',
+  'bella-vista-nsw':     'sydney',
+  'broadway':            'sydney',
+  'broadway-nsw':        'sydney',
+  'macquarie-park':      'sydney',
+  'macquarie-park-nsw':  'sydney',
+  'sydney-cbd':          'sydney',
+  'sydney-cbd-nsw':      'sydney',
+  // Small Melbourne suburbs — 308 single-hop to Melbourne.
+  'richmond':            'melbourne',
+  'richmond-vic':        'melbourne',
+  'cremorne':            'melbourne',
+  'cremorne-vic':        'melbourne',
+  'parkville':           'melbourne',
+  'parkville-vic':       'melbourne',
+  'mulgrave':            'melbourne',
+  'mulgrave-vic':        'melbourne',
+  'chadstone':           'melbourne',
+  'chadstone-vic':       'melbourne',
+  'hawthorn':            'melbourne',
+  'hawthorn-vic':        'melbourne',
+  'hawthorn-east':       'melbourne',
+  'hawthorn-east-vic':   'melbourne',
+  'melbourne-cbd':       'melbourne',
+  'melbourne-cbd-vic':   'melbourne',
   // Multi-location slugs (old parser didn't split on |)
   'melbourne-vic-sydney-nsw': 'melbourne',
   'sydney-nsw-melbourne-vic': 'sydney',
   'sydney-nsw-brisbane-qld-melbourne-vic': 'sydney',
   'melbourne-vic-sydney-nsw-brisbane-qld': 'melbourne',
+  // State abbreviation shortcuts → canonical state slug so /jobs/location/nsw
+  // redirects to /jobs/location/new-south-wales (one canonical URL per state).
+  'nsw': 'new-south-wales',
+  'vic': 'victoria',
+  'qld': 'queensland',
+  'wa': 'western-australia',
+  'sa': 'south-australia',
+  'tas': 'tasmania',
+  'act': 'australian-capital-territory',
+  'nt': 'northern-territory',
 };
 
 interface Job {
@@ -119,26 +166,52 @@ const getLocationJobs = cache(async function getLocationJobs(citySlug: string): 
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  // Get all approved jobs - using same pattern as /jobs page
-  const { data: jobs, error } = await supabaseAdmin
-    .from('jobs')
-    .select(`
-      *,
-      highlights,
-      companies (
-        id,
-        name,
-        logo_url,
-        website
-      )
-    `)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false })
-    .limit(200);
-
-  if (error || !jobs) {
-    console.error('Error fetching jobs:', error);
-    return [];
+  // Paginate to get all approved jobs. PostgREST caps a single response at
+  // ~1,000 rows by default, and niche locations/categories often have jobs
+  // outside the top N — a hard limit silently returns 0 matches and 404s
+  // the page. Since slug matching happens client-side after parsing the
+  // location string, we need the full set before filtering.
+  const BATCH = 1000;
+  type JobRow = {
+    id: string;
+    title: string;
+    description: string;
+    location: string;
+    location_type: 'onsite' | 'remote' | 'hybrid';
+    job_type: string[];
+    salary_min: number | null;
+    salary_max: number | null;
+    show_salary: boolean;
+    created_at: string;
+    is_featured: boolean;
+    highlights: string[] | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    companies: any;
+  };
+  const jobs: JobRow[] = [];
+  for (let offset = 0; ; offset += BATCH) {
+    const { data, error } = await supabaseAdmin
+      .from('jobs')
+      .select(`
+        *,
+        highlights,
+        companies (
+          id,
+          name,
+          logo_url,
+          website
+        )
+      `)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + BATCH - 1);
+    if (error) {
+      console.error('Error fetching jobs:', error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    jobs.push(...(data as JobRow[]));
+    if (data.length < BATCH) break;
   }
 
   // Transform job - Supabase may return companies as array or single object
@@ -168,13 +241,21 @@ const getLocationJobs = cache(async function getLocationJobs(citySlug: string): 
       .map(transformJob);
   }
 
-  // Filter by city slug (parse location string)
-  // Note: suburb and state columns may not exist yet
+  // State-level slug (e.g. "new-south-wales") — aggregate every job whose
+  // location string references the state by full name or abbreviation.
+  // "Sydney NSW", "Newcastle NSW", and "New South Wales" all qualify.
+  const state = getStateBySlug(citySlug);
+  if (state) {
+    return jobs
+      .filter(job => jobLocationMatchesState(job.location, state))
+      .map(transformJob);
+  }
+
+  // Filter by city slug. Use canonicalLocationSlug so "Surry Hills NSW"
+  // et al. roll up into the Sydney page rather than being filtered out —
+  // mirrors the sitemap-side aggregation in getAllJobLocations().
   const locationJobs = jobs
-    .filter(job => {
-      const jobLocationSlug = extractLocationSlug(job.location, null, null);
-      return jobLocationSlug === citySlug;
-    })
+    .filter(job => canonicalLocationSlug(job.location) === citySlug)
     .map(transformJob);
 
   return locationJobs;

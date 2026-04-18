@@ -102,30 +102,40 @@ const getCategoryJobs = cache(async function getCategoryJobs(categorySlug: strin
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  // Get all approved jobs - using same pattern as /jobs page
-  const { data: jobs, error } = await supabaseAdmin
-    .from('jobs')
-    .select(`
-      *,
-      highlights,
-      companies (
-        id,
-        name,
-        logo_url,
-        website
-      )
-    `)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false })
-    .limit(200);
-
-  if (error || !jobs) {
-    console.error('Error fetching jobs:', error);
-    return [];
+  // Paginate to get all approved jobs. A hard limit silently drops jobs
+  // outside the top N, which starves niche categories — see the sibling
+  // location page for the same bug and fix.
+  const BATCH = 1000;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type JobRow = any;
+  const jobs: JobRow[] = [];
+  for (let offset = 0; ; offset += BATCH) {
+    const { data, error } = await supabaseAdmin
+      .from('jobs')
+      .select(`
+        *,
+        highlights,
+        companies (
+          id,
+          name,
+          logo_url,
+          website
+        )
+      `)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + BATCH - 1);
+    if (error) {
+      console.error('Error fetching jobs:', error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    jobs.push(...data);
+    if (data.length < BATCH) break;
   }
 
   // Transform job - Supabase may return companies as array or single object
-  const transformJob = (job: typeof jobs[0]): Job => ({
+  const transformJob = (job: JobRow): Job => ({
     id: job.id,
     title: job.title,
     description: job.description,

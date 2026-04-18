@@ -89,9 +89,104 @@ const KNOWN_CITY_NAMES: Record<string, string> = {
   'darwin': 'Darwin',
   'cairns': 'Cairns',
   'townsville': 'Townsville',
+  // Major Sydney business districts kept as standalone landing pages because
+  // they carry meaningful independent search demand.
+  'parramatta': 'Parramatta',
+  'north-sydney': 'North Sydney',
   'remote': 'Remote',
   'australia': 'Australia',
 };
+
+/**
+ * Small residential/commercial suburbs that should roll up to their parent
+ * city rather than having their own landing page — otherwise suburb pages
+ * dilute SEO equity from the main Sydney/Melbourne pages and 404 frequently
+ * as low-volume suburb job counts drop under the sitemap threshold.
+ *
+ * Major business districts (Parramatta, North Sydney) and genuine regional
+ * cities (Newcastle, Geelong, Gold Coast, etc.) intentionally stay as
+ * standalone pages and are not included here.
+ */
+const SUBURB_TO_CITY_SLUG: Record<string, string> = {
+  // Sydney-region
+  'surry-hills':    'sydney',
+  'chatswood':      'sydney',
+  'north-ryde':     'sydney',
+  'st-leonards':    'sydney',
+  'eveleigh':       'sydney',
+  'kensington':     'sydney',
+  'barangaroo':     'sydney',
+  'bella-vista':    'sydney',
+  'broadway':       'sydney',
+  'macquarie-park': 'sydney',
+  'sydney-cbd':     'sydney',
+  // Melbourne-region
+  'richmond':       'melbourne',
+  'cremorne':       'melbourne',
+  'parkville':      'melbourne',
+  'mulgrave':       'melbourne',
+  'chadstone':      'melbourne',
+  'hawthorn':       'melbourne',
+  'hawthorn-east':  'melbourne',
+  'melbourne-cbd':  'melbourne',
+};
+
+/**
+ * Returns the canonical location slug for a job's location string — runs
+ * the raw extraction, then folds small suburbs into their parent city.
+ * Used by both the sitemap generator (so a "Surry Hills NSW" job counts
+ * toward Sydney's count) and the location/cross page filters (so
+ * /jobs/location/sydney actually lists those jobs).
+ */
+export function canonicalLocationSlug(location: string | null | undefined): string {
+  const raw = extractLocationSlug(location ?? '', null, null);
+  return SUBURB_TO_CITY_SLUG[raw] ?? raw;
+}
+
+/**
+ * Australian states and territories. Each state generates a location page at
+ * /jobs/location/<slug> that aggregates every job whose location string
+ * contains the state name or abbreviation anywhere — so "Sydney NSW",
+ * "Newcastle NSW" and "New South Wales" all roll up into
+ * /jobs/location/new-south-wales, capturing state-level search demand
+ * alongside the existing city pages.
+ */
+export const AUSTRALIAN_STATES = [
+  { slug: 'new-south-wales',              name: 'New South Wales',              abbr: 'NSW' },
+  { slug: 'victoria',                     name: 'Victoria',                     abbr: 'VIC' },
+  { slug: 'queensland',                   name: 'Queensland',                   abbr: 'QLD' },
+  { slug: 'western-australia',            name: 'Western Australia',            abbr: 'WA'  },
+  { slug: 'south-australia',              name: 'South Australia',              abbr: 'SA'  },
+  { slug: 'tasmania',                     name: 'Tasmania',                     abbr: 'TAS' },
+  { slug: 'australian-capital-territory', name: 'Australian Capital Territory', abbr: 'ACT' },
+  { slug: 'northern-territory',           name: 'Northern Territory',           abbr: 'NT'  },
+] as const;
+
+export type AustralianState = typeof AUSTRALIAN_STATES[number];
+
+const STATE_BY_SLUG = new Map<string, AustralianState>(
+  AUSTRALIAN_STATES.map(s => [s.slug, s]),
+);
+
+export function getStateBySlug(slug: string): AustralianState | null {
+  return STATE_BY_SLUG.get(slug) ?? null;
+}
+
+/**
+ * Returns true if `location` references the given state — by full name
+ * (case-insensitive substring) or by abbreviation (case-insensitive word-
+ * bounded so "NSW" matches "Sydney NSW" but not "nswrap" and "SA" doesn't
+ * match "Disaster").
+ */
+export function jobLocationMatchesState(
+  location: string | null | undefined,
+  state: AustralianState,
+): boolean {
+  if (!location) return false;
+  if (location.toLowerCase().includes(state.name.toLowerCase())) return true;
+  const abbrRe = new RegExp(`\\b${state.abbr}\\b`, 'i');
+  return abbrRe.test(location);
+}
 
 // Minimum number of approved jobs required for a location to appear in the
 // sitemap and browse UI. Prevents one-off junk slugs from polluting SEO
@@ -99,9 +194,13 @@ const KNOWN_CITY_NAMES: Record<string, string> = {
 const MIN_JOBS_FOR_SITEMAP = 2;
 
 /**
- * Generates a human-readable location name from slug
+ * Generates a human-readable location name from slug. Checks state slugs
+ * first (so "new-south-wales" -> "New South Wales"), then city slugs, then
+ * falls back to naive title-casing.
  */
 export function locationSlugToName(slug: string): string {
+  const state = STATE_BY_SLUG.get(slug);
+  if (state) return state.name;
   return KNOWN_CITY_NAMES[slug] || slug
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -158,17 +257,38 @@ export async function getAllJobLocations(): Promise<Array<{
     return [];
   }
 
-  // Extract locations and count occurrences
+  // Extract locations and count occurrences. We use `canonicalLocationSlug`
+  // rather than the raw extractor so small suburbs (Surry Hills, Chatswood,
+  // Richmond, etc.) roll up into their parent city instead of creating thin
+  // standalone landing pages. Also explicitly skip the "australia" fallback
+  // slug — it's what extractLocationSlug returns when input is unparseable
+  // and should never appear as a sitemap entry.
   const locationMap = new Map<string, { count: number; state?: string | null }>();
 
   jobs.forEach(job => {
-    const slug = extractLocationSlug(job.location, null, null);
+    const slug = canonicalLocationSlug(job.location);
+    if (slug === 'australia') return;
     const existing = locationMap.get(slug) || { count: 0 };
     locationMap.set(slug, {
       count: existing.count + 1,
       state: null, // Will be populated when suburb/state columns exist
     });
   });
+
+  // State-level aggregation — a job with "Sydney NSW" counts in both
+  // /jobs/location/sydney (city) AND /jobs/location/new-south-wales (state).
+  // We count independently then overwrite the entry at the state slug so
+  // any collision with city-level counting (e.g. jobs literally tagged
+  // "New South Wales") resolves in favour of the state-level superset.
+  for (const state of AUSTRALIAN_STATES) {
+    let stateCount = 0;
+    for (const job of jobs) {
+      if (jobLocationMatchesState(job.location, state)) stateCount++;
+    }
+    if (stateCount > 0) {
+      locationMap.set(state.slug, { count: stateCount, state: state.abbr });
+    }
+  }
 
   // Convert to array, filter out locations with too few jobs (prevents junk
   // slugs from one-off bad data polluting the sitemap), and sort by count

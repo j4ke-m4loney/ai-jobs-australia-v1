@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { VALID_CATEGORY_SLUGS } from '@/lib/job-import/categories';
-import { extractLocationSlug } from '@/lib/locations/generator';
+import { canonicalLocationSlug } from '@/lib/locations/generator';
 
 // Minimum number of approved jobs required for a category×location cross page
 // to appear in the sitemap and be pre-rendered. Higher threshold than single-
@@ -50,10 +50,16 @@ export async function getAllCategoryLocationCombos(): Promise<CategoryLocationCo
     const catSlug = normaliseCategory(job.category);
     if (!validSlugs.has(catSlug)) continue;
 
-    // Handle remote as a location
+    // Handle remote as a location. Use canonicalLocationSlug so cross-page
+    // combos reflect the same suburb→city consolidation the listing and
+    // sitemap use — avoids orphan "category × small-suburb" combos.
     const locSlug = job.location_type === 'remote'
       ? 'remote'
-      : extractLocationSlug(job.location, null, null);
+      : canonicalLocationSlug(job.location);
+
+    // Skip the "australia" fallback — unparseable locations shouldn't create
+    // standalone cross-page entries.
+    if (locSlug === 'australia') continue;
 
     const key = `${catSlug}::${locSlug}`;
     comboMap.set(key, (comboMap.get(key) || 0) + 1);

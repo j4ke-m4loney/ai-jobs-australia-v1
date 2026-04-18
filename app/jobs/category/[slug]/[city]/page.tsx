@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { categorySlugToName } from '@/lib/categories/generator';
-import { extractLocationSlug, locationSlugToName } from '@/lib/locations/generator';
+import { canonicalLocationSlug, locationSlugToName } from '@/lib/locations/generator';
 import { VALID_CATEGORY_SLUGS } from '@/lib/job-import/categories';
 import { getAllCategoryLocationCombos } from '@/lib/categories/cross-generator';
 import { legacyCategorySlugToRedirect } from '@/lib/search/generator';
@@ -95,28 +95,38 @@ async function getCrossJobs(categorySlug: string, citySlug: string): Promise<Job
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  const { data: jobs, error } = await supabaseAdmin
-    .from('jobs')
-    .select(`
-      *,
-      highlights,
-      companies (
-        id,
-        name,
-        logo_url,
-        website
-      )
-    `)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false })
-    .limit(200);
-
-  if (error || !jobs) {
-    console.error('Error fetching cross jobs:', error);
-    return [];
+  // Paginate all approved jobs — see location/category page for the
+  // underlying "limit silently 404s niche pages" bug.
+  const BATCH = 1000;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type JobRow = any;
+  const jobs: JobRow[] = [];
+  for (let offset = 0; ; offset += BATCH) {
+    const { data, error } = await supabaseAdmin
+      .from('jobs')
+      .select(`
+        *,
+        highlights,
+        companies (
+          id,
+          name,
+          logo_url,
+          website
+        )
+      `)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + BATCH - 1);
+    if (error) {
+      console.error('Error fetching cross jobs:', error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    jobs.push(...data);
+    if (data.length < BATCH) break;
   }
 
-  const transformJob = (job: typeof jobs[0]): Job => ({
+  const transformJob = (job: JobRow): Job => ({
     id: job.id,
     title: job.title,
     description: job.description,
@@ -147,7 +157,7 @@ async function getCrossJobs(categorySlug: string, citySlug: string): Promise<Job
     if (citySlug === 'remote') {
       return job.location_type === 'remote';
     }
-    const jobLocationSlug = extractLocationSlug(job.location, null, null);
+    const jobLocationSlug = canonicalLocationSlug(job.location);
     return jobLocationSlug === citySlug;
   });
 
