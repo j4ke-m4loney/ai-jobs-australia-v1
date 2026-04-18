@@ -210,7 +210,7 @@ export default async function LocationPage({ params }: LocationPageProps) {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">AI Jobs in {cityName}</h1>
           <p className="text-xl text-muted-foreground">
-            {allJobs.length} AI, machine learning, and data science {allJobs.length === 1 ? 'position' : 'positions'} available in {cityName}
+            {allJobs.length} AI, Machine Learning, and Data Science {allJobs.length === 1 ? 'position' : 'positions'} available in {cityName}
           </p>
         </div>
 
@@ -250,7 +250,7 @@ export default async function LocationPage({ params }: LocationPageProps) {
               '@context': 'https://schema.org',
               '@type': 'JobPostingCollection',
               'name': `AI Jobs in ${cityName}`,
-              'description': `Find AI and machine learning jobs in ${cityName}, Australia`,
+              'description': `Find AI and Machine Learning jobs in ${cityName}, Australia`,
               'numberOfItems': allJobs.length,
             }),
           }}
