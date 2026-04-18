@@ -5,7 +5,8 @@ import { join } from 'path'
 import { getAllJobCategories } from '@/lib/categories/generator'
 import { getAllJobLocations } from '@/lib/locations/generator'
 import { getAllCategoryLocationCombos } from '@/lib/categories/cross-generator'
-import { getAllSearchKeywords } from '@/lib/search/generator'
+import { getAllSearchKeywords, CURATED_SEARCH_KEYWORDS } from '@/lib/search/generator'
+import { getAllSuburbStateCombos } from '@/lib/locations/au-suburbs'
 
 const BASE_URL = 'https://www.aijobsaustralia.com.au'
 
@@ -225,5 +226,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.85,
   }))
 
-  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...searchPages, ...jobPages, ...blogPages]
+  // Keyword × suburb × state landing pages. These 308-redirect to
+  // /jobs?search=&location= — including them in the sitemap tells Google
+  // the URLs exist so it can follow the redirect and consolidate ranking
+  // signal onto the canonical state-level search page. Priority is kept
+  // below the curated keyword pages since they're transitional URLs.
+  const suburbCombos = getAllSuburbStateCombos()
+  const suburbSearchPages: MetadataRoute.Sitemap = suburbCombos.flatMap((suburb) =>
+    CURATED_SEARCH_KEYWORDS.map((kw) => ({
+      url: `${BASE_URL}/jobs/search/${kw.slug}-${suburb.slug}-${suburb.state}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.5,
+    })),
+  )
+
+  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...searchPages, ...suburbSearchPages, ...jobPages, ...blogPages]
 }

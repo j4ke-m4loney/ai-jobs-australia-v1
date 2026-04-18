@@ -12,6 +12,7 @@ import {
   getAllSearchKeywords,
   RELATED_KEYWORDS,
 } from '@/lib/search/generator';
+import { parseSuburbSearchSlug } from '@/lib/search/suburb-slug-parser';
 import { SearchPageRedirect } from './SearchPageRedirect';
 
 interface SearchPageProps {
@@ -34,6 +35,13 @@ export async function generateStaticParams() {
 // SEO metadata with dynamic job count
 export async function generateMetadata({ params }: SearchPageProps): Promise<Metadata> {
   const { slug } = await params;
+
+  // Suburb-level slugs (e.g. ai-engineer-richmond-vic) never render —
+  // the default export 301-redirects them. Return empty metadata so
+  // we don't bother running the keyword job count query for them.
+  if (parseSuburbSearchSlug(slug)) {
+    return {};
+  }
 
   if (!isValidSearchSlug(slug)) {
     return {};
@@ -60,6 +68,24 @@ export async function generateMetadata({ params }: SearchPageProps): Promise<Met
 
 export default async function SearchPage({ params }: SearchPageProps) {
   const { slug } = await params;
+
+  // Suburb-level SEO URL (e.g. /jobs/search/ai-engineer-richmond-vic).
+  // 308-redirect to the state-filtered job search so the ranking signal
+  // consolidates onto the canonical /jobs?search=&location= page and the
+  // user lands on /jobs with both the keyword and state dropdown pre-filled.
+  //
+  // `match=broad` mirrors SearchPageRedirect behaviour for the curated
+  // keyword pages — searches title OR description (not title-only), so a
+  // "AI Engineer" job listing with the role in the description still
+  // surfaces. `guest=true` skips the auth redirect for unauthenticated
+  // visitors landing from search.
+  const suburbMatch = parseSuburbSearchSlug(slug);
+  if (suburbMatch) {
+    const { keyword, suburb } = suburbMatch;
+    permanentRedirect(
+      `/jobs?search=${encodeURIComponent(keyword.keyword)}&location=${suburb.state}&guest=true&match=broad`,
+    );
+  }
 
   // Invalid slug — redirect to main jobs page
   if (!isValidSearchSlug(slug)) {
