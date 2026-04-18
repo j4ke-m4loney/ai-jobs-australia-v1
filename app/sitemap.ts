@@ -90,10 +90,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Error fetching blog posts for sitemap:', blogError)
   }
 
-  // Company profile pages (/company/<uuid>) are noindex — they're opaque
-  // UUIDs that duplicate content already indexed at /jobs/<id>, so we don't
-  // advertise them in the sitemap. The layout at /app/company/[id]/layout.tsx
-  // carries the matching noindex meta tag.
+  // Company profile pages (/company/<uuid>) are disabled — the route returns
+  // 404 from app/company/[id]/page.tsx. They were opaque UUID duplicates of
+  // the individual /jobs/<id> pages and will eventually be rebuilt under
+  // human-readable /companies/<slug> URLs. See the TODO in that page file.
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
