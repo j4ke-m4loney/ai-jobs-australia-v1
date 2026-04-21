@@ -213,6 +213,7 @@ const Footer = () => {
                 <li>
                   <Link
                     href="/login"
+                    rel="nofollow"
                     className="hover:text-background transition-smooth"
                   >
                     Job Seeker Sign In
@@ -221,6 +222,7 @@ const Footer = () => {
                 <li>
                   <Link
                     href="/employer-login"
+                    rel="nofollow"
                     className="hover:text-background transition-smooth"
                   >
                     Employer Sign In

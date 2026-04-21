@@ -228,6 +228,7 @@ export default async function CategoryLocationPage({ params }: CrossPageProps) {
               </p>
               <Link
                 href={`/login?next=${encodeURIComponent(`/jobs/category/${slug}/${city}`)}`}
+                rel="nofollow"
                 className="inline-block bg-primary text-primary-foreground hover:bg-primary/90 font-medium py-2 px-6 rounded-lg transition-colors"
               >
                 Sign Up Free
