@@ -140,13 +140,14 @@ export const SignupOrViewAllCard: React.FC<SignupOrViewAllCardProps> = ({
         <div className="max-w-md mx-auto space-y-4">
           <Link
             href={`/login?next=${encodeURIComponent(redirectPath)}`}
+            rel="nofollow"
             className="inline-block w-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium py-3 px-6 rounded-lg transition-colors"
           >
             Sign Up Free - View All Jobs
           </Link>
           <p className="text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="text-primary hover:underline font-medium">
+            <Link href="/login" rel="nofollow" className="text-primary hover:underline font-medium">
               Sign in
             </Link>
           </p>

@@ -144,7 +144,7 @@ export default function HirePage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/post-job-login">
+            <Link href="/post-job-login" rel="nofollow">
               <Button
                 size="lg"
                 className="bg-gradient-hero hover:opacity-90 text-white font-semibold px-8 py-6 text-lg"
@@ -599,7 +599,7 @@ export default function HirePage() {
             Start reaching qualified AI candidates today.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/post-job-login">
+            <Link href="/post-job-login" rel="nofollow">
               <Button
                 size="lg"
                 className="bg-gradient-hero hover:opacity-90 text-white font-semibold px-8 py-6 text-lg"

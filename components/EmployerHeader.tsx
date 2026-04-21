@@ -90,7 +90,7 @@ const EmployerHeader = () => {
                 </Button>
               </>
             ) : (
-              <Link href="/post-job-login">
+              <Link href="/post-job-login" rel="nofollow">
                 <Button variant="default" size="sm">
                   Sign In
                 </Button>
@@ -152,6 +152,7 @@ const EmployerHeader = () => {
               ) : (
                 <Link
                   href="/employer-login"
+                  rel="nofollow"
                   onClick={closeMobileMenu}
                   className="flex items-center gap-3 py-3 px-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors font-medium"
                 >

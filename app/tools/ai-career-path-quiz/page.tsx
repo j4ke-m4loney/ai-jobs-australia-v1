@@ -199,7 +199,7 @@ export default function AICareerPathQuizPage() {
               className="bg-white/10 hover:bg-white/20 text-white border-white/30"
               asChild
             >
-              <Link href="/login">Create Free Profile</Link>
+              <Link href="/login" rel="nofollow">Create Free Profile</Link>
             </Button>
           </div>
         </div>
