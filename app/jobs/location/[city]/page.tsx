@@ -8,11 +8,93 @@ import {
   getStateBySlug,
   jobLocationMatchesState,
   canonicalLocationSlug,
+  AUSTRALIAN_STATES,
 } from '@/lib/locations/generator';
+import { resolveSuburbSlugToState } from '@/lib/locations/au-suburbs';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RecentJobCard } from '@/components/jobs/RecentJobCard';
 import { SignupOrViewAllCard } from '@/components/jobs/SignupOrViewAllCard';
+
+// Maps lowercase state abbreviations to their canonical state page slug so a
+// fallback resolver can redirect /jobs/location/<suburb-state> directly to the
+// state landing page without another lookup hop.
+const STATE_ABBR_TO_SLUG: Record<string, string> = Object.fromEntries(
+  AUSTRALIAN_STATES.map(s => [s.abbr.toLowerCase(), s.slug]),
+);
+const STATE_ABBR_SET = new Set(Object.keys(STATE_ABBR_TO_SLUG));
+
+/**
+ * Attempts to resolve a legacy/unknown location slug to a canonical location
+ * URL so Google's "Not found (404)" report stops growing and we preserve the
+ * SEO equity from URLs Google indexed before the location parser changes.
+ *
+ * Handles three patterns in priority order:
+ *  1. Multi-location slugs ("sydney-nsw-melbourne-vic", "sydney-or-melbourne")
+ *     → take the first city-ish token, recurse.
+ *  2. Suburb in AU_SUBURBS (with or without explicit state suffix)
+ *     → redirect to the parent state's landing page.
+ *  3. Bare state abbreviation ("nsw", "vic")
+ *     → redirect to the canonical state slug.
+ *
+ * Returns the canonical slug (e.g. "sydney", "new-south-wales") or null if
+ * nothing matches — caller should fall back to /jobs.
+ */
+function resolveLegacyLocationSlug(slug: string): string | null {
+  if (!slug) return null;
+
+  // Treat "-or-" as a location separator ("sydney-or-melbourne", "brisbane-qld-or-sydney-nsw").
+  if (slug.includes('-or-')) {
+    const first = slug.split('-or-')[0];
+    if (first && first !== slug) return resolveLegacyLocationSlug(first);
+  }
+
+  // Bare state abbreviation: "nsw" → "new-south-wales".
+  if (STATE_ABBR_SET.has(slug)) {
+    return STATE_ABBR_TO_SLUG[slug];
+  }
+
+  const tokens = slug.split('-');
+  const firstStateIdx = tokens.findIndex(t => STATE_ABBR_SET.has(t));
+
+  // Slug begins with a state abbr ("act-nsw-nt-qld-...") — best we can do
+  // is redirect to that first state's landing page.
+  if (firstStateIdx === 0) {
+    return STATE_ABBR_TO_SLUG[tokens[0]];
+  }
+
+  // Multi-location or suburb-with-state-suffix: "sydney-nsw-melbourne-vic",
+  // "north-sydney-nsw", "cremorne-vic". Take everything before the first
+  // state abbr and try to resolve it; else redirect to that first state.
+  if (firstStateIdx > 0) {
+    const cityPart = tokens.slice(0, firstStateIdx).join('-');
+    const stateAbbr = tokens[firstStateIdx];
+
+    if (cityPart in KNOWN_CANONICAL_CITIES) return cityPart;
+    const rolled = canonicalLocationSlug(cityPart);
+    if (rolled in KNOWN_CANONICAL_CITIES) return rolled;
+    const suburbState = resolveSuburbSlugToState(cityPart);
+    if (suburbState) return STATE_ABBR_TO_SLUG[suburbState];
+    return STATE_ABBR_TO_SLUG[stateAbbr];
+  }
+
+  // Single suburb slug with no state abbr anywhere: try AU_SUBURBS lookup.
+  const suburbState = resolveSuburbSlugToState(slug);
+  if (suburbState) return STATE_ABBR_TO_SLUG[suburbState];
+
+  return null;
+}
+
+// Canonical city slugs that have their own landing page (generateStaticParams
+// seeds the top 20 but these are always valid). Used so multi-location slugs
+// starting with a major city redirect to that city's page rather than rolling
+// all the way up to state-level.
+const KNOWN_CANONICAL_CITIES: Record<string, true> = {
+  sydney: true, melbourne: true, brisbane: true, perth: true, adelaide: true,
+  canberra: true, hobart: true, darwin: true, 'gold-coast': true,
+  newcastle: true, geelong: true, wollongong: true, cairns: true,
+  townsville: true, parramatta: true, 'north-sydney': true,
+};
 
 // Map of old state-appended slugs to their canonical form.
 // These were previously indexed by Google before the location parser
@@ -273,8 +355,15 @@ export default async function LocationPage({ params }: LocationPageProps) {
   const cityName = locationSlugToName(city);
   const allJobs = await getLocationJobs(city);
 
-  // Show 404 if location has no jobs
+  // No jobs for this slug — before 404ing, try to resolve it as a legacy
+  // slug pattern (multi-location, suburb-with-state-suffix, bare state abbr)
+  // and redirect to the appropriate canonical location page. Recovers SEO
+  // equity from URLs Google indexed before location parsing was tightened.
   if (allJobs.length === 0) {
+    const resolved = resolveLegacyLocationSlug(city);
+    if (resolved && resolved !== city) {
+      permanentRedirect(`/jobs/location/${resolved}`);
+    }
     notFound();
   }
 

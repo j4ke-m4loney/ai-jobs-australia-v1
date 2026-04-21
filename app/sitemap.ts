@@ -5,8 +5,7 @@ import { join } from 'path'
 import { getAllJobCategories } from '@/lib/categories/generator'
 import { getAllJobLocations } from '@/lib/locations/generator'
 import { getAllCategoryLocationCombos } from '@/lib/categories/cross-generator'
-import { getAllSearchKeywords, CURATED_SEARCH_KEYWORDS } from '@/lib/search/generator'
-import { getAllSuburbStateCombos } from '@/lib/locations/au-suburbs'
+import { getAllSearchKeywords } from '@/lib/search/generator'
 
 const BASE_URL = 'https://www.aijobsaustralia.com.au'
 
@@ -226,20 +225,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.85,
   }))
 
-  // Keyword × suburb × state landing pages. These 308-redirect to
-  // /jobs?search=&location= — including them in the sitemap tells Google
-  // the URLs exist so it can follow the redirect and consolidate ranking
-  // signal onto the canonical state-level search page. Priority is kept
-  // below the curated keyword pages since they're transitional URLs.
-  const suburbCombos = getAllSuburbStateCombos()
-  const suburbSearchPages: MetadataRoute.Sitemap = suburbCombos.flatMap((suburb) =>
-    CURATED_SEARCH_KEYWORDS.map((kw) => ({
-      url: `${BASE_URL}/jobs/search/${kw.slug}-${suburb.slug}-${suburb.state}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.5,
-    })),
-  )
+  // Note: keyword × suburb × state URLs (/jobs/search/<kw>-<suburb>-<state>)
+  // are deliberately NOT in the sitemap. The route still 308-redirects to
+  // /jobs?search=&location= for any inbound traffic, but listing ~1,000
+  // redirect-only URLs in the sitemap produced no ranking lift (the
+  // destination is a faceted state of /jobs with no self-canonical or
+  // unique content, which Google folds back into /jobs) while bloating the
+  // GSC "Page with redirect" report. See conversation 2026-04-21.
 
-  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...searchPages, ...suburbSearchPages, ...jobPages, ...blogPages]
+  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...searchPages, ...jobPages, ...blogPages]
 }
