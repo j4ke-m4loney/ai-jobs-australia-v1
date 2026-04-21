@@ -645,3 +645,30 @@ export function findSuburb(suburbSlug: string, stateAbbr: string): AuSuburb | nu
 export function getAllSuburbStateCombos(): readonly AuSuburb[] {
   return AU_SUBURBS;
 }
+
+/**
+ * Look up a suburb's state by slug alone.
+ *
+ * Used by the legacy location-slug fallback to recover 404s for URLs Google
+ * indexed before we consolidated small suburbs into their parent state (e.g.
+ * /jobs/location/cremorne-vic or /jobs/location/carlton-north). If the slug
+ * includes an explicit state suffix we use it; otherwise we pick the first
+ * matching suburb in AU_SUBURBS (ambiguous same-named suburbs resolve to
+ * whichever entry appears first, which in practice is the most prominent one).
+ *
+ * Returns null if no match — caller should fall back to a generic redirect.
+ */
+export function resolveSuburbSlugToState(slug: string): AuStateAbbr | null {
+  if (!slug) return null;
+
+  const suffixMatch = slug.match(/^(.*)-(nsw|vic|qld|wa|sa|tas|act|nt)$/);
+  if (suffixMatch) {
+    const [, suburbPart, stateAbbr] = suffixMatch;
+    const state = stateAbbr as AuStateAbbr;
+    const found = AU_SUBURBS.find(s => s.slug === suburbPart && s.state === state);
+    if (found) return found.state;
+  }
+
+  const found = AU_SUBURBS.find(s => s.slug === slug);
+  return found?.state ?? null;
+}
