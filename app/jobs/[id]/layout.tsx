@@ -1,35 +1,11 @@
-import { cache } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { getJobById } from "@/lib/jobs/get-job-by-id";
 
 // Statuses that have a public, indexable detail page.
 // Everything else (pending, rejected, needs_review, draft) returns a 404 so it
 // never accumulates in Google's index.
 const PUBLIC_STATUSES = new Set(["approved", "expired"]);
-
-// Server-side Supabase client for metadata generation
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Cached per-request — deduplicates across generateMetadata, JobLayout, and JobStructuredData
-// Fetches job regardless of status so we can distinguish "expired" from "not found"
-const getJobById = cache(async (id: string) => {
-  const { data } = await supabase
-    .from("jobs")
-    .select(`
-      *,
-      companies (
-        name,
-        logo_url,
-        website
-      )
-    `)
-    .eq("id", id)
-    .single();
-  return data;
-});
 
 interface Props {
   params: Promise<{ id: string }>;
