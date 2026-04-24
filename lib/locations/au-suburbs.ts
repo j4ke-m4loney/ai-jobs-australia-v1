@@ -615,6 +615,26 @@ export const AU_SUBURBS: readonly AuSuburb[] = [
   // ────────────────────────────────────────────────────────────────
   { slug: 'city-of-darwin', state: 'nt', displayName: 'City of Darwin' },
   { slug: 'city-of-palmerston', state: 'nt', displayName: 'City of Palmerston' },
+
+  // ────────────────────────────────────────────────────────────────
+  // Legacy slug recovery — suburbs appearing in GSC "Not found (404)"
+  // reports that weren't in the curated list. Each resolves to its
+  // parent state via resolveSuburbSlugToState so crawled URLs stop
+  // 404ing and the historical link equity flows to the state page.
+  // ────────────────────────────────────────────────────────────────
+  { slug: 'woollahra', state: 'nsw', displayName: 'Woollahra' },
+  { slug: 'newcastle-and-maitland', state: 'nsw', displayName: 'Newcastle and Maitland' },
+  { slug: 'carlton-north', state: 'vic', displayName: 'Carlton North' },
+  { slug: 'knoxfield', state: 'vic', displayName: 'Knoxfield' },
+  { slug: 'footscray-park', state: 'vic', displayName: 'Footscray Park' },
+  { slug: 'ballarat-central', state: 'vic', displayName: 'Ballarat Central' },
+  { slug: 'cairns-region', state: 'qld', displayName: 'Cairns Region' },
+  { slug: 'cannon-hill', state: 'qld', displayName: 'Cannon Hill' },
+  { slug: 'murarrie', state: 'qld', displayName: 'Murarrie' },
+  { slug: 'bentley', state: 'wa', displayName: 'Bentley' },
+  { slug: 'murdoch', state: 'wa', displayName: 'Murdoch' },
+  { slug: 'edinburgh', state: 'sa', displayName: 'Edinburgh' },
+  { slug: 'conder', state: 'act', displayName: 'Conder' },
 ];
 
 /**

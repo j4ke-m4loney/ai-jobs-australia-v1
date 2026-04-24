@@ -170,6 +170,9 @@ const LEGACY_SLUG_REDIRECTS: Record<string, string> = {
   'tas': 'tasmania',
   'act': 'australian-capital-territory',
   'nt': 'northern-territory',
+  // Parser artefact: "Australia (Remote)" indexed as 'australia-remote'.
+  // Redirect to the remote jobs landing page which is a valid route.
+  'australia-remote': 'remote',
 };
 
 interface Job {
