@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { RecentJobCard } from '@/components/jobs/RecentJobCard';
+import { SignupOrViewAllCard } from '@/components/jobs/SignupOrViewAllCard';
 import {
   isValidSearchSlug,
   searchSlugToDisplayName,
@@ -93,6 +94,10 @@ export default async function SearchPage({ params }: SearchPageProps) {
   const keyword = searchSlugToKeyword(slug);
   const allJobs = await getSearchKeywordJobs(keyword);
 
+  // First 9 visible publicly; rest hidden behind the SignupOrViewAllCard
+  const publicJobs = allJobs.slice(0, 9);
+  const hiddenJobsCount = Math.max(0, allJobs.length - publicJobs.length);
+
   // Related search pages for internal linking
   const relatedSlugs = RELATED_KEYWORDS[slug] ?? [];
 
@@ -118,18 +123,49 @@ export default async function SearchPage({ params }: SearchPageProps) {
           <p className="text-xl text-muted-foreground">
             {allJobs.length} {displayName} {allJobs.length === 1 ? 'position' : 'positions'} available
           </p>
+          {allJobs.length > publicJobs.length && (
+            <Link
+              href={`/jobs?search=${encodeURIComponent(keyword)}&match=broad`}
+              className="inline-flex items-center gap-1 mt-3 text-primary hover:underline font-medium"
+            >
+              View all {allJobs.length} {displayName} jobs →
+            </Link>
+          )}
         </div>
 
-        {/* Server-rendered job list for SEO — users are redirected before seeing this */}
-        {allJobs.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
-            {allJobs.slice(0, 9).map(job => (
-              <div key={job.id} className="h-full">
-                <RecentJobCard job={job} />
-              </div>
-            ))}
+        {/* Job listings — first 9 visible, gradient fade-out on bottom 3
+            so anonymous users hit the SignupOrViewAllCard below */}
+        {publicJobs.length > 0 && (
+          <div className="relative">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+              {publicJobs.map((job, index) => (
+                <div
+                  key={job.id}
+                  className={`h-full ${index >= 6 ? 'pointer-events-none' : ''}`}
+                >
+                  <RecentJobCard job={job} />
+                </div>
+              ))}
+            </div>
+
+            {/* Gradient fade-out overlay — gentle fade on bottom 3 cards */}
+            <div
+              className="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
+              style={{
+                height: '550px',
+                background:
+                  'linear-gradient(to bottom, transparent 0%, transparent 40%, hsl(var(--background)) 95%, hsl(var(--background)) 100%)',
+              }}
+            />
           </div>
         )}
+
+        {/* Signup gate — shows signup CTA for anonymous, "View All" for logged-in */}
+        <SignupOrViewAllCard
+          hiddenJobsCount={hiddenJobsCount}
+          categoryName={`${displayName} AI`}
+          redirectPath={`/jobs/search/${slug}`}
+        />
 
         {/* Related Searches — internal cross-linking for SEO */}
         {relatedSlugs.length > 0 && (
