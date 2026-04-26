@@ -314,7 +314,7 @@ export default function ToolsPage() {
             Ready to Find Your Next AI Role?
           </h2>
           <p className="text-xl text-white/90 mb-8">
-            Discover hundreds of AI, Machine Learning, and Data Science
+            Discover hundreds of AI, Machine Learning, Data Science, and AI Emergent
             opportunities across Australia
           </p>
           <div className="flex flex-wrap gap-4 justify-center">

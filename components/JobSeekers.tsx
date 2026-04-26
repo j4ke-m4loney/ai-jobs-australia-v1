@@ -24,7 +24,7 @@ const JobSeekers = () => {
               </h2>
 
               <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
-                Connect with genuine AI, Machine Learning, and Data Science
+                Connect with genuine AI, Machine Learning, Data Science, and AI Emergent
                 opportunities across Australia. From startups to enterprise,
                 remote to on-site.
               </p>

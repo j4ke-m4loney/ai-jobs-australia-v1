@@ -20,14 +20,14 @@ export const metadata: Metadata = {
   applicationName: "AI Jobs Australia",
   title: "AI Jobs Australia | #1 Home for AI Opportunities",
   description:
-    "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
+    "Discover the latest AI, Machine Learning, Data Science, and AI Emergent opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
   openGraph: {
     siteName: "AI Jobs Australia",
     type: "website",
     locale: "en_AU",
     title: "#1 Home for all AI Opportunities In Australia",
     description:
-      "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
+      "Discover the latest AI, Machine Learning, Data Science, and AI Emergent opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
     url: "https://www.aijobsaustralia.com.au",
     images: [
       {
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     creator: "@AIJobsAustralia",
     title: "#1 Home for all AI Opportunities In Australia",
     description:
-      "Discover the latest AI, Machine Learning, and Data Science opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
+      "Discover the latest AI, Machine Learning, Data Science, and AI Emergent opportunities across Australia. Browse hundreds of jobs from top companies hiring AI professionals",
     images: ["https://www.aijobsaustralia.com.au/twitter-card.png"],
   },
   icons: {
@@ -126,7 +126,7 @@ export default function RootLayout({
                 caption: "AI Jobs Australia Logo",
               },
               description:
-                "Australia's #1 platform for AI, Machine Learning, and Data Science jobs. Connecting local talent with local opportunities.",
+                "Australia's #1 platform for AI, Machine Learning, Data Science, and AI Emergent jobs. Connecting local talent with local opportunities.",
               email: "hello@aijobsaustralia.com.au",
               contactPoint: {
                 "@type": "ContactPoint",

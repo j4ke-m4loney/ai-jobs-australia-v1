@@ -59,7 +59,7 @@ export default function CoverLetterAnalyserPage() {
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground">
-              Optimise your cover letter for AI, Machine Learning, and Data Science roles
+              Optimise your cover letter for AI, Machine Learning, Data Science, and AI Emergent roles
               in Australia. Get instant feedback on structure, keywords, personalisation,
               and actionable tips to stand out.
             </p>
@@ -189,7 +189,7 @@ export default function CoverLetterAnalyserPage() {
             Ready to Land Your Dream AI Job?
           </h2>
           <p className="text-xl text-white/90 mb-8">
-            Discover hundreds of AI, Machine Learning, and Data Science roles across
+            Discover hundreds of AI, Machine Learning, Data Science, and AI Emergent roles across
             Australia
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
