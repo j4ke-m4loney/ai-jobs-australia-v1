@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
  * Jobs are matched via broad ILIKE on title + description.
  */
 export const CURATED_SEARCH_KEYWORDS = [
+  // ── Roles ─────────────────────────────────────────────────────────────────
   { slug: 'ai-engineer', keyword: 'AI Engineer', displayName: 'AI Engineer' },
   { slug: 'data-scientist', keyword: 'Data Scientist', displayName: 'Data Scientist' },
   { slug: 'machine-learning', keyword: 'Machine Learning', displayName: 'Machine Learning' },
@@ -20,7 +21,35 @@ export const CURATED_SEARCH_KEYWORDS = [
   { slug: 'ai-governance', keyword: 'AI Governance', displayName: 'AI Governance' },
   { slug: 'ai-architect', keyword: 'AI Architect', displayName: 'AI Architect' },
   { slug: 'ai-researcher', keyword: 'AI Researcher', displayName: 'AI Researcher' },
+
+  // ── Languages ─────────────────────────────────────────────────────────────
   { slug: 'python', keyword: 'Python', displayName: 'Python' },
+  { slug: 'sql', keyword: 'SQL', displayName: 'SQL' },
+
+  // ── Cloud platforms ───────────────────────────────────────────────────────
+  { slug: 'aws', keyword: 'AWS', displayName: 'AWS' },
+  { slug: 'azure', keyword: 'Azure', displayName: 'Azure' },
+  { slug: 'gcp', keyword: 'GCP', displayName: 'GCP' },
+  { slug: 'sagemaker', keyword: 'SageMaker', displayName: 'SageMaker' },
+
+  // ── ML frameworks ─────────────────────────────────────────────────────────
+  { slug: 'tensorflow', keyword: 'TensorFlow', displayName: 'TensorFlow' },
+  { slug: 'pytorch', keyword: 'PyTorch', displayName: 'PyTorch' },
+  { slug: 'hugging-face', keyword: 'Hugging Face', displayName: 'Hugging Face' },
+
+  // ── LLM / GenAI ───────────────────────────────────────────────────────────
+  { slug: 'llm', keyword: 'LLM', displayName: 'LLM' },
+  { slug: 'generative-ai', keyword: 'Generative AI', displayName: 'Generative AI' },
+  { slug: 'langchain', keyword: 'LangChain', displayName: 'LangChain' },
+  { slug: 'rag', keyword: 'RAG', displayName: 'RAG' },
+  { slug: 'prompt-engineering', keyword: 'Prompt Engineering', displayName: 'Prompt Engineering' },
+  { slug: 'agentic-ai', keyword: 'Agentic', displayName: 'Agentic AI' },
+  { slug: 'openai', keyword: 'OpenAI', displayName: 'OpenAI' },
+
+  // ── Data infrastructure ───────────────────────────────────────────────────
+  { slug: 'snowflake', keyword: 'Snowflake', displayName: 'Snowflake' },
+  { slug: 'databricks', keyword: 'Databricks', displayName: 'Databricks' },
+  { slug: 'spark', keyword: 'Spark', displayName: 'Spark' },
 ] as const;
 
 type SearchSlug = typeof CURATED_SEARCH_KEYWORDS[number]['slug'];
@@ -47,6 +76,34 @@ export const RELATED_KEYWORDS: Record<string, SearchSlug[]> = {
   'ai-architect': ['ai-engineer', 'ai-platform', 'ai-governance', 'machine-learning', 'deep-learning'],
   'ai-researcher': ['deep-learning', 'nlp', 'machine-learning', 'computer-vision', 'ai-engineer'],
   'python': ['data-scientist', 'data-engineer', 'software-engineer', 'machine-learning', 'mlops'],
+
+  // Languages
+  'sql': ['data-analyst', 'data-engineer', 'data-scientist', 'python', 'snowflake'],
+
+  // Cloud platforms
+  'aws': ['sagemaker', 'mlops', 'ai-platform', 'python', 'azure'],
+  'azure': ['aws', 'mlops', 'ai-platform', 'python', 'gcp'],
+  'gcp': ['aws', 'azure', 'mlops', 'ai-platform', 'python'],
+  'sagemaker': ['aws', 'mlops', 'machine-learning', 'ai-platform', 'python'],
+
+  // ML frameworks
+  'tensorflow': ['pytorch', 'deep-learning', 'machine-learning', 'python', 'ai-engineer'],
+  'pytorch': ['tensorflow', 'deep-learning', 'machine-learning', 'python', 'ai-engineer'],
+  'hugging-face': ['llm', 'nlp', 'generative-ai', 'pytorch', 'machine-learning'],
+
+  // LLM / GenAI cluster — these reinforce each other heavily
+  'llm': ['generative-ai', 'openai', 'langchain', 'rag', 'ai-engineer'],
+  'generative-ai': ['llm', 'openai', 'ai-engineer', 'machine-learning', 'rag'],
+  'langchain': ['llm', 'rag', 'generative-ai', 'python', 'ai-engineer'],
+  'rag': ['llm', 'langchain', 'generative-ai', 'openai', 'ai-engineer'],
+  'prompt-engineering': ['llm', 'generative-ai', 'openai', 'ai-engineer', 'langchain'],
+  'agentic-ai': ['llm', 'ai-engineer', 'generative-ai', 'langchain', 'ai-architect'],
+  'openai': ['llm', 'generative-ai', 'rag', 'ai-engineer', 'prompt-engineering'],
+
+  // Data infrastructure
+  'snowflake': ['databricks', 'data-engineer', 'spark', 'sql', 'data-scientist'],
+  'databricks': ['snowflake', 'data-engineer', 'spark', 'mlops', 'machine-learning'],
+  'spark': ['databricks', 'data-engineer', 'snowflake', 'python', 'mlops'],
 };
 
 /**
