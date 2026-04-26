@@ -334,6 +334,77 @@ const Footer = () => {
             </nav>
           </div>
 
+          {/* Secondary nav row — hub page entry points by job type and salary */}
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <nav aria-label="Browse by Job Type and Experience">
+              <h4 className="font-semibold mb-4">By Job Type &amp; Experience</h4>
+              <ul className="space-y-2 text-background/80">
+                <li>
+                  <Link
+                    href="/jobs/seniority/senior"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Senior AI Jobs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/type/contract"
+                    className="hover:text-background transition-smooth"
+                  >
+                    Contract AI Jobs
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/type/internship"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Internships
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+
+            <nav aria-label="Browse by Salary">
+              <h4 className="font-semibold mb-4">By Salary</h4>
+              <ul className="space-y-2 text-background/80">
+                <li>
+                  <Link
+                    href="/jobs/salary/100k-plus"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs $100k+
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/salary/120k-plus"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs $120k+
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/salary/150k-plus"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs $150k+
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/salary/200k-plus"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs $200k+
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </div>
+
           {/* Bottom Bar */}
           <div className="border-t border-background/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
