@@ -9,7 +9,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           {/* Main Footer Content */}
-          <div className="grid lg:grid-cols-6 gap-8 mb-12">
+          <div className="grid lg:grid-cols-7 gap-8 mb-12">
             {/* Brand */}
             <div className="lg:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
@@ -161,6 +161,77 @@ const Footer = () => {
                     className="hover:text-background transition-smooth"
                   >
                     Remote AI Jobs
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+
+            {/* States */}
+            <nav aria-label="Browse by State">
+              <h4 className="font-semibold mb-4">Browse by State</h4>
+              <ul className="space-y-2 text-background/80">
+                <li>
+                  <Link
+                    href="/jobs/location/new-south-wales"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in NSW
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/victoria"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in Victoria
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/queensland"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in Queensland
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/western-australia"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in WA
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/south-australia"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in SA
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/australian-capital-territory"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in ACT
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/tasmania"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in Tasmania
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/jobs/location/northern-territory"
+                    className="hover:text-background transition-smooth"
+                  >
+                    AI Jobs in NT
                   </Link>
                 </li>
               </ul>

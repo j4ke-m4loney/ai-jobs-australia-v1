@@ -1,19 +1,17 @@
+import { cache } from 'react';
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-
-  // Check for required env vars - return default metadata if missing
+// Cached so generateMetadata and the layout share a single DB lookup per
+// request. React's cache() de-dupes by argument value within a render.
+const getPublishedPost = cache(async (slug: string) => {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return {
-      title: 'Blog | AI Jobs Australia',
-      description: 'Read the latest articles about AI jobs and careers in Australia.',
-    };
+    return null;
   }
 
   const supabase = createClient(
@@ -21,14 +19,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
-  const { data: post } = await supabase
+  const { data } = await supabase
     .from('blog_posts')
     .select('*')
     .eq('slug', slug)
     .eq('status', 'published')
     .single();
 
+  return data;
+});
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPublishedPost(slug);
+
   if (!post) {
+    // The layout default export will call notFound() and render the
+    // root not-found page with a real 404 status. Metadata returned
+    // here is overridden by the not-found page's own metadata, but we
+    // set it anyway in case the not-found render is bypassed.
     return {
       title: 'Article Not Found | AI Jobs Australia',
       description: 'The requested article could not be found.',
@@ -56,10 +65,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function BlogArticleLayout({
+export default async function BlogArticleLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
+  const post = await getPublishedPost(slug);
+
+  // Without this, unpublished/deleted posts return HTTP 200 with the
+  // client-side "Article Not Found" UI — Google classifies that as
+  // soft 404. notFound() returns a real 404 status.
+  if (!post) {
+    notFound();
+  }
+
   return children;
 }

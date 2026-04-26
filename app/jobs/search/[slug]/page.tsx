@@ -70,21 +70,19 @@ export default async function SearchPage({ params }: SearchPageProps) {
   const { slug } = await params;
 
   // Suburb-level SEO URL (e.g. /jobs/search/ai-engineer-richmond-vic).
-  // 308-redirect to the state-filtered job search so the ranking signal
-  // consolidates onto the canonical /jobs?search=&location= page and the
-  // user lands on /jobs with both the keyword and state dropdown pre-filled.
-  //
-  // `match=broad` mirrors SearchPageRedirect behaviour for the curated
-  // keyword pages — searches title OR description (not title-only), so a
-  // "AI Engineer" job listing with the role in the description still
-  // surfaces. `guest=true` skips the auth redirect for unauthenticated
-  // visitors landing from search.
+  // 308-redirect to the curated keyword landing page (/jobs/search/<keyword>)
+  // rather than the state-filtered /jobs listing — Google was classifying
+  // the latter as soft-404 for low-job states (TAS/NT/WA) where the
+  // state-filtered destination came back empty. The keyword landing page
+  // is always populated (its getSearchKeywordJobs helper fills to ~9 with
+  // related-keyword fallbacks), preserving the visitor's keyword intent
+  // and giving Google a content-rich destination. The state filter is
+  // dropped — niche-state job markets are too thin for the filter to add
+  // useful surface area, and same trade-off the legacy-category redirect
+  // ladder already makes (see legacyCategorySlugToRedirect).
   const suburbMatch = parseSuburbSearchSlug(slug);
   if (suburbMatch) {
-    const { keyword, suburb } = suburbMatch;
-    permanentRedirect(
-      `/jobs?search=${encodeURIComponent(keyword.keyword)}&location=${suburb.state}&guest=true&match=broad`,
-    );
+    permanentRedirect(`/jobs/search/${suburbMatch.keyword.slug}`);
   }
 
   // Invalid slug — redirect to main jobs page

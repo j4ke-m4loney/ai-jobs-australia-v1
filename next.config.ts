@@ -26,6 +26,11 @@ const nextConfig: NextConfig = {
         destination: '/tools/ai-skills-gap-analyser',
         permanent: true,
       },
+      {
+        source: '/blog/how-many-references-for-a-resume-for-ai-and-data-cience-in-australia',
+        destination: '/blog/how-many-references-for-a-resume-for-ai-and-data-science-in-australia',
+        permanent: true,
+      },
     ];
   },
 };
