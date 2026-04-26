@@ -13,7 +13,6 @@ import {
   RELATED_KEYWORDS,
 } from '@/lib/search/generator';
 import { parseSuburbSearchSlug } from '@/lib/search/suburb-slug-parser';
-import { SearchPageRedirect } from './SearchPageRedirect';
 
 interface SearchPageProps {
   params: Promise<{
@@ -99,10 +98,6 @@ export default async function SearchPage({ params }: SearchPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Client-side redirect: sends real users to /jobs?search=keyword
-          Googlebot sees the server-rendered HTML below for indexing */}
-      <SearchPageRedirect keyword={keyword} />
-
       <Header />
 
       <main className="container mx-auto px-4 pt-24 pb-8">
