@@ -182,7 +182,7 @@ export default function AIRoleComparisonPage() {
             Found Your Ideal AI Role?
           </h2>
           <p className="text-xl text-white/90 mb-8">
-            Browse hundreds of AI, Machine Learning, and Data Science roles
+            Browse hundreds of AI, Machine Learning, Data Science, and AI Emergent roles
             across Australia
           </p>
           <div className="flex flex-wrap gap-4 justify-center">

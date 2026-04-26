@@ -86,14 +86,6 @@ const Footer = () => {
                 </li>
                 <li>
                   <Link
-                    href="/jobs/category/ml-engineer"
-                    className="hover:text-background transition-smooth"
-                  >
-                    ML Engineer Jobs
-                  </Link>
-                </li>
-                <li>
-                  <Link
                     href="/jobs/category/software-engineer"
                     className="hover:text-background transition-smooth"
                   >
@@ -105,7 +97,7 @@ const Footer = () => {
                     href="/categories"
                     className="hover:text-background transition-smooth font-medium"
                   >
-                    Browse All Categories
+                    Browse all →
                   </Link>
                 </li>
               </ul>
@@ -302,43 +294,102 @@ const Footer = () => {
               </ul>
             </nav>
 
-            {/* Legal */}
-            <nav aria-label="Legal">
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-background/80">
-                <li>
-                  <Link
-                    href="/privacy-policy"
-                    className="hover:text-background transition-smooth"
-                  >
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/terms"
-                    className="hover:text-background transition-smooth"
-                  >
-                    Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/contact"
-                    className="hover:text-background transition-smooth"
-                  >
-                    Contact Us
-                  </Link>
-                </li>
-              </ul>
+            {/* Filter Jobs — combined hub page entry points (experience, type, salary) */}
+            <nav aria-label="Filter Jobs">
+              <h4 className="font-semibold mb-4">Filter Jobs</h4>
+              <div className="space-y-4">
+                <div>
+                  <h5 className="text-background/50 text-xs uppercase tracking-wider mb-2">By Experience</h5>
+                  <ul className="space-y-2 text-background/80">
+                    <li>
+                      <Link
+                        href="/jobs/seniority/senior"
+                        className="hover:text-background transition-smooth"
+                      >
+                        Senior AI Jobs
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 className="text-background/50 text-xs uppercase tracking-wider mb-2">By Type</h5>
+                  <ul className="space-y-2 text-background/80">
+                    <li>
+                      <Link
+                        href="/jobs/type/contract"
+                        className="hover:text-background transition-smooth"
+                      >
+                        Contract AI Jobs
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/jobs/type/internship"
+                        className="hover:text-background transition-smooth"
+                      >
+                        AI Internships
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 className="text-background/50 text-xs uppercase tracking-wider mb-2">By Salary</h5>
+                  <ul className="space-y-2 text-background/80">
+                    <li>
+                      <Link
+                        href="/jobs/salary/100k-plus"
+                        className="hover:text-background transition-smooth"
+                      >
+                        AI Jobs $100k+
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/jobs/salary/120k-plus"
+                        className="hover:text-background transition-smooth"
+                      >
+                        AI Jobs $120k+
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/jobs/salary/150k-plus"
+                        className="hover:text-background transition-smooth"
+                      >
+                        AI Jobs $150k+
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/jobs/salary/200k-plus"
+                        className="hover:text-background transition-smooth"
+                      >
+                        AI Jobs $200k+
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </nav>
           </div>
 
           {/* Bottom Bar */}
           <div className="border-t border-background/20 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="text-background/60 text-sm mb-4 md:mb-0">
-                © 2026 AIJobsAustralia.com.au. All rights reserved.
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-background/60 text-sm">
+                <span>© 2026 AIJobsAustralia.com.au</span>
+                <span className="hidden md:inline" aria-hidden="true">·</span>
+                <Link href="/privacy-policy" className="hover:text-background transition-smooth">
+                  Privacy
+                </Link>
+                <span className="hidden md:inline" aria-hidden="true">·</span>
+                <Link href="/terms" className="hover:text-background transition-smooth">
+                  Terms
+                </Link>
+                <span className="hidden md:inline" aria-hidden="true">·</span>
+                <Link href="/contact" className="hover:text-background transition-smooth">
+                  Contact
+                </Link>
               </div>
 
               {/* Social Links */}

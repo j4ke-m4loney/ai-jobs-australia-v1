@@ -196,8 +196,8 @@ const HomePage = () => {
               </h1>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Discover the latest opportunities in Artificial Intelligence,
-                Machine Learning, and Data Science, including roles you won’t
-                find on the major job boards.
+                Machine Learning, Data Science and AI Emergent roles, including
+                opportunities you won’t find on major job boards.
               </p>
 
               {/* Search Form */}

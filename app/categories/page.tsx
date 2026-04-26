@@ -45,7 +45,7 @@ export default function CategoriesPage() {
             All Categories
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Browse AI, Machine Learning, and Data Science roles across all
+            Browse AI, Machine Learning, Data Science, and AI Emergent roles across all
             specialisations
           </p>
         </div>

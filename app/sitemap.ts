@@ -6,6 +6,7 @@ import { getAllJobCategories } from '@/lib/categories/generator'
 import { getAllJobLocations } from '@/lib/locations/generator'
 import { getAllCategoryLocationCombos } from '@/lib/categories/cross-generator'
 import { getAllSearchKeywords } from '@/lib/search/generator'
+import { SENIORITY_SLUGS, JOB_TYPE_SLUGS, SALARY_SLUGS } from '@/lib/jobs/hub-pages'
 
 const BASE_URL = 'https://www.aijobsaustralia.com.au'
 
@@ -233,5 +234,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // unique content, which Google folds back into /jobs) while bloating the
   // GSC "Page with redirect" report. See conversation 2026-04-21.
 
-  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...searchPages, ...jobPages, ...blogPages]
+  // Hub pages — SEO landing pages by seniority, job type, salary tier.
+  // Each slug list is curated in lib/jobs/hub-pages.ts to only include
+  // axes with reliable 6+ job volume so the destination always has
+  // content (avoiding the soft-404 trap that hit keyword×suburb).
+  const hubPages: MetadataRoute.Sitemap = [
+    ...SENIORITY_SLUGS.map(slug => ({
+      url: `${BASE_URL}/jobs/seniority/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.85,
+    })),
+    ...JOB_TYPE_SLUGS.map(slug => ({
+      url: `${BASE_URL}/jobs/type/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.85,
+    })),
+    ...SALARY_SLUGS.map(slug => ({
+      url: `${BASE_URL}/jobs/salary/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.85,
+    })),
+  ]
+
+  return [...staticPages, ...categoryPages, ...locationPages, ...crossPages, ...searchPages, ...hubPages, ...jobPages, ...blogPages]
 }
