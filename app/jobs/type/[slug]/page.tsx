@@ -80,7 +80,7 @@ export default async function JobTypePage({ params }: JobTypePageProps) {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{HEADING[slug]}</h1>
           <p className="text-xl text-muted-foreground">
-            {primaryCount} {displayName.toLowerCase()} AI, Machine Learning, and Data Science{' '}
+            {primaryCount} {displayName.toLowerCase()} AI{' '}
             {primaryCount === 1 ? 'position' : 'positions'} available
           </p>
           {primaryCount > publicJobs.length && (

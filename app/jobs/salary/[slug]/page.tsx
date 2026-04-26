@@ -82,8 +82,7 @@ export default async function SalaryPage({ params }: SalaryPageProps) {
             AI Jobs Paying {displayName} in Australia
           </h1>
           <p className="text-xl text-muted-foreground">
-            {primaryCount} AI, Machine Learning, and Data Science{' '}
-            {primaryCount === 1 ? 'position' : 'positions'} paying {displayName}
+            {primaryCount} AI {primaryCount === 1 ? 'position' : 'positions'} paying {displayName}
           </p>
           {primaryCount > publicJobs.length && (
             <Link

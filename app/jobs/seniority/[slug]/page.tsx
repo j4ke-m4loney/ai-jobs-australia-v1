@@ -77,7 +77,7 @@ export default async function SeniorityPage({ params }: SeniorityPageProps) {
             {displayName} AI Jobs in Australia
           </h1>
           <p className="text-xl text-muted-foreground">
-            {primaryCount} {displayName.toLowerCase()} AI, Machine Learning, and Data Science{' '}
+            {primaryCount} {displayName.toLowerCase()} AI{' '}
             {primaryCount === 1 ? 'position' : 'positions'} available
           </p>
           {primaryCount > publicJobs.length && (
