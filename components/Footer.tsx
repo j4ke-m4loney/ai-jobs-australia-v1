@@ -21,7 +21,7 @@ const Footer = () => {
                   className="w-8 h-8 brightness-0 invert"
                 />
                 <span className="text-xl font-bold">
-                  AIJobsAustralia.com.au
+                  AI Jobs Australia
                 </span>
               </div>
               <p className="text-background/80 mb-6 max-w-md">
@@ -377,7 +377,7 @@ const Footer = () => {
           <div className="border-t border-background/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-background/60 text-sm">
-                <span>© 2026 AIJobsAustralia.com.au</span>
+                <span>© 2026 AI Jobs Australia</span>
                 <span className="hidden md:inline" aria-hidden="true">·</span>
                 <Link href="/privacy-policy" className="hover:text-background transition-smooth">
                   Privacy
