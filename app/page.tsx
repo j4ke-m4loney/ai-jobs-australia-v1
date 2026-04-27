@@ -131,20 +131,25 @@ const HomePage = () => {
     },
   ];
 
-  const topCompanies = [
-    { name: "Google", logo: "/companies/google.webp" },
-    { name: "Microsoft", logo: "/companies/microsoft.png" },
-    { name: "Atlassian", logo: "/companies/atlassian.png" },
-    { name: "Canva", logo: "/companies/canva.png" },
-    { name: "Telstra", logo: "/companies/Telstra.webp" },
-    { name: "Westpac", logo: "/companies/Westpac.png" },
-    { name: "Commbank", logo: "/companies/CommBank-Logo.webp" },
-    { name: "Amazon", logo: "/companies/Amazon.webp" },
-    { name: "Xero", logo: "/companies/xero.svg" },
-    { name: "Deloitte", logo: "/companies/deloitte.png" },
-    { name: "Oracle", logo: "/companies/Oracle.png" },
-    { name: "Sportsbet", logo: "/companies/sportsbet.svg" },
-  ];
+  // Hidden 2026-04-28 — these are logos of companies whose AI roles we
+  // surface but who have not formally authorised their logo for promotional
+  // use on AJA. Risk of conflict during outbound partner/sponsor outreach.
+  // Restore by uncommenting this array and the corresponding <section> in
+  // the JSX below.
+  // const topCompanies = [
+  //   { name: "Google", logo: "/companies/google.webp" },
+  //   { name: "Microsoft", logo: "/companies/microsoft.png" },
+  //   { name: "Atlassian", logo: "/companies/atlassian.png" },
+  //   { name: "Canva", logo: "/companies/canva.png" },
+  //   { name: "Telstra", logo: "/companies/Telstra.webp" },
+  //   { name: "Westpac", logo: "/companies/Westpac.png" },
+  //   { name: "Commbank", logo: "/companies/CommBank-Logo.webp" },
+  //   { name: "Amazon", logo: "/companies/Amazon.webp" },
+  //   { name: "Xero", logo: "/companies/xero.svg" },
+  //   { name: "Deloitte", logo: "/companies/deloitte.png" },
+  //   { name: "Oracle", logo: "/companies/Oracle.png" },
+  //   { name: "Sportsbet", logo: "/companies/sportsbet.svg" },
+  // ];
 
   const negativePoints = [
     {
@@ -263,20 +268,21 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Top Companies */}
+        {/* Top Companies — hidden 2026-04-28, see topCompanies array above for context. */}
+        {/*
         <section className="pt-0 pb-6 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              {/* <h2 className="text-foreground text-3xl font-bold">
+              <h2 className="text-foreground text-3xl font-bold">
                 Top Companies Hiring in Aus
-              </h2> */}
+              </h2>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center max-w-5xl mx-auto">
               {topCompanies.map((company) => (
                 <div
                   key={company.name}
-                  className="relative w-32 h-16 grayscale  transition-all duration-300 opacity-60"
+                  className="relative w-32 h-16 grayscale transition-all duration-300 opacity-60"
                 >
                   <Image
                     src={company.logo}
@@ -290,6 +296,7 @@ const HomePage = () => {
             </div>
           </div>
         </section>
+        */}
 
         {/* Featured Jobs */}
         <ErrorBoundary>
