@@ -192,7 +192,7 @@ const HomePage = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="pt-10 text-4xl md:text-6xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
-                AI Jobs Australia: The #1 Home for AI Roles
+                The #1 Home for AI Jobs In Australia
               </h1>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Discover the latest opportunities in Artificial Intelligence,
