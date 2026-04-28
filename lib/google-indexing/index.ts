@@ -100,6 +100,27 @@ export async function requestBatchJobIndexing(
 }
 
 /**
+ * Request removal of multiple job pages from the index
+ * Used by the daily cleanup cron when bulk-expiring jobs.
+ * Note: Google Indexing API has a quota of 200 requests per day.
+ */
+export async function requestBatchJobRemoval(
+  jobIds: string[]
+): Promise<IndexingResult[]> {
+  const results: IndexingResult[] = [];
+
+  for (const jobId of jobIds) {
+    const result = await requestJobRemoval(jobId);
+    results.push(result);
+
+    // Small delay to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  return results;
+}
+
+/**
  * Check if Google Indexing API is configured
  */
 export function isIndexingConfigured(): boolean {
