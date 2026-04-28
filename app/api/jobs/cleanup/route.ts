@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { checkJobUrl } from "@/lib/job-cleanup/url-checker";
+import {
+  requestBatchJobRemoval,
+  isIndexingConfigured,
+} from "@/lib/google-indexing";
 
 const BATCH_SIZE = 50; // Process 50 jobs per cron run
 const MIN_CHECK_INTERVAL_HOURS = 24; // Re-check jobs daily
 const MAX_JOB_AGE_DAYS = 60; // Auto-expire jobs older than this
 const REVIEW_GRACE_PERIOD_DAYS = 20; // Don't flag jobs for review if posted within this many days
+
+// Cap how many removal pings we send per cron run. Google Indexing API
+// quota is 200/day total; leave half the budget for indexing of newly
+// approved jobs (which goes through the admin status route).
+const MAX_INDEXING_REMOVALS_PER_RUN = 100;
 
 // This endpoint should be called by a cron job to clean up expired or invalid jobs
 // Add ?dryRun=true to preview what would be expired without making changes
@@ -42,7 +51,13 @@ export async function GET(request: NextRequest) {
       needsReview: 0,
       keptActive: 0,
       errors: 0,
+      indexingApiNotified: 0,
+      indexingApiFailed: 0,
     };
+
+    // Collected job IDs that transitioned approved → expired during this
+    // run. Pinged to Google Indexing API at the end (capped + best-effort).
+    const removedJobIds: string[] = [];
 
     console.log("[JobCleanup] Starting cleanup run", {
       timestamp: now,
@@ -81,6 +96,11 @@ export async function GET(request: NextRequest) {
         console.log(
           `[JobCleanup] ${dryRun ? "Would expire" : "Expired"} ${stats.paidExpired} paid jobs past their expires_at date`
         );
+        if (!dryRun && paidExpiredJobs) {
+          for (const j of paidExpiredJobs) {
+            if (j.id) removedJobIds.push(j.id);
+          }
+        }
       }
     }
 
@@ -114,6 +134,11 @@ export async function GET(request: NextRequest) {
         console.log(
           `[JobCleanup] ${dryRun ? "Would expire" : "Expired"} ${stats.ageExpired} jobs older than ${MAX_JOB_AGE_DAYS} days`
         );
+        if (!dryRun && agedOutJobs) {
+          for (const j of agedOutJobs) {
+            if (j.id) removedJobIds.push(j.id);
+          }
+        }
       }
     }
 
@@ -227,6 +252,7 @@ export async function GET(request: NextRequest) {
           updateData.status = "expired";
           updateData.expired_evidence = result.evidence?.join(", ");
           stats.expired++;
+          removedJobIds.push(job.id);
           console.log(
             `[JobCleanup] Marking as expired: ${job.id} - ${job.title}`
           );
@@ -270,6 +296,41 @@ export async function GET(request: NextRequest) {
       } catch (error) {
         console.error(`[JobCleanup] Error checking job ${job.id}:`, error);
         stats.errors++;
+      }
+    }
+
+    // Notify Google Indexing API of jobs removed in this run. Best-effort:
+    // any failure logs and continues — never fails the cron. Capped at
+    // MAX_INDEXING_REMOVALS_PER_RUN to leave daily quota for new-job
+    // indexing (which fires from the admin status route).
+    if (removedJobIds.length > 0) {
+      if (!isIndexingConfigured()) {
+        console.log(
+          `[JobCleanup] ${removedJobIds.length} jobs expired but GOOGLE_INDEXING_CREDENTIALS is not set — skipping Indexing API removal`
+        );
+      } else {
+        const toNotify = removedJobIds.slice(0, MAX_INDEXING_REMOVALS_PER_RUN);
+        const skipped = removedJobIds.length - toNotify.length;
+        console.log(
+          `[JobCleanup] Notifying Google Indexing API of ${toNotify.length} job removals` +
+            (skipped > 0 ? ` (capped, ${skipped} more will be discovered via sitemap)` : "")
+        );
+
+        try {
+          const indexResults = await requestBatchJobRemoval(toNotify);
+          stats.indexingApiNotified = indexResults.filter(r => r.success).length;
+          stats.indexingApiFailed = indexResults.length - stats.indexingApiNotified;
+          console.log(
+            `[JobCleanup] Indexing API: ${stats.indexingApiNotified} succeeded, ${stats.indexingApiFailed} failed`
+          );
+        } catch (indexError) {
+          // Should never reach here — requestJobRemoval catches its own errors —
+          // but defend against a future change that lets one through.
+          console.error(
+            "[JobCleanup] Unexpected error from requestBatchJobRemoval:",
+            indexError
+          );
+        }
       }
     }
 
