@@ -50,7 +50,7 @@ export default function FeaturedJobs() {
 
   const fetchFeaturedJobs = async () => {
     try {
-      const response = await fetch("/api/jobs/featured?limit=6");
+      const response = await fetch("/api/jobs/featured?limit=9");
       const data = await response.json();
 
       if (!response.ok) {
@@ -142,7 +142,9 @@ export default function FeaturedJobs() {
             const remainder = filteredJobs.length % 3;
             return filteredJobs.map((job, index) => {
               const isLastRow = remainder > 0 && index >= filteredJobs.length - remainder;
-              const colSpan = isLastRow ? 'lg:col-span-3' : 'lg:col-span-2';
+              const colSpan = isLastRow
+                ? (remainder === 1 ? 'lg:col-span-2 lg:col-start-3' : 'lg:col-span-3')
+                : 'lg:col-span-2';
               return (
               <Card
                 key={job.id}
