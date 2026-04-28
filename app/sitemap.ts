@@ -10,6 +10,13 @@ import { SENIORITY_SLUGS, JOB_TYPE_SLUGS, SALARY_SLUGS } from '@/lib/jobs/hub-pa
 
 const BASE_URL = 'https://www.aijobsaustralia.com.au'
 
+// Regenerate the sitemap hourly so new approved jobs surface to Google
+// without waiting for the next code deploy. Without this, sitemap.ts is
+// generated once at build time and cached — which left the production
+// sitemap with 0 of the 1,965 indexable job UUIDs whenever a build-time
+// fetch quietly failed (silent break in the pagination loop on error).
+export const revalidate = 3600
+
 /**
  * Auto-discovers tool pages from /app/tools/[slug]/page.tsx.
  * Any new tool directory with a page.tsx is automatically included.
@@ -40,10 +47,13 @@ function discoverToolPages(): MetadataRoute.Sitemap {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Create Supabase client inside function to avoid build-time initialization
+  // Use the service-role key (matches the pattern in lib/categories/generator.ts,
+  // lib/locations/generator.ts, etc.). The anon key was silently returning 0
+  // jobs in production builds — switching to service role removes RLS as a
+  // variable and matches every other server-side query in the codebase.
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
   // Fetch approved + expired jobs. Expired jobs stay indexed with a clear
@@ -72,13 +82,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .range(offset, offset + JOB_BATCH_SIZE - 1)
 
     if (error) {
-      console.error('Error fetching jobs for sitemap:', error)
+      console.error('[sitemap] error fetching jobs batch at offset', offset, error)
       break
     }
     if (!data || data.length === 0) break
     jobs.push(...(data as SitemapJob[]))
     if (data.length < JOB_BATCH_SIZE) break
   }
+  console.log('[sitemap] fetched', jobs.length, 'job pages for sitemap')
 
   // Fetch all published blog posts
   const { data: blogPosts, error: blogError } = await supabase
