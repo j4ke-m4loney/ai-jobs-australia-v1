@@ -199,8 +199,27 @@ async function JobStructuredData({ id }: { id: string }) {
     };
   }
 
-  // Add direct apply URL if external
+  // Mark directApply for both external and internal applications. Per
+  // Google's definition (https://developers.google.com/search/docs/appearance/structured-data/job-posting#directapply),
+  // a posting qualifies as direct apply when "the user completes the
+  // application process on your site... the user doesn't have to click
+  // apply and provide user information more than once".
+  //
+  // - external: a clean ATS link that lands on the application form
+  //   directly counts. We trust this for AJA's external listings since
+  //   most are scraped from ATS partners (Workday, Lever, Greenhouse)
+  //   which deep-link to the apply page.
+  // - internal: AJA hosts the apply form at /apply/[jobId] — the user
+  //   never leaves the site, never re-enters info, never has to click
+  //   through a second "apply" elsewhere. Qualifies as direct apply.
+  // - null/undefined application_method: legacy paid listings default
+  //   to internal apply, so treat the same as "internal".
   if (job.application_method === "external" && job.application_url) {
+    jobPostingSchema.directApply = true;
+  } else if (
+    !job.application_method ||
+    job.application_method === "internal"
+  ) {
     jobPostingSchema.directApply = true;
   }
 
