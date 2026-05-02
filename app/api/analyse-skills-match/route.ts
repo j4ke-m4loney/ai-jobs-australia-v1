@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { anthropic } from '@/lib/anthropic';
+import { checkAndIncrementUsage } from '@/lib/usage-limits';
+import { checkRateLimit } from '@/lib/rate-limit';
+
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export interface SkillsMatchAnalysis {
   percentage: number;
@@ -72,7 +82,14 @@ const skillsMatchTool = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userSkills, jobTitle, jobDescription, jobRequirements } = await request.json();
+    const { userId, userSkills, jobTitle, jobDescription, jobRequirements } = await request.json();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'userId is required' },
+        { status: 400 }
+      );
+    }
 
     if (!userSkills || !Array.isArray(userSkills)) {
       return NextResponse.json(
@@ -98,6 +115,42 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Rate limit: 5 requests per minute per user
+    const rateLimit = checkRateLimit(`skills_match:${userId}`, 5, 60 * 1000);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment before trying again.' },
+        { status: 429 }
+      );
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    // Verify user has an active intelligence subscription
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('id, status, plan_type')
+      .eq('user_id', userId)
+      .eq('plan_type', 'intelligence')
+      .eq('status', 'active')
+      .single();
+
+    if (!subscription) {
+      return NextResponse.json(
+        { error: 'Active AJA Intelligence subscription required' },
+        { status: 403 }
+      );
+    }
+
+    // Check monthly usage cap
+    const usage = await checkAndIncrementUsage(supabase, userId, 'match_score');
+    if (usage && !usage.allowed) {
+      return NextResponse.json(
+        { error: 'monthly_limit', message: `You've reached your monthly limit of ${usage.limit} skills match analyses. Resets next month.`, currentCount: usage.currentCount, limit: usage.limit },
+        { status: 429 }
+      );
+    }
+
     const jobContent = `
 Job Title: ${jobTitle}
 
@@ -110,7 +163,7 @@ ${jobRequirements ? `Requirements:\n${jobRequirements}` : ''}
     const candidateSkills = userSkills.join(', ');
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-haiku-4-5',
       max_tokens: 1024,
       tools: [skillsMatchTool],
       tool_choice: { type: 'tool', name: 'submit_skills_match' },

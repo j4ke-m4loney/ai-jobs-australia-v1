@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Sparkles, Loader2, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   trackAnalyseRoleModalOpened,
   trackSkillsMatchAnalysed,
@@ -105,6 +106,7 @@ interface AnalyseRoleModalProps {
 }
 
 export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "unknown" }: AnalyseRoleModalProps) {
+  const { user } = useAuth();
   const [showInitialLoader, setShowInitialLoader] = useState(true);
   // 0 = none visible, 1 = first visible, 2 = first two visible, etc.
   const [visibleFeatures, setVisibleFeatures] = useState<number>(0);
@@ -119,7 +121,7 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
 
   // Fetch skills match analysis
   const fetchSkillsMatch = useCallback(async () => {
-    if (!job || !userSkills || userSkills.length === 0 || !job.description) {
+    if (!job || !userSkills || userSkills.length === 0 || !job.description || !user?.id) {
       return;
     }
 
@@ -153,6 +155,7 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          userId: user.id,
           userSkills,
           jobTitle: job.title,
           jobDescription: job.description,
@@ -192,7 +195,7 @@ export function AnalyseRoleModal({ isOpen, onClose, job, userSkills, source = "u
     } finally {
       setSkillsMatchLoading(false);
     }
-  }, [job, userSkills]);
+  }, [job, userSkills, user?.id]);
 
   // Show initial loader, then staggered reveal of features
   useEffect(() => {
