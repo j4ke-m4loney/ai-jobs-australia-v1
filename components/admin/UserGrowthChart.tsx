@@ -37,6 +37,7 @@ export function UserGrowthChart() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [percentageChange, setPercentageChange] = useState<number>(0);
+  const [totalUsers, setTotalUsers] = useState<number>(0);
   const [visibleMetrics, setVisibleMetrics] = useState({
     totalUsers: true,
     newUsers: true,
@@ -78,6 +79,7 @@ export function UserGrowthChart() {
       const result = await response.json();
       setData(result.data || []);
       setPercentageChange(result.percentageChange || 0);
+      setTotalUsers(result.totalUsers || 0);
     } catch (err) {
       console.error('Error fetching growth data:', err);
       setError('Failed to load user growth data');
@@ -143,7 +145,6 @@ export function UserGrowthChart() {
     }
   };
 
-  const totalUsers = data.length > 0 ? data[data.length - 1].totalUsers : 0;
   const newUsersThisPeriod = data.length > 0 ? data[data.length - 1].newUsers : 0;
 
   return (

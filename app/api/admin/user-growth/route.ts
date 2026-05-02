@@ -34,19 +34,35 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get('period') || 'monthly';
 
-    // Fetch all profiles with created_at timestamps
-    const { data: profiles, error } = await supabaseAdmin
-      .from('profiles')
-      .select('created_at')
-      .order('created_at', { ascending: true });
+    // Fetch all profiles with created_at timestamps.
+    // PostgREST enforces a server-side row cap (typically 1000) regardless of
+    // the requested range, so we paginate through the full table — otherwise
+    // the chart silently drops the newest signups (the ones users care about).
+    const PAGE_SIZE = 1000;
+    const profiles: { created_at: string }[] = [];
+    let totalUserCount: number | null = null;
+    let from = 0;
+    while (true) {
+      const { data: page, error, count } = await supabaseAdmin
+        .from('profiles')
+        .select('created_at', { count: 'exact' })
+        .order('created_at', { ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
 
-    if (error) {
-      console.error('Error fetching profiles:', error);
-      return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 500 });
+      if (error) {
+        console.error('Error fetching profiles:', error);
+        return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 500 });
+      }
+
+      if (totalUserCount === null) totalUserCount = count ?? 0;
+      if (!page || page.length === 0) break;
+      profiles.push(...page);
+      if (page.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
     }
 
-    if (!profiles || profiles.length === 0) {
-      return NextResponse.json({ data: [] });
+    if (profiles.length === 0) {
+      return NextResponse.json({ data: [], totalUsers: totalUserCount ?? 0 });
     }
 
     // Aggregate data based on period
@@ -73,6 +89,7 @@ export async function GET(request: NextRequest) {
       percentageChange: Math.round(percentageChange * 10) / 10, // Round to 1 decimal place
       previousPeriodSignups,
       currentPeriodSignups,
+      totalUsers: totalUserCount ?? profiles.length,
     });
   } catch (error) {
     console.error('Error in user-growth API:', error);
