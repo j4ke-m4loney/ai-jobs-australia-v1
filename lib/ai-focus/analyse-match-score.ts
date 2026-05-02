@@ -101,7 +101,7 @@ ${requirements ? `Requirements:\n${requirements}` : ''}
     : resumeText;
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-haiku-20240307',
+    model: 'claude-haiku-4-5',
     max_tokens: 1024,
     tools: [matchScoreTool],
     tool_choice: { type: 'tool', name: 'submit_match_score' },

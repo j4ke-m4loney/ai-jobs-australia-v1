@@ -20,7 +20,7 @@ export async function matchCompany(
   const companyList = companies.map((c) => `${c.id}|${c.name}`).join('\n');
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-haiku-20240307',
+    model: 'claude-haiku-4-5',
     max_tokens: 128,
     system: `You match company names. Given an extracted company name and a list of existing companies (id|name), find the best match from the list.
 

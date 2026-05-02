@@ -23,7 +23,7 @@ export async function GET() {
     const startTime = Date.now();
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-haiku-4-5',
       max_tokens: 50,
       messages: [{ role: 'user', content: 'Say "hello" in JSON: {"message": "hello"}' }],
       system: 'Return only valid JSON.',
